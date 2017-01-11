@@ -25,7 +25,7 @@
 #include <tuple>
 #include <map>
 #include "Configuration.h"
-#include "StressTensor.h"
+#include "Sym2Tensor.h"
 #include "Interaction.h"
 #include "vec3d.h"
 #include "Matrix.h"
@@ -129,10 +129,10 @@ private:
 	void computeForcesOnWallParticles();
 	void computeVelocityCoeffFixedParticles();
 	void rescaleVelHydroStressControlled();
-	void addUpInteractionStressGU(std::vector<StressTensor> &stress_comp,
+	void addUpInteractionStressGU(std::vector<Sym2Tensor> &stress_comp,
 								  const std::vector<vec3d> &non_affine_vel,
 								  const std::vector<vec3d> &non_affine_ang_vel);
-	void addUpInteractionStressME(std::vector<StressTensor> &stress_comp);
+	void addUpInteractionStressME(std::vector<Sym2Tensor> &stress_comp);
 
 	void computeMaxNAVelocity();
 	double (System::*calcInteractionRange)(int, int);
@@ -223,8 +223,8 @@ private:
 	std::vector<vec3d> ang_velocity_predictor;
 	std::vector<vec3d> na_ang_velocity;
 	std::vector<vec3d> fixed_velocities;
-	std::vector<StressTensor> total_stress_pp; // per particle
-	StressTensor total_stress;
+	std::vector<Sym2Tensor> total_stress_pp; // per particle
+	Sym2Tensor total_stress;
 
 	/**************** Interaction machinery ***************************/
 	/* We hold the Interaction instances in a std::vector */
@@ -265,14 +265,14 @@ private:
 	 * The responsability for the correctness of interaction_partners is left to System
 	 * (not delegated any more to Interaction, like it used to).*/
 	std::vector < std::vector<int> > interaction_partners;
-	void gatherStressesByRateDependencies(StressTensor &rate_prop_stress,
-										  StressTensor &rate_indep_stress);
+	void gatherStressesByRateDependencies(Sym2Tensor &rate_prop_stress,
+										  Sym2Tensor &rate_indep_stress);
 
 	std::map<std::string, ForceComponent> force_components;
-	std::map<std::string, StressTensor> total_stress_groups;
+	std::map<std::string, Sym2Tensor> total_stress_groups;
 	std::map<std::string, StressComponent> stress_components;
 	std::map<std::string, VelocityComponent> velocity_components;
-	Averager<StressTensor> stress_avg;
+	Averager<Sym2Tensor> stress_avg;
 	double dt;
 	double avg_dt;
 	int avg_dt_nb;

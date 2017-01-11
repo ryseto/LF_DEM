@@ -23,7 +23,7 @@
 #include <iomanip>
 #include <fstream>
 #include "vec3d.h"
-#include "StressTensor.h"
+#include "Sym2Tensor.h"
 #include "MatrixBlocks.h"
 
 class System;

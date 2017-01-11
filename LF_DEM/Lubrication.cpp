@@ -585,9 +585,9 @@ std::pair<struct DBlock, struct DBlock> Lubrication::RFU_DBlocks_squeeze_tangent
 // stresslet_i = R_SU^{ii} * vi + R_SU^{ij} * vj
 // stresslet_j = R_SU^{ji} * vi + R_SU^{jj} * vj
 void Lubrication::addGUStresslet(const vec3d& vi, const vec3d& vj,
-								 const vec3d& oi, const vec3d& oj,
-								 StressTensor& stresslet_i,
-								 StressTensor& stresslet_j) const
+                                 const vec3d& oi, const vec3d& oj,
+                                 Sym2Tensor& stresslet_i,
+                                 Sym2Tensor& stresslet_j) const
 {
 	/*
 	 * (xx, xy, xz, yz, yy, zz)
@@ -598,25 +598,25 @@ void Lubrication::addGUStresslet(const vec3d& vi, const vec3d& vj,
 	 */
 	double nvec_vi = dot(nvec, vi);
 	double nvec_vj = dot(nvec, vj);
-	StressTensor nvec_nvec(*nvec);
+	Sym2Tensor nvec_nvec = outer(*nvec);
 	stresslet_i += -(XG[0]*nvec_vi+XG[1]*nvec_vj)*nvec_nvec; // XGU_i
 	stresslet_j += -(XG[2]*nvec_vi+XG[3]*nvec_vj)*nvec_nvec; // XGU_j
 	if (!tangential) {
 		return;
 	}
-	StressTensor tmp_i = StressTensor(*nvec, vi) - nvec_vi*nvec_nvec;
-	StressTensor tmp_j = StressTensor(*nvec, vj) - nvec_vj*nvec_nvec;
+	Sym2Tensor tmp_i = outer_sym(*nvec, vi) - nvec_vi*nvec_nvec;
+	Sym2Tensor tmp_j = outer_sym(*nvec, vj) - nvec_vj*nvec_nvec;
 	stresslet_i += -2*(YG[0]*tmp_i+YG[1]*tmp_j); // YGU_i
 	stresslet_j += -2*(YG[2]*tmp_i+YG[3]*tmp_j); // YGU_j
-	StressTensor tmp2_i(*nvec, cross(oi, *nvec));
-	StressTensor tmp2_j(*nvec, cross(oj, *nvec));
+	Sym2Tensor tmp2_i = outer_sym(*nvec, cross(oi, *nvec));
+	Sym2Tensor tmp2_j = outer_sym(*nvec, cross(oj, *nvec));
 	stresslet_i += -2*(YM[0]*tmp2_i+YM[1]*tmp2_j); // YHO_i
 	stresslet_j += -2*(YM[2]*tmp2_i+YM[3]*tmp2_j); // YHO_j
 }
 
 void Lubrication::addMEStresslet(const matrix& E_inf,
-                                 StressTensor& stresslet_i,
-                                 StressTensor& stresslet_j) const
+                                 Sym2Tensor& stresslet_i,
+                                 Sym2Tensor& stresslet_j) const
 {
 	/**
 		\brief The \f$ M:\hat{E}^{\infty} \f$ component of the stress.
@@ -636,14 +636,14 @@ void Lubrication::addMEStresslet(const matrix& E_inf,
 
 	 */
 	double nnE = dot(nvec, E_inf*(*nvec));
-	StressTensor nvec_nvec(*nvec);
+	Sym2Tensor nvec_nvec = outer(*nvec);
 	double coeff = 1.5*nnE;
 	stresslet_i += coeff*(XM[0]+XM[1])*nvec_nvec; // XME_i
 	stresslet_j += coeff*(XM[2]+XM[3])*nvec_nvec; // XME_j
 	if (tangential) {
 		vec3d Einf_nvec = E_inf*(*nvec);
-		StressTensor nvec_Einf_nvec(*nvec, Einf_nvec);
-		StressTensor nvec_Einf_nvec__nnE_nvec_nvec = 2*(nvec_Einf_nvec-nnE*nvec_nvec);
+		Sym2Tensor nvec_Einf_nvec = outer_sym(*nvec, Einf_nvec);
+		Sym2Tensor nvec_Einf_nvec__nnE_nvec_nvec = 2*(nvec_Einf_nvec-nnE*nvec_nvec);
 		stresslet_i += (YM[0]+YM[1])*nvec_Einf_nvec__nnE_nvec_nvec; // YME_i
 		stresslet_j += (YM[2]+YM[3])*nvec_Einf_nvec__nnE_nvec_nvec; // YME_j
 	}

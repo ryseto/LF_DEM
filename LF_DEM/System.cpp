@@ -86,7 +86,6 @@ ratio_unit_time(NULL),
 eventLookUp(NULL)
 {
 	max_sliding_velocity = 0;
-	total_stress = 0;
 	lx = 0;
 	ly = 0;
 	lz = 0;
@@ -1753,7 +1752,7 @@ void System::computeVelocityByComponents()
 		CALL_MEMBER_FN(*this, fc.second.getForceTorque)(fc.second.force, fc.second.torque);
 		setSolverRHS(fc.second);
 		stokes_solver.solve(velocity_components[fc.first].vel,
-							velocity_components[fc.first].ang_vel);
+		                    velocity_components[fc.first].ang_vel);
 	}
 	if (brownian && twodimension) {
 		rushWorkFor2DBrownian(velocity_components["brownian"].vel,
@@ -1780,8 +1779,8 @@ void System::computeShearRate()
 	 \brief Compute the shear rate under stress control conditions.
 	 */
 	calcStressPerParticle();
-	StressTensor rate_prop_stress;
-	StressTensor rate_indep_stress;
+	Sym2Tensor rate_prop_stress;
+	Sym2Tensor rate_indep_stress;
 	gatherStressesByRateDependencies(rate_prop_stress, rate_indep_stress);
 	double newtonian_viscosity = shearStressComponent(rate_prop_stress, p.theta_shear); // computed with rate=1, o here it is also the viscosity.
 	double newtonian_stress = target_stress - shearStressComponent(rate_indep_stress, p.theta_shear);

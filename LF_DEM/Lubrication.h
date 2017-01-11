@@ -19,7 +19,7 @@
 #include <iomanip>
 #include <fstream>
 #include "vec3d.h"
-#include "StressTensor.h"
+#include "Sym2Tensor.h"
 #include "MatrixBlocks.h"
 
 class System;
@@ -125,11 +125,11 @@ private:
 	vec3d getTotalForce() const;
 
 	void addMEStresslet(const matrix& E_inf,
-	                    StressTensor& stresslet_i,
-	                    StressTensor& stresslet_j) const;
+	                    Sym2Tensor& stresslet_i,
+	                    Sym2Tensor& stresslet_j) const;
 	void addGUStresslet(const vec3d& vi, const vec3d& vj,
 	                    const vec3d& oi, const vec3d& oj,
-	                    StressTensor& stresslet_i, StressTensor& stresslet_j) const;
+	                    Sym2Tensor& stresslet_i, Sym2Tensor& stresslet_j) const;
 	void updateResistanceCoeff();
 	void setResistanceCoeff(double normal_rc, double tangent_rc);
 	//void setResistanceCoeffTang(double tangent_rc);

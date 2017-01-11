@@ -672,7 +672,7 @@ void Simulation::outputData()
 		cerr << "Warning, particle stress data output temporarily disabled " << endl;
 		// for (int i=0; i<sys.get_np(); i++) {
 		// 	if (p.out_particle_stress.find('t') != string::npos) {
-		// 		StressTensor s = sys.lubstress[i]+sys.contactstressXF[i]+sys.contactstressGU[i];
+		// 		Sym2Tensor s = sys.lubstress[i]+sys.contactstressXF[i]+sys.contactstressGU[i];
 		// 		if (sys.brownian) {
 		// 			s += sys.brownianstressGU[i];
 		// 		}
@@ -832,7 +832,7 @@ void Simulation::outputIntFileTxt()
 	for (const auto &inter: sys.interaction) {
 		unsigned int i, j;
 		std::tie(i, j) = inter.get_par_num();
-		StressTensor stress_contact = inter.contact.getContactStressXF();
+		Sym2Tensor stress_contact = inter.contact.getContactStressXF();
 		outdata_int.entryData("particle 1 label", "none", 1, i);
 		outdata_int.entryData("particle 2 label", "none", 1, j);
 		outdata_int.entryData("contact state "
