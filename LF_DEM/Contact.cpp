@@ -450,7 +450,7 @@ void Contact::addUpStress(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1)
 void Contact::addUpStressSpring(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1) const
 {
 	Sym2Tensor spring_stress;
-	spring_stress = outer_sym(interaction->rvec, getTotalForce());
+	spring_stress = outer_sym(interaction->rvec, f_spring_total);
 	double r_ij = get_rcontact();
 	stress_p0 += (a0/r_ij)*spring_stress;
 	stress_p1 += (a1/r_ij)*spring_stress;
