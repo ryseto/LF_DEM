@@ -84,52 +84,16 @@ public:
     }
   }
 
-  /*  N1 = Sxx-Szz;
-   */
-  double getNormalStress1()
-  {
-    return elm[0]-elm[5];
-  }
+	vec3d diag()
+	{
+		return {elm[0], elm[4], elm[5]};
+	}
 
-  /*  N2 = Szz-Syy;
-   */
-  double getNormalStress2()
-  {
-    return elm[5]-elm[4];
-  }
-
-  double getParticlePressure()
-  {
-    return -(1./3)*(elm[0]+elm[4]+elm[5]);
-  }
-
+	double trace()
+	{
+		return elm[0]+elm[4]+elm[5];
+	}
 };
-
-// Helper functions
-inline double shearStressComponent(const Sym2Tensor& s, double theta_shear)
-{
-  return cos(theta_shear)*s.elm[2]+sin(theta_shear)*s.elm[3];
-}
-
-inline Sym2Tensor outer_sym(const vec3d& v1, const vec3d& v2)
-{
-  return {v1.x*v2.x, //xx
-          0.5*(v1.x*v2.y+v1.y*v2.x), //xy
-          0.5*(v1.x*v2.z+v1.z*v2.x), //xz
-          0.5*(v1.y*v2.z+v1.z*v2.y), //yz
-          v1.y*v2.y, //yy
-          v1.z*v2.z}; //zz
-}
-
-inline Sym2Tensor outer(const vec3d& v)
-{
-  return {v.x*v.x,
-          v.x*v.y,
-          v.x*v.z,
-          v.y*v.z,
-          v.y*v.y,
-          v.z*v.z};
-}
 
 inline Sym2Tensor operator + (const Sym2Tensor& s)
 {
@@ -213,6 +177,8 @@ inline Sym2Tensor operator / (const Sym2Tensor& s,
           s.elm[5]/a};
 }
 
+// Helper functions
+
 inline vec3d dot(const Sym2Tensor& s,
                  const vec3d& v)
 {
@@ -227,4 +193,35 @@ inline vec3d dot(const vec3d& v,
 {
 	return dot(s, v);   // s is symmetric
 }
+
+inline double doubledot(const Sym2Tensor& s1, const Sym2Tensor& s2)
+{
+	return   s1.elm[0]*s2.elm[0]
+	       + 2*s1.elm[1]*s2.elm[1]
+	       + 2*s1.elm[2]*s2.elm[2]
+	       + 2*s1.elm[3]*s2.elm[3]
+	       + s1.elm[4]*s2.elm[4]
+	       + s1.elm[5]*s2.elm[5];
+}
+
+inline Sym2Tensor outer_sym(const vec3d& v1, const vec3d& v2)
+{
+  return {v1.x*v2.x, //xx
+          0.5*(v1.x*v2.y+v1.y*v2.x), //xy
+          0.5*(v1.x*v2.z+v1.z*v2.x), //xz
+          0.5*(v1.y*v2.z+v1.z*v2.y), //yz
+          v1.y*v2.y, //yy
+          v1.z*v2.z}; //zz
+}
+
+inline Sym2Tensor outer(const vec3d& v)
+{
+  return {v.x*v.x,
+          v.x*v.y,
+          v.x*v.z,
+          v.y*v.z,
+          v.y*v.y,
+          v.z*v.z};
+}
+
 #endif

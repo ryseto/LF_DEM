@@ -10,6 +10,7 @@
 #include <sstream>
 #include <cmath>
 #include <stdexcept>
+#include <assert.h>
 #include "SystemHelperFunctions.h"
 #include "global.h"
 
@@ -93,8 +94,6 @@ eventLookUp(NULL)
 	time_in_simulation_units = 0;
 	shear_strain = 0;
 	cumulated_strain = 0;
-	costheta_shear = 1;
-	sintheta_shear = 0;
 }
 
 System::~System()
@@ -646,8 +645,7 @@ void System::timeStepBoxing()
 		\brief Apply a strain step to the boxing system.
 	 */
 	if (!zero_shear) {
-		vec3d strain_increment = {costheta_shear, sintheta_shear, 0};
-		strain_increment *= dt*shear_rate;
+		vec3d strain_increment = 2*dot(E_infinity, {0, 0, 1})*dt;
 		cumulated_strain += strain_increment.norm();
 		shear_strain += strain_increment;
 		shear_disp += strain_increment*lz;
@@ -663,8 +661,7 @@ void System::timeStepBoxing()
 		shear_disp.y = shear_disp.y-m*ly;
 	} else {
 		if (wall_rheology || p.simulation_mode == 31) {
-			vec3d strain_increment = {costheta_shear, sintheta_shear, 0};
-			strain_increment *= dt*shear_rate;
+			vec3d strain_increment = 2*dot(E_infinity, {0, 0, 1})*dt;
 			cumulated_strain += strain_increment.norm();
 			shear_strain += strain_increment;
 			angle_wheel += dt*(omega_wheel_in-omega_wheel_out);
@@ -1762,15 +1759,46 @@ void System::computeVelocityByComponents()
 
 void System::setVelocityDifference()
 {
-	vel_difference = {costheta_shear*shear_rate*lz,
-	                  sintheta_shear*shear_rate*lz,
-	                  0};
+	vel_difference = 2*dot(E_infinity, {0, 0, lz});
 }
 
 void System::set_shear_rate(double sr)
 {
 	shear_rate = sr;
+	omega_inf = omegahat_inf*shear_rate;
+	E_infinity = Ehat_infinity*shear_rate;
 	setVelocityDifference();
+}
+
+void System::setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty)
+{
+	Ehat_infinity = EhatInfty;
+	omegahat_inf = OhatInfty;
+	if(twodimension) {
+		if (fabs(Ehat_infinity.elm[3])>1e-15 || fabs(Ehat_infinity.elm[4])>1e-15) {
+			throw runtime_error(" System:: Error: 2d simulation with Einf_{y?} != 0");
+		} else {
+			Ehat_infinity.elm[3] = 0;
+			Ehat_infinity.elm[4] = 0;
+		}
+		if (fabs(omegahat_inf.x)>1e-15 || fabs(omegahat_inf.z)>1e-15) {
+			throw runtime_error(" System:: Error: 2d simulation with Omega_inf not along y");
+		} else {
+			omegahat_inf.x = 0;
+			omegahat_inf.z = 0;
+		}
+	}
+	omega_inf = omegahat_inf*shear_rate;
+	E_infinity = Ehat_infinity*shear_rate;
+	setVelocityDifference();
+}
+
+void System::setShearDirection(double theta_shear) // will probably be deprecated soon
+{
+	double costheta_shear = cos(theta_shear);
+	double sintheta_shear = sin(theta_shear);
+	setImposedFlow({0, 0, costheta_shear/2, sintheta_shear/2, 0, 0},
+	               {-0.5*sintheta_shear, 0.5*costheta_shear, 0});
 }
 
 void System::computeShearRate()
@@ -1778,12 +1806,13 @@ void System::computeShearRate()
 	/**
 	 \brief Compute the shear rate under stress control conditions.
 	 */
+	assert(abs(shear_rate-1) < 1e-15);
 	calcStressPerParticle();
 	Sym2Tensor rate_prop_stress;
 	Sym2Tensor rate_indep_stress;
 	gatherStressesByRateDependencies(rate_prop_stress, rate_indep_stress);
-	double newtonian_viscosity = shearStressComponent(rate_prop_stress, p.theta_shear); // computed with rate=1, o here it is also the viscosity.
-	double newtonian_stress = target_stress - shearStressComponent(rate_indep_stress, p.theta_shear);
+	double newtonian_viscosity = doubledot(rate_prop_stress, getEinfty()); // computed with rate=1, o here it is also the viscosity.
+	double newtonian_stress = target_stress - doubledot(rate_indep_stress, getEinfty());
 
 	set_shear_rate(newtonian_stress/newtonian_viscosity);
 	if (cumulated_strain < init_strain_shear_rate_limit) {
@@ -1910,8 +1939,7 @@ void System::tmpMixedProblemSetVelocities()
 		static double time_next = p.strain_reversal;
 		if (time_ > time_next) {
 			p.theta_shear += M_PI;
-			costheta_shear = cos(p.theta_shear);
-			sintheta_shear = sin(p.theta_shear);
+			setShearDirection(p.theta_shear);
 			time_next += p.strain_reversal;
 		}
 	} else if (p.simulation_mode == 31) {
@@ -2098,10 +2126,7 @@ void System::computeUInf()
 	for (int i=0; i<np; i++) {
 		u_inf[i].reset();
 	}
-	omega_inf.reset();
 	if (!zero_shear) {
-		omega_inf = omegahat_inf*shear_rate;
-		E_infinity = Ehat_infinity*shear_rate;
 		for (int i=0; i<np; i++) {
 			u_inf[i] = dot(E_infinity, position[i]) + cross(omega_inf, position[i]);
 		}

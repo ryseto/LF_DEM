@@ -121,7 +121,6 @@ void Simulation::handleEventsFragility()
 		}
 	}
 	if (p.disp_max < 1e-6 || sys.get_cumulated_strain() > 3.) {
-		p.cross_shear = true; //!p.cross_shear;
 		p.disp_max = p_initial.disp_max;
 		cout << "Event Fragility : starting cross shear" << endl;
 	}
@@ -187,7 +186,6 @@ void Simulation::setupOptionalSimulation(string indent)
 			cout << indent << "Test simulation for relax" << endl;
 			sys.zero_shear = true;
 			sys.mobile_fixed = true;
-			sys.p.cross_shear = false;
 			break;
 		case 11: //ctest1
 			cout << indent << "Test simulation with co-axial cylinders (rotate outer clynder)" << endl;
@@ -215,7 +213,6 @@ void Simulation::setupOptionalSimulation(string indent)
 			break;
 		case 21:
 			cout << indent << "Test simulation for shear reversibility" << endl;
-			sys.p.cross_shear = true;
 			break;
 		case 31:
 			cout << indent << "Test simulation (wtest1), simple shear with walls" << endl;
@@ -581,7 +578,7 @@ void Simulation::outputData()
 
 	outdata.setUnit(output_unit_scales);
 	double sr = sys.get_shear_rate();
-	double shear_stress = shearStressComponent(sys.total_stress, p.theta_shear);
+	double shear_stress = doubledot(sys.total_stress, sys.getEinfty()/sr);
 	outdata.entryData("time", "time", 1, sys.get_time());
 	if (sys.get_omega_wheel() == 0 || sys.wall_rheology == false) {
 		// Simple shear geometry
@@ -595,16 +592,17 @@ void Simulation::outputData()
 	outdata.entryData("viscosity", "viscosity", 1, shear_stress/sr);
 	for (const auto &stress_comp: sys.total_stress_groups) {
 		string entry_name = "Viscosity("+stress_comp.first+")";
-		outdata.entryData(entry_name, "viscosity", 1, shearStressComponent(stress_comp.second, p.theta_shear)/sr);
+		outdata.entryData(entry_name, "viscosity", 1, doubledot(stress_comp.second, sys.getEinfty()/sr)/sr);
 	}
 	/*
 	 * Stress
 	 */
 	outdata.entryData("shear stress", "stress", 1, shear_stress);
-	outdata.entryData("N1 viscosity", "viscosity", 1, sys.total_stress.getNormalStress1()/sr);
-	outdata.entryData("N2 viscosity", "viscosity", 1, sys.total_stress.getNormalStress2()/sr);
-	outdata.entryData("particle pressure", "stress", 1, sys.total_stress.getParticlePressure());
-	outdata.entryData("particle pressure contact", "stress", 1, sys.total_stress_groups["contact"].getParticlePressure());
+	auto stress_diag = sys.total_stress.diag();
+	outdata.entryData("N1 viscosity", "viscosity", 1, (stress_diag.x-stress_diag.z)/sr);
+	outdata.entryData("N2 viscosity", "viscosity", 1, (stress_diag.z-stress_diag.y)/sr);
+	outdata.entryData("particle pressure", "stress", 1, -sys.total_stress.trace()/3);
+	outdata.entryData("particle pressure contact", "stress", 1, -sys.total_stress_groups["contact"].trace()/3);
 	/* energy
 	 */
 	outdata.entryData("energy", "none", 1, getPotentialEnergy(sys));
@@ -636,11 +634,7 @@ void Simulation::outputData()
 	outdata.entryData("kt", "none", 1, p.kt);
 	outdata.entryData("kr", "none", 1, p.kr);
 	vec3d shear_strain = sys.get_shear_strain();
-	if(!p.cross_shear) {
-		outdata.entryData("shear strain", "none", 1, shear_strain.x);
-	} else {
-		outdata.entryData("shear strain", "none", 3, shear_strain);
-	}
+	outdata.entryData("shear strain", "none", 3, shear_strain);
 	if (sys.wall_rheology) {
 		outdata.entryData("shear viscosity wall 1", "viscosity", 1, sys.shearstress_wall1/sr);
 		outdata.entryData("shear viscosity wall 2", "viscosity", 1, sys.shearstress_wall2/sr);
@@ -829,6 +823,7 @@ void Simulation::outputIntFileTxt()
 	outdata_int.setUnit(output_unit_scales);
 	stringstream snapshot_header;
 	getSnapshotHeader(snapshot_header);
+	double sr = sys.get_shear_rate();
 	for (const auto &inter: sys.interaction) {
 		unsigned int i, j;
 		std::tie(i, j) = inter.get_par_num();
@@ -873,7 +868,7 @@ void Simulation::outputIntFileTxt()
 							  inter.repulsion.getForceNorm());
 		if (diminish_output == false) {
 			outdata_int.entryData("Viscosity contribution of contact xF", "stress", 1, \
-								  shearStressComponent(stress_contact, p.theta_shear));
+								  doubledot(stress_contact, sys.getEinfty()/sr)/sr);
 		}
 	}
 	outdata_int.writeToFile(snapshot_header.str());

@@ -695,8 +695,6 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		input_values[keyword] = str2DimensionalValue("force", keyword, value, force_value_ptr[keyword]);
 	} else if (keyword == "fixed_dt") {
 		p.fixed_dt = str2bool(value);
-	} else if (keyword == "cross_shear") {
-		p.cross_shear = str2bool(value);
 	} else if (keyword == "theta_shear") {
 		p.theta_shear = atof(value.c_str());
 		p.theta_shear *= M_PI/180;  // convert in radians
@@ -830,7 +828,6 @@ void Simulation::setDefaultParameters(string input_scale)
 	autoSetParameters("out_binary_conf", "false");
 	autoSetParameters("out_data_vel_components", "false");
 	autoSetParameters("fixed_dt", "false");
-	autoSetParameters("cross_shear", "false");
 	autoSetParameters("theta_shear", "0");
 	autoSetParameters("event_handler", "");
 	autoSetParameters("simulation_mode", "0");

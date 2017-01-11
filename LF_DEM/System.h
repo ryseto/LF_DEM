@@ -70,8 +70,6 @@ private:
 	vec3d shear_strain;
 	double cumulated_strain;
 	double angle_wheel; // rotational angle of rotary couette geometory
-	double costheta_shear;
-	double sintheta_shear;
 	Sym2Tensor Ehat_infinity; // E/shear_rate: "shape" of the flow
 	vec3d omegahat_inf;  // omega/shear_rate: "shape" of the flow
 	Sym2Tensor E_infinity;
@@ -453,22 +451,8 @@ private:
 		return E_infinity;
 	}
 
-	void setShearDirection(double theta_shear)
-	{
-		costheta_shear = cos(theta_shear);
-		sintheta_shear = sin(theta_shear);
-		if (twodimension) {
-			if (std::abs(sintheta_shear) > 1e-10) {
-				throw std::runtime_error(" System:: Error: 2d simulation with sin(theta_shear) != 0");
-			} else { // to avoid sintheta_shear = 1e-16, which takes particles out of plane after a while
-				sintheta_shear = 0;
-			}
-		}
-		Ehat_infinity = {0, 0, costheta_shear/2, sintheta_shear/2, 0, 0};
-		omegahat_inf = {-0.5*sintheta_shear, 0.5*costheta_shear, 0};
-		setVelocityDifference();
-	}
-
+	void setShearDirection(double theta_shear);
+	void setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty);
 	const std::vector <vec3d> & getNonAffineDisp()
 	{
 		return na_disp;
