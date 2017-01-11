@@ -213,7 +213,7 @@ inline  Sym2Tensor operator * (const Sym2Tensor& s,
 }
 
 template <typename T>
-friend Sym2Tensor operator / (const Sym2Tensor& s,
+inline Sym2Tensor operator / (const Sym2Tensor& s,
                               const T& a)
 {
   return {s.elm[0]/a,
