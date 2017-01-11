@@ -428,7 +428,7 @@ void Simulation::exportForceAmplitudes()
 	cout << indent+"Normal contact stiffness (in \"" << input_values["kn"].unit << "\" units): " << p.kn << endl;
 	cout << indent+"Sliding contact stiffness (in \"" << input_values["kt"].unit << "\" units): " << p.kt << endl;
 	cout << indent+"Rolling contact stiffness (in \"" << input_values["kr"].unit << "\" units): " << p.kr << endl;
-	
+
 	if (input_values.find("hydro") != input_values.end()) { // == if rate controlled
 		sys.set_shear_rate(*(input_values["hydro"].value));
 	}
@@ -582,7 +582,7 @@ void Simulation::setupSimulation(string in_args,
 	setupNonDimensionalization(dimensionlessnumber, input_scale);
 
 	assertParameterCompatibility();
-	
+
 	if (input_files[3] != "not_given") {
 		throw runtime_error("pre-simulation data deprecated?");
 	}
@@ -651,7 +651,7 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		input_values[keyword] = str2DimensionalValue("force", keyword, value, force_value_ptr[keyword]);
 	} else if (keyword == "monolayer") {
 		p.monolayer = str2bool(value);
-	} else if (keyword == "repulsiveforce_length") {
+	} else if (keyword == "repulsive_length") {
 		p.repulsive_length = atof(value.c_str());
 	} else if (keyword == "repulsive_max_length") {
 		p.repulsive_max_length = atof(value.c_str());
@@ -819,97 +819,65 @@ void Simulation::setDefaultParameters(string input_scale)
 	/**
 	 \brief Set default values for ParameterSet parameters.
 	 */
-	p.Pe_switch = 5;
-	p.dt = 1e-4;
-	p.disp_max = 1e-3;
-	p.monolayer = false;
-	p.rest_threshold = 1e-4;
-	p.integration_method = 1;
-	p.np_fixed = 0;
-	/*
-	 * Stokes drag coeffient
-	 */
-	p.sd_coeff = 1;
-	/*
-	 * Lubrication model
-	 * 0 no lubrication
-	 * 1 1/xi lubrication (only squeeze mode)
-	 * 2 log(1/xi) lubrication
-	 * 3 ???
-	 */
-	p.lubrication_model = "tangential";
-	/*
-	 * 0 No friction
-	 * 1 Linear friction law Ft < mu Fn
-	 * 2 Threshold friction without repulsive force
-	 * 3 Threshold friction without repulsion + mu inf
-	 */
-	p.friction_model = 1;
-	input_values["time_end"] = str2DimensionalValue("time", "time_end", "10h", &p.time_end);
-	p.lub_max_gap = 0.5;
-	/* This is cutoff distance (center-to-center) for interactions (repulsive force, etc.).
-	 * If interaction_range is not indicated, this value will be set from lub_max_gap.
-	 */
-	p.interaction_range = -1;
-	/*
-	 * reduced_gap_min: gives reduced lubrication (maximum coeeffient).
-	 *
-	 */
-	p.lub_reduce_parameter = 1e-3;
-	/*
-	 * contact_relaxation_factore
-	 *
-	 * This gives the coeffient of the resistance term for h < 0.
-	 * - If the value is negative, the value of 1/lub_reduce_parameter is used.
-	 *
-	 */
-	input_values["contact_relaxation_time"] = str2DimensionalValue("time", "contact_relaxation_time", "1e-3"+input_scale, &p.contact_relaxation_time);
-	input_values["contact_relaxation_time_tan"] = str2DimensionalValue("time", "contact_relaxation_time_tan", "-1"+input_scale, &p.contact_relaxation_time_tan);
+	autoSetParameters("Pe_switch", "5");
+	autoSetParameters("dt", "1e-4");
+	autoSetParameters("disp_max", "1e-3");
+	autoSetParameters("monolayer", "false");
+	autoSetParameters("rest_threshold", "1e-4");
+	autoSetParameters("integration_method", "1");
+	autoSetParameters("np_fixed", "0");
+	autoSetParameters("sd_coeff", "1");
+	autoSetParameters("lubrication_model", "tangential");
+	autoSetParameters("friction_model", "1");
+	autoSetParameters("time_end", "10h");
+	autoSetParameters("lub_max_gap", "0.5");
+	autoSetParameters("interaction_range", "-1");
+	autoSetParameters("lub_reduce_parameter", "1e-3");
+	autoSetParameters("contact_relaxation_time", "1e-3"+input_scale);
+	autoSetParameters("contact_relaxation_time_tan", "-1"+input_scale);
 	if (input_scale != "kn") {
-		input_values["kn"] = str2DimensionalValue("force", "kn", "2000"+input_scale, &p.kn);
+		autoSetParameters("kn", "2000"+input_scale);
+		autoSetParameters("min_kn", "1000"+input_scale);
+		autoSetParameters("max_kn", "1000000"+input_scale);
 	}
 	if (input_scale != "kt") {
-		input_values["kt"] = str2DimensionalValue("force", "kt", "0.5kn", &p.kt);
+		autoSetParameters("kt", "0.5kn");
+		autoSetParameters("min_kt", "1000"+input_scale);
+		autoSetParameters("max_kt", "1000000"+input_scale);
 	}
 	if (input_scale != "kr") {
-		input_values["kr"] = str2DimensionalValue("force", "kr", "0kn", &p.kr);
+		autoSetParameters("kr", "0kn");
 	}
-	p.auto_determine_knkt = false;
-	p.overlap_target = 0.05;
-	p.disp_tan_target = 0.05;
-	p.memory_strain_avg = 0.01;
-	p.memory_strain_k = 0.02;
-	p.start_adjust = 0.2;
-	p.min_kn = 1000;
-	p.max_kn = 1000000;
-	p.min_kt = 1000;
-	p.max_kt = 1000000;
-	p.min_dt = 1e-7;
-	p.max_dt = 1e-3;
-	p.repulsive_length = 0.05;
-	p.repulsive_max_length = -1;
-	p.mu_static = 1;
-	p.mu_dynamic = -1;
-	p.mu_rolling = 0;
-	input_values["time_interval_output_data"] = str2DimensionalValue("time", "time_interval_output_data", "1e-2h", &p.time_interval_output_data);
-	input_values["time_interval_output_config"] = str2DimensionalValue("time", "time_interval_output_config", "1e-1h", &p.time_interval_output_config);
-	p.log_time_interval = false;
-	input_values["initial_log_time"] = str2DimensionalValue("time", "initial_log_time", "1e-4h", &p.initial_log_time);
-	p.nb_output_data_log_time = 100;
-	p.nb_output_config_log_time = 100;
-	p.origin_zero_flow = true;
-	p.out_data_particle = true;
-	p.out_data_interaction = true;
-	p.out_particle_stress = "";
-	p.out_binary_conf = false;
-	p.out_data_vel_components = false;
-	p.ft_max = 1;
-	p.fixed_dt = false;
-	p.cross_shear = false;
-	p.theta_shear = 0;
-	p.event_handler = "";
-	p.simulation_mode = 0;
+	autoSetParameters("auto_determine_knkt", "false");
+	autoSetParameters("overlap_target", "0.05");
+	autoSetParameters("disp_tan_target", "0.05");
+	autoSetParameters("memory_strain_avg", "0.01");
+	autoSetParameters("memory_strain_k", "0.02");
+	autoSetParameters("start_adjust", "0.2");
+	autoSetParameters("repulsive_length", "0.05");
+	autoSetParameters("repulsive_max_length", "-1");
+	autoSetParameters("mu_static", "1");
+	autoSetParameters("mu_dynamic", "-1");
+	autoSetParameters("mu_rolling", "0");
+	autoSetParameters("time_interval_output_data", "1e-2h");
+	autoSetParameters("time_interval_output_config", "1e-1h");
+	autoSetParameters("log_time_interval", "false");
+	autoSetParameters("initial_log_time", "1e-4h");
+	autoSetParameters("nb_output_data_log_time", "100");
+	autoSetParameters("nb_output_config_log_time", "100");
+	autoSetParameters("origin_zero_flow", "true");
+	autoSetParameters("out_data_particle", "true");
+	autoSetParameters("out_data_interaction", "true");
+	autoSetParameters("out_particle_stress", "");
+	autoSetParameters("out_binary_conf", "false");
+	autoSetParameters("out_data_vel_components", "false");
+	autoSetParameters("fixed_dt", "false");
+	autoSetParameters("cross_shear", "false");
+	autoSetParameters("theta_shear", "0");
+	autoSetParameters("event_handler", "");
+	autoSetParameters("simulation_mode", "0");
 }
+
 
 inline string columnDefinition(int &cnb, const string &type, const string &name)
 {

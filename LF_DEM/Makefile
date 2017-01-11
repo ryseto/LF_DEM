@@ -12,9 +12,9 @@ ifneq ("$(wildcard $(makeconfig))","")
 endif
 
 # Compilation Flags
-CXXFLAGS_optimized = -O3 -std=c++11
-CXXFLAGS_debug = -g -DDEV="1" -std=c++11
-CXXFLAGS_dev = -O3 -DDEV="1" -std=c++11
+CXXFLAGS_optimized = -O3
+CXXFLAGS_debug = -g -DDEV="1"
+CXXFLAGS_dev = -O3 -DDEV="1"
 
 GPP_Warnings = -Wall
 ifeq ($(CXX),$(filter $(CXX),g++ clang++))
@@ -46,7 +46,7 @@ ifeq ($(DSFMT_RNG),yes)
 	DSFMT_SRC = dSFMT-src-2.2.3/dSFMT.c
 endif
 
-ifeq ($(UseMetis),yes) 
+ifeq ($(UseMetis),yes)
 	CXXFLAGS_optimized += -DUSE_METIS
 	CXXFLAGS_debug += -DUSE_METIS
 	CXXFLAGS_dev += -DUSE_METIS
@@ -84,13 +84,16 @@ OBJ=$(SRC:.cpp=.o)
 DSFMT_OBJ += $(DSFMT_SRC:.c=.o)
 DATE=$(shell date +%D | sed "s./..g")
 
-all:	CXXFLAGS= $(CXXFLAGS_optimized)
+all:	CXXFLAGS= $(CXXFLAGS_optimized) -std=c++11
+all:	CFLAGS= $(CXXFLAGS_optimized)
 all:	$(OUT_CODE)
 
-debug:	CXXFLAGS= $(CXXFLAGS_debug)
+debug:	CXXFLAGS= $(CXXFLAGS_debug) -std=c++11
+debug:	CFLAGS= $(CXXFLAGS_debug)
 debug:	$(OUT_CODE)
 
-dev:	CXXFLAGS= $(CXXFLAGS_dev)
+dev:	CXXFLAGS= $(CXXFLAGS_dev) -std=c++11
+dev:	CFLAGS= $(CXXFLAGS_dev)
 dev:	$(OUT_CODE)
 
 check:
@@ -108,7 +111,7 @@ $(OBJ): $(SRC)
 	$(CXX) $(CXXFLAGS) $(Includes) -c $(@:.o=.cpp)
 
 $(DSFMT_OBJ): $(DSFMT_SRC)
-	$(CXX) $(CXXFLAGS) -o $@ -c $(@:.o=.c)
+	$(CXX) $(CFLAGS) -o $@ -c $(@:.o=.c)
 
 tar:
 	echo "#define GIT_VERSION \"$(VERSION)\"" > VersionInfo.h
