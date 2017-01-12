@@ -24,6 +24,7 @@
 #include <string>
 #include <tuple>
 #include <map>
+#include "global.h"
 #include "Configuration.h"
 #include "Sym2Tensor.h"
 #include "Interaction.h"
@@ -165,7 +166,7 @@ private:
 	void declareVelocityComponents();
 	void declareForceComponents();
 
-	template<typename T> void setupGenericConfiguration(T conf, std::string control);
+	template<typename T> void setupGenericConfiguration(T conf, ControlVariable control_);
 	void setupBrownian();
 	void setupParameters();
 	void setupParametersContacts();
@@ -191,8 +192,7 @@ private:
 	bool pairwise_resistance;
 	// Simulation parameters
 	bool twodimension;
-	bool rate_controlled;
-	bool stress_controlled;
+	ControlVariable control;
 	bool zero_shear;
 	bool wall_rheology;
 	bool mobile_fixed;
@@ -267,7 +267,7 @@ private:
 	std::map<std::string, ForceComponent> force_components;
 	std::map<std::string, Sym2Tensor> total_stress_groups;
 	std::map<std::string, StressComponent> stress_components;
-	std::map<std::string, VelocityComponent> velocity_components;
+	std::map<std::string, VelocityComponent> na_velo_components;
 	Averager<Sym2Tensor> stress_avg;
 	double dt;
 	double avg_dt;
@@ -318,9 +318,9 @@ private:
 	std::vector <struct contact_state> getContacts();
 	struct base_configuration getConfiguration();
 	void setInteractions_GenerateInitConfig();
-	void setupConfiguration(struct base_configuration c, std::string control);
-	void setupConfiguration(struct fixed_velo_configuration c, std::string control);
-	void setupConfiguration(struct circular_couette_configuration c, std::string control);
+	void setupConfiguration(struct base_configuration c, ControlVariable control_);
+	void setupConfiguration(struct fixed_velo_configuration c, ControlVariable control_);
+	void setupConfiguration(struct circular_couette_configuration c, ControlVariable control_);
 	void allocateRessources();
 	void timeEvolution(double time_end, double strain_end);
 	void displacement(int i, const vec3d& dr);

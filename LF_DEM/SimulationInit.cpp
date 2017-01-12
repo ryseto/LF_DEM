@@ -369,12 +369,12 @@ void Simulation::setupNonDimensionalization(double dimensionlessnumber,
 		This function determines the most appropriate unit scales to use in the System class depending on the input parameters (Brownian/non-Brownian, shear rate, stress/rate controlled), and converts all the input values in these units.
 	 */
 	input_scale = unit_longname[input_scale];
-	if (control_var == "rate") {
+	if (control_var == rate) {
 		input_rate = dimensionlessnumber; // @@@ Renaming is required?
 	}
-	if (control_var == "rate") {
+	if (control_var == rate) {
 		setupNonDimensionalizationRateControlled(dimensionlessnumber, input_scale);
-	} else if (control_var == "stress") {
+	} else if (control_var == stress) {
 		setupNonDimensionalizationStressControlled(dimensionlessnumber, input_scale);
 	} else {
 		ostringstream error_str;
@@ -399,7 +399,7 @@ void Simulation::assertParameterCompatibility()
 			throw runtime_error(error_str.str());
 		}
 	}
-	if (control_var == "stress") {
+	if (control_var == stress) {
 		if (p.integration_method != 0) {
 			cerr << "Warning : use of the Predictor-Corrector method for the stress controlled simulation is experimental." << endl;
 		}
@@ -919,7 +919,16 @@ string Simulation::prepareSimulationName(bool binary_conf,
 			}
 		}
 	}
-	string_control_parameters << "_" << control_var << dimensionlessnumber << input_scale;
+	if (control_var==rate) {
+		string_control_parameters << "_" << "rate";
+	}
+	if (control_var==stress) {
+		string_control_parameters << "_" << "stress";
+	}
+	if (control_var==viscnb) {
+		string_control_parameters << "_" << "viscnb";
+	}
+	string_control_parameters << dimensionlessnumber << input_scale;
 	ss_simu_name << string_control_parameters.str();
 	if (simu_identifier != "") {
 		ss_simu_name << "_";

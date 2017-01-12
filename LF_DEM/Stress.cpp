@@ -24,11 +24,11 @@ void System::declareStressComponents() {
 
 	/*****************  GU stresses *********************/
 	// From the velocity components
-	if (lubrication && velocity_components.empty()) {
+	if (lubrication && na_velo_components.empty()) {
 		throw runtime_error(" System::declareStressComponents: No velocity components declared, you probably forgot it.");
 	}
 	if (lubrication) {
-		for (const auto &vc: velocity_components) {
+		for (const auto &vc: na_velo_components) {
 			if (vc.first != "brownian") {
 				stress_components[vc.first] = StressComponent(VELOCITY_STRESS,
 				                                                vc.second.vel.size(),
@@ -52,7 +52,7 @@ void System::declareStressComponents() {
 	}
 
 	/****************  xF stresses *****************/
-	if (rate_controlled) {
+	if (control==rate) {
 		stress_components["xF_contact"] = StressComponent(XF_STRESS, np, RATE_DEPENDENT, "contact"); // rate dependent through xFdashpot
 	} else { // stress controlled
 		stress_components["xF_contact_rateprop"] = StressComponent(XF_STRESS, np, RATE_PROPORTIONAL, "contact");
@@ -62,7 +62,7 @@ void System::declareStressComponents() {
 		stress_components["xF_repulsion"] = StressComponent(XF_STRESS, np, RATE_INDEPENDENT, "repulsion");
 	}
 
-	if (stress_controlled) {
+	if (control==stress) {
 		for (const auto &sc: stress_components) {
 			if (sc.second.rate_dependence == RATE_DEPENDENT) {
 				ostringstream error_msg;
@@ -126,13 +126,14 @@ void System::gatherVelocitiesByRateDependencies(vector<vec3d> &rateprop_vel,
 			[Note] The rate proportional part is a total velocity, and as such must be dealt with proper Lees-Edwards BC.
 						 The rate independent part is always a non-affine velocity.
 	*/
+	assert(control==stress || control==viscnb);
 	for (unsigned int i=0; i<rateprop_vel.size(); i++) {
 		rateprop_vel[i].reset();
 		rateprop_ang_vel[i].reset();
 		rateindep_vel[i].reset();
 		rateindep_ang_vel[i].reset();
 	}
-	for (const auto &vc: velocity_components) {
+	for (const auto &vc: na_velo_components) {
 		if (vc.second.rate_dependence == RATE_PROPORTIONAL) {
 			for (unsigned int i=0; i<rateprop_vel.size(); i++) {
 				rateprop_vel[i] += vc.second.vel[i];
@@ -243,14 +244,14 @@ void System::calcStressPerParticle()
 		const auto &component_name = sc.first;
 		if (type == VELOCITY_STRESS) {
 			addUpInteractionStressGU(sc.second.particle_stress,
-			                         velocity_components[component_name].vel,
-			                         velocity_components[component_name].ang_vel);
+			                         na_velo_components[component_name].vel,
+			                         na_velo_components[component_name].ang_vel);
 		}
 		if (type == STRAIN_STRESS) {
 			addUpInteractionStressME(sc.second.particle_stress);
 		}
 	}
-	if (rate_controlled) {
+	if (control==rate) {
 		auto &cstress_XF = stress_components["xF_contact"].particle_stress;
 		for (auto &inter: interaction) {
 			if (inter.contact.is_active()) {

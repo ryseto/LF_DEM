@@ -150,4 +150,10 @@ inline std::vector<std::string> splitString(const std::string& str){
 	return elements;
 }
 
+enum ControlVariable {
+	rate,
+	stress,
+	viscnb
+};
+
 #endif /* defined(__LF_DEM__global__) */

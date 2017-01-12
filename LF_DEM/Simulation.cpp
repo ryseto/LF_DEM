@@ -276,7 +276,7 @@ void Simulation::simulationSteadyShear(string in_args,
 									   bool binary_conf,
 									   double dimensionless_number,
 									   string input_scale,
-									   string control_variable,
+									   ControlVariable control_variable,
 									   string simu_identifier)
 {
 	string indent = "  Simulation::\t";
@@ -327,7 +327,7 @@ void Simulation::simulationInverseYield(string in_args,
 										bool binary_conf,
 										double dimensionless_number,
 										string input_scale,
-										string control_variable,
+										ControlVariable control_variable,
 										string simu_identifier)
 {
 	control_var = control_variable;
@@ -545,9 +545,9 @@ double Simulation::getRate()
 	/**
 	 \brief The shear rate in the input units
 	 */
-	if (control_var == "rate") {
+	if (control_var == rate) {
 		return input_rate;
-	} else if (control_var == "stress") {
+	} else if (control_var == stress) {
 		return sys.get_shear_rate();
 	} else {
 		return 1;
@@ -802,7 +802,7 @@ void Simulation::outputParFileTxt()
 		}
 
 		if (p.out_data_vel_components) {
-			for (const auto &vc: sys.velocity_components) {
+			for (const auto &vc: sys.na_velo_components) {
 				string entry_name_vel = "non-affine "+vc.first+" velocity (x, y, z)";
 				string entry_name_ang_vel = "non-affine angular "+vc.first+" velocity (x, y, z)";
 				outdata_par.entryData(entry_name_vel, "velocity", 3, vc.second.vel[i]);
