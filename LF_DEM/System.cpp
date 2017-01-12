@@ -498,13 +498,13 @@ void System::setupGenericConfiguration(T conf, ControlVariable control_){
 
 void System::setupConfiguration(struct base_configuration conf, ControlVariable control_)
 {
-	setupGenericConfiguration(conf, control);
+	setupGenericConfiguration(conf, control_);
 }
 
 void System::setupConfiguration(struct fixed_velo_configuration conf, ControlVariable control_)
 {
 	p.np_fixed = conf.fixed_velocities.size();
-	setupGenericConfiguration(conf, control);
+	setupGenericConfiguration(conf, control_);
 	setFixedVelocities(conf.fixed_velocities);
 }
 
@@ -516,7 +516,7 @@ void System::setupConfiguration(struct circular_couette_configuration conf, Cont
 	radius_in = conf.radius_in;
 	radius_out = conf.radius_out;
 
-	setupGenericConfiguration(conf, control);
+	setupGenericConfiguration(conf, control_);
 }
 
 void System::setupSystemPostConfiguration()
@@ -819,7 +819,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		}
 	}
 	timeStepMove(time_end, strain_end);
-	for (unsigned int i=0; i<np; i++) {
+	for (int i=0; i<np; i++) {
 		na_disp[i] += na_velocity[i]*dt;
 	}
 	if (eventLookUp != NULL) {
@@ -924,7 +924,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 		}
 	}
 	timeStepMoveCorrector();
-	for (unsigned int i=0; i<np; i++) {
+	for (int i=0; i<np; i++) {
 		na_disp[i] += na_velocity[i]*dt;
 	}
 }
@@ -1573,7 +1573,6 @@ void System::setHydroForceToParticle_squeeze(vector<vec3d> &force,
 {
 	vec3d GEi, GEj;
 	unsigned int i, j;
-	double sr = get_shear_rate();
 	for (const auto &inter: interaction) {
 		if (inter.lubrication.is_active()) {
 			std::tie(i, j) = inter.get_par_num();
@@ -1589,7 +1588,6 @@ void System::setHydroForceToParticle_squeeze_tangential(vector<vec3d> &force,
 {
 	vec3d GEi, GEj, HEi, HEj;
 	unsigned int i, j;
-	double sr = get_shear_rate();
 	for (const auto &inter: interaction) {
 		if (inter.lubrication.is_active()) {
 			std::tie(i, j) = inter.get_par_num();

@@ -17,7 +17,7 @@ CXXFLAGS_debug = -g -DDEV="1"
 CXXFLAGS_dev = -O3 -DDEV="1"
 
 GPP_Warnings = -Wall
-ifeq ($(CXX),$(filter $(CXX),g++ clang++))
+ifeq ($(CXX),$(filter $(CXX),g++ clang++ gcc))
 	CXXFLAGS_optimized += $(GPP_Warnings)
 	CXXFLAGS_debug += -pg $(GPP_Warnings) -Wextra -Wshadow
 	CXXFLAGS_dev += $(GPP_Warnings) -Wextra -Wshadow

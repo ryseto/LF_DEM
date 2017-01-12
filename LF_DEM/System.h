@@ -71,12 +71,12 @@ private:
 	vec3d shear_strain;
 	double cumulated_strain;
 	double angle_wheel; // rotational angle of rotary couette geometory
+	double shear_rate;
 	Sym2Tensor Ehat_infinity; // E/shear_rate: "shape" of the flow
 	vec3d omegahat_inf;  // omega/shear_rate: "shape" of the flow
 	Sym2Tensor E_infinity;
 	vec3d omega_inf;
 
-	double shear_rate;
 	double particle_volume;
 
 	std::vector <vec3d> u_inf;
