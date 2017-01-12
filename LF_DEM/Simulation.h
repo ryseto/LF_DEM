@@ -39,7 +39,6 @@ private:
 	std::map <std::string, std::string> unit_longname;
 	std::map <std::string, DimensionalValue> input_values;
 	std::map <std::string, double*> force_value_ptr;
-	double volume_or_area_fraction;
 	std::string header_imported_configulation[2];
 	std::string control_var;
 	double shear_rate_expectation;
@@ -86,7 +85,7 @@ public:
 							   std::string control_variable,
 							   std::string simu_identifier);
 	// void simulationfinedSequence(std::string seq_type, std::string in_args, std::vector<std::string> &input_files, bool binary_conf, std::string control_variable);
-	
+
 	void simulationInverseYield(std::string in_args,
 								std::vector<std::string>& input_files,
 								bool binary_conf,
@@ -94,7 +93,7 @@ public:
 								std::string input_scale,
 								std::string control_variable,
 								std::string simu_identifier);
-	
+
 	void setupSimulation(std::string in_args,
 						 std::vector<std::string>& input_files,
 						 bool binary_conf,
@@ -142,15 +141,6 @@ public:
 	std::map<std::string,std::string> getConfMetaData(const std::string &, const std::string &);
 	std::string getMetaParameter(std::map<std::string,std::string> &, std::string &, const std::string &);
 	std::string getMetaParameter(std::map<std::string,std::string> &, std::string &);
-	bool isTwoDimension(const std::string&);
-	bool isTwoDimensionBinary(const std::string&);
-	std::pair<int,int> get_np(const std::string&);
-	std::pair<int,int> get_np_Binary(const std::string&);
-	void importConfiguration(const std::string&);
-	void importConfigurationBinary(const std::string&);
-	void readPositionsImposedVelocity(std::fstream &file_import);
-	void readPositions(std::fstream &file_import);
-	void setMetadata(std::fstream &file_import);
 	void exportForceAmplitudes();
 	void setLowPeclet();
 	void changeUnit(DimensionalValue &x, std::string new_unit);

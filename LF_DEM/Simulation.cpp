@@ -121,7 +121,6 @@ void Simulation::handleEventsFragility()
 		}
 	}
 	if (p.disp_max < 1e-6 || sys.get_cumulated_strain() > 3.) {
-		p.cross_shear = true; //!p.cross_shear;
 		p.disp_max = p_initial.disp_max;
 		cout << "Event Fragility : starting cross shear" << endl;
 	}
@@ -187,7 +186,6 @@ void Simulation::setupOptionalSimulation(string indent)
 			cout << indent << "Test simulation for relax" << endl;
 			sys.zero_shear = true;
 			sys.mobile_fixed = true;
-			sys.p.cross_shear = false;
 			break;
 		case 11: //ctest1
 			cout << indent << "Test simulation with co-axial cylinders (rotate outer clynder)" << endl;
@@ -215,7 +213,6 @@ void Simulation::setupOptionalSimulation(string indent)
 			break;
 		case 21:
 			cout << indent << "Test simulation for shear reversibility" << endl;
-			sys.p.cross_shear = true;
 			break;
 		case 31:
 			cout << indent << "Test simulation (wtest1), simple shear with walls" << endl;
@@ -477,20 +474,18 @@ void Simulation::outputConfigurationBinary(string conf_filename)
  	      particle data : [x, y, z, radius]*np, [vx, vy, vz]*np_fixed
  				contact data : as v2
 	 */
-	int np = sys.get_np();
+	auto conf = sys.getConfiguration();
+	int np = conf.position.size();
 	vector< vector<double> > pos(np);
 	int dims = 4;
 	for (int i=0; i<np; i++) {
 		pos[i].resize(dims);
-		pos[i][0] = sys.position[i].x;
-		pos[i][1] = sys.position[i].y;
-		pos[i][2] = sys.position[i].z;
-		pos[i][3] = sys.radius[i];
+		pos[i][0] = conf.position[i].x;
+		pos[i][1] = conf.position[i].y;
+		pos[i][2] = conf.position[i].z;
+		pos[i][3] = conf.radius[i];
 	}
 	ofstream conf_export;
-	double lx = sys.get_lx();
-	double ly = sys.get_ly();
-	double lz = sys.get_lz();
 	conf_export.open(conf_filename.c_str(), ios::binary | ios::out);
 
 	int conf_switch = -1; // older formats did not have labels, -1 signs for a labeled binary
@@ -503,20 +498,20 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 
 	conf_export.write((char*)&np, sizeof(int));
 	if (binary_conf_format == 3) {
-		int np_fixed = sys.get_np() - sys.np_mobile;
+		int np_fixed = sys.fixed_velocities.size();
 		conf_export.write((char*)&np_fixed, sizeof(int));
 	}
-	conf_export.write((char*)&volume_or_area_fraction, sizeof(double));
-	conf_export.write((char*)&lx, sizeof(double));
-	conf_export.write((char*)&ly, sizeof(double));
-	conf_export.write((char*)&lz, sizeof(double));
-	conf_export.write((char*)&(sys.shear_disp.x), sizeof(double));
-	conf_export.write((char*)&(sys.shear_disp.y), sizeof(double));
+	conf_export.write((char*)&conf.volume_or_area_fraction, sizeof(double));
+	conf_export.write((char*)&conf.lx, sizeof(double));
+	conf_export.write((char*)&conf.ly, sizeof(double));
+	conf_export.write((char*)&conf.lz, sizeof(double));
+	conf_export.write((char*)&(conf.lees_edwards_disp.x), sizeof(double));
+	conf_export.write((char*)&(conf.lees_edwards_disp.y), sizeof(double));
 	for (int i=0; i<np; i++) {
 		conf_export.write((char*)&pos[i][0], dims*sizeof(double));
 	}
 	if (binary_conf_format == 3) {
-		int np_fixed = sys.get_np() - sys.np_mobile;
+		int np_fixed = sys.fixed_velocities.size();
 		vector< vector<double> > vel(np_fixed);
 		for (int i=0; i<np_fixed; i++) {
 			vel[i].resize(3);
@@ -528,8 +523,7 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 			conf_export.write((char*)&vel[i][0], 3*sizeof(double));
 		}
 	}
-	vector <struct contact_state> cs;
-	sys.getContacts(cs);
+	const auto &cs = conf.contact_states;
 	int ncont = cs.size();
 	conf_export.write((char*)&ncont, sizeof(unsigned int));
 	for (int i=0; i<ncont; i++) {
@@ -584,7 +578,7 @@ void Simulation::outputData()
 
 	outdata.setUnit(output_unit_scales);
 	double sr = sys.get_shear_rate();
-	double shear_stress = shearStressComponent(sys.total_stress, p.theta_shear);
+	double shear_stress = doubledot(sys.total_stress, sys.getEinfty()/sr);
 	outdata.entryData("time", "time", 1, sys.get_time());
 	if (sys.get_omega_wheel() == 0 || sys.wall_rheology == false) {
 		// Simple shear geometry
@@ -598,16 +592,17 @@ void Simulation::outputData()
 	outdata.entryData("viscosity", "viscosity", 1, shear_stress/sr);
 	for (const auto &stress_comp: sys.total_stress_groups) {
 		string entry_name = "Viscosity("+stress_comp.first+")";
-		outdata.entryData(entry_name, "viscosity", 1, shearStressComponent(stress_comp.second, p.theta_shear)/sr);
+		outdata.entryData(entry_name, "viscosity", 1, doubledot(stress_comp.second, sys.getEinfty()/sr)/sr);
 	}
 	/*
 	 * Stress
 	 */
 	outdata.entryData("shear stress", "stress", 1, shear_stress);
-	outdata.entryData("N1 viscosity", "viscosity", 1, sys.total_stress.getNormalStress1()/sr);
-	outdata.entryData("N2 viscosity", "viscosity", 1, sys.total_stress.getNormalStress2()/sr);
-	outdata.entryData("particle pressure", "stress", 1, sys.total_stress.getParticlePressure());
-	outdata.entryData("particle pressure contact", "stress", 1, sys.total_stress_groups["contact"].getParticlePressure());
+	auto stress_diag = sys.total_stress.diag();
+	outdata.entryData("N1 viscosity", "viscosity", 1, (stress_diag.x-stress_diag.z)/sr);
+	outdata.entryData("N2 viscosity", "viscosity", 1, (stress_diag.z-stress_diag.y)/sr);
+	outdata.entryData("particle pressure", "stress", 1, -sys.total_stress.trace()/3);
+	outdata.entryData("particle pressure contact", "stress", 1, -sys.total_stress_groups["contact"].trace()/3);
 	/* energy
 	 */
 	outdata.entryData("energy", "none", 1, getPotentialEnergy(sys));
@@ -639,11 +634,7 @@ void Simulation::outputData()
 	outdata.entryData("kt", "none", 1, p.kt);
 	outdata.entryData("kr", "none", 1, p.kr);
 	vec3d shear_strain = sys.get_shear_strain();
-	if(!p.cross_shear) {
-		outdata.entryData("shear strain", "none", 1, shear_strain.x);
-	} else {
-		outdata.entryData("shear strain", "none", 3, shear_strain);
-	}
+	outdata.entryData("shear strain", "none", 3, shear_strain);
 	if (sys.wall_rheology) {
 		outdata.entryData("shear viscosity wall 1", "viscosity", 1, sys.shearstress_wall1/sr);
 		outdata.entryData("shear viscosity wall 2", "viscosity", 1, sys.shearstress_wall2/sr);
@@ -675,7 +666,7 @@ void Simulation::outputData()
 		cerr << "Warning, particle stress data output temporarily disabled " << endl;
 		// for (int i=0; i<sys.get_np(); i++) {
 		// 	if (p.out_particle_stress.find('t') != string::npos) {
-		// 		StressTensor s = sys.lubstress[i]+sys.contactstressXF[i]+sys.contactstressGU[i];
+		// 		Sym2Tensor s = sys.lubstress[i]+sys.contactstressXF[i]+sys.contactstressGU[i];
 		// 		if (sys.brownian) {
 		// 			s += sys.brownianstressGU[i];
 		// 		}
@@ -734,12 +725,13 @@ vec3d Simulation::shiftUpCoordinate(double x, double y, double z)
 
 void Simulation::createDataHeader(stringstream& data_header)
 {
+	auto conf = sys.getConfiguration();
 	data_header << "# LF_DEM version " << GIT_VERSION << endl;
-	data_header << "# np " << sys.get_np() << endl;
-	data_header << "# VF " << volume_or_area_fraction << endl;
-	data_header << "# Lx " << sys.get_lx() << endl;
-	data_header << "# Ly " << sys.get_ly() << endl;
-	data_header << "# Lz " << sys.get_lz() << endl;
+	data_header << "# np " << conf.position.size() << endl;
+	data_header << "# VF " << conf.volume_or_area_fraction << endl;
+	data_header << "# Lx " << conf.lx << endl;
+	data_header << "# Ly " << conf.ly << endl;
+	data_header << "# Lz " << conf.lz << endl;
 }
 
 void Simulation::outputDataHeader(ofstream& fout)
@@ -831,10 +823,11 @@ void Simulation::outputIntFileTxt()
 	outdata_int.setUnit(output_unit_scales);
 	stringstream snapshot_header;
 	getSnapshotHeader(snapshot_header);
+	double sr = sys.get_shear_rate();
 	for (const auto &inter: sys.interaction) {
 		unsigned int i, j;
 		std::tie(i, j) = inter.get_par_num();
-		StressTensor stress_contact = inter.contact.getContactStressXF();
+		Sym2Tensor stress_contact = inter.contact.getContactStressXF();
 		outdata_int.entryData("particle 1 label", "none", 1, i);
 		outdata_int.entryData("particle 2 label", "none", 1, j);
 		outdata_int.entryData("contact state "
@@ -875,7 +868,7 @@ void Simulation::outputIntFileTxt()
 							  inter.repulsion.getForceNorm());
 		if (diminish_output == false) {
 			outdata_int.entryData("Viscosity contribution of contact xF", "stress", 1, \
-								  shearStressComponent(stress_contact, p.theta_shear));
+								  doubledot(stress_contact, sys.getEinfty()/sr)/sr);
 		}
 	}
 	outdata_int.writeToFile(snapshot_header.str());

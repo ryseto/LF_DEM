@@ -96,6 +96,7 @@ private:
 	std::pair<std::vector<vec3d>, std::vector<double>>  putRandom(bool twodimension);
 	void setParameters(Simulation &simu);
 	void outputPositionData(const System &sys);
+	template<typename T> void baseSetup(T &conf, bool is2d, double inflate_ratio);
 public:
 	GenerateInitConfig():
 	circulargap_config(false),

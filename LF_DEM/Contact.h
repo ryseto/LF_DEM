@@ -18,8 +18,9 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <vector>
 #include "vec3d.h"
-#include "StressTensor.h"
+#include "Sym2Tensor.h"
 #include "ContactDashpot.h"
 
 class System;
@@ -58,7 +59,7 @@ private:
 	 *       Private Methods         *
 	 *********************************/
 	//===== forces and stresses computations =====//
-	StressTensor contact_stresslet_XF; //stress tensor of contact force
+	Sym2Tensor contact_stresslet_XF; //stress tensor of contact force
 	double f_spring_normal_norm; // normal contact force
 	double normal_load; // compressive load + cohesion. If it is positive, particies are in cohesive contact state.
 	vec3d f_spring_normal; // normal contact force, spring only
@@ -135,9 +136,9 @@ public:
 	vec3d getTangentialForce() const;
 	double get_normal_load() const;
 	void calcContactStress();
-	void addUpStress(StressTensor &stress_p0, StressTensor &stress_p1);
-	void addUpStressSpring(StressTensor &stress_p0, StressTensor &stress_p1) const;
-	StressTensor getContactStressXF() const
+	void addUpStress(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1);
+	void addUpStressSpring(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1) const;
+	Sym2Tensor getContactStressXF() const
 	{
 		return contact_stresslet_XF;
 	}

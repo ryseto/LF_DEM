@@ -73,12 +73,12 @@ void System::declareStressComponents() {
 
 	for (const auto &sc: stress_components) {
 		auto &group = sc.second.group;
-		total_stress_groups[group] = StressTensor();
+		total_stress_groups[group] = Sym2Tensor();
 	}
 }
 
 
-void System::addUpInteractionStressGU(std::vector<StressTensor> &stress_comp,
+void System::addUpInteractionStressGU(std::vector<Sym2Tensor> &stress_comp,
                                       const std::vector<vec3d> &non_affine_vel,
                                       const std::vector<vec3d> &non_affine_ang_vel)
 {
@@ -97,7 +97,7 @@ void System::addUpInteractionStressGU(std::vector<StressTensor> &stress_comp,
 	}
 }
 
-void System::addUpInteractionStressME(std::vector<StressTensor> &stress_comp)
+void System::addUpInteractionStressME(std::vector<Sym2Tensor> &stress_comp)
 {
 	if (!lubrication) {
 		return;
@@ -175,20 +175,20 @@ void System::calcContactXFPerParticleStressControlled()
 		}
 		if (inter.contact.dashpot.is_active()) {
 			// rate_prop_vel is a full velocity (not non affine)
-			StressTensor rateprop_stress = StressTensor(inter.rvec,
-			                                            inter.contact.dashpot.getForceOnP0(rateprop_vel[i],
-			                                                                               rateprop_vel[j],
-			                                                                               rateprop_ang_vel[i],
-			                                                                               rateprop_ang_vel[j]));
+			Sym2Tensor rateprop_stress = outer_sym(inter.rvec,
+			                                       inter.contact.dashpot.getForceOnP0(rateprop_vel[i],
+			                                                                          rateprop_vel[j],
+			                                                                          rateprop_ang_vel[i],
+			                                                                          rateprop_ang_vel[j]));
 			double r_ij = radius[i] + radius[j];
 			rateprop_XF[i] += (radius[i]/r_ij)*rateprop_stress;
 			rateprop_XF[j] += (radius[j]/r_ij)*rateprop_stress;
 
-			StressTensor rateindep_stress = StressTensor(inter.rvec,
-			                                             inter.contact.dashpot.getForceOnP0_nonaffine(rateindep_vel[i],
-			                                                                                          rateindep_vel[j],
-			                                                                                          rateindep_ang_vel[i],
-			                                                                                          rateindep_ang_vel[j]));
+			Sym2Tensor rateindep_stress = outer_sym(inter.rvec,
+			                                        inter.contact.dashpot.getForceOnP0_nonaffine(rateindep_vel[i],
+			                                                                                     rateindep_vel[j],
+			                                                                                     rateindep_ang_vel[i],
+			                                                                                     rateindep_ang_vel[j]));
 			rateindep_XF[i] += (radius[i]/r_ij)*rateindep_stress;
 			rateindep_XF[j] += (radius[j]/r_ij)*rateindep_stress;
 		}
@@ -323,8 +323,8 @@ void System::getStressCouette(int i,
 	stress_rt = -cs*total_stress_pp[i].elm[0]+(cc-ss)*total_stress_pp[i].elm[2]+cs*total_stress_pp[i].elm[5];
 }
 
-void System::gatherStressesByRateDependencies(StressTensor &rate_prop_stress,
-                                              StressTensor &rate_indep_stress)
+void System::gatherStressesByRateDependencies(Sym2Tensor &rate_prop_stress,
+                                              Sym2Tensor &rate_indep_stress)
 {
 	rate_prop_stress.reset();
 	rate_indep_stress.reset();
@@ -341,12 +341,7 @@ void System::gatherStressesByRateDependencies(StressTensor &rate_prop_stress,
 
 	if (!zero_shear) {
 		// suspending fluid viscosity
-		if (p.cross_shear) {
-			rate_prop_stress.elm[2] += costheta_shear*shear_rate/6./M_PI;
-			rate_prop_stress.elm[3] += sintheta_shear*shear_rate/6./M_PI;
-		}	else {
-			rate_prop_stress.elm[2] += shear_rate/6./M_PI;
-		}
+		rate_prop_stress += 2*E_infinity/(6*M_PI);
 	}
 }
 
