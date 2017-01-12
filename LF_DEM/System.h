@@ -336,10 +336,10 @@ private:
 	void calcStress();
 	void calcStressPerParticle();
 	void calcContactXFPerParticleStressControlled();
-	void gatherVelocitiesByRateDependencies(std::vector<vec3d> rateprop_vel,
-											std::vector<vec3d> rateprop_ang_vel,
-											std::vector<vec3d> rateindep_vel,
-											std::vector<vec3d> rateindep_ang_vel) const;
+	void gatherVelocitiesByRateDependencies(std::vector<vec3d> &rateprop_vel,
+	                                        std::vector<vec3d> &rateprop_ang_vel,
+	                                        std::vector<vec3d> &rateindep_vel,
+	                                        std::vector<vec3d> &rateindep_ang_vel) const;
 	void calcTotalStressPerParticle();
 	void getStressCouette(int i,
 						  double &stress_rr,
