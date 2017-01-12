@@ -49,3 +49,4 @@ config/Makefile_config.mk
 # temporary file
 .nfs*
 gmon.out
+LF_DEM_*
