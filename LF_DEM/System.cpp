@@ -1266,18 +1266,14 @@ void System::eraseResistance(int p0, int p1)
 	pairwise_resistance_changed = true;
 }
 
-void System::buildHydroTerms()
+void System::buildResistanceMatrix()
 {
 	/**
-	 \brief Builds the hydrodynamic resistance matrix and hydrodynamic driving force.
+	 \brief Builds the resistance matrix
 
-	 @param build_res_mat Build the resistance matrix
-	 \f$R_{\mathrm{FU}}\f$ (in Bossis and Brady \cite
-	 brady_stokesian_1988 notations) and set it as the current
-	 resistance in the StokesSolver. If false, the resistance in the
-	 StokesSolver is untouched, it is not reset.
-	 @param build_force_GE Build the \f$R_{\mathrm{FE}}:E_{\infty}\f$ force
-	 and \b add it to the right-hand-side of the StokesSolver
+	 The built matrix \f$R_{\mathrm{FU}}\f$ (in Bossis and Brady \cite
+	 brady_stokesian_1988 notations) contains pairwise resistances,
+	 coming from lubrication or contact dashpots.
 	 */
 	unsigned int size_mm = 0;
 	for (auto bnb: nb_blocks_mm) {
@@ -1293,19 +1289,13 @@ void System::buildHydroTerms()
 	}
 
 	// create a new resistance matrix in stokes_solver
-	stokes_solver.resetResistanceMatrix(size_mm, size_mf, size_ff,
-										resistance_matrix_dblock, pairwise_resistance_changed);
-	pairwise_resistance_changed = false;
 	/* [note]
 	 * The resistance matrix is reset with resistance_matrix_dblock,
 	 * which is calculated at the beginning.
 	 */
-	// add GE in the rhs and lubrication terms in the resistance matrix
-	buildResistanceMatrix();
-}
-
-void System::buildResistanceMatrix()
-{
+	stokes_solver.resetResistanceMatrix(size_mm, size_mf, size_ff,
+										resistance_matrix_dblock, pairwise_resistance_changed);
+	pairwise_resistance_changed = false;
 	for (int i=0; i<np-1; i ++) {
 		stokes_solver.startNewColumn();
 		for (auto& inter : interaction_list[i]) {
@@ -1321,6 +1311,7 @@ void System::buildResistanceMatrix()
 	}
 	stokes_solver.matrixFillingDone();
 }
+
 
 void System::computeForcesOnWallParticles()
 {
@@ -1728,7 +1719,7 @@ void System::computeMaxNAVelocity()
 
 void System::computeVelocityWithoutComponents()
 {
-	buildHydroTerms();
+	buildResistanceMatrix();
 	for (auto &fc: force_components) {
 		CALL_MEMBER_FN(*this, fc.second.getForceTorque)(fc.second.force, fc.second.torque);
 		addToSolverRHS(fc.second);
@@ -1744,7 +1735,7 @@ void System::computeVelocityByComponents()
 	/**
 	 \brief Compute velocities component by component.
 	 */
-	buildHydroTerms();
+	buildResistanceMatrix();
 	for (auto &fc: force_components) {
 		CALL_MEMBER_FN(*this, fc.second.getForceTorque)(fc.second.force, fc.second.torque);
 		setSolverRHS(fc.second);

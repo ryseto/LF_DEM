@@ -114,10 +114,10 @@ void System::addUpInteractionStressME(std::vector<Sym2Tensor> &stress_comp)
 	}
 }
 
-void System::gatherVelocitiesByRateDependencies(vector<vec3d> rateprop_vel,
-                                                vector<vec3d> rateprop_ang_vel,
-                                                vector<vec3d> rateindep_vel,
-                                                vector<vec3d> rateindep_ang_vel) const
+void System::gatherVelocitiesByRateDependencies(vector<vec3d> &rateprop_vel,
+                                                vector<vec3d> &rateprop_ang_vel,
+                                                vector<vec3d> &rateindep_vel,
+                                                vector<vec3d> &rateindep_ang_vel) const
 {
 	/** Gather velocity components in rate proportional and rate independent parts.
 			If there is a rate dependent (but not proportional), it is left out.
