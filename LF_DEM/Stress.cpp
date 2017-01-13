@@ -106,10 +106,9 @@ void System::addUpInteractionStressME(std::vector<Sym2Tensor> &stress_comp)
 		if (inter.lubrication.is_active()) {
 			unsigned int i, j;
 			std::tie(i, j) = inter.get_par_num();
-			inter.lubrication.addMEStresslet(costheta_shear,
-											 sintheta_shear,
-											 shear_rate,
-											 stress_comp[i], stress_comp[j]); // R_SE:Einf-R_SU*v
+			inter.lubrication.addMEStresslet(E_infinity,
+											 stress_comp[i],
+											 stress_comp[j]); // R_SE:Einf-R_SU*v
 		}
 	}
 }
@@ -359,14 +358,7 @@ void System::calcStress()
 	}
 
 	if (!zero_shear) {
-		// suspending fluid viscosity
-		if (p.cross_shear) {
-			total_stress_groups["hydro"].elm[2] += costheta_shear*shear_rate/6./M_PI;
-			total_stress_groups["hydro"].elm[3] += sintheta_shear*shear_rate/6./M_PI;
-		} else {
-			StressTensor stress_solvent((shear_rate/(6*M_PI))*E_infinity);
-			total_stress_groups["hydro"] += stress_solvent;
-		}
+		total_stress_groups["hydro"] += 2*E_infinity/(6*M_PI);
 	}
 
 	total_stress.reset();
