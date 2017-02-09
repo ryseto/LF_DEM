@@ -462,8 +462,10 @@ void System::setupGenericConfiguration(T conf, ControlVariable control_){
 	cout << indent << "Setting up System... " << endl;
 	np = conf.position.size();
 	np_mobile = np - p.np_fixed;
-	twodimension = conf.ly == 0;
 	control = control_;
+	
+	setBoxSize(conf.lx,conf.ly,conf.lz);
+	twodimension = ly == 0;
 
 	setupParameters();
 	// Memory
@@ -490,7 +492,6 @@ void System::setupGenericConfiguration(T conf, ControlVariable control_){
 		shear_strain = {0, 0, 0};
 	}
 
-	setBoxSize(conf.lx,conf.ly,conf.lz);
 	setConfiguration(conf.position, conf.radius);
 	setContacts(conf.contact_states);
 	setupSystemPostConfiguration();
