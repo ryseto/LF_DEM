@@ -153,16 +153,11 @@ void System::allocateRessources()
 	nb_blocks_ff.resize(p.np_fixed, 0);
 	nb_blocks_mm.resize(np-p.np_fixed, 0);
 	nb_blocks_mf.resize(np-p.np_fixed, 0);
-	//
-
 	// Forces and Stress
 	forceResultant.resize(np);
 	torqueResultant.resize(np);
-
 	declareStressComponents();
-
 	total_stress_pp.resize(np);
-
 }
 
 void System::declareForceComponents()
@@ -307,7 +302,7 @@ vector <struct contact_state> System::getContacts()
 
 		Used to output a configuration including contact info. Useful if you want to restart from exact same configuration.
 	 */
- vector <struct contact_state> cs;
+	vector <struct contact_state> cs;
 	for (const auto &inter: interaction) {
 		if (inter.contact.is_active()) {
 			cs.push_back(inter.contact.getState());
@@ -340,7 +335,7 @@ void System::setupParametersLubrication()
 	if (p.lub_reduce_parameter > 1) {
 		cout << indent+" p.lub_reduce_parameter>1, log terms in lubrication set to 0." << endl;
 	}
-
+	
 	if (p.lubrication_model != "normal" &&
 		p.lubrication_model != "none" &&
 		p.lubrication_model != "tangential") {
@@ -630,7 +625,6 @@ struct base_configuration System::getConfiguration()
 	c.contact_states = getContacts();
 	return c;
 }
-
 
 void System::timeStepBoxing()
 {
@@ -1305,7 +1299,6 @@ void System::buildResistanceMatrix()
 	stokes_solver.matrixFillingDone();
 }
 
-
 void System::computeForcesOnWallParticles()
 {
 	/**
@@ -1731,7 +1724,7 @@ void System::computeVelocityByComponents()
 		CALL_MEMBER_FN(*this, fc.second.getForceTorque)(fc.second.force, fc.second.torque);
 		setSolverRHS(fc.second);
 		stokes_solver.solve(na_velo_components[fc.first].vel,
-		                    na_velo_components[fc.first].ang_vel);
+							na_velo_components[fc.first].ang_vel);
 	}
 	if (brownian && twodimension) {
 		rushWorkFor2DBrownian(na_velo_components["brownian"].vel,
