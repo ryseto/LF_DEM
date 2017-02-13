@@ -276,7 +276,7 @@ void Simulation::simulationSteadyShear(string in_args,
 									   bool binary_conf,
 									   double dimensionless_number,
 									   string input_scale,
-									   string control_variable,
+									   ControlVariable control_variable,
 									   string simu_identifier)
 {
 	string indent = "  Simulation::\t";
@@ -327,7 +327,7 @@ void Simulation::simulationInverseYield(string in_args,
 										bool binary_conf,
 										double dimensionless_number,
 										string input_scale,
-										string control_variable,
+										ControlVariable control_variable,
 										string simu_identifier)
 {
 	control_var = control_variable;
@@ -545,13 +545,26 @@ double Simulation::getRate()
 	/**
 	 \brief The shear rate in the input units
 	 */
-	if (control_var == "rate") {
+	if (control_var == rate) {
 		return input_rate;
-	} else if (control_var == "stress") {
+	} else if (control_var == stress) {
 		return sys.get_shear_rate();
 	} else {
 		return 1;
 	}
+}
+
+vector<Sym2Tensor> Simulation::getParticleStressGroup(string group)
+{
+	vector<Sym2Tensor> S (sys.get_np(), 0);
+	for (const auto &sc: sys.stress_components) {
+		if (sc.second.group == group || group=="total") {
+			for (size_t i=0; i<S.size(); i++) {
+				S[i] += sc.second.particle_stress[i];
+			}
+		}
+	}
+	return S;
 }
 
 void Simulation::outputData()
@@ -663,31 +676,23 @@ void Simulation::outputData()
 		outdata_pst.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 		outdata_pst.setUnit(output_unit_scales);
 
-		cerr << "Warning, particle stress data output temporarily disabled " << endl;
-		// for (int i=0; i<sys.get_np(); i++) {
-		// 	if (p.out_particle_stress.find('t') != string::npos) {
-		// 		Sym2Tensor s = sys.lubstress[i]+sys.contactstressXF[i]+sys.contactstressGU[i];
-		// 		if (sys.brownian) {
-		// 			s += sys.brownianstressGU[i];
-		// 		}
-		// 		if (sys.repulsiveforce) {
-		// 			s += sys.repulsivestressGU[i]+sys.repulsivestressXF[i];
-		// 		}
-		// 		outdata_pst.entryData("total stress (xx, xy, xz, yz, yy, zz), excluding magnetic stress", "stress", 6, s);
-		// 	}
-		// 	if (p.out_particle_stress.find('l') != string::npos) {
-		// 		outdata_pst.entryData("lubrication stress (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.lubstress[i]);
-		// 	}
-		// 	if (p.out_particle_stress.find('c') != string::npos) {
-		// 		outdata_pst.entryData("contact stress (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.contactstressXF[i] + sys.contactstressGU[i]);
-		// 	}
-		// 	if (sys.brownian && p.out_particle_stress.find('b') != string::npos ) {
-		// 		outdata_pst.entryData("Brownian stress (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.brownianstressGU[i]);
-		// 	}
-		// 	if (sys.repulsiveforce && p.out_particle_stress.find('r') != string::npos ) {
-		// 		outdata_pst.entryData("repulsive stress (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.repulsivestressGU[i] + sys.repulsivestressXF[i]);
-		// 	}
-		// }
+		map<string, string> group_shorts;
+		group_shorts["l"] = "hydro";
+		group_shorts["c"] = "contact";
+		group_shorts["r"] = "repulsion";
+		group_shorts["b"] = "brownian";
+		group_shorts["d"] = "dashpot";
+		group_shorts["t"] = "total";
+		map<string, vector<Sym2Tensor>> particle_stress;
+		for (auto &type: p.out_particle_stress) {
+			auto group_name = group_shorts[string(1, type)];
+			particle_stress[group_name] = getParticleStressGroup(group_name);
+		}
+		for (int i=0; i<sys.get_np(); i++) {
+			for(const auto &pst: particle_stress) {
+				outdata_pst.entryData(pst.first + " stress (xx, xy, xz, yz, yy, zz)", "stress", 6, pst.second[i]);
+			}
+		}
 		stringstream snapshot_header;
 		getSnapshotHeader(snapshot_header);
 		outdata_pst.writeToFile(snapshot_header.str());
@@ -802,7 +807,7 @@ void Simulation::outputParFileTxt()
 		}
 
 		if (p.out_data_vel_components) {
-			for (const auto &vc: sys.velocity_components) {
+			for (const auto &vc: sys.na_velo_components) {
 				string entry_name_vel = "non-affine "+vc.first+" velocity (x, y, z)";
 				string entry_name_ang_vel = "non-affine angular "+vc.first+" velocity (x, y, z)";
 				outdata_par.entryData(entry_name_vel, "velocity", 3, vc.second.vel[i]);

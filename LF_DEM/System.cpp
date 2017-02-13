@@ -69,8 +69,7 @@ cohesion(false),
 critical_load(false),
 lowPeclet(false),
 twodimension(false),
-rate_controlled(false),
-stress_controlled(false),
+control(rate),
 zero_shear(false),
 wall_rheology(false),
 mobile_fixed(false),
@@ -154,23 +153,18 @@ void System::allocateRessources()
 	nb_blocks_ff.resize(p.np_fixed, 0);
 	nb_blocks_mm.resize(np-p.np_fixed, 0);
 	nb_blocks_mf.resize(np-p.np_fixed, 0);
-	//
-
 	// Forces and Stress
 	forceResultant.resize(np);
 	torqueResultant.resize(np);
-
 	declareStressComponents();
-
 	total_stress_pp.resize(np);
-
 }
 
 void System::declareForceComponents()
 {
 	// Only declare in force components the forces on the rhs of
 	// R_FU*(U-U_inf) = RHS
-	// These forces will be used to compute the velocity_components,
+	// These forces will be used to compute the na_velo_components,
 	// a set of components that must add up exactly to the total non-affine velocity
 
 	bool torque = true;
@@ -217,10 +211,10 @@ void System::declareForceComponents()
 
 void System::declareVelocityComponents()
 {
-	// Only declare in velocity_components a set of components that add up
+	// Only declare in na_velo_components a set of components that add up
 	// exactly to the non-affine velocity
 	for (const auto &fc: force_components) {
-		velocity_components[fc.first] = VelocityComponent(fc.second.force.size(), fc.second.rate_dependence);
+		na_velo_components[fc.first] = VelocityComponent(fc.second.force.size(), fc.second.rate_dependence);
 	}
 }
 
@@ -308,7 +302,7 @@ vector <struct contact_state> System::getContacts()
 
 		Used to output a configuration including contact info. Useful if you want to restart from exact same configuration.
 	 */
- vector <struct contact_state> cs;
+	vector <struct contact_state> cs;
 	for (const auto &inter: interaction) {
 		if (inter.contact.is_active()) {
 			cs.push_back(inter.contact.getState());
@@ -341,7 +335,7 @@ void System::setupParametersLubrication()
 	if (p.lub_reduce_parameter > 1) {
 		cout << indent+" p.lub_reduce_parameter>1, log terms in lubrication set to 0." << endl;
 	}
-
+	
 	if (p.lubrication_model != "normal" &&
 		p.lubrication_model != "none" &&
 		p.lubrication_model != "tangential") {
@@ -458,20 +452,15 @@ void System::setupBrownian()
 }
 
 template<typename T>
-void System::setupGenericConfiguration(T conf, string control){
+void System::setupGenericConfiguration(T conf, ControlVariable control_){
 	string indent = "  System::\t";
 	cout << indent << "Setting up System... " << endl;
 	np = conf.position.size();
 	np_mobile = np - p.np_fixed;
-	twodimension = conf.ly == 0;
-
-	if (control == "rate") {
-		rate_controlled = true;
-	}
-	if (control == "stress") {
-		rate_controlled = false;
-	}
-	stress_controlled = !rate_controlled;
+	control = control_;
+	
+	setBoxSize(conf.lx,conf.ly,conf.lz);
+	twodimension = ly == 0;
 
 	setupParameters();
 	// Memory
@@ -498,25 +487,24 @@ void System::setupGenericConfiguration(T conf, string control){
 		shear_strain = {0, 0, 0};
 	}
 
-	setBoxSize(conf.lx,conf.ly,conf.lz);
 	setConfiguration(conf.position, conf.radius);
 	setContacts(conf.contact_states);
 	setupSystemPostConfiguration();
 }
 
-void System::setupConfiguration(struct base_configuration conf, string control)
+void System::setupConfiguration(struct base_configuration conf, ControlVariable control_)
 {
-	setupGenericConfiguration(conf, control);
+	setupGenericConfiguration(conf, control_);
 }
 
-void System::setupConfiguration(struct fixed_velo_configuration conf, string control)
+void System::setupConfiguration(struct fixed_velo_configuration conf, ControlVariable control_)
 {
 	p.np_fixed = conf.fixed_velocities.size();
-	setupGenericConfiguration(conf, control);
+	setupGenericConfiguration(conf, control_);
 	setFixedVelocities(conf.fixed_velocities);
 }
 
-void System::setupConfiguration(struct circular_couette_configuration conf, string control)
+void System::setupConfiguration(struct circular_couette_configuration conf, ControlVariable control_)
 {
 	p.np_fixed = conf.np_wall1 + conf.np_wall2;
 	np_wall1 = conf.np_wall1;
@@ -524,7 +512,7 @@ void System::setupConfiguration(struct circular_couette_configuration conf, stri
 	radius_in = conf.radius_in;
 	radius_out = conf.radius_out;
 
-	setupGenericConfiguration(conf, control);
+	setupGenericConfiguration(conf, control_);
 }
 
 void System::setupSystemPostConfiguration()
@@ -637,7 +625,6 @@ struct base_configuration System::getConfiguration()
 	c.contact_states = getContacts();
 	return c;
 }
-
 
 void System::timeStepBoxing()
 {
@@ -827,7 +814,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		}
 	}
 	timeStepMove(time_end, strain_end);
-	for (unsigned int i=0; i<np; i++) {
+	for (int i=0; i<np; i++) {
 		na_disp[i] += na_velocity[i]*dt;
 	}
 	if (eventLookUp != NULL) {
@@ -932,7 +919,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 		}
 	}
 	timeStepMoveCorrector();
-	for (unsigned int i=0; i<np; i++) {
+	for (int i=0; i<np; i++) {
 		na_disp[i] += na_velocity[i]*dt;
 	}
 }
@@ -1312,7 +1299,6 @@ void System::buildResistanceMatrix()
 	stokes_solver.matrixFillingDone();
 }
 
-
 void System::computeForcesOnWallParticles()
 {
 	/**
@@ -1334,16 +1320,16 @@ void System::computeForcesOnWallParticles()
 	// that is not coming from the wall velocities
 	vector<vec3d> na_velocity_mobile (np_mobile);
 	vector<vec3d> na_ang_velocity_mobile (np_mobile);
-	const auto &vel_contact = velocity_components["contact"].vel;
-	const auto &ang_vel_contact = velocity_components["contact"].ang_vel;
+	const auto &vel_contact = na_velo_components["contact"].vel;
+	const auto &ang_vel_contact = na_velo_components["contact"].ang_vel;
 
 	for (int i=0; i<np_mobile; i++) {
 		na_velocity_mobile[i] = vel_contact[i];
 		na_ang_velocity_mobile[i] = ang_vel_contact[i];
 	}
 	if (repulsiveforce) {
-		const auto &vel_repulsive = velocity_components["repulsion"].vel;
-		const auto &ang_vel_repulsive = velocity_components["repulsion"].ang_vel;
+		const auto &vel_repulsive = na_velo_components["repulsion"].vel;
+		const auto &ang_vel_repulsive = na_velo_components["repulsion"].ang_vel;
 		for (int i=0; i<np_mobile; i++) {
 			na_velocity_mobile[i] += vel_repulsive[i];
 			na_ang_velocity_mobile[i] += ang_vel_repulsive[i];
@@ -1369,8 +1355,8 @@ void System::computeForcesOnWallParticles()
 	// Now the part proportional to the wall speed
 
 	// From the mobile particles
-	const auto &vel_hydro_from_fixed = velocity_components["from_fixed"].vel;
-	const auto &ang_vel_hydro_from_fixed = velocity_components["from_fixed"].ang_vel;
+	const auto &vel_hydro_from_fixed = na_velo_components["from_fixed"].vel;
+	const auto &ang_vel_hydro_from_fixed = na_velo_components["from_fixed"].ang_vel;
 	for (int i=0; i<np_mobile; i++) {
 		na_velocity_mobile[i] = vel_hydro_from_fixed[i];
 		na_ang_velocity_mobile[i] = ang_vel_hydro_from_fixed[i];
@@ -1581,7 +1567,6 @@ void System::setHydroForceToParticle_squeeze(vector<vec3d> &force,
 {
 	vec3d GEi, GEj;
 	unsigned int i, j;
-	double sr = get_shear_rate();
 	for (const auto &inter: interaction) {
 		if (inter.lubrication.is_active()) {
 			std::tie(i, j) = inter.get_par_num();
@@ -1597,7 +1582,6 @@ void System::setHydroForceToParticle_squeeze_tangential(vector<vec3d> &force,
 {
 	vec3d GEi, GEj, HEi, HEj;
 	unsigned int i, j;
-	double sr = get_shear_rate();
 	for (const auto &inter: interaction) {
 		if (inter.lubrication.is_active()) {
 			std::tie(i, j) = inter.get_par_num();
@@ -1739,12 +1723,12 @@ void System::computeVelocityByComponents()
 	for (auto &fc: force_components) {
 		CALL_MEMBER_FN(*this, fc.second.getForceTorque)(fc.second.force, fc.second.torque);
 		setSolverRHS(fc.second);
-		stokes_solver.solve(velocity_components[fc.first].vel,
-		                    velocity_components[fc.first].ang_vel);
+		stokes_solver.solve(na_velo_components[fc.first].vel,
+							na_velo_components[fc.first].ang_vel);
 	}
 	if (brownian && twodimension) {
-		rushWorkFor2DBrownian(velocity_components["brownian"].vel,
-							  velocity_components["brownian"].ang_vel);
+		rushWorkFor2DBrownian(na_velo_components["brownian"].vel,
+							  na_velo_components["brownian"].ang_vel);
 	}
 }
 
@@ -1934,7 +1918,7 @@ void System::tmpMixedProblemSetVelocities()
 			time_next += p.strain_reversal;
 		}
 	} else if (p.simulation_mode == 31) {
-		auto &vel_from_fixed = velocity_components["from_fixed"];
+		auto &vel_from_fixed = na_velo_components["from_fixed"];
 		for (int i=np_mobile; i<np; i++) {
 			vel_from_fixed.vel[i] = shear_rate*fixed_velocities[i-np_mobile];
 			vel_from_fixed.ang_vel[i].reset();
@@ -1998,7 +1982,7 @@ void System::sumUpVelocityComponents()
 		na_velocity[i].reset();
 		na_ang_velocity[i].reset();
 	}
-	for (const auto &vc: velocity_components) {
+	for (const auto &vc: na_velo_components) {
 		const auto &vel = vc.second.vel;
 		const auto &ang_vel = vc.second.ang_vel;
 		for (int i=0; i<np_mobile; i++) {
@@ -2022,7 +2006,7 @@ void System::setFixedParticleVelocities()
 
 void System::rescaleVelHydroStressControlled()
 {
-	for (auto &vc: velocity_components) {
+	for (auto &vc: na_velo_components) {
 		if (vc.second.rate_dependence == RATE_PROPORTIONAL) {
 			vc.second *= shear_rate;
 		}
@@ -2040,14 +2024,14 @@ void System::computeVelocities(bool divided_velocities)
 	 */
 	stokes_solver.resetRHS();
 	resetForceComponents();
-	if (divided_velocities || stress_controlled) {
-		if (stress_controlled) {
+	if (divided_velocities || control==stress) {
+		if (control==stress) {
 			set_shear_rate(1);
 		}
 		computeUInf();
 		setFixedParticleVelocities();
 		computeVelocityByComponents();
-		if (stress_controlled) {
+		if (control==stress) {
 			if (p.simulation_mode != 31) {
 				computeShearRate();
 			} else {
@@ -2126,7 +2110,7 @@ void System::computeUInf()
 
 void System::adjustVelocityPeriodicBoundary()
 {
-	if (stress_controlled) { // in rate control it is already done in computeVelocities()
+	if (control==stress) { // in rate control it is already done in computeVelocities()
 		computeUInf();
 	}
 	for (int i=0; i<np; i++) {

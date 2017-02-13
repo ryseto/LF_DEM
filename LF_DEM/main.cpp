@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 	string stress_rate_filename = "not_given";
 	string seq_filename = "not_given";
 	string seq_type;
-	string rheology_control = "rate";
+	ControlVariable rheology_control = rate;
 	string simu_identifier = "";
 	const struct option longopts[] = {
 		{"rate-controlled",   required_argument, 0, 'r'},
@@ -70,7 +70,7 @@ int main(int argc, char **argv)
 	while ((c = getopt_long(argc, argv, "hn8fldm:s:S:t:r:R:g::a:k:i:v:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
-				rheology_control = "stress";
+				rheology_control = stress;
 				if (getSuffix(optarg, numeral, suffix)) {
 					dimensionless_number = atof(numeral.c_str());
 					// cout << "Stress control: " << dimensionless_number << endl;
@@ -80,13 +80,13 @@ int main(int argc, char **argv)
 				break;
 			case 'S':
 				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
-				rheology_control = "stress";
+				rheology_control = stress;
 				seq_filename = optarg;
 				seq_type = "s";
 				// cout << "Stress sequence, file " << seq_filename << endl;
 				break;
 			case 't':
-				rheology_control = "stress";
+				rheology_control = stress;
 				if (getSuffix(optarg, numeral, suffix)) {
 					dimensionless_number = atof(numeral.c_str());
 					// cout << "Stress control: " << dimensionless_number << endl;
@@ -96,7 +96,7 @@ int main(int argc, char **argv)
 				seq_type = "iy";
 				break;
 			case 'r':
-				rheology_control = "rate";
+				rheology_control = rate;
 				if (getSuffix(optarg, numeral, suffix)) {
 					dimensionless_number = atof(numeral.c_str());
 					cout << "Rate control: " << dimensionless_number << endl;
@@ -106,13 +106,13 @@ int main(int argc, char **argv)
 				break;
 			case 'R':
 				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
-				rheology_control = "rate";
+				rheology_control = rate;
 				seq_filename = optarg;
 				seq_type = "r";
 				cout << "Rate sequence, file " << seq_filename << endl;
 				break;
 			case '8':
-				rheology_control = "rate";
+				rheology_control = rate;
 				dimensionless_number = 1;
 				suffix = "h";
 				cout << "Rate control, infinite shear rate (hydro + hard contacts only)" << endl;

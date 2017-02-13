@@ -131,7 +131,7 @@ inline std::vector<std::string> splitString(const std::string& str){
 
 	std::vector<std::string> elements;
 
-	while ( stripped_str.length()>0 ) {
+	while (stripped_str.length() > 0) {
 		brk = stripped_str.find(" ");
 		std::string first_part;
 		if (brk < std::string::npos) {
@@ -149,5 +149,11 @@ inline std::vector<std::string> splitString(const std::string& str){
 	}
 	return elements;
 }
+
+enum ControlVariable {
+	rate,
+	stress,
+	viscnb
+};
 
 #endif /* defined(__LF_DEM__global__) */

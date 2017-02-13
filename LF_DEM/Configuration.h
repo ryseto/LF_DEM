@@ -63,7 +63,7 @@ inline std::vector <struct contact_state> readContactStatesBStream(std::istream 
     unsigned int p0, p1;
     input.read((char*)&p0, sizeof(unsigned int));
     // hacky thing to guess if this is an old format with particle numbers as unsigned short
-    if((int)p0>np){
+    if(p0>np){
       ushort_format = true;
       input.seekg(file_pos);
       break;
@@ -109,7 +109,7 @@ inline std::pair<std::vector <vec3d>, std::vector <double>> readPositionsBStream
   double x_, y_, z_, r_;
   std::vector <vec3d> position;
   std::vector <double> radius;
-  for (int i=0; i<np; i++) {
+  for (unsigned int i=0; i<np; i++) {
     input.read((char*)&x_, sizeof(double));
     input.read((char*)&y_, sizeof(double));
     input.read((char*)&z_, sizeof(double));
@@ -168,8 +168,6 @@ inline int getBinaryConfigurationFileFormat(const std::string& filename_import_p
   }
   int binary_format_version;
   int switch_;
-  int np_fixed;
-  double lx, ly, lz;
   file_import.read((char*)&switch_, sizeof(int));
   if (switch_ == -1) {
     file_import.read((char*)&binary_format_version, sizeof(int));

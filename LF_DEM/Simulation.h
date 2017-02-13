@@ -40,7 +40,7 @@ private:
 	std::map <std::string, DimensionalValue> input_values;
 	std::map <std::string, double*> force_value_ptr;
 	std::string header_imported_configulation[2];
-	std::string control_var;
+	ControlVariable control_var;
 	double shear_rate_expectation;
 	double strain_end;
 	double time_end;
@@ -73,6 +73,8 @@ private:
 	 */
 
 	void setupOptionalSimulation(std::string indent);
+	std::vector<Sym2Tensor> getParticleStressGroup(std::string group);
+
 public:
 	/* For DEMsystem*/
 	Simulation();
@@ -82,7 +84,7 @@ public:
 							   bool binary_conf,
 							   double dimensionless_number,
 							   std::string input_scale,
-							   std::string control_variable,
+							   ControlVariable control_variable,
 							   std::string simu_identifier);
 	// void simulationfinedSequence(std::string seq_type, std::string in_args, std::vector<std::string> &input_files, bool binary_conf, std::string control_variable);
 
@@ -91,7 +93,7 @@ public:
 								bool binary_conf,
 								double dimensionless_number,
 								std::string input_scale,
-								std::string control_variable,
+								ControlVariable control_variable,
 								std::string simu_identifier);
 
 	void setupSimulation(std::string in_args,
@@ -101,11 +103,6 @@ public:
 						 std::string input_scale,
 						 std::string simu_identifier);
 	TimeKeeper initTimeKeeper();
-
-	void setControlVariable(const std::string& var)
-	{
-		control_var = var;
-	};
 	ParameterSet p;
 	bool keepRunning();
 	// void timeEvolution(double& next_output_data);
