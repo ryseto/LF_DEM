@@ -433,13 +433,13 @@ void Contact::calcContactStress()
 	 * The contact force F includes both the spring force and the dashpot force.
 	 */
 	if (is_active()) {
-		contact_stresslet_XF.set(interaction->rvec, getTotalForce());
+		contact_stresslet_XF = outer_sym(interaction->rvec, getTotalForce());
 	} else {
 		contact_stresslet_XF.reset();
 	}
 }
 
-void Contact::addUpStress(StressTensor &stress_p0, StressTensor &stress_p1)
+void Contact::addUpStress(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1)
 {
 	calcContactStress();
 	double r_ij = get_rcontact();
@@ -447,10 +447,10 @@ void Contact::addUpStress(StressTensor &stress_p0, StressTensor &stress_p1)
 	stress_p1 += (a1/r_ij)*contact_stresslet_XF;
 }
 
-void Contact::addUpStressSpring(StressTensor &stress_p0, StressTensor &stress_p1) const
+void Contact::addUpStressSpring(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1) const
 {
-	StressTensor spring_stress;
-	spring_stress.set(interaction->rvec, f_spring_total);
+	Sym2Tensor spring_stress;
+	spring_stress = outer_sym(interaction->rvec, f_spring_total);
 	double r_ij = get_rcontact();
 	stress_p0 += (a0/r_ij)*spring_stress;
 	stress_p1 += (a1/r_ij)*spring_stress;

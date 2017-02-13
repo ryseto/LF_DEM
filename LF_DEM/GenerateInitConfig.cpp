@@ -6,10 +6,10 @@
 //  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
 //
 
-#include <stdlib.h> // necessary for Linux
 #include "GenerateInitConfig.h"
 #include "Simulation.h"
 #include "SystemHelperFunctions.h"
+#include "Configuration.h"
 #ifndef USE_DSFMT
 #define RANDOM ( rand_gen.rand() ) // RNG uniform [0,1]
 #endif
@@ -17,6 +17,22 @@
 #define RANDOM ( dsfmt_genrand_close_open(&rand_gen) ) // RNG uniform [0,1]
 #endif
 using namespace std;
+
+template<typename T>
+void GenerateInitConfig::baseSetup(T &conf, bool is2d, double inflate_ratio) {
+	std::tie(conf.position, conf.radius) = putRandom(is2d);
+	for (int i=0; i<np; i++) {
+		conf.radius[i] *= inflate_ratio;
+	}
+	if (is2d) {
+		conf.angle.resize(conf.position.size(), 0);
+	}
+	conf.lx = lx;
+	conf.ly = ly;
+	conf.lz = lz;
+	conf.lees_edwards_disp = {0, 0, 0};
+	conf.volume_or_area_fraction = volume_fraction;
+}
 
 int GenerateInitConfig::generate(int rand_seed_, int config_type)
 {
@@ -34,6 +50,12 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 	Simulation simu;
 	setParameters(simu);
 	rand_seed = rand_seed_;
+
+	auto &sys = simu.getSys();
+	double contact_ratio = 0.05;
+	double min_gap = -0.01;
+	double inflate_ratio = 1-min_gap;
+
 	if (circulargap_config) {
 		/* Note:
 		 * Wall particles are placed at
@@ -41,6 +63,7 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		 *   r = radius_out + a;
 		 * Mobile partilces can be in radius_in < r < radius_out
 		 */
+
 		np_wall1 = ((cg_radius_in-radius_wall_particle)*2*M_PI)/(2*radius_wall_particle);
 		np_wall2 = ((cg_radius_out+radius_wall_particle)*2*M_PI)/(2*radius_wall_particle);
 		cerr << "np_in = " << np_wall1 << endl;
@@ -48,7 +71,14 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		np_movable = np;
 		np_fix = np_wall1+np_wall2;
 		np += np_fix;
+		struct circular_couette_configuration c;
+		baseSetup(c, sys.twodimension, inflate_ratio);
+		c.np_wall1 = np_wall1;
+		c.np_wall2 = np_wall2;
+		c.radius_in = cg_radius_in;
+		c.radius_out = cg_radius_out;
 		cerr << "np " << np << endl;
+		sys.setupConfiguration(c, ControlVariable(rate));
 	} else if (parallel_wall_config) {
 		/* Note:
 		 * Wall particles are placed at
@@ -56,40 +86,42 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		 *   z = z_top + a;
 		 * Mobile partilces can be in radius_in < r < radius_out
 		 */
+
 		np_wall1 = lx/(2*radius_wall_particle);
 		np_wall2 = lx/(2*radius_wall_particle);
 		np_movable = np;
 		np_fix = np_wall1+np_wall2;
 		np += np_fix;
+		struct circular_couette_configuration c;
+		baseSetup(c, sys.twodimension, inflate_ratio);
+		c.np_wall1 = np_wall1;
+		c.np_wall2 = np_wall2;
+		c.radius_in = cg_radius_in;
+		c.radius_out = cg_radius_out;
+		sys.setupConfiguration(c, ControlVariable(rate));
 	} else if (winding_wall_config) {
+
 		np_wall1 = (cg_radius_out+cg_radius_in)*M_PI/2/1.5+1;
 		np_wall2 = (cg_radius_out+cg_radius_in)*M_PI/2/1.5+1;
 		np_movable = np;
 		np_fix = np_wall1+np_wall2;
 		np += np_fix;
+		struct circular_couette_configuration c;
+		baseSetup(c, sys.twodimension, inflate_ratio);
+		c.np_wall1 = np_wall1;
+		c.np_wall2 = np_wall2;
+		c.radius_in = cg_radius_in;
+		c.radius_out = cg_radius_out;
+		sys.setupConfiguration(c, ControlVariable(rate));
 	} else {
+		struct base_configuration c;
 		np_movable = np;
+		baseSetup(c, sys.twodimension, inflate_ratio);
+		sys.setupConfiguration(c, ControlVariable(rate));
 	}
 
-	auto &sys = simu.getSys();
 
-	sys.set_np(np);
-	sys.set_np_mobile(np_movable);
 
-	sys.setupSystemPreConfiguration("rate", sys.twodimension);
-	sys.setBoxSize(lx, ly, lz);
-
-	double contact_ratio = 0.05;
-	double min_gap = -0.01;
-	double inflate_ratio = 1-min_gap;
-
-	auto posrad = putRandom(sys.twodimension);
-	sys.setConfiguration(posrad.first, posrad.second);
-	for (int i=0; i<np; i++) {
-		sys.radius[i] *= inflate_ratio;
-	}
-
-	sys.setupSystemPostConfiguration();
 
 	sys.checkNewInteraction();
 	sys.updateInteractions();
@@ -607,10 +639,10 @@ void GenerateInitConfig::setParameters(Simulation &simu)
 	lx_half = lx/2;
 	ly_half = ly/2;
 	lz_half = lz/2;
-	
+
 	max_iteration = readStdinDefault(-1, "max iteration number");
 
-	
+
 	cerr << "np = " << np1+np2 << endl;
 	cerr << "np1 : np2 " << np1 << ":" << np2 << endl;
 	cerr << "vf1 = " << volume_fraction << endl;

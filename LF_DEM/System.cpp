@@ -10,6 +10,7 @@
 #include <sstream>
 #include <cmath>
 #include <stdexcept>
+#include <assert.h>
 #include "SystemHelperFunctions.h"
 #include "global.h"
 
@@ -68,8 +69,7 @@ cohesion(false),
 critical_load(false),
 lowPeclet(false),
 twodimension(false),
-rate_controlled(false),
-stress_controlled(false),
+control(rate),
 zero_shear(false),
 wall_rheology(false),
 mobile_fixed(false),
@@ -86,7 +86,6 @@ ratio_unit_time(NULL),
 eventLookUp(NULL)
 {
 	max_sliding_velocity = 0;
-	total_stress = 0;
 	lx = 0;
 	ly = 0;
 	lz = 0;
@@ -94,8 +93,6 @@ eventLookUp(NULL)
 	time_in_simulation_units = 0;
 	shear_strain = 0;
 	cumulated_strain = 0;
-	costheta_shear = 1;
-	sintheta_shear = 0;
 }
 
 System::~System()
@@ -104,7 +101,7 @@ System::~System()
 	interaction_list.clear();
 }
 
-void System::allocateRessourcesPreConfiguration()
+void System::allocateRessources()
 {
 	if (np <= 0) {
 		throw runtime_error("System::allocateRessources() :  np is 0 or negative, cannot allocate this.");
@@ -120,8 +117,9 @@ void System::allocateRessourcesPreConfiguration()
 	}
 	// Configuration
 	if (twodimension) {
-		angle.resize(np);
+		angle.resize(np, 0);
 	}
+
 	// Velocity
 	velocity.resize(np);
 	for (auto &v: velocity) {
@@ -155,20 +153,18 @@ void System::allocateRessourcesPreConfiguration()
 	nb_blocks_ff.resize(p.np_fixed, 0);
 	nb_blocks_mm.resize(np-p.np_fixed, 0);
 	nb_blocks_mf.resize(np-p.np_fixed, 0);
-	//
-	if (p.auto_determine_knkt) {
-		kn_avg.setRelaxationTime(p.memory_strain_avg);
-		kt_avg.setRelaxationTime(p.memory_strain_avg);
-		overlap_avg.setRelaxationTime(p.memory_strain_avg);
-		max_disp_tan_avg.setRelaxationTime(p.memory_strain_avg);
-	}
+	// Forces and Stress
+	forceResultant.resize(np);
+	torqueResultant.resize(np);
+	declareStressComponents();
+	total_stress_pp.resize(np);
 }
 
 void System::declareForceComponents()
 {
 	// Only declare in force components the forces on the rhs of
 	// R_FU*(U-U_inf) = RHS
-	// These forces will be used to compute the velocity_components,
+	// These forces will be used to compute the na_velo_components,
 	// a set of components that must add up exactly to the total non-affine velocity
 
 	bool torque = true;
@@ -215,27 +211,10 @@ void System::declareForceComponents()
 
 void System::declareVelocityComponents()
 {
-	// Only declare in velocity_components a set of components that add up
+	// Only declare in na_velo_components a set of components that add up
 	// exactly to the non-affine velocity
 	for (const auto &fc: force_components) {
-		velocity_components[fc.first] = VelocityComponent(fc.second.force.size(), fc.second.rate_dependence);
-	}
-}
-
-void System::allocateRessourcesPostConfiguration()
-{
-	// Forces and Stress
-	forceResultant.resize(np);
-	torqueResultant.resize(np);
-
-	declareStressComponents();
-
-	total_stress_pp.resize(np);
-	if (brownian) {
-		if (lowPeclet) {
-			double stress_avg_relaxation_parameter = 10*p.time_interval_output_data; // 0 --> no average
-			stress_avg.setRelaxationTime(stress_avg_relaxation_parameter);
-		}
+		na_velo_components[fc.first] = VelocityComponent(fc.second.force.size(), fc.second.rate_dependence);
 	}
 }
 
@@ -277,6 +256,19 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	}
 	radius_wall_particle = radius[np-1];
 	setSystemVolume();
+
+	particle_volume = 0;
+	if (twodimension) {
+		for(auto r: radius) {
+			particle_volume += r*r;
+		}
+		particle_volume *= M_PI;
+	} else {
+		for(auto r: radius) {
+			particle_volume += r*r*r;
+		}
+		particle_volume *= 4*M_PI/3.;
+	}
 }
 
 void System::setFixedVelocities(const vector <vec3d>& vel)
@@ -303,47 +295,25 @@ void System::setContacts(const vector <struct contact_state>& cs)
 	}
 }
 
-void System::getContacts(vector <struct contact_state>& cs)
+vector <struct contact_state> System::getContacts()
 {
 	/**
 		\brief Get the list of contacts with their state variables.
 
 		Used to output a configuration including contact info. Useful if you want to restart from exact same configuration.
 	 */
+	vector <struct contact_state> cs;
 	for (const auto &inter: interaction) {
 		if (inter.contact.is_active()) {
 			cs.push_back(inter.contact.getState());
 		}
 	}
+	return cs;
 }
 
-void System::setupSystemPreConfiguration(string control, bool is2d)
+void System::setupParametersIntegrator()
 {
-	/**
-		\brief Initialize the system class for the simulation.
-	 */
-
-	/* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	 * @ We have to consider p.contact_relaxation_time in Brownian case.
-	 * @ The resistance coeffient affects Brownian force.
-	 * @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	 *
-	 * @@@ --> I agree. I want to make clear the best way to handle contacting hard-sphere Brownian aprticles.
-	 * @@@     The contact force parameters kn and contact_relaxation_time may need to depend on dt in Brownian simulation.
-	*/
-	np_mobile = np-p.np_fixed;
 	string indent = "  System::\t";
-	cout << indent << "Setting up System... " << endl;
-	twodimension = is2d;
-
-	if (control == "rate") {
-		rate_controlled = true;
-	}
-	if (control == "stress") {
-		rate_controlled = false;
-	}
-	stress_controlled = !rate_controlled;
-
 	if (p.integration_method == 0) {
 		timeEvolutionDt = &System::timeEvolutionEulersMethod;
 	} else if (p.integration_method == 1) {
@@ -353,7 +323,11 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 		error_str << indent << "integration_method = " << p.integration_method << endl << indent << "The integration method is not impremented yet." << endl;
 		throw runtime_error(error_str.str());
 	}
+}
 
+void System::setupParametersLubrication()
+{
+	string indent = "  System::\t";
 	lubrication = p.lubrication_model != "none";
 	if (p.lub_max_gap < 0) {
 		throw runtime_error(indent+"lub_max_gap<0 is forbidden.");
@@ -361,23 +335,24 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	if (p.lub_reduce_parameter > 1) {
 		cout << indent+" p.lub_reduce_parameter>1, log terms in lubrication set to 0." << endl;
 	}
-	pairwise_resistance = lubrication || p.contact_relaxation_time != 0 || p.contact_relaxation_time_tan != 0;
-
+	
 	if (p.lubrication_model != "normal" &&
 		p.lubrication_model != "none" &&
 		p.lubrication_model != "tangential") {
 		throw runtime_error(indent+"unknown lubrication_model "+p.lubrication_model+"\n");
 	}
 
-	if (p.interaction_range == -1) {
-		/* If interaction_range is not indicated,
-		 * interaction object is created at the lubrication cutoff.
+	if (p.lubrication_model == "tangential" && p.lub_max_gap >= 1) {
+		/* The tangential part of lubrication is approximated as log(1/h).
+		 * To keep log(1/h) > 0, h needs to be less than 1.
 		 */
-		calcInteractionRange = &System::calcLubricationRange;
-		p.interaction_range = 2+p.lub_max_gap;
-	} else {
-		calcInteractionRange = &System::calcInteractionRangeDefault;
+		throw runtime_error(indent+"lub_max_gap must be smaller than 1\n");
 	}
+}
+
+void System::setupParametersContacts()
+{
+	string indent = "  System::\t";
 	if (p.friction_model == 0) {
 		cout << indent+"friction model: no friction" << endl;
 		p.mu_static = 0;
@@ -406,77 +381,138 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 			throw runtime_error(indent+"Error: Rolling friction without sliding friction?\n");
 		}
 	}
-	if (p.lubrication_model == "tangential" && p.lub_max_gap >= 1) {
-		/* The tangential part of lubrication is approximated as log(1/h).
-		 * To keep log(1/h) > 0, h needs to be less than 1.
+}
+
+void System::setupParameters()
+{
+	setupParametersIntegrator();
+	setupParametersLubrication();
+	setupParametersContacts();
+	pairwise_resistance = lubrication || p.contact_relaxation_time != 0 || p.contact_relaxation_time_tan != 0;
+
+	if (p.interaction_range == -1) {
+		/* If interaction_range is not indicated,
+		 * interaction object is created at the lubrication cutoff.
 		 */
-		throw runtime_error(indent+"lub_max_gap must be smaller than 1\n");
+		calcInteractionRange = &System::calcLubricationRange;
+		p.interaction_range = 2+p.lub_max_gap;
+	} else {
+		calcInteractionRange = &System::calcInteractionRangeDefault;
 	}
+
+
 	if (p.repulsive_length <= 0) {
 		repulsiveforce = false;
 		p.repulsive_length = 0;
 	}
 	setShearDirection(p.theta_shear);
-	// Memory
-	allocateRessourcesPreConfiguration();
 
-	for (int i=0; i<np; i++) {
-		if (twodimension) {
-			angle[i] = 0;
-		}
-		velocity[i].reset();
-		na_velocity[i].reset();
-		ang_velocity[i].reset();
-		na_ang_velocity[i].reset();
+	if (p.auto_determine_knkt) {
+		kn_avg.setRelaxationTime(p.memory_strain_avg);
+		kt_avg.setRelaxationTime(p.memory_strain_avg);
+		overlap_avg.setRelaxationTime(p.memory_strain_avg);
+		max_disp_tan_avg.setRelaxationTime(p.memory_strain_avg);
 	}
-	if (mobile_fixed) {
-		for (int i=0; i<p.np_fixed; i++) {
-			non_rate_proportional_wall_force[i].reset();
-			non_rate_proportional_wall_torque[i].reset();
-			rate_proportional_wall_force[i].reset();
-			rate_proportional_wall_torque[i].reset();
-		}
-	}
-
-	shear_strain = {0, 0, 0};
 
 	if (brownian) {
+		if (lowPeclet) {
+			double stress_avg_relaxation_parameter = 10*p.time_interval_output_data; // 0 --> no average
+			stress_avg.setRelaxationTime(stress_avg_relaxation_parameter);
+		}
+	}
+	if (p.simulation_mode == 31) {
+		p.sd_coeff = 1e-6;
+	}
+}
+
+void System::setupBrownian()
+{
+
 #ifdef DEV
-		/* In developing and debugging phases,
-		 * we give a seed to generate the same series of random number.
-		 * DEV is defined as a preprocessor option in the Makefile
-		 */
+	/* In developing and debugging phases,
+	 * we give a seed to generate the same series of random number.
+	 * DEV is defined as a preprocessor option in the Makefile
+	 */
 #ifndef USE_DSFMT
-		r_gen = new MTRand(17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
+	r_gen = new MTRand(17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
 #endif
 #ifdef USE_DSFMT
-		dsfmt_init_gen_rand(&r_gen, 17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
+	dsfmt_init_gen_rand(&r_gen, 17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
 #endif
 #endif
 
 #ifndef DEV
 #ifndef USE_DSFMT
-		r_gen = new MTRand;
+	r_gen = new MTRand;
 #endif
 #ifdef USE_DSFMT
-		dsfmt_init_gen_rand(&r_gen, wagnerhash(std::time(NULL), clock()) ) ; // hash of time and clock trick from MersenneTwister v1.0 by Richard J. Wagner
+	dsfmt_init_gen_rand(&r_gen, wagnerhash(std::time(NULL), clock()) ) ; // hash of time and clock trick from MersenneTwister v1.0 by Richard J. Wagner
 #endif
 #endif
+}
+
+template<typename T>
+void System::setupGenericConfiguration(T conf, ControlVariable control_){
+	string indent = "  System::\t";
+	cout << indent << "Setting up System... " << endl;
+	np = conf.position.size();
+	np_mobile = np - p.np_fixed;
+	control = control_;
+	
+	setBoxSize(conf.lx,conf.ly,conf.lz);
+	twodimension = ly == 0;
+
+	setupParameters();
+	// Memory
+	allocateRessources();
+
+	if (brownian) {
+		setupBrownian();
 	}
+
 	time_ = 0;
 	time_in_simulation_units = 0;
 	total_num_timesteps = 0;
 
-	vel_difference.reset();
-	setVelocityDifference();
-	if (p.simulation_mode == 31) {
-		p.sd_coeff = 1e-6;
-	}
 	angle_output = false;
 	if (twodimension) {
 		angle_output = true;
 	}
 	cout << indent << "Setting up System... [ok]" << endl;
+
+	shear_disp = conf.lees_edwards_disp;
+	if (p.keep_input_strain) {
+		shear_strain = shear_disp/lz;
+	} else {
+		shear_strain = {0, 0, 0};
+	}
+
+	setConfiguration(conf.position, conf.radius);
+	setContacts(conf.contact_states);
+	setupSystemPostConfiguration();
+}
+
+void System::setupConfiguration(struct base_configuration conf, ControlVariable control_)
+{
+	setupGenericConfiguration(conf, control_);
+}
+
+void System::setupConfiguration(struct fixed_velo_configuration conf, ControlVariable control_)
+{
+	p.np_fixed = conf.fixed_velocities.size();
+	setupGenericConfiguration(conf, control_);
+	setFixedVelocities(conf.fixed_velocities);
+}
+
+void System::setupConfiguration(struct circular_couette_configuration conf, ControlVariable control_)
+{
+	p.np_fixed = conf.np_wall1 + conf.np_wall2;
+	np_wall1 = conf.np_wall1;
+	np_wall2 = conf.np_wall2;
+	radius_in = conf.radius_in;
+	radius_out = conf.radius_out;
+
+	setupGenericConfiguration(conf, control_);
 }
 
 void System::setupSystemPostConfiguration()
@@ -540,12 +576,6 @@ void System::setupSystemPostConfiguration()
 	if (pairwise_resistance) {
 		stokes_solver.init(np, np_mobile);
 	}
-	allocateRessourcesPostConfiguration();
-	if (!stress_controlled) {
-		setVelocityDifference();
-	}
-	E_infinity.set(0, 2, shear_rate/2); //@@@
-	E_infinity.set(2, 0, shear_rate/2); //@@@
 	initializeBoxing();
 	checkNewInteraction();
 	dt = p.dt;
@@ -578,14 +608,31 @@ void System::initializeBoxing()
 	boxset.update();
 }
 
+struct base_configuration System::getConfiguration()
+{
+	struct base_configuration c;
+	c.lx = lx;
+	c.ly = ly;
+	c.lz = lz;
+	c.volume_or_area_fraction = particle_volume/system_volume;
+
+	c.position = position;
+	c.radius = radius;
+	if (twodimension) {
+		c.angle = angle;
+	}
+	c.lees_edwards_disp = shear_disp;
+	c.contact_states = getContacts();
+	return c;
+}
+
 void System::timeStepBoxing()
 {
 	/**
 		\brief Apply a strain step to the boxing system.
 	 */
 	if (!zero_shear) {
-		vec3d strain_increment = {costheta_shear, sintheta_shear, 0};
-		strain_increment *= dt*shear_rate;
+		vec3d strain_increment = 2*dot(E_infinity, {0, 0, 1})*dt;
 		cumulated_strain += strain_increment.norm();
 		shear_strain += strain_increment;
 		shear_disp += strain_increment*lz;
@@ -601,8 +648,7 @@ void System::timeStepBoxing()
 		shear_disp.y = shear_disp.y-m*ly;
 	} else {
 		if (wall_rheology || p.simulation_mode == 31) {
-			vec3d strain_increment = {costheta_shear, sintheta_shear, 0};
-			strain_increment *= dt*shear_rate;
+			vec3d strain_increment = 2*dot(E_infinity, {0, 0, 1})*dt;
 			cumulated_strain += strain_increment.norm();
 			shear_strain += strain_increment;
 			angle_wheel += dt*(omega_wheel_in-omega_wheel_out);
@@ -768,7 +814,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		}
 	}
 	timeStepMove(time_end, strain_end);
-	for (unsigned int i=0; i<np; i++) {
+	for (int i=0; i<np; i++) {
 		na_disp[i] += na_velocity[i]*dt;
 	}
 	if (eventLookUp != NULL) {
@@ -873,7 +919,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 		}
 	}
 	timeStepMoveCorrector();
-	for (unsigned int i=0; i<np; i++) {
+	for (int i=0; i<np; i++) {
 		na_disp[i] += na_velocity[i]*dt;
 	}
 }
@@ -1207,18 +1253,14 @@ void System::eraseResistance(int p0, int p1)
 	pairwise_resistance_changed = true;
 }
 
-void System::buildHydroTerms()
+void System::buildResistanceMatrix()
 {
 	/**
-	 \brief Builds the hydrodynamic resistance matrix and hydrodynamic driving force.
+	 \brief Builds the resistance matrix
 
-	 @param build_res_mat Build the resistance matrix
-	 \f$R_{\mathrm{FU}}\f$ (in Bossis and Brady \cite
-	 brady_stokesian_1988 notations) and set it as the current
-	 resistance in the StokesSolver. If false, the resistance in the
-	 StokesSolver is untouched, it is not reset.
-	 @param build_force_GE Build the \f$R_{\mathrm{FE}}:E_{\infty}\f$ force
-	 and \b add it to the right-hand-side of the StokesSolver
+	 The built matrix \f$R_{\mathrm{FU}}\f$ (in Bossis and Brady \cite
+	 brady_stokesian_1988 notations) contains pairwise resistances,
+	 coming from lubrication or contact dashpots.
 	 */
 	unsigned int size_mm = 0;
 	for (auto bnb: nb_blocks_mm) {
@@ -1234,19 +1276,13 @@ void System::buildHydroTerms()
 	}
 
 	// create a new resistance matrix in stokes_solver
-	stokes_solver.resetResistanceMatrix(size_mm, size_mf, size_ff,
-										resistance_matrix_dblock, pairwise_resistance_changed);
-	pairwise_resistance_changed = false;
 	/* [note]
 	 * The resistance matrix is reset with resistance_matrix_dblock,
 	 * which is calculated at the beginning.
 	 */
-	// add GE in the rhs and lubrication terms in the resistance matrix
-	buildResistanceMatrix();
-}
-
-void System::buildResistanceMatrix()
-{
+	stokes_solver.resetResistanceMatrix(size_mm, size_mf, size_ff,
+										resistance_matrix_dblock, pairwise_resistance_changed);
+	pairwise_resistance_changed = false;
 	for (int i=0; i<np-1; i ++) {
 		stokes_solver.startNewColumn();
 		for (auto& inter : interaction_list[i]) {
@@ -1268,10 +1304,10 @@ void System::computeForcesOnWallParticles()
 	/**
 		\brief This method computes the force (and torque, for now, but it might be dropped)
 		on the fixed particles.
-	 
+
 		It is designed with simple shear with walls under stress controlled conditions in mind,
 		so it decomposes the force in a rate-proportional part and a rate-independent part.
-	 
+
 		*/
 	throw runtime_error(" Control stress with walls disabled for now .\n");
 	if (!zero_shear) {
@@ -1284,16 +1320,16 @@ void System::computeForcesOnWallParticles()
 	// that is not coming from the wall velocities
 	vector<vec3d> na_velocity_mobile (np_mobile);
 	vector<vec3d> na_ang_velocity_mobile (np_mobile);
-	const auto &vel_contact = velocity_components["contact"].vel;
-	const auto &ang_vel_contact = velocity_components["contact"].ang_vel;
+	const auto &vel_contact = na_velo_components["contact"].vel;
+	const auto &ang_vel_contact = na_velo_components["contact"].ang_vel;
 
 	for (int i=0; i<np_mobile; i++) {
 		na_velocity_mobile[i] = vel_contact[i];
 		na_ang_velocity_mobile[i] = ang_vel_contact[i];
 	}
 	if (repulsiveforce) {
-		const auto &vel_repulsive = velocity_components["repulsion"].vel;
-		const auto &ang_vel_repulsive = velocity_components["repulsion"].ang_vel;
+		const auto &vel_repulsive = na_velo_components["repulsion"].vel;
+		const auto &ang_vel_repulsive = na_velo_components["repulsion"].ang_vel;
 		for (int i=0; i<np_mobile; i++) {
 			na_velocity_mobile[i] += vel_repulsive[i];
 			na_ang_velocity_mobile[i] += ang_vel_repulsive[i];
@@ -1319,8 +1355,8 @@ void System::computeForcesOnWallParticles()
 	// Now the part proportional to the wall speed
 
 	// From the mobile particles
-	const auto &vel_hydro_from_fixed = velocity_components["from_fixed"].vel;
-	const auto &ang_vel_hydro_from_fixed = velocity_components["from_fixed"].ang_vel;
+	const auto &vel_hydro_from_fixed = na_velo_components["from_fixed"].vel;
+	const auto &ang_vel_hydro_from_fixed = na_velo_components["from_fixed"].ang_vel;
 	for (int i=0; i<np_mobile; i++) {
 		na_velocity_mobile[i] = vel_hydro_from_fixed[i];
 		na_ang_velocity_mobile[i] = ang_vel_hydro_from_fixed[i];
@@ -1458,7 +1494,7 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 {
 	/**
 	 \brief Generates a Brownian force realization and sets is as the RHS of the stokes_solver.
-	 
+
 	 The generated Brownian force \f$F_B\f$ satisfies
 	 \f$ \langle F_\mathrm{B} \rangle = 0\f$
 	 and
@@ -1467,7 +1503,7 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 	 jeffrey_calculation_1992, that is \f$R_{\mathrm{FU}}\f$ in Bossis and Brady
 	 \cite brady_stokesian_1988 notations) is the current resistance matrix
 	 stored in the stokes_solver.
-	 
+
 	 */
 	if(!in_predictor) { // The Brownian force must be the same in the predictor and the corrector
 		return;
@@ -1484,7 +1520,7 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 		torque[i].y = sqrt_2_dt_amp*GRANDOM;
 		torque[i].z = sqrt_2_dt_amp*GRANDOM;
 	}
-	
+
 	if (pairwise_resistance) {
 		/* L*L^T = RFU
 		 */
@@ -1531,11 +1567,10 @@ void System::setHydroForceToParticle_squeeze(vector<vec3d> &force,
 {
 	vec3d GEi, GEj;
 	unsigned int i, j;
-	double sr = get_shear_rate();
 	for (const auto &inter: interaction) {
 		if (inter.lubrication.is_active()) {
 			std::tie(i, j) = inter.get_par_num();
-			std::tie(GEi, GEj) = inter.lubrication.calcGE_squeeze(sr); // G*E_\infty term
+			std::tie(GEi, GEj) = inter.lubrication.calcGE_squeeze(E_infinity); // G*E_\infty term
 			force[i] += GEi;
 			force[j] += GEj;
 		}
@@ -1547,11 +1582,10 @@ void System::setHydroForceToParticle_squeeze_tangential(vector<vec3d> &force,
 {
 	vec3d GEi, GEj, HEi, HEj;
 	unsigned int i, j;
-	double sr = get_shear_rate();
 	for (const auto &inter: interaction) {
 		if (inter.lubrication.is_active()) {
 			std::tie(i, j) = inter.get_par_num();
-			std::tie(GEi, GEj, HEi, HEj) = inter.lubrication.calcGEHE_squeeze_tangential(sr); // G*E_\infty term, no gamma dot
+			std::tie(GEi, GEj, HEi, HEj) = inter.lubrication.calcGEHE_squeeze_tangential(E_infinity); // G*E_\infty term, no gamma dot
 			force[i] += GEi;
 			force[j] += GEj;
 			torque[i] += HEi;
@@ -1669,7 +1703,7 @@ void System::computeMaxNAVelocity()
 
 void System::computeVelocityWithoutComponents()
 {
-	buildHydroTerms();
+	buildResistanceMatrix();
 	for (auto &fc: force_components) {
 		CALL_MEMBER_FN(*this, fc.second.getForceTorque)(fc.second.force, fc.second.torque);
 		addToSolverRHS(fc.second);
@@ -1685,29 +1719,61 @@ void System::computeVelocityByComponents()
 	/**
 	 \brief Compute velocities component by component.
 	 */
-	buildHydroTerms();
+	buildResistanceMatrix();
 	for (auto &fc: force_components) {
 		CALL_MEMBER_FN(*this, fc.second.getForceTorque)(fc.second.force, fc.second.torque);
 		setSolverRHS(fc.second);
-		stokes_solver.solve(velocity_components[fc.first].vel,
-							velocity_components[fc.first].ang_vel);
+		stokes_solver.solve(na_velo_components[fc.first].vel,
+							na_velo_components[fc.first].ang_vel);
 	}
 	if (brownian && twodimension) {
-		rushWorkFor2DBrownian(velocity_components["brownian"].vel,
-							  velocity_components["brownian"].ang_vel);
+		rushWorkFor2DBrownian(na_velo_components["brownian"].vel,
+							  na_velo_components["brownian"].ang_vel);
 	}
 }
 
 void System::setVelocityDifference()
 {
-	vel_difference.x = costheta_shear*shear_rate*lz;
-	vel_difference.y = sintheta_shear*shear_rate*lz;
+	vel_difference = 2*dot(E_infinity, {0, 0, lz});
 }
 
 void System::set_shear_rate(double sr)
 {
 	shear_rate = sr;
+	omega_inf = omegahat_inf*shear_rate;
+	E_infinity = Ehat_infinity*shear_rate;
 	setVelocityDifference();
+}
+
+void System::setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty)
+{
+	Ehat_infinity = EhatInfty;
+	omegahat_inf = OhatInfty;
+	if(twodimension) {
+		if (fabs(Ehat_infinity.elm[3])>1e-15 || fabs(Ehat_infinity.elm[4])>1e-15) {
+			throw runtime_error(" System:: Error: 2d simulation with Einf_{y?} != 0");
+		} else {
+			Ehat_infinity.elm[3] = 0;
+			Ehat_infinity.elm[4] = 0;
+		}
+		if (fabs(omegahat_inf.x)>1e-15 || fabs(omegahat_inf.z)>1e-15) {
+			throw runtime_error(" System:: Error: 2d simulation with Omega_inf not along y");
+		} else {
+			omegahat_inf.x = 0;
+			omegahat_inf.z = 0;
+		}
+	}
+	omega_inf = omegahat_inf*shear_rate;
+	E_infinity = Ehat_infinity*shear_rate;
+	setVelocityDifference();
+}
+
+void System::setShearDirection(double theta_shear) // will probably be deprecated soon
+{
+	double costheta_shear = cos(theta_shear);
+	double sintheta_shear = sin(theta_shear);
+	setImposedFlow({0, 0, costheta_shear/2, sintheta_shear/2, 0, 0},
+	               {-0.5*sintheta_shear, 0.5*costheta_shear, 0});
 }
 
 void System::computeShearRate()
@@ -1715,12 +1781,13 @@ void System::computeShearRate()
 	/**
 	 \brief Compute the shear rate under stress control conditions.
 	 */
+	assert(abs(shear_rate-1) < 1e-15);
 	calcStressPerParticle();
-	StressTensor rate_prop_stress;
-	StressTensor rate_indep_stress;
+	Sym2Tensor rate_prop_stress;
+	Sym2Tensor rate_indep_stress;
 	gatherStressesByRateDependencies(rate_prop_stress, rate_indep_stress);
-	double newtonian_viscosity = shearStressComponent(rate_prop_stress, p.theta_shear); // computed with rate=1, o here it is also the viscosity.
-	double newtonian_stress = target_stress - shearStressComponent(rate_indep_stress, p.theta_shear);
+	double newtonian_viscosity = doubledot(rate_prop_stress, getEinfty()); // computed with rate=1, o here it is also the viscosity.
+	double newtonian_stress = target_stress - doubledot(rate_indep_stress, getEinfty());
 
 	set_shear_rate(newtonian_stress/newtonian_viscosity);
 	if (cumulated_strain < init_strain_shear_rate_limit) {
@@ -1847,12 +1914,11 @@ void System::tmpMixedProblemSetVelocities()
 		static double time_next = p.strain_reversal;
 		if (time_ > time_next) {
 			p.theta_shear += M_PI;
-			costheta_shear = cos(p.theta_shear);
-			sintheta_shear = sin(p.theta_shear);
+			setShearDirection(p.theta_shear);
 			time_next += p.strain_reversal;
 		}
 	} else if (p.simulation_mode == 31) {
-		auto &vel_from_fixed = velocity_components["from_fixed"];
+		auto &vel_from_fixed = na_velo_components["from_fixed"];
 		for (int i=np_mobile; i<np; i++) {
 			vel_from_fixed.vel[i] = shear_rate*fixed_velocities[i-np_mobile];
 			vel_from_fixed.ang_vel[i].reset();
@@ -1916,7 +1982,7 @@ void System::sumUpVelocityComponents()
 		na_velocity[i].reset();
 		na_ang_velocity[i].reset();
 	}
-	for (const auto &vc: velocity_components) {
+	for (const auto &vc: na_velo_components) {
 		const auto &vel = vc.second.vel;
 		const auto &ang_vel = vc.second.ang_vel;
 		for (int i=0; i<np_mobile; i++) {
@@ -1940,7 +2006,7 @@ void System::setFixedParticleVelocities()
 
 void System::rescaleVelHydroStressControlled()
 {
-	for (auto &vc: velocity_components) {
+	for (auto &vc: na_velo_components) {
 		if (vc.second.rate_dependence == RATE_PROPORTIONAL) {
 			vc.second *= shear_rate;
 		}
@@ -1958,14 +2024,14 @@ void System::computeVelocities(bool divided_velocities)
 	 */
 	stokes_solver.resetRHS();
 	resetForceComponents();
-	if (divided_velocities || stress_controlled) {
-		if (stress_controlled) {
+	if (divided_velocities || control==stress) {
+		if (control==stress) {
 			set_shear_rate(1);
 		}
 		computeUInf();
 		setFixedParticleVelocities();
 		computeVelocityByComponents();
-		if (stress_controlled) {
+		if (control==stress) {
 			if (p.simulation_mode != 31) {
 				computeShearRate();
 			} else {
@@ -2035,27 +2101,16 @@ void System::computeUInf()
 	for (int i=0; i<np; i++) {
 		u_inf[i].reset();
 	}
-	omega_inf.reset();
 	if (!zero_shear) {
-		if (!p.cross_shear) {
-			for (int i=0; i<np; i++) {
-				u_inf[i].x = shear_rate*position[i].z;
-			}
-			omega_inf.y = 0.5*shear_rate;
-		} else {
-			for (int i=0; i<np; i++) {
-				u_inf[i].x = costheta_shear*shear_rate*position[i].z;
-				u_inf[i].y = sintheta_shear*shear_rate*position[i].z;
-			}
-			omega_inf.y =  0.5*costheta_shear*shear_rate;
-			omega_inf.x = -0.5*sintheta_shear*shear_rate;
+		for (int i=0; i<np; i++) {
+			u_inf[i] = dot(E_infinity, position[i]) + cross(omega_inf, position[i]);
 		}
 	}
 }
 
 void System::adjustVelocityPeriodicBoundary()
 {
-	if (stress_controlled) { // in rate control it is already done in computeVelocities()
+	if (control==stress) { // in rate control it is already done in computeVelocities()
 		computeUInf();
 	}
 	for (int i=0; i<np; i++) {

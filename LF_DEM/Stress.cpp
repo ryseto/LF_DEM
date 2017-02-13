@@ -7,6 +7,7 @@
 //
 #include <sstream>
 #include <stdexcept>
+#include <assert.h>
 #include "System.h"
 #include "global.h"
 #include "StressComponent.h"
@@ -24,11 +25,11 @@ void System::declareStressComponents() {
 
 	/*****************  GU stresses *********************/
 	// From the velocity components
-	if (lubrication && velocity_components.empty()) {
+	if (lubrication && na_velo_components.empty()) {
 		throw runtime_error(" System::declareStressComponents: No velocity components declared, you probably forgot it.");
 	}
 	if (lubrication) {
-		for (const auto &vc: velocity_components) {
+		for (const auto &vc: na_velo_components) {
 			if (vc.first != "brownian") {
 				stress_components[vc.first] = StressComponent(VELOCITY_STRESS,
 				                                                vc.second.vel.size(),
@@ -52,7 +53,7 @@ void System::declareStressComponents() {
 	}
 
 	/****************  xF stresses *****************/
-	if (rate_controlled) {
+	if (control==rate) {
 		stress_components["xF_contact"] = StressComponent(XF_STRESS, np, RATE_DEPENDENT, "contact"); // rate dependent through xFdashpot
 	} else { // stress controlled
 		stress_components["xF_contact_rateprop"] = StressComponent(XF_STRESS, np, RATE_PROPORTIONAL, "contact");
@@ -62,7 +63,7 @@ void System::declareStressComponents() {
 		stress_components["xF_repulsion"] = StressComponent(XF_STRESS, np, RATE_INDEPENDENT, "repulsion");
 	}
 
-	if (stress_controlled) {
+	if (control==stress) {
 		for (const auto &sc: stress_components) {
 			if (sc.second.rate_dependence == RATE_DEPENDENT) {
 				ostringstream error_msg;
@@ -75,12 +76,12 @@ void System::declareStressComponents() {
 
 	for (const auto &sc: stress_components) {
 		auto &group = sc.second.group;
-		total_stress_groups[group] = StressTensor();
+		total_stress_groups[group] = Sym2Tensor();
 	}
 }
 
 
-void System::addUpInteractionStressGU(std::vector<StressTensor> &stress_comp,
+void System::addUpInteractionStressGU(std::vector<Sym2Tensor> &stress_comp,
                                       const std::vector<vec3d> &non_affine_vel,
                                       const std::vector<vec3d> &non_affine_ang_vel)
 {
@@ -99,7 +100,7 @@ void System::addUpInteractionStressGU(std::vector<StressTensor> &stress_comp,
 	}
 }
 
-void System::addUpInteractionStressME(std::vector<StressTensor> &stress_comp)
+void System::addUpInteractionStressME(std::vector<Sym2Tensor> &stress_comp)
 {
 	if (!lubrication) {
 		return;
@@ -108,18 +109,17 @@ void System::addUpInteractionStressME(std::vector<StressTensor> &stress_comp)
 		if (inter.lubrication.is_active()) {
 			unsigned int i, j;
 			std::tie(i, j) = inter.get_par_num();
-			inter.lubrication.addMEStresslet(costheta_shear,
-			                                          sintheta_shear,
-			                                          shear_rate,
-			                                          stress_comp[i], stress_comp[j]); // R_SE:Einf-R_SU*v
+			inter.lubrication.addMEStresslet(E_infinity,
+			                                 stress_comp[i],
+			                                 stress_comp[j]); // R_SE:Einf-R_SU*v
 		}
 	}
 }
 
-void System::gatherVelocitiesByRateDependencies(vector<vec3d> rateprop_vel,
-                                                vector<vec3d> rateprop_ang_vel,
-                                                vector<vec3d> rateindep_vel,
-                                                vector<vec3d> rateindep_ang_vel) const
+void System::gatherVelocitiesByRateDependencies(vector<vec3d> &rateprop_vel,
+                                                vector<vec3d> &rateprop_ang_vel,
+                                                vector<vec3d> &rateindep_vel,
+                                                vector<vec3d> &rateindep_ang_vel) const
 {
 	/** Gather velocity components in rate proportional and rate independent parts.
 			If there is a rate dependent (but not proportional), it is left out.
@@ -127,13 +127,14 @@ void System::gatherVelocitiesByRateDependencies(vector<vec3d> rateprop_vel,
 			[Note] The rate proportional part is a total velocity, and as such must be dealt with proper Lees-Edwards BC.
 						 The rate independent part is always a non-affine velocity.
 	*/
+	assert(control==stress || control==viscnb);
 	for (unsigned int i=0; i<rateprop_vel.size(); i++) {
 		rateprop_vel[i].reset();
 		rateprop_ang_vel[i].reset();
 		rateindep_vel[i].reset();
 		rateindep_ang_vel[i].reset();
 	}
-	for (const auto &vc: velocity_components) {
+	for (const auto &vc: na_velo_components) {
 		if (vc.second.rate_dependence == RATE_PROPORTIONAL) {
 			for (unsigned int i=0; i<rateprop_vel.size(); i++) {
 				rateprop_vel[i] += vc.second.vel[i];
@@ -177,20 +178,20 @@ void System::calcContactXFPerParticleStressControlled()
 		}
 		if (inter.contact.dashpot.is_active()) {
 			// rate_prop_vel is a full velocity (not non affine)
-			StressTensor rateprop_stress = StressTensor(inter.rvec,
-			                                            inter.contact.dashpot.getForceOnP0(rateprop_vel[i],
-			                                                                               rateprop_vel[j],
-			                                                                               rateprop_ang_vel[i],
-			                                                                               rateprop_ang_vel[j]));
+			Sym2Tensor rateprop_stress = outer_sym(inter.rvec,
+			                                       inter.contact.dashpot.getForceOnP0(rateprop_vel[i],
+			                                                                          rateprop_vel[j],
+			                                                                          rateprop_ang_vel[i],
+			                                                                          rateprop_ang_vel[j]));
 			double r_ij = radius[i] + radius[j];
 			rateprop_XF[i] += (radius[i]/r_ij)*rateprop_stress;
 			rateprop_XF[j] += (radius[j]/r_ij)*rateprop_stress;
 
-			StressTensor rateindep_stress = StressTensor(inter.rvec,
-			                                             inter.contact.dashpot.getForceOnP0_nonaffine(rateindep_vel[i],
-			                                                                                          rateindep_vel[j],
-			                                                                                          rateindep_ang_vel[i],
-			                                                                                          rateindep_ang_vel[j]));
+			Sym2Tensor rateindep_stress = outer_sym(inter.rvec,
+			                                        inter.contact.dashpot.getForceOnP0_nonaffine(rateindep_vel[i],
+			                                                                                     rateindep_vel[j],
+			                                                                                     rateindep_ang_vel[i],
+			                                                                                     rateindep_ang_vel[j]));
 			rateindep_XF[i] += (radius[i]/r_ij)*rateindep_stress;
 			rateindep_XF[j] += (radius[j]/r_ij)*rateindep_stress;
 		}
@@ -244,14 +245,14 @@ void System::calcStressPerParticle()
 		const auto &component_name = sc.first;
 		if (type == VELOCITY_STRESS) {
 			addUpInteractionStressGU(sc.second.particle_stress,
-			                         velocity_components[component_name].vel,
-			                         velocity_components[component_name].ang_vel);
+			                         na_velo_components[component_name].vel,
+			                         na_velo_components[component_name].ang_vel);
 		}
 		if (type == STRAIN_STRESS) {
 			addUpInteractionStressME(sc.second.particle_stress);
 		}
 	}
-	if (rate_controlled) {
+	if (control==rate) {
 		auto &cstress_XF = stress_components["xF_contact"].particle_stress;
 		for (auto &inter: interaction) {
 			if (inter.contact.is_active()) {
@@ -325,8 +326,8 @@ void System::getStressCouette(int i,
 	stress_rt = -cs*total_stress_pp[i].elm[0]+(cc-ss)*total_stress_pp[i].elm[2]+cs*total_stress_pp[i].elm[5];
 }
 
-void System::gatherStressesByRateDependencies(StressTensor &rate_prop_stress,
-                                              StressTensor &rate_indep_stress)
+void System::gatherStressesByRateDependencies(Sym2Tensor &rate_prop_stress,
+                                              Sym2Tensor &rate_indep_stress)
 {
 	rate_prop_stress.reset();
 	rate_indep_stress.reset();
@@ -343,12 +344,7 @@ void System::gatherStressesByRateDependencies(StressTensor &rate_prop_stress,
 
 	if (!zero_shear) {
 		// suspending fluid viscosity
-		if (p.cross_shear) {
-			rate_prop_stress.elm[2] += costheta_shear*shear_rate/6./M_PI;
-			rate_prop_stress.elm[3] += sintheta_shear*shear_rate/6./M_PI;
-		}	else {
-			rate_prop_stress.elm[2] += shear_rate/6./M_PI;
-		}
+		rate_prop_stress += 2*E_infinity/(6*M_PI);
 	}
 }
 
@@ -366,14 +362,7 @@ void System::calcStress()
 	}
 
 	if (!zero_shear) {
-		// suspending fluid viscosity
-		if (p.cross_shear) {
-			total_stress_groups["hydro"].elm[2] += costheta_shear*shear_rate/6./M_PI;
-			total_stress_groups["hydro"].elm[3] += sintheta_shear*shear_rate/6./M_PI;
-		}	else {
-			StressTensor stress_solvent((shear_rate/(6*M_PI))*E_infinity);
-			total_stress_groups["hydro"] += stress_solvent;
-		}
+		total_stress_groups["hydro"] += 2*E_infinity/(6*M_PI);
 	}
 
 	total_stress.reset();

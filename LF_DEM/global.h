@@ -15,6 +15,14 @@
 #define XF_STRESS 2
 #define BROWNIAN_STRESS 3
 
+#define BIN_FORMAT_BASE_OLD 1
+#define BIN_FORMAT_BASE_NEW 2
+#define BIN_FORMAT_FIXED_VEL 3
+#define TXT_FORMAT_BASE_OLD 1
+#define TXT_FORMAT_BASE_NEW 2
+#define TXT_FORMAT_FIXED_VEL 3
+#define TXT_FORMAT_CIRCULAR_COUETTE 4
+
 #define CALL_MEMBER_FN(object,ptrToMember)  ((object).*(ptrToMember))
 
 #ifndef GIT_VERSION
@@ -123,7 +131,7 @@ inline std::vector<std::string> splitString(const std::string& str){
 
 	std::vector<std::string> elements;
 
-	while ( stripped_str.length()>0 ) {
+	while (stripped_str.length() > 0) {
 		brk = stripped_str.find(" ");
 		std::string first_part;
 		if (brk < std::string::npos) {
@@ -141,5 +149,11 @@ inline std::vector<std::string> splitString(const std::string& str){
 	}
 	return elements;
 }
+
+enum ControlVariable {
+	rate,
+	stress,
+	viscnb
+};
 
 #endif /* defined(__LF_DEM__global__) */

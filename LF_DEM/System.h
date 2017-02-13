@@ -24,10 +24,11 @@
 #include <string>
 #include <tuple>
 #include <map>
-#include "StressTensor.h"
+#include "global.h"
+#include "Configuration.h"
+#include "Sym2Tensor.h"
 #include "Interaction.h"
 #include "vec3d.h"
-#include "Matrix.h"
 #include "BoxSet.h"
 #include "StokesSolver.h"
 #include "ParameterSet.h"
@@ -70,11 +71,14 @@ private:
 	vec3d shear_strain;
 	double cumulated_strain;
 	double angle_wheel; // rotational angle of rotary couette geometory
-	double costheta_shear;
-	double sintheta_shear;
 	double shear_rate;
-
+	Sym2Tensor Ehat_infinity; // E/shear_rate: "shape" of the flow
+	vec3d omegahat_inf;  // omega/shear_rate: "shape" of the flow
+	Sym2Tensor E_infinity;
 	vec3d omega_inf;
+
+	double particle_volume;
+
 	std::vector <vec3d> u_inf;
 	std::vector <vec3d> na_disp;
 
@@ -100,7 +104,6 @@ private:
 	void setDashpotForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setHydroForceToParticle_squeeze(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setHydroForceToParticle_squeeze_tangential(std::vector<vec3d> &force, std::vector<vec3d> &torque);
-	void buildHydroTerms();
 	void buildResistanceMatrix();
 	void setBrownianForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setSolverRHS(const ForceComponent &fc);
@@ -123,10 +126,10 @@ private:
 	void computeForcesOnWallParticles();
 	void computeVelocityCoeffFixedParticles();
 	void rescaleVelHydroStressControlled();
-	void addUpInteractionStressGU(std::vector<StressTensor> &stress_comp,
+	void addUpInteractionStressGU(std::vector<Sym2Tensor> &stress_comp,
 								  const std::vector<vec3d> &non_affine_vel,
 								  const std::vector<vec3d> &non_affine_ang_vel);
-	void addUpInteractionStressME(std::vector<StressTensor> &stress_comp);
+	void addUpInteractionStressME(std::vector<Sym2Tensor> &stress_comp);
 
 	void computeMaxNAVelocity();
 	double (System::*calcInteractionRange)(int, int);
@@ -163,6 +166,14 @@ private:
 	void declareVelocityComponents();
 	void declareForceComponents();
 
+	template<typename T> void setupGenericConfiguration(T conf, ControlVariable control_);
+	void setupBrownian();
+	void setupParameters();
+	void setupParametersContacts();
+	void setupParametersLubrication();
+	void setupParametersIntegrator();
+	void setupSystemPostConfiguration();
+
  protected:
  public:
 	System(ParameterSet& ps, std::list <Event>& ev);
@@ -181,8 +192,7 @@ private:
 	bool pairwise_resistance;
 	// Simulation parameters
 	bool twodimension;
-	bool rate_controlled;
-	bool stress_controlled;
+	ControlVariable control;
 	bool zero_shear;
 	bool wall_rheology;
 	bool mobile_fixed;
@@ -209,8 +219,8 @@ private:
 	std::vector<vec3d> ang_velocity_predictor;
 	std::vector<vec3d> na_ang_velocity;
 	std::vector<vec3d> fixed_velocities;
-	std::vector<StressTensor> total_stress_pp; // per particle
-	StressTensor total_stress;
+	std::vector<Sym2Tensor> total_stress_pp; // per particle
+	Sym2Tensor total_stress;
 
 	/**************** Interaction machinery ***************************/
 	/* We hold the Interaction instances in a std::vector */
@@ -251,14 +261,14 @@ private:
 	 * The responsability for the correctness of interaction_partners is left to System
 	 * (not delegated any more to Interaction, like it used to).*/
 	std::vector < std::vector<int> > interaction_partners;
-	void gatherStressesByRateDependencies(StressTensor &rate_prop_stress,
-										  StressTensor &rate_indep_stress);
+	void gatherStressesByRateDependencies(Sym2Tensor &rate_prop_stress,
+										  Sym2Tensor &rate_indep_stress);
 
 	std::map<std::string, ForceComponent> force_components;
-	std::map<std::string, StressTensor> total_stress_groups;
+	std::map<std::string, Sym2Tensor> total_stress_groups;
 	std::map<std::string, StressComponent> stress_components;
-	std::map<std::string, VelocityComponent> velocity_components;
-	Averager<StressTensor> stress_avg;
+	std::map<std::string, VelocityComponent> na_velo_components;
+	Averager<Sym2Tensor> stress_avg;
 	double dt;
 	double avg_dt;
 	int avg_dt_nb;
@@ -298,20 +308,20 @@ private:
 	vec3d force_downwall;
 	double *ratio_unit_time; // to convert System time in Simulation time
 
-	matrix E_infinity;
-	matrix O_infinity;
+
 	/****************************************/
 	void setSystemVolume();
 	void setConfiguration(const std::vector <vec3d>& initial_positions,
 	                      const std::vector <double>& radii);
 	void setFixedVelocities(const std::vector <vec3d>& vel);
 	void setContacts(const std::vector <struct contact_state>& cs);
-	void getContacts(std::vector <struct contact_state>& cs);
+	std::vector <struct contact_state> getContacts();
+	struct base_configuration getConfiguration();
 	void setInteractions_GenerateInitConfig();
-	void setupSystemPreConfiguration(std::string control, bool is2d);
-	void setupSystemPostConfiguration();
-	void allocateRessourcesPreConfiguration();
-	void allocateRessourcesPostConfiguration();
+	void setupConfiguration(struct base_configuration c, ControlVariable control_);
+	void setupConfiguration(struct fixed_velo_configuration c, ControlVariable control_);
+	void setupConfiguration(struct circular_couette_configuration c, ControlVariable control_);
+	void allocateRessources();
 	void timeEvolution(double time_end, double strain_end);
 	void displacement(int i, const vec3d& dr);
 	void checkNewInteraction();
@@ -326,10 +336,10 @@ private:
 	void calcStress();
 	void calcStressPerParticle();
 	void calcContactXFPerParticleStressControlled();
-	void gatherVelocitiesByRateDependencies(std::vector<vec3d> rateprop_vel,
-											std::vector<vec3d> rateprop_ang_vel,
-											std::vector<vec3d> rateindep_vel,
-											std::vector<vec3d> rateindep_ang_vel) const;
+	void gatherVelocitiesByRateDependencies(std::vector<vec3d> &rateprop_vel,
+	                                        std::vector<vec3d> &rateprop_ang_vel,
+	                                        std::vector<vec3d> &rateindep_vel,
+	                                        std::vector<vec3d> &rateindep_ang_vel) const;
 	void calcTotalStressPerParticle();
 	void getStressCouette(int i,
 						  double &stress_rr,
@@ -409,7 +419,7 @@ private:
 	{
 		return shear_strain;
 	}
-	
+
 	double get_cumulated_strain()
 	{
 		return cumulated_strain;
@@ -435,25 +445,13 @@ private:
 		return total_num_timesteps;
 	}
 
-	std::tuple<double,double> getCosSinShearAngle()
+	Sym2Tensor getEinfty()
 	{
-		return std::make_tuple(costheta_shear, sintheta_shear);
+		return E_infinity;
 	}
 
-	void setShearDirection(double theta_shear)
-	{
-		costheta_shear = cos(theta_shear);
-		sintheta_shear = sin(theta_shear);
-		if (twodimension) {
-			if (std::abs(sintheta_shear) > 1e-10) {
-				throw std::runtime_error(" System:: Error: 2d simulation with sin(theta_shear) != 0");
-			} else { // to avoid sintheta_shear = 1e-16, which takes particles out of plane after a while
-				sintheta_shear = 0;
-			}
-		}
-		setVelocityDifference();
-	}
-	
+	void setShearDirection(double theta_shear);
+	void setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty);
 	const std::vector <vec3d> & getNonAffineDisp()
 	{
 		return na_disp;

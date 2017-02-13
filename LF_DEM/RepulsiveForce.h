@@ -19,7 +19,7 @@
 #include <iomanip>
 #include <fstream>
 #include "vec3d.h"
-#include "StressTensor.h"
+#include "Sym2Tensor.h"
 
 class System;
 class Interaction;
@@ -38,7 +38,7 @@ private:
 	vec3d force_vector; // normal contact force
 	double force_norm;
 	double reduced_force_norm;
-	StressTensor stresslet_XF;
+	Sym2Tensor stresslet_XF;
 	void calcReducedForceNorm();
 	void calcScaledForce();
 public:
@@ -51,8 +51,7 @@ public:
 	cutoff_roundlength(0),
 	force_vector(0),
 	force_norm(0),
-	reduced_force_norm(0),
-	stresslet_XF(0)
+	reduced_force_norm(0)
 	{};
 	void init(System* sys_, Interaction* int_);
 	~RepulsiveForce(){};
@@ -69,8 +68,8 @@ public:
 		return force_vector;
 	}
 	void calcStressXF();
-	void addUpStressXF(StressTensor &stress_p0, StressTensor &stress_p1);
-	StressTensor getStressXF() const
+	void addUpStressXF(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1);
+	Sym2Tensor getStressXF() const
 	{
 		return stresslet_XF;
 	}

@@ -143,9 +143,9 @@ struct ParameterSet
 	bool monolayer;							///< Particle movements are confined in monolayer. 3D rotations are allowed. [false]
 	double rest_threshold; ///< criteria to judge saturation of deformation, i.e. jammed state etc. [1e-4]
 	std::string event_handler;  ///< Select event handler [""]
- 	bool cross_shear;        ///< Allow arbitrary shear in xy plane (actual direction set by theta_shear) [false]
 	double theta_shear;  ///< Shear direction, in degress, 0 is shear along x, 90 is shear along y [0]
 	double strain_reversal;  ///< for test_simulation = 21 (rtest1)
+	bool keep_input_strain;  ///< Use as initial strain value the strain from initial Lees-Edwards displacement [false]
 };
 
 #endif/* defined(__LF_DEM__ParameterSet__) */

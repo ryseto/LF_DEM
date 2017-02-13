@@ -23,7 +23,7 @@
 #include "Contact.h"
 #include "Lubrication.h"
 #include "RepulsiveForce.h"
-#include "StressTensor.h"
+#include "Sym2Tensor.h"
 
 class System;
 
@@ -117,7 +117,7 @@ struct compare_interaction {
 	{
 		auto ij1 = inter1->get_par_num();
 		auto ij2 = inter2->get_par_num();
-		
+
 		bool equal = (ij1.first == ij2.first) && (ij1.second == ij2.second);
 		if (equal) {
 			return inter1 < inter2;
