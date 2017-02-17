@@ -7,6 +7,7 @@
 //
 #include <sstream>
 #include <stdexcept>
+#include <assert.h>
 #include "System.h"
 #include "global.h"
 #include "StressComponent.h"
