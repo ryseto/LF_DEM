@@ -671,32 +671,6 @@ void Simulation::outputData()
 		outdata_st.entryData(entry_name, "stress", 6, stress_comp.second);
 	}
 	outdata_st.writeToFile();
-
-	if (!p.out_particle_stress.empty()) {
-		outdata_pst.setDimensionlessNumber(force_ratios[dimless_nb_label]);
-		outdata_pst.setUnit(output_unit_scales);
-
-		map<string, string> group_shorts;
-		group_shorts["l"] = "hydro";
-		group_shorts["c"] = "contact";
-		group_shorts["r"] = "repulsion";
-		group_shorts["b"] = "brownian";
-		group_shorts["d"] = "dashpot";
-		group_shorts["t"] = "total";
-		map<string, vector<Sym2Tensor>> particle_stress;
-		for (auto &type: p.out_particle_stress) {
-			auto group_name = group_shorts[string(1, type)];
-			particle_stress[group_name] = getParticleStressGroup(group_name);
-		}
-		for (int i=0; i<sys.get_np(); i++) {
-			for(const auto &pst: particle_stress) {
-				outdata_pst.entryData(pst.first + " stress (xx, xy, xz, yz, yy, zz)", "stress", 6, pst.second[i]);
-			}
-		}
-		stringstream snapshot_header;
-		getSnapshotHeader(snapshot_header);
-		outdata_pst.writeToFile(snapshot_header.str());
-	}
 }
 
 void Simulation::getSnapshotHeader(stringstream& snapshot_header)
@@ -744,6 +718,34 @@ void Simulation::outputDataHeader(ofstream& fout)
 	stringstream data_header;
 	createDataHeader(data_header);
 	fout << data_header.str();
+}
+
+void Simulation::outputPstFileTxt()
+{
+	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
+	outdata_pst.setDimensionlessNumber(force_ratios[dimless_nb_label]);
+	outdata_pst.setUnit(output_unit_scales);
+
+	map<string, string> group_shorts;
+	group_shorts["l"] = "hydro";
+	group_shorts["c"] = "contact";
+	group_shorts["r"] = "repulsion";
+	group_shorts["b"] = "brownian";
+	group_shorts["d"] = "dashpot";
+	group_shorts["t"] = "total";
+	map<string, vector<Sym2Tensor>> particle_stress;
+	for (auto &type: p.out_particle_stress) {
+		auto group_name = group_shorts[string(1, type)];
+		particle_stress[group_name] = getParticleStressGroup(group_name);
+	}
+	for (int i=0; i<sys.get_np(); i++) {
+		for(const auto &pst: particle_stress) {
+			outdata_pst.entryData(pst.first + " stress (xx, xy, xz, yz, yy, zz)", "stress", 6, pst.second[i]);
+		}
+	}
+	stringstream snapshot_header;
+	getSnapshotHeader(snapshot_header);
+	outdata_pst.writeToFile(snapshot_header.str());
 }
 
 void Simulation::outputParFileTxt()
@@ -886,6 +888,9 @@ void Simulation::outputConfigurationData()
 	}
 	if (p.out_data_interaction) {
 		outputIntFileTxt();
+	}
+	if (!p.out_particle_stress.empty()) {
+		outputPstFileTxt();
 	}
 }
 
