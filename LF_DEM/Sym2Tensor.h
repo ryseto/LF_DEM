@@ -19,6 +19,9 @@
 #include <iostream>
 #include <iomanip>
 #include <array>
+#include "Matrix.h"
+
+class matrix;
 
 class Sym2Tensor {
 public:
@@ -92,6 +95,14 @@ public:
 	double trace()
 	{
 		return elm[0]+elm[4]+elm[5];
+	}
+
+	matrix getMatrix()
+	{
+		matrix m(elm[0], elm[1], elm[2],
+				 elm[1], elm[4], elm[3],
+				 elm[2], elm[3], elm[5]);
+		return m;
 	}
 };
 

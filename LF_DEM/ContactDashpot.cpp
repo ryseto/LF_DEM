@@ -208,11 +208,10 @@ struct ODBlock ContactDashpot::RFU_ODBlock() const
 		block.col3[4] = -YC[1]*nvec->x*nvec->z;
 		// column 4
 		block.col4[0] =  YB[1]*nvec->x;
-		block.col4[1] =  YC[1]*(1-nvec->y*nvec->y);;
+		block.col4[1] =  YC[1]*(1-nvec->y*nvec->y);
 		block.col4[2] = -YC[1]*nvec->y*nvec->z;
-;
 		// column 5
-		block.col5[0] =  YC[1]*(1-nvec->z*nvec->z);;
+		block.col5[0] =  YC[1]*(1-nvec->z*nvec->z);
 	} else {
 		// column 0
 		block.col0[0] = XA[1]*nvec->x*nvec->x;
@@ -365,7 +364,12 @@ vec3d ContactDashpot::getForceOnP0(const vec3d &vel_p0,
 	if (is_active()) {
 		vec3d vi(vel_p0);
 		vec3d vj(vel_p1);
-		vj += interaction->z_offset*sys->get_vel_difference();
+		if (!sys->ext_flow) {
+			vj += interaction->z_offset*sys->get_vel_difference();
+		} else {
+			vj += sys->get_vel_difference_extension(interaction->pd_shift);
+		}
+
 		/* XAU_i */
 		vec3d force_p0 = -dot(XA[0]*vi+XA[1]*vj, nvec)*(*nvec);
 		if (tangential_coeff > 0) {

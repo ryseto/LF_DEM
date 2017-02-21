@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 {
 	cout << endl << "LF_DEM version " << GIT_VERSION << endl << endl;
 	string usage = "(1) Simulation\n $ LF_DEM [-r Rate] [-s Stress] [-R Rate_Sequence] [-S Stress_Sequence]\
-	[-m ?] [-k kn_kt_File] [-v Simulation_Identifier] [-i Provisional_Data] [-n]\
+	[-e] [-m ?] [-k kn_kt_File] [-v Simulation_Identifier] [-i Provisional_Data] [-n]\
 	Configuration_File Parameter_File \
 	\n\n OR \n\n(2) Generate initial configuration\n $ LF_DEM -g Random_Seed [-M]\n";
 
@@ -40,6 +40,7 @@ int main(int argc, char **argv)
 	bool force_to_run = false;
 	bool long_file_name = false;
 	bool diminish_output = false;
+	string flow_type = "shear";
 	string config_filename = "not_given";
 	string param_filename = "not_given";
 	string knkt_filename = "not_given";
@@ -67,7 +68,7 @@ int main(int argc, char **argv)
 
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hn8fldm:s:S:t:r:R:g::a:k:i:v:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hn8efldm:s:S:t:r:R:g::a:k:i:v:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
 				rheology_control = stress;
@@ -116,6 +117,9 @@ int main(int argc, char **argv)
 				dimensionless_number = 1;
 				suffix = "h";
 				cout << "Rate control, infinite shear rate (hydro + hard contacts only)" << endl;
+				break;
+			case 'e':
+				flow_type = "extension";
 				break;
 			case 'k':
 				knkt_filename = optarg;
@@ -191,13 +195,14 @@ int main(int argc, char **argv)
 
 		if (seq_type == "iy") {
 			simulation.simulationInverseYield(in_args.str(), input_files, binary_conf,
-											  dimensionless_number, suffix, rheology_control, simu_identifier);
+											  dimensionless_number, suffix, rheology_control,
+											  flow_type, simu_identifier);
 
 		} else if (seq_filename == "not_given") {
 			try {
 				simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
 												 dimensionless_number, suffix, rheology_control,
-												 simu_identifier);
+												 flow_type, simu_identifier);
 			} catch (runtime_error& e) {
 				cerr << e.what() << endl;
 				return 1;

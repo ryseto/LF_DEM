@@ -130,7 +130,6 @@
 		CDE4695916BC4CB800923139 /* StokesSolver.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = StokesSolver.cpp; sourceTree = "<group>"; };
 		D9032D731B79D1A00062A6F3 /* Events.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Events.h; sourceTree = "<group>"; };
 		D9032D741B79DFE60062A6F3 /* SimulationInit.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SimulationInit.cpp; sourceTree = "<group>"; };
-		D90971261E042E9000EAB3B7 /* Matrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Matrix.h; sourceTree = "<group>"; };
 		D90AF33D1AF9FFBA00E15C7E /* _averager_8h_source.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = _averager_8h_source.html; sourceTree = "<group>"; };
 		D90AF33E1AF9FFBA00E15C7E /* _box_8h_source.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = _box_8h_source.html; sourceTree = "<group>"; };
 		D90AF33F1AF9FFBA00E15C7E /* _box_set_8h_source.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = _box_set_8h_source.html; sourceTree = "<group>"; };
@@ -605,6 +604,9 @@
 		D9A906701BF331EF00BE8640 /* trajectory.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = trajectory.pl; path = tools/trajectory.pl; sourceTree = SOURCE_ROOT; };
 		D9AD32F11D8CAD3D00819471 /* SystemHelperFunctions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SystemHelperFunctions.h; sourceTree = "<group>"; };
 		D9B0FF381D1A810C00FFCBFD /* Timer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Timer.h; sourceTree = "<group>"; };
+		D9B4104A1E53E52F00A2C9D5 /* Matrix.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Matrix.h; sourceTree = "<group>"; };
+		D9B4104B1E5BE26600A2C9D5 /* Sym2Tensor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sym2Tensor.h; sourceTree = "<group>"; };
+		D9B4104C1E5BF15900A2C9D5 /* Configuration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Configuration.h; sourceTree = "<group>"; };
 		D9B659F81998FD14003DA63E /* LF_DEM.profdata */ = {isa = PBXFileReference; lastKnownFileType = file; path = LF_DEM.profdata; sourceTree = "<group>"; };
 		D9BA0B8B1C7010930077D0AC /* analyzeWallShear.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; name = analyzeWallShear.pl; path = tools/analyzeWallShear.pl; sourceTree = SOURCE_ROOT; };
 		D9BC20971AAD607B0033D4A8 /* algorithm.graffle */ = {isa = PBXFileReference; lastKnownFileType = file; path = algorithm.graffle; sourceTree = "<group>"; };
@@ -1235,18 +1237,19 @@
 				D9CE1B441B066B5E00E052D9 /* dSFMT-common.h */,
 				D9CE1B451B066B5E00E052D9 /* dSFMT-params.h */,
 				D9CE1B461B066B5E00E052D9 /* dSFMT-params19937.h */,
-				D90971261E042E9000EAB3B7 /* Matrix.h */,
 				D988E38D165441750009949F /* main.cpp */,
 				D9752C881B18285100DDE5E4 /* global.h */,
 				D9032D731B79D1A00062A6F3 /* Events.h */,
 				D91EB7AA1D7B027C000868CE /* ForceComponent.h */,
 				D972B3AB1DC785C400024381 /* StressComponent.h */,
 				D972B3AC1DC785C400024381 /* VelocityComponent.h */,
+				D9B4104C1E5BF15900A2C9D5 /* Configuration.h */,
 				D9878876165545680047A87E /* Simulation.h */,
 				D9878875165545680047A87E /* Simulation.cpp */,
 				D9032D741B79DFE60062A6F3 /* SimulationInit.cpp */,
 				D9A80BF61B1C87D000F4BFD3 /* OutputData.h */,
 				D988E39B1654A18D0009949F /* System.h */,
+				D9B4104A1E53E52F00A2C9D5 /* Matrix.h */,
 				D988E39A1654A18D0009949F /* System.cpp */,
 				D92244831BFBF08700F46233 /* SystemHelperFunctions.cpp */,
 				D9AD32F11D8CAD3D00819471 /* SystemHelperFunctions.h */,
@@ -1275,6 +1278,7 @@
 				D9278EA61A93050700ABCD87 /* Averager.h */,
 				D9B0FF381D1A810C00FFCBFD /* Timer.h */,
 				D988E399165443C10009949F /* vec3d.h */,
+				D9B4104B1E5BE26600A2C9D5 /* Sym2Tensor.h */,
 				D92F19C21676450800411650 /* MersenneTwister.h */,
 				D988E38F165441750009949F /* LF_DEM.1 */,
 			);

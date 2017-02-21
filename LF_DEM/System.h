@@ -24,11 +24,13 @@
 #include <string>
 #include <tuple>
 #include <map>
+#include <complex>
 #include "global.h"
 #include "Configuration.h"
 #include "Sym2Tensor.h"
 #include "Interaction.h"
 #include "vec3d.h"
+#include "Matrix.h"
 #include "BoxSet.h"
 #include "StokesSolver.h"
 #include "ParameterSet.h"
@@ -38,6 +40,7 @@
 #include "VelocityComponent.h"
 #include "ForceComponent.h"
 #include "cholmod.h"
+
 #ifndef USE_DSFMT
 #include "MersenneTwister.h"
 #endif
@@ -68,10 +71,14 @@ private:
 	double lx_half; // =lx/2
 	double ly_half; // =ly/2
 	double lz_half; // =lz/2
+	double lx_ext_flow;
+	double ly_ext_flow;
+	double lz_ext_flow;
 	vec3d shear_strain;
 	double cumulated_strain;
 	double angle_wheel; // rotational angle of rotary couette geometory
 	double shear_rate;
+	double extension_rate;
 	Sym2Tensor Ehat_infinity; // E/shear_rate: "shape" of the flow
 	vec3d omegahat_inf;  // omega/shear_rate: "shape" of the flow
 	Sym2Tensor E_infinity;
@@ -81,6 +88,9 @@ private:
 
 	std::vector <vec3d> u_inf;
 	std::vector <vec3d> na_disp;
+	double sq_cos_ma; // magic angle @@@@
+	double sq_sin_ma; // magic angle @@@@
+	double cos_ma_sin_ma; // magic angle @@@@
 
 	/* data */
 	bool keepRunning(double time_end, double strain_end);
@@ -180,6 +190,7 @@ private:
 	~System();
 	ParameterSet& p;
 	int np_mobile; ///< number of mobile particles
+	bool ext_flow;
 	// Interaction types
 	bool brownian;
 	bool friction;
@@ -220,6 +231,7 @@ private:
 	std::vector<vec3d> na_ang_velocity;
 	std::vector<vec3d> fixed_velocities;
 	std::vector<Sym2Tensor> total_stress_pp; // per particle
+	std::vector<std::complex<double>> phi6;
 	Sym2Tensor total_stress;
 
 	/**************** Interaction machinery ***************************/
@@ -309,6 +321,35 @@ private:
 	double *ratio_unit_time; // to convert System time in Simulation time
 
 
+	
+	/****************************************************************************************************
+	 * Extensional flow using Kraynik-Reinelt Method was originally implemented                         *
+	 * by Antonio Martiniello and Giulio Giuseppe Giusteri from Auguest to November 2016 at OIST.       *
+	 ****************************************************************************************************/
+	//Sym2Tensor E_infinity; // Extension flow
+	//matrix O_infinity; // Extension flow
+	matrix deform_forward; // Extension flow
+	matrix deform_backward; // Extension flow
+	matrix dot_deform_forward; // Extension flow
+	matrix grad_u; // = L Extension flow
+	/*****************************
+	 * Domains in the simulation box are numbered as follows.
+	 *    10 - 8 --11
+	 *    |         |
+	 *    2    1    3
+	 *    |         |
+	 *    6 -- 4 ---7
+	 *************************/
+	vec3d box_axis1;  // x (6--7)
+	vec3d box_axis2;  // z (6--10)
+	vec3d box_diagonal_7_10; //
+	vec3d box_diagonal_6_11;
+	double strain_retrim; // APR
+	double strain_retrim_interval; // APR
+	std::vector <int> overlap_particles;
+	/****************************************/
+
+	
 	/****************************************/
 	void setSystemVolume();
 	void setConfiguration(const std::vector <vec3d>& initial_positions,
@@ -331,8 +372,10 @@ private:
 	void eraseResistance(int p0, int p1);
 	void updateInteractions();
 	int periodize(vec3d&);
-	int periodizeDiff(vec3d&);
-	vec3d periodized(const vec3d&);
+	void periodizeExtFlow(const int &i, bool &pd_transport);
+	vec3d periodized(const vec3d& pos_diff);
+	int periodizeDiff(vec3d& pos_diff);
+	void periodizeDiffExtFlow(vec3d& pos_diff, vec3d& pd_shift, const int &i, const int &j);
 	void calcStress();
 	void calcStressPerParticle();
 	void calcContactXFPerParticleStressControlled();
@@ -352,6 +395,11 @@ private:
 	double calcLubricationRange(int, int);
 	void (System::*eventLookUp)();
 	void eventShearJamming();
+	void retrimProcess(); // APR
+	void retrim(vec3d&); // APR
+	void updateH(double); // APR
+	void yaplotBoxing(std::ofstream &fout_boxing);
+	void calcOrderParameter();
 
 	void setBoxSize(double lx_, double ly_, double lz_)
 	{
@@ -378,6 +426,21 @@ private:
 		return lz;
 	}
 
+	double get_lx_ext_flow()
+	{
+		return lx_ext_flow;
+	}
+	
+	double get_ly_ext_flow()
+	{
+		return ly_ext_flow;
+	}
+	
+	double get_lz_ext_flow()
+	{
+		return lz_ext_flow;
+	}
+
 	double get_time_in_simulation_units()
 	{
 		return time_in_simulation_units;
@@ -395,11 +458,23 @@ private:
 
 	void set_shear_rate(double sr);
 
+	void set_extension_rate(double er);
+	
+	double get_extension_rate()
+	{
+		return extension_rate;
+	}
+
 	vec3d get_vel_difference()
 	{
 		return vel_difference;
 	}
 
+	vec3d get_vel_difference_extension(const vec3d &pos_shift)
+	{
+		return grad_u*pos_shift;
+	}
+	
 	void set_np(int val)
 	{
 		np = val;
@@ -451,10 +526,27 @@ private:
 	}
 
 	void setShearDirection(double theta_shear);
+	
 	void setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty);
+	
 	const std::vector <vec3d> & getNonAffineDisp()
 	{
 		return na_disp;
+	}
+	
+	Sym2Tensor symmetrise(matrix &m)
+	{
+		Sym2Tensor m_sym;
+		// 0(0,0) 1(0,1) 2(0,2)
+		// 3(1,0) 4(1,1) 5(1,2)
+		// 6(2,0) 7(2,1) 8(2,2)
+		m_sym.elm[0] = m.elm[0];
+		m_sym.elm[1] = 0.5*(m.elm[1]+m.elm[3]);
+		m_sym.elm[2] = 0.5*(m.elm[2]+m.elm[6]);
+		m_sym.elm[3] = 0.5*(m.elm[5]+m.elm[7]);
+		m_sym.elm[4] = m.elm[4];
+		m_sym.elm[5] = m.elm[8];
+		return m_sym;
 	}
 };
 #endif /* defined(__LF_DEM__System__) */
