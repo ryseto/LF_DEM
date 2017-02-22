@@ -389,10 +389,6 @@ void System::setupParameters()
 	setupParametersLubrication();
 	setupParametersContacts();
 	pairwise_resistance = lubrication || p.contact_relaxation_time != 0 || p.contact_relaxation_time_tan != 0;
-	if (ext_flow) {
-		// extensional flow
-		p.magic_angle = atan(0.5*(sqrt(5)-1)); // simulation box needs to be tilted in this angle.
-	}
 	if (p.interaction_range == -1) {
 		/* If interaction_range is not indicated,
 		 * interaction object is created at the lubrication cutoff.
@@ -406,6 +402,10 @@ void System::setupParameters()
 	if (p.repulsive_length <= 0) {
 		repulsiveforce = false;
 		p.repulsive_length = 0;
+	}
+	if (ext_flow) {
+		// extensional flow
+		p.magic_angle = atan(0.5*(sqrt(5)-1)); // simulation box needs to be tilted in this angle.
 	}
 	setShearDirection(p.theta_shear);
 
@@ -1870,6 +1870,7 @@ void System::computeVelocityByComponents()
 void System::setVelocityDifference()
 {
 	vel_difference = 2*dot(E_infinity, {0, 0, lz});
+	vel_difference.cerr();
 }
 
 void System::set_shear_rate(double shear_rate_)
@@ -1916,8 +1917,8 @@ void System::setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty)
 			omegahat_inf.z = 0;
 		}
 	}
-	omega_inf = omegahat_inf*shear_rate;
-	E_infinity = Ehat_infinity*shear_rate;
+	//	omega_inf = omegahat_inf*shear_rate;
+	//E_infinity = Ehat_infinity*shear_rate;
 }
 
 void System::setShearDirection(double theta_shear) // will probably be deprecated soon
@@ -2333,9 +2334,7 @@ void System::displacement(int i, const vec3d& dr)
 		/**** simple shear flow ****/
 		int z_shift = periodize(position[i]);
 		if (z_shift != 0) {
-			cerr << z_shift << endl;
 			velocity[i] += z_shift*vel_difference;
-			cerr << vel_difference << endl;
 		}
 	} else {
 		/**** extensional flow ****/
@@ -2354,6 +2353,7 @@ void System::periodizeExtFlow(const int &i, bool &pd_transport)
 {
 	if (boxset.boxType(i) != 1) {
 		vec3d s = deform_backward*position[i];
+		//deform_backward.print();
 		while (s.z >= lz) {
 			s.z -= lz;
 			pd_transport = true;
@@ -2371,6 +2371,7 @@ void System::periodizeExtFlow(const int &i, bool &pd_transport)
 			pd_transport = true;
 		}
 		position[i] = deform_forward*s;
+		//deform_forward.print();
 	}
 	if (!twodimension) {
 		if (position[i].y >= ly) {

@@ -135,8 +135,12 @@ void Contact::incrementTangentialDisplacement()
 	 zshift = -1; //  p1 (z ~ lz), p0 (z ~ 0)
 
 	******************************************************/
-//	vec3d vel_offset = interaction->z_offset*sys->get_vel_difference();
-	vec3d vel_offset = sys->get_vel_difference_extension(interaction->pd_shift);
+	vec3d vel_offset;
+	if (!sys->ext_flow) {
+		vel_offset = interaction->z_offset*sys->get_vel_difference();
+	} else {
+		vel_offset = sys->get_vel_difference_extension(interaction->pd_shift);
+	}
 	vec3d translational_deltav = sys->velocity[p1]-sys->velocity[p0]+vel_offset;
 	vec3d rotational_deltav = -cross(a0*sys->ang_velocity[p0]+a1*sys->ang_velocity[p1], interaction->nvec);
 

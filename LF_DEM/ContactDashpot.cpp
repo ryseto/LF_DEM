@@ -384,7 +384,6 @@ vec3d ContactDashpot::getForceOnP0(const vec3d &vel_p0,
 	}
 }
 
-
 vec3d ContactDashpot::getForceOnP0_nonaffine(const vec3d &na_vel_p0,
 											 const vec3d &na_vel_p1,
 											 const vec3d &na_ang_vel_p0,

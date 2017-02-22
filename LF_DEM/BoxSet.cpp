@@ -179,7 +179,7 @@ void BoxSet::positionBoxes()
 				for (unsigned int iz=0; iz<z_box_nb; iz++) {
 					Box* const bx = (*it);
 					bx->setPosition({box_xsize*(ix+0.5), box_ysize*(iy+0.5), box_zsize*(iz+0.5)}); // the center of the box
-					int label = ix*y_box_nb*z_box_nb+iy*z_box_nb+iz;
+					unsigned int label = ix*y_box_nb*z_box_nb+iy*z_box_nb+iz;
 					box_labels[label] = bx;
 					if (iz == 0 && iz < z_box_nb-1) {// bottom box
 						BottomBoxes.insert(bx);
@@ -204,7 +204,7 @@ void BoxSet::positionBoxes()
 				for (unsigned int iz=0; iz<z_box_nb; iz++) {
 					Box* const bx = (*it);
 					// The origin of extensional flow is (0, 0, 0)
-					bx->resetTypes();
+					bx->type = 0;//@@@@
 					bx->setPosition({box_xsize*(ix+0.5)-origin_ext_flow.x,
 						box_ysize*(iy+0.5), box_zsize*(iz+0.5)-origin_ext_flow.z}); // the center of the box
 					unsigned int label = ix*yz_box_nb+iy*z_box_nb+iz;
@@ -454,8 +454,6 @@ void BoxSet::updateNeighbors()
 
 void BoxSet::updateNeighborsExtFlow()
 {
-	cerr << "updateNeighborsExtFlow" << endl;
-	exit(1);
 	vec3d pos_pd;
 	vec3d pos;
 	for (auto& bx : Boxes) {

@@ -118,7 +118,7 @@ sub readHeader {
 	$line = <IN_particle>; ($buf, $buf, $Lz) = split(/\s+/, $line);
 	
 	if ($Ly==0) {
-		$number_of_header = 9;
+		$number_of_header = 10;
 	} else {
 		$number_of_header = 7;
 	}
