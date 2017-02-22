@@ -11,10 +11,10 @@
 #include "System.h"
 #include "global.h"
 #include "StressComponent.h"
-
 using namespace std;
 
-void System::declareStressComponents() {
+void System::declareStressComponents()
+{
 	// It is essential that the stresses in stress_components sum up to the total stress.
 	// exemple: if the total stress is S_TOTAL = S_A + S_B,
 	// you should declare A and B, but not TOTAL.
@@ -30,9 +30,9 @@ void System::declareStressComponents() {
 		for (const auto &vc: na_velo_components) {
 			if (vc.first != "brownian") {
 				stress_components[vc.first] = StressComponent(VELOCITY_STRESS,
-				                                                vc.second.vel.size(),
-			                                                  vc.second.rate_dependence,
-			                                                  vc.first);
+															  vc.second.vel.size(),
+															  vc.second.rate_dependence,
+															  vc.first);
 			}
 		}
 	}
@@ -51,7 +51,7 @@ void System::declareStressComponents() {
 	}
 
 	/****************  xF stresses *****************/
-	if (control==rate) {
+	if (control == rate) {
 		stress_components["xF_contact"] = StressComponent(XF_STRESS, np, RATE_DEPENDENT, "contact"); // rate dependent through xFdashpot
 	} else { // stress controlled
 		stress_components["xF_contact_rateprop"] = StressComponent(XF_STRESS, np, RATE_PROPORTIONAL, "contact");
@@ -61,7 +61,7 @@ void System::declareStressComponents() {
 		stress_components["xF_repulsion"] = StressComponent(XF_STRESS, np, RATE_INDEPENDENT, "repulsion");
 	}
 
-	if (control==stress) {
+	if (control == stress) {
 		for (const auto &sc: stress_components) {
 			if (sc.second.rate_dependence == RATE_DEPENDENT) {
 				ostringstream error_msg;
@@ -77,7 +77,6 @@ void System::declareStressComponents() {
 		total_stress_groups[group] = Sym2Tensor();
 	}
 }
-
 
 void System::addUpInteractionStressGU(std::vector<Sym2Tensor> &stress_comp,
                                       const std::vector<vec3d> &non_affine_vel,
@@ -250,7 +249,7 @@ void System::calcStressPerParticle()
 			addUpInteractionStressME(sc.second.particle_stress);
 		}
 	}
-	if (control==rate) {
+	if (control == rate) {
 		auto &cstress_XF = stress_components["xF_contact"].particle_stress;
 		for (auto &inter: interaction) {
 			if (inter.contact.is_active()) {
@@ -289,9 +288,7 @@ void System::calcStressPerParticle()
 			}
 		}
 	}
-
 }
-
 
 void System::calcTotalStressPerParticle()
 {

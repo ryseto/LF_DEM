@@ -77,8 +77,7 @@ private:
 	vec3d shear_strain;
 	double cumulated_strain;
 	double angle_wheel; // rotational angle of rotary couette geometory
-	double shear_rate;
-	double extension_rate;
+	double shear_rate; //@@@ In the extensional-flow simulation, shear_rate is extensional rate.
 	Sym2Tensor Ehat_infinity; // E/shear_rate: "shape" of the flow
 	vec3d omegahat_inf;  // omega/shear_rate: "shape" of the flow
 	Sym2Tensor E_infinity;
@@ -456,14 +455,9 @@ private:
 		return shear_rate;
 	}
 
-	void set_shear_rate(double sr);
+	void set_shear_rate(double shear_rate);
 
-	void set_extension_rate(double er);
-	
-	double get_extension_rate()
-	{
-		return extension_rate;
-	}
+	void set_extension_rate(double shear_rate);
 
 	vec3d get_vel_difference()
 	{

@@ -119,7 +119,6 @@ void System::allocateRessources()
 	if (twodimension) {
 		angle.resize(np, 0);
 	}
-
 	// Velocity
 	velocity.resize(np);
 	for (auto &v: velocity) {
@@ -158,6 +157,7 @@ void System::allocateRessources()
 	torqueResultant.resize(np);
 	declareStressComponents();
 	total_stress_pp.resize(np);
+	phi6.resize(np);
 }
 
 void System::declareForceComponents()
@@ -284,7 +284,6 @@ void System::setContacts(const vector <struct contact_state>& cs)
 
 		Used to restart the simulation from a given state.
 	 */
-
 	for (const auto& c : cs) {
 		for (auto &inter: interaction) {
 			unsigned int p0, p1;
@@ -390,7 +389,9 @@ void System::setupParameters()
 	setupParametersLubrication();
 	setupParametersContacts();
 	pairwise_resistance = lubrication || p.contact_relaxation_time != 0 || p.contact_relaxation_time_tan != 0;
-
+	if (ext_flow) {
+		p.magic_angle = atan(0.5*(sqrt(5)-1)); // simulation box needs to be tilted in this angle.
+	}
 	if (p.interaction_range == -1) {
 		/* If interaction_range is not indicated,
 		 * interaction object is created at the lubrication cutoff.
@@ -400,7 +401,6 @@ void System::setupParameters()
 	} else {
 		calcInteractionRange = &System::calcInteractionRangeDefault;
 	}
-
 
 	if (p.repulsive_length <= 0) {
 		repulsiveforce = false;
@@ -581,7 +581,6 @@ void System::setupSystemPostConfiguration()
 		/* Initial setup for extensional flow
 		 *
 		 */
-		p.magic_angle = atan(0.5*(sqrt(5)-1)); // simulation box needs to be tilted in this angle.
 		strain_retrim_interval = log(0.5*(3+sqrt(5))); // every this strain, the main simulation box is retrimmed.
 		strain_retrim = strain_retrim_interval; // Setting the first value of strain to retrim.
 		double cos_ma = cos(p.magic_angle);
@@ -593,7 +592,8 @@ void System::setupSystemPostConfiguration()
 		cerr << "cumulated_strain = " << cumulated_strain << endl;
 		updateH(cumulated_strain); // cumulated_strain = 0
 	}
-
+	
+	cerr << "strain_retrim = " << strain_retrim << endl;
 	initializeBoxing();
 	checkNewInteraction();
 	dt = p.dt;
@@ -637,7 +637,12 @@ void System::initializeBoxing()
 	for (int i=0; i<np; i++) {
 		boxset.box(i);
 	}
-	boxset.update();
+	if (!ext_flow) {
+		/**** simple shear flow ****/
+		boxset.update();
+	} else {
+		boxset.updateExtFlow();
+	}
 }
 
 struct base_configuration System::getConfiguration()
@@ -680,7 +685,7 @@ void System::timeStepBoxing()
 			}
 			shear_disp.y = shear_disp.y-m*ly;
 		} else {
-			double strain_increment = dt*extension_rate;
+			double strain_increment = dt*shear_rate;
 			cumulated_strain += strain_increment;
 		}
 	} else {
@@ -1032,6 +1037,7 @@ void System::adaptTimeStep(double time_end, double strain_end)
 	if (time_end >= 0) {
 		if (get_time()+dt > time_end) {
 			dt = time_end-get_time();
+
 		}
 	}
 }
@@ -1058,7 +1064,7 @@ void System::timeStepMove(double time_end, double strain_end)
 		adaptTimeStep(time_end, strain_end);
 	}
 	if (ext_flow) {
-		if (time_+dt > strain_retrim) { // extension_rate = 1 is assumed
+		if (time_+dt > strain_retrim) { // shear_rate = 1 is assumed
 			dt = strain_retrim-time_;
 		}
 	}
@@ -1085,6 +1091,7 @@ void System::timeStepMove(double time_end, double strain_end)
 	}
 	if (ext_flow) {
 		if (cumulated_strain == strain_retrim) {
+			cerr << "cumulated_strain = " << cumulated_strain << endl;
 			retrimProcess();
 		} else if (cumulated_strain > strain_retrim){
 			cerr << "cumulated_strain = " << cumulated_strain << " > " << strain_retrim << endl;
@@ -1106,7 +1113,7 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
 		}
 	}
 	if (ext_flow) {
-		if (time_+dt > strain_retrim) { // extension_rate = 1 is assumed
+		if (time_+dt > strain_retrim) { // shear_rate = 1 is assumed
 			dt = strain_retrim-time_;
 		}
 	}
@@ -1871,19 +1878,26 @@ void System::setVelocityDifference()
 	vel_difference = 2*dot(E_infinity, {0, 0, lz});
 }
 
-void System::set_shear_rate(double sr)
+void System::set_shear_rate(double shear_rate_)
 {
-	shear_rate = sr;
+	shear_rate = shear_rate_;
 	omega_inf = omegahat_inf*shear_rate;
 	E_infinity = Ehat_infinity*shear_rate;
 	setVelocityDifference();
+}
+
+void System::set_extension_rate(double shear_rate_)
+{
+	shear_rate = 0.5*shear_rate_; //note: shear_rate = 2*extension_rate
+	omega_inf.reset();
+	vel_difference.reset();
 }
 
 void System::setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty)
 {
 	Ehat_infinity = EhatInfty;
 	omegahat_inf = OhatInfty;
-	if(twodimension) {
+	if (twodimension) {
 		if (fabs(Ehat_infinity.elm[3])>1e-15 || fabs(Ehat_infinity.elm[4])>1e-15) {
 			throw runtime_error(" System:: Error: 2d simulation with Einf_{y?} != 0");
 		} else {
@@ -1899,12 +1913,6 @@ void System::setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty)
 	}
 	omega_inf = omegahat_inf*shear_rate;
 	E_infinity = Ehat_infinity*shear_rate;
-	setVelocityDifference();
-}
-
-void System::set_extension_rate(double rate)
-{
-	extension_rate = rate;
 	if (!ext_flow) {
 		setVelocityDifference();
 	}
@@ -1912,10 +1920,22 @@ void System::set_extension_rate(double rate)
 
 void System::setShearDirection(double theta_shear) // will probably be deprecated soon
 {
-	double costheta_shear = cos(theta_shear);
-	double sintheta_shear = sin(theta_shear);
-	setImposedFlow({0, 0, costheta_shear/2, sintheta_shear/2, 0, 0},
-	               {-0.5*sintheta_shear, 0.5*costheta_shear, 0});
+	if (!ext_flow) {
+		double costheta_shear = cos(theta_shear);
+		double sintheta_shear = sin(theta_shear);
+		setImposedFlow({0, 0, costheta_shear/2, sintheta_shear/2, 0, 0},
+					   {-0.5*sintheta_shear, 0.5*costheta_shear, 0});
+	} else {
+		matrix grad_u_orig(1, 0, 0,
+						   0, 0, 0,
+						   0, 0,-1);
+		matrix rotation, rotation_inv;
+		rotation.set_rotation(-p.magic_angle, 'y');
+		rotation_inv.set_rotation(p.magic_angle, 'y');
+		grad_u = rotation_inv*grad_u_orig*rotation;
+		setImposedFlow(symmetrise(grad_u),
+					   {0, 0, 0});
+	}
 }
 
 void System::computeShearRate()
@@ -2601,12 +2621,12 @@ void System::updateH(double strainH)
 									1, // 11
 									exp_strain_x*sq_sin_ma+exp_strain_z*sq_cos_ma); // 22
 		/******** Set H_dot *****************************************/
-		dot_deform_forward.setSymmetric(extension_rate*(exp_strain_x*sq_cos_ma-exp_strain_z*sq_sin_ma), // 00
+		dot_deform_forward.setSymmetric(shear_rate*(exp_strain_x*sq_cos_ma-exp_strain_z*sq_sin_ma), // 00
 										0, // 01
-										-extension_rate*(exp_strain_x+exp_strain_z)*cos_ma_sin_ma, // 02
+										-shear_rate*(exp_strain_x+exp_strain_z)*cos_ma_sin_ma, // 02
 										0, // 12
 										0, // 11
-										extension_rate*(exp_strain_x*sq_sin_ma-exp_strain_z*sq_cos_ma)); //22
+										shear_rate*(exp_strain_x*sq_sin_ma-exp_strain_z*sq_cos_ma)); //22
 	} else {
 		cerr << p.flow_type << endl;
 		cerr << "mix flow is not implemented yet" << endl;
@@ -2616,8 +2636,8 @@ void System::updateH(double strainH)
 	/* grad_u is not neccesary to update.
 	 *
 	 */
-	grad_u = dot_deform_forward*deform_backward;
-	E_infinity = symmetrise(grad_u);
+	//grad_u = dot_deform_forward*deform_backward;
+	//E_infinity = symmetrise(grad_u);
 	//O_infinity = grad_u.antiSymmetrise();
 	/************** for boxing **************************************/
 	box_axis1 = lx*deform_forward.getLine(0); // 6--7 = 10--11

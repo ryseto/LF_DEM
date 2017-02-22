@@ -602,7 +602,7 @@ void Simulation::outputData()
 	if (sys.p.flow_type == "shear") {
 		rate = sys.get_shear_rate();
 	} else { //extension
-		rate = sys.get_extension_rate(); // strain_rate = 1 in the rate control simulation
+		rate = sys.get_shear_rate(); // strain_rate = 1 in the rate control simulation
 		matrix rotation, rotation_inv;
 		matrix sigma, sigma_rot;
 		rotation.set_rotation(p.magic_angle, 'y');
@@ -733,7 +733,7 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 	snapshot_header << target_stress_input << ' ';
 	snapshot_header << sys.get_cumulated_strain() << ' ';
 	snapshot_header << sys.get_cumulated_strain()-sys.strain_retrim+sys.strain_retrim_interval << ' ';//6
-	snapshot_header << sys.get_extension_rate() << ' '; //7
+	snapshot_header << sys.get_shear_rate() << ' '; //7
 	snapshot_header << endl;
 }
 

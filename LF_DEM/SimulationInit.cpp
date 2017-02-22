@@ -432,8 +432,9 @@ void Simulation::exportForceAmplitudes()
 	cout << indent+"Rolling contact stiffness (in \"" << input_values["kr"].unit << "\" units): " << p.kr << endl;
 
 	if (input_values.find("hydro") != input_values.end()) { // == if rate controlled
-		sys.set_shear_rate(*(input_values["hydro"].value));
-		if (sys.ext_flow) {
+		if (!sys.ext_flow) {
+			sys.set_shear_rate(*(input_values["hydro"].value));
+		} else {
 			sys.set_extension_rate(*(input_values["hydro"].value));
 		}
 	}
