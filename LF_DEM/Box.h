@@ -33,7 +33,7 @@ private:
 public:
 	Box()
 	{
-		type = 0;
+		type = 1;
 	};
 	~Box();
 

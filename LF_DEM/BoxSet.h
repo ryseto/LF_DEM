@@ -45,17 +45,14 @@ private:
 	std::vector <Box*> box_labels;
 	System* sys;
 	int nb_movingneighbor_part;
-
 	/*****
 	 WhichBox(vec3d pos)
 	 returns a pointer on the box containg position pos
 	 *****/
 	Box* whichBox(const vec3d&);
 	Box* whichBox(unsigned int box_label);
-
 	void updateNeighbors();
 	void updateNeighborsExtFlow();
-	
 	// init methods
 	void allocateBoxes();
 	void positionBoxes();
@@ -64,14 +61,11 @@ private:
 	void assignNeighborsTop();
 	void assignNeighborsBottom();
 	void assignNeighborsTopBottom();
-	
 	void assignNeighborsStaticExtFlow();
 	void assignNeighobrsDynamicExtFlow(Box& bx, const vec3d &pos);
-
 	Box** boxMap;
 	std::vector<vec3d> top_probing_positions;
 	std::vector<vec3d> bottom_probing_positions;
-	
 	unsigned int whichBoxLabel(const vec3d&);
 	unsigned int labelRight(int unsigned label_) {
 		return label_+yz_box_nb;

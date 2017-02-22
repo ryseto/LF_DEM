@@ -390,6 +390,7 @@ void System::setupParameters()
 	setupParametersContacts();
 	pairwise_resistance = lubrication || p.contact_relaxation_time != 0 || p.contact_relaxation_time_tan != 0;
 	if (ext_flow) {
+		// extensional flow
 		p.magic_angle = atan(0.5*(sqrt(5)-1)); // simulation box needs to be tilted in this angle.
 	}
 	if (p.interaction_range == -1) {
@@ -577,10 +578,8 @@ void System::setupSystemPostConfiguration()
 	if (pairwise_resistance) {
 		stokes_solver.init(np, np_mobile);
 	}
-	if (p.flow_type == "extension") {
-		/* Initial setup for extensional flow
-		 *
-		 */
+	if (ext_flow) {
+		// extensional flow
 		strain_retrim_interval = log(0.5*(3+sqrt(5))); // every this strain, the main simulation box is retrimmed.
 		strain_retrim = strain_retrim_interval; // Setting the first value of strain to retrim.
 		double cos_ma = cos(p.magic_angle);
@@ -589,11 +588,8 @@ void System::setupSystemPostConfiguration()
 		sq_sin_ma = sin_ma*sin_ma;
 		cos_ma_sin_ma = cos_ma*sin_ma;
 		//setH_dot(1);
-		cerr << "cumulated_strain = " << cumulated_strain << endl;
 		updateH(cumulated_strain); // cumulated_strain = 0
 	}
-	
-	cerr << "strain_retrim = " << strain_retrim << endl;
 	initializeBoxing();
 	checkNewInteraction();
 	dt = p.dt;
@@ -620,10 +616,14 @@ void System::initializeBoxing()
 		}
 	}
 	if (!ext_flow) {
-		/**** simple shear flow ****/
+		// simple shear
 		boxset.init(max_range, this);
+		for (int i=0; i<np; i++) {
+			boxset.box(i);
+		}
+		boxset.update();
 	} else {
-		/**** extensional flow ****/
+		// extensional flow
 		double dl = max_range;
 		int num_x = (int)(lx/dl);
 		int num_z = (int)(lz/dl);
@@ -632,15 +632,9 @@ void System::initializeBoxing()
 		lz_ext_flow = 2*dl*(num_z+1)+2*dl;
 		vec3d box_origin(dl*(num_x+2), 0, dl*(num_z+2));
 		boxset.initExtFlow(max_range, box_origin, this);
-	}
-
-	for (int i=0; i<np; i++) {
-		boxset.box(i);
-	}
-	if (!ext_flow) {
-		/**** simple shear flow ****/
-		boxset.update();
-	} else {
+		for (int i=0; i<np; i++) {
+			boxset.box(i);
+		}
 		boxset.updateExtFlow();
 	}
 }
@@ -700,6 +694,7 @@ void System::timeStepBoxing()
 		/**** simple shear flow ****/
 		boxset.update();
 	} else {
+		/**** extensional flow ****/
 		boxset.updateExtFlow();
 	}
 }
@@ -1037,7 +1032,6 @@ void System::adaptTimeStep(double time_end, double strain_end)
 	if (time_end >= 0) {
 		if (get_time()+dt > time_end) {
 			dt = time_end-get_time();
-
 		}
 	}
 }
@@ -1880,6 +1874,8 @@ void System::setVelocityDifference()
 
 void System::set_shear_rate(double shear_rate_)
 {
+	setImposedFlow({0, 0, 0.5, 0, 0, 0},
+				   {0, 0.5, 0});
 	shear_rate = shear_rate_;
 	omega_inf = omegahat_inf*shear_rate;
 	E_infinity = Ehat_infinity*shear_rate;
@@ -1888,6 +1884,15 @@ void System::set_shear_rate(double shear_rate_)
 
 void System::set_extension_rate(double shear_rate_)
 {
+	matrix grad_u_orig(1, 0, 0,
+					   0, 0, 0,
+					   0, 0,-1);
+	matrix rotation, rotation_inv;
+	rotation.set_rotation(-p.magic_angle, 'y');
+	rotation_inv.set_rotation(p.magic_angle, 'y');
+	grad_u = rotation_inv*grad_u_orig*rotation;
+	setImposedFlow(symmetrise(grad_u),
+				   {0, 0, 0});
 	shear_rate = 0.5*shear_rate_; //note: shear_rate = 2*extension_rate
 	omega_inf.reset();
 	vel_difference.reset();
@@ -1913,9 +1918,6 @@ void System::setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty)
 	}
 	omega_inf = omegahat_inf*shear_rate;
 	E_infinity = Ehat_infinity*shear_rate;
-	if (!ext_flow) {
-		setVelocityDifference();
-	}
 }
 
 void System::setShearDirection(double theta_shear) // will probably be deprecated soon
@@ -2331,7 +2333,9 @@ void System::displacement(int i, const vec3d& dr)
 		/**** simple shear flow ****/
 		int z_shift = periodize(position[i]);
 		if (z_shift != 0) {
+			cerr << z_shift << endl;
 			velocity[i] += z_shift*vel_difference;
+			cerr << vel_difference << endl;
 		}
 	} else {
 		/**** extensional flow ****/
@@ -2592,46 +2596,35 @@ void System::retrim(vec3d& pos)
 
 void System::updateH(double strainH)
 {
-	if (p.flow_type == "shear") {
-		/**** simple shear flow ****/
-		deform_forward = 1+(strainH-strain_retrim+strain_retrim_interval)*dot_deform_forward;
-		cerr << "this part need to update" << endl;
-		exit(1);
-	} else if (p.flow_type == "extension") {
-		/**** extensional flow ****/
-		/* H_orig = (exp(epsilon_dot t) 0 0 / 0 1 0 / 0 0 exp(-epsilon_dot t))
-		 * H = R(-magicangle) H_orig R(magicangle)
-		 */
-		double exp_strain_x;
-		double exp_strain_z;
-		if (strainH == strain_retrim) {
-			exp_strain_x = 1;
-			exp_strain_z = 1;
-		} else {
-			// strain rate = 1
-			exp_strain_x = exp(strainH-strain_retrim+strain_retrim_interval);
-			exp_strain_z = 1.0/exp_strain_x;
-		}
-		/******** Set H     *****************************************/
-		// 00, 01, 02, 12, 11, 22
-		deform_forward.setSymmetric(exp_strain_x*sq_cos_ma+exp_strain_z*sq_sin_ma, // 00
-									0, // 01
-									-(exp_strain_x-exp_strain_z)*cos_ma_sin_ma, // 02
-									0, // 12
-									1, // 11
-									exp_strain_x*sq_sin_ma+exp_strain_z*sq_cos_ma); // 22
-		/******** Set H_dot *****************************************/
-		dot_deform_forward.setSymmetric(shear_rate*(exp_strain_x*sq_cos_ma-exp_strain_z*sq_sin_ma), // 00
-										0, // 01
-										-shear_rate*(exp_strain_x+exp_strain_z)*cos_ma_sin_ma, // 02
-										0, // 12
-										0, // 11
-										shear_rate*(exp_strain_x*sq_sin_ma-exp_strain_z*sq_cos_ma)); //22
+	/**** extensional flow ****/
+	/* H_orig = (exp(epsilon_dot t) 0 0 / 0 1 0 / 0 0 exp(-epsilon_dot t))
+	 * H = R(-magicangle) H_orig R(magicangle)
+	 */
+	double exp_strain_x;
+	double exp_strain_z;
+	if (strainH == strain_retrim) {
+		exp_strain_x = 1;
+		exp_strain_z = 1;
 	} else {
-		cerr << p.flow_type << endl;
-		cerr << "mix flow is not implemented yet" << endl;
-		exit(1);
+		// strain rate = 1
+		exp_strain_x = exp(strainH-strain_retrim+strain_retrim_interval);
+		exp_strain_z = 1.0/exp_strain_x;
 	}
+	/******** Set H     *****************************************/
+	// 00, 01, 02, 12, 11, 22
+	deform_forward.setSymmetric(exp_strain_x*sq_cos_ma+exp_strain_z*sq_sin_ma, // 00
+								0, // 01
+								-(exp_strain_x-exp_strain_z)*cos_ma_sin_ma, // 02
+								0, // 12
+								1, // 11
+								exp_strain_x*sq_sin_ma+exp_strain_z*sq_cos_ma); // 22
+	/******** Set H_dot *****************************************/
+	dot_deform_forward.setSymmetric(shear_rate*(exp_strain_x*sq_cos_ma-exp_strain_z*sq_sin_ma), // 00
+									0, // 01
+									-shear_rate*(exp_strain_x+exp_strain_z)*cos_ma_sin_ma, // 02
+									0, // 12
+									0, // 11
+									shear_rate*(exp_strain_x*sq_sin_ma-exp_strain_z*sq_cos_ma)); //22
 	deform_backward = deform_forward.inverse();
 	/* grad_u is not neccesary to update.
 	 *

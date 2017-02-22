@@ -286,6 +286,8 @@ void Simulation::simulationSteadyShear(string in_args,
 	string indent = "  Simulation::\t";
 	if (flow_type == "extension") {
 		sys.ext_flow = true;
+	} else {
+		sys.ext_flow = false;
 	}
 	control_var = control_variable;
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale,
@@ -589,7 +591,6 @@ void Simulation::outputData()
 	 \b NOTE: this behavior should be changed
 	 and made more consistent in the future.
 	 */
-
 	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
 	if (force_ratios.find(dimless_nb_label) == force_ratios.end()) {
 		ostringstream error_str;
@@ -697,7 +698,6 @@ void Simulation::outputData()
 		outdata_st.entryData(entry_name, "stress", 6, stress_comp.second);
 	}
 	outdata_st.writeToFile();
-
 	if (!p.out_particle_stress.empty()) {
 		outdata_pst.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 		outdata_pst.setUnit(output_unit_scales);
@@ -785,7 +785,6 @@ void Simulation::outputParFileTxt()
 	}
 	outdata_par.setDefaultPrecision(output_precision);
 	outdata_int.setDefaultPrecision(output_precision);
-
 	vector<vec3d> pos(np);
 	vector<vec3d> vel(np);
 	if (!sys.ext_flow) {
@@ -829,7 +828,6 @@ void Simulation::outputParFileTxt()
 		outdata_par.entryData("position (x, y, z)", "none", 3, pos[i], 6);
 		outdata_par.entryData("velocity (x, y, z)", "velocity", 3, vel[i]);
 		outdata_par.entryData("angular velocity (x, y, z)", "none", 3, sys.ang_velocity[i]);
-		outdata_par.entryData("non affine displacement (x, y, z)", "none", 3, na_disp[i]);
 		if (!sys.ext_flow) {
 			outdata_par.entryData("non affine displacement (x, y, z)", "none", 3, na_disp[i]);
 		}
@@ -844,7 +842,6 @@ void Simulation::outputParFileTxt()
 		if (sys.twodimension) {
 			outdata_par.entryData("angle", "none", 1, sys.angle[i]);
 		}
-
 		if (p.out_data_vel_components) {
 			for (const auto &vc: sys.na_velo_components) {
 				string entry_name_vel = "non-affine "+vc.first+" velocity (x, y, z)";

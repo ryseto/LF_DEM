@@ -33,7 +33,6 @@ void BoxSet::init(double interaction_dist, System* sys_)
 		box_ysize = sys->get_ly();
 		box_zsize = sys->get_lz();
 		box_nb = 1;
-
 		auto it = Boxes.insert(new Box());
 		Box* const b = (*it.first);
 		b->setPosition({0, 0, 0});
@@ -205,6 +204,7 @@ void BoxSet::positionBoxes()
 				for (unsigned int iz=0; iz<z_box_nb; iz++) {
 					Box* const bx = (*it);
 					// The origin of extensional flow is (0, 0, 0)
+					bx->resetTypes();
 					bx->setPosition({box_xsize*(ix+0.5)-origin_ext_flow.x,
 						box_ysize*(iy+0.5), box_zsize*(iz+0.5)-origin_ext_flow.z}); // the center of the box
 					unsigned int label = ix*yz_box_nb+iy*z_box_nb+iz;
@@ -288,7 +288,6 @@ void BoxSet::assignNeighborsTopBottom()
 	for (auto& bx : TopBottomBoxes) {
 		auto pos = bx->getPosition();
 		vec3d delta;
-
 		// boxes at same level first: these are fixed once and for all in the simulation
 		int m10p1[] = {-1, 0, 1};
 		for (const auto& a : m10p1) {
@@ -299,13 +298,15 @@ void BoxSet::assignNeighborsTopBottom()
 				bx->addStaticNeighbor(whichBox(sys->periodized(pos+delta)));
 			}
 		}
-
 		for (const auto& delta_prob : top_probing_positions) {
+			cerr << ".";
 			bx->addMovingNeighbor(whichBox(sys->periodized(pos+delta_prob)));
 		}
 		for (const auto& delta_prob : bottom_probing_positions) {
+			cerr << "-";
 			bx->addMovingNeighbor(whichBox(sys->periodized(pos+delta_prob)));
 		}
+		exit(1);
 	}
 }
 
@@ -453,6 +454,8 @@ void BoxSet::updateNeighbors()
 
 void BoxSet::updateNeighborsExtFlow()
 {
+	cerr << "updateNeighborsExtFlow" << endl;
+	exit(1);
 	vec3d pos_pd;
 	vec3d pos;
 	for (auto& bx : Boxes) {

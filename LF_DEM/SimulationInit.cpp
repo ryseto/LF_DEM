@@ -576,9 +576,12 @@ void Simulation::setupSimulation(string in_args,
 	string filename_import_positions = input_files[0];
 	string filename_parameters = input_files[1];
 	sys.p.flow_type = flow_type; // shear or extension or mix (not implemented yet)
-	if (sys.p.flow_type == "extension") {
+	if (!sys.ext_flow) { //@@@ Where is the optimal place? This function is called twice in the current code.
+		sys.set_shear_rate(dimensionlessnumber);
+	} else {
 		sys.set_extension_rate(dimensionlessnumber); //@@@ Need to be checked
 	}
+	
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		cout << "init_relax" << endl;
 		sys.zero_shear = true;
@@ -659,7 +662,11 @@ void Simulation::setupSimulation(string in_args,
 				}
 		}
 	}
-
+	if (!sys.ext_flow) {
+		sys.set_shear_rate(dimensionlessnumber);
+	} else {
+		sys.set_extension_rate(dimensionlessnumber); //@@@ Need to be checked
+	}
 	p_initial = p;
 	simu_name = prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
 									  simu_identifier, dimensionlessnumber, input_scale);
