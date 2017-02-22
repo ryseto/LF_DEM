@@ -242,6 +242,27 @@ inline struct Frame lf_snapshot_file::get_frame(std::size_t frame_nb) {
   }
 }
 
+inline void to_double(const std::string &s, double &d) {
+  try
+  {
+    d = std::stod(s);
+  }
+  catch (std::invalid_argument e)
+  {
+    throw std::runtime_error("Invalid double "+s);
+  }
+  catch (std::out_of_range e)
+  {
+    auto ld = std::stold(s);
+    if (ld < (long double)std::numeric_limits<double>::min()) {
+      d = 0;
+    }
+    if (ld > (long double)std::numeric_limits<double>::max()) {
+      throw std::runtime_error("double overflow "+s);;
+    }
+  }
+}
+
 /********** Private lf_snapshot_file methods *************/
 inline bool lf_snapshot_file::read_frame_meta(struct Frame &frame) {
   frame.meta_data.clear();
@@ -258,11 +279,11 @@ inline bool lf_snapshot_file::read_frame_meta(struct Frame &frame) {
   if (frame_meta[0] != "#") {
     throw std::runtime_error(" Ill-formed frame header.");
   }
-  frame.meta_data["curvilinear strain"] = stod(frame_meta[1]);
-  frame.meta_data["shear disp x"] = stod(frame_meta[2]);
-  frame.meta_data["rate"] = stod(frame_meta[3]);
-  frame.meta_data["target stress"] = stod(frame_meta[4]);
-  frame.meta_data["time"] = stod(frame_meta[5]);
+  to_double(frame_meta[1], frame.meta_data["curvilinear strain"]);
+  to_double(frame_meta[2], frame.meta_data["shear disp x"]);
+  to_double(frame_meta[3], frame.meta_data["rate"]);
+  to_double(frame_meta[4], frame.meta_data["target stress"]);
+  to_double(frame_meta[5], frame.meta_data["time"]);
   return true;
 }
 
@@ -288,6 +309,15 @@ inline void lf_snapshot_file::read_frame_data(struct Frame &frame) {
     std::istringstream ss (line);
     for (auto &r: record) {
       ss >> r;
+      if (ss.fail()) {
+        if (r == std::numeric_limits<double>::max()) {
+          throw std::runtime_error(" double overflow");
+        } else if (r == std::numeric_limits<double>::min()) {
+          r = 0;
+        } else {
+          throw std::runtime_error(" unknown parsing error");
+        }
+      }
     }
     frame.data.push_back(record);
     pos = f.tellg();
