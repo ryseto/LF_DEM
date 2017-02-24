@@ -148,7 +148,6 @@ private:
 	void checkForceBalance();
 	void wallForces();
 	bool hasNeighbor(int i, int j);
-	void setVelocityDifference();
 #ifndef USE_DSFMT
 	MTRand *r_gen;
 #endif
@@ -345,6 +344,7 @@ private:
 	double strain_retrim_interval; // APR
 	std::vector <int> overlap_particles;
 	/****************************************/
+	void setVelocityDifference(); // Lees-Edwards boundary condition
 	void setSystemVolume();
 	void setConfiguration(const std::vector <vec3d>& initial_positions,
 	                      const std::vector <double>& radii);
@@ -389,10 +389,10 @@ private:
 	double calcLubricationRange(int, int);
 	void (System::*eventLookUp)();
 	void eventShearJamming();
-	void retrimProcess(); // APR
-	void retrim(vec3d&); // APR
-	void updateH(double); // APR
-	void yaplotBoxing(std::ofstream &fout_boxing);
+	void retrimProcess(); // Extensional flow Periodic Boundary condition
+	void retrim(vec3d&); // Extensional flow Periodic Boundary condition
+	void updateH(double); // Extensional flow Periodic Boundary condition
+	void yaplotBoxing(std::ofstream &fout_boxing); // Extensional flow Periodic Boundary condition
 	void calcOrderParameter();
 
 	void setBoxSize(double lx_, double ly_, double lz_)

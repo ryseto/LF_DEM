@@ -677,6 +677,13 @@ void Simulation::setupSimulation(string in_args,
 	p_initial = p;
 	simu_name = prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
 									  simu_identifier, dimensionlessnumber, input_scale);
+	if (!sys.ext_flow) {
+		// simple shear
+		sys.setVelocityDifference();
+	} else {
+		// extensional flow
+		sys.vel_difference.reset();
+	}
 	openOutputFiles(simu_name);
 	echoInputFiles(in_args, input_files);
 	cout << indent << "Simulation setup [ok]" << endl;
@@ -1031,6 +1038,7 @@ string Simulation::prepareSimulationName(bool binary_conf,
 	}
 	string_control_parameters << dimensionlessnumber << input_scale;
 	ss_simu_name << string_control_parameters.str();
+	ss_simu_name << "_" << sys.p.flow_type;
 	if (simu_identifier != "") {
 		ss_simu_name << "_";
 		ss_simu_name << simu_identifier;
@@ -1041,7 +1049,8 @@ string Simulation::prepareSimulationName(bool binary_conf,
 	return ss_simu_name.str();
 }
 
-TimeKeeper Simulation::initTimeKeeper() {
+TimeKeeper Simulation::initTimeKeeper()
+{
 	TimeKeeper tk;
 	if (p.log_time_interval) {
 		tk.addClock("data", LogClock(p.initial_log_time,

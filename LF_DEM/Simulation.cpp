@@ -932,7 +932,7 @@ void Simulation::outputConfigurationData()
 	if (p.out_data_interaction) {
 		outputIntFileTxt();
 	}
-	sys.yaplotBoxing(fout_boxing); // for debugging.
+	//sys.yaplotBoxing(fout_boxing); // for debugging.
 }
 
 void Simulation::outputFinalConfiguration(const string& filename_import_positions)

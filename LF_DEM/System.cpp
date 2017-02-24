@@ -1866,7 +1866,6 @@ void System::computeVelocityByComponents()
 void System::setVelocityDifference()
 {
 	vel_difference = 2*dot(E_infinity, {0, 0, lz});
-	vel_difference.cerr();
 }
 
 void System::set_shear_rate(double shear_rate_)
@@ -1874,7 +1873,6 @@ void System::set_shear_rate(double shear_rate_)
 	shear_rate = shear_rate_;
 	omega_inf = omegahat_inf*shear_rate;
 	E_infinity = Ehat_infinity*shear_rate;
-	setVelocityDifference();
 }
 
 void System::set_extension_rate(double shear_rate_)
@@ -1882,7 +1880,6 @@ void System::set_extension_rate(double shear_rate_)
 	shear_rate = shear_rate_; //note: shear_rate = 2*extension_rate (@@@ 
 	omega_inf.reset();
 	E_infinity = Ehat_infinity*shear_rate;
-	vel_difference.reset();
 }
 
 void System::setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty)

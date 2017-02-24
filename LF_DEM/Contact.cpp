@@ -137,8 +137,10 @@ void Contact::incrementTangentialDisplacement()
 	******************************************************/
 	vec3d vel_offset;
 	if (!sys->ext_flow) {
+		// simple shear
 		vel_offset = interaction->z_offset*sys->get_vel_difference();
 	} else {
+		// extensional flow
 		vel_offset = sys->get_vel_difference_extension(interaction->pd_shift);
 	}
 	vec3d translational_deltav = sys->velocity[p1]-sys->velocity[p0]+vel_offset;
