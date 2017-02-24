@@ -602,6 +602,9 @@ void Simulation::setupSimulation(string in_args,
 	}
 	setDefaultParameters(input_scale);
 	readParameterFile(filename_parameters);
+	if (sys.ext_flow) {
+		p.origin_zero_flow = false;
+	}
 	setupOptionalSimulation(indent);
 	tagStrainParameters();
 	setupNonDimensionalization(dimensionlessnumber, input_scale);
