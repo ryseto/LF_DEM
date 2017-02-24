@@ -97,6 +97,20 @@ public:
 		return elm[0]+elm[4]+elm[5];
 	}
 	
+	void setSymmetrize(matrix &m)
+	{
+		//Sym2Tensor m_sym;
+		// 0(0,0) 1(0,1) 2(0,2)
+		// 3(1,0) 4(1,1) 5(1,2)
+		// 6(2,0) 7(2,1) 8(2,2)
+		elm[0] = m.elm[0];
+		elm[1] = 0.5*(m.elm[1]+m.elm[3]);
+		elm[2] = 0.5*(m.elm[2]+m.elm[6]);
+		elm[3] = 0.5*(m.elm[5]+m.elm[7]);
+		elm[4] = m.elm[4];
+		elm[5] = m.elm[8];
+	}
+	
 	matrix getMatrix()
 	{
 		matrix m(elm[0], elm[1], elm[2],

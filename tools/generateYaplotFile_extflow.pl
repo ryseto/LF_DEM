@@ -164,6 +164,7 @@ sub InParticles {
 		# 4 target_stress_input
 		# 5 sys.get_time()
 		# 6 sys.angle_external_magnetic_field
+		#
 		($buf, $shear_strain, $shear_disp, $shear_rate, $shear_stress, $time_, $timeper, $epsilondot) = split(/\s+/, $line);
 		if ($buf ne '#') {
 			printf "InParticles  $buf\n";

@@ -403,11 +403,7 @@ void System::setupParameters()
 		repulsiveforce = false;
 		p.repulsive_length = 0;
 	}
-	if (ext_flow) {
-		// extensional flow
-		p.magic_angle = atan(0.5*(sqrt(5)-1)); // simulation box needs to be tilted in this angle.
-	}
-	setShearDirection(p.theta_shear);
+		setShearDirection(p.theta_shear);
 
 	if (p.auto_determine_knkt) {
 		kn_avg.setRelaxationTime(p.memory_strain_avg);
@@ -1291,7 +1287,7 @@ void System::checkNewInteraction()
 {
 	/**
 	 \brief Checks if there are new pairs of interacting particles. If so, creates and sets up the corresponding Interaction objects.
-
+	 
 	 To be called after particle moved.
 	 */
 	vec3d pos_diff;
@@ -1875,8 +1871,6 @@ void System::setVelocityDifference()
 
 void System::set_shear_rate(double shear_rate_)
 {
-	setImposedFlow({0, 0, 0.5, 0, 0, 0},
-				   {0, 0.5, 0});
 	shear_rate = shear_rate_;
 	omega_inf = omegahat_inf*shear_rate;
 	E_infinity = Ehat_infinity*shear_rate;
@@ -1885,17 +1879,9 @@ void System::set_shear_rate(double shear_rate_)
 
 void System::set_extension_rate(double shear_rate_)
 {
-	matrix grad_u_orig(1, 0, 0,
-					   0, 0, 0,
-					   0, 0,-1);
-	matrix rotation, rotation_inv;
-	rotation.set_rotation(-p.magic_angle, 'y');
-	rotation_inv.set_rotation(p.magic_angle, 'y');
-	grad_u = rotation_inv*grad_u_orig*rotation;
-	setImposedFlow(symmetrise(grad_u),
-				   {0, 0, 0});
-	shear_rate = 0.5*shear_rate_; //note: shear_rate = 2*extension_rate
+	shear_rate = shear_rate_; //note: shear_rate = 2*extension_rate (@@@ 
 	omega_inf.reset();
+	E_infinity = Ehat_infinity*shear_rate;
 	vel_difference.reset();
 }
 
@@ -1904,13 +1890,13 @@ void System::setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty)
 	Ehat_infinity = EhatInfty;
 	omegahat_inf = OhatInfty;
 	if (twodimension) {
-		if (fabs(Ehat_infinity.elm[3])>1e-15 || fabs(Ehat_infinity.elm[4])>1e-15) {
+		if (fabs(Ehat_infinity.elm[3]) > 1e-15 || fabs(Ehat_infinity.elm[4]) > 1e-15) {
 			throw runtime_error(" System:: Error: 2d simulation with Einf_{y?} != 0");
 		} else {
 			Ehat_infinity.elm[3] = 0;
 			Ehat_infinity.elm[4] = 0;
 		}
-		if (fabs(omegahat_inf.x)>1e-15 || fabs(omegahat_inf.z)>1e-15) {
+		if (fabs(omegahat_inf.x) > 1e-15 || fabs(omegahat_inf.z) > 1e-15) {
 			throw runtime_error(" System:: Error: 2d simulation with Omega_inf not along y");
 		} else {
 			omegahat_inf.x = 0;
@@ -1928,16 +1914,6 @@ void System::setShearDirection(double theta_shear) // will probably be deprecate
 		double sintheta_shear = sin(theta_shear);
 		setImposedFlow({0, 0, costheta_shear/2, sintheta_shear/2, 0, 0},
 					   {-0.5*sintheta_shear, 0.5*costheta_shear, 0});
-	} else {
-		matrix grad_u_orig(1, 0, 0,
-						   0, 0, 0,
-						   0, 0,-1);
-		matrix rotation, rotation_inv;
-		rotation.set_rotation(-p.magic_angle, 'y');
-		rotation_inv.set_rotation(p.magic_angle, 'y');
-		grad_u = rotation_inv*grad_u_orig*rotation;
-		setImposedFlow(symmetrise(grad_u),
-					   {0, 0, 0});
 	}
 }
 

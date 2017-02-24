@@ -21,7 +21,6 @@ using namespace std;
 
 Simulation::Simulation():
 sys(System(p, events)),
-shear_rate_expectation(-1),
 internal_unit_scales("hydro"),
 target_stress_input(0),
 diminish_output(false)
@@ -36,7 +35,6 @@ diminish_output(false)
 	unit_longname["kt"] = "kt";
 	unit_longname["kr"] = "kr";
 	unit_longname["s"] = "stress";
-
 	force_value_ptr["hydro"] = &dimensionless_rate; // the dimensionless hydrodynamic force is also the dimensionless shear rate
 	force_value_ptr["repulsion"] = &sys.p.repulsion;
 	force_value_ptr["critical_load"] = &sys.p.critical_load;
@@ -51,7 +49,8 @@ diminish_output(false)
 
 Simulation::~Simulation(){};
 
-string Simulation::gitVersion(){
+string Simulation::gitVersion()
+{
 	return GIT_VERSION;
 }
 
@@ -610,11 +609,11 @@ void Simulation::outputData()
 		rotation_inv.set_rotation(-p.magic_angle, 'y');
 		sigma = sys.total_stress.getMatrix();
 		sigma_rot = rotation_inv*(sigma*rotation);
-		sys.total_stress = sys.symmetrise(sigma_rot);
+		sys.total_stress.setSymmetrize(sigma_rot);
 		for (auto &stress_comp: sys.total_stress_groups) {
 			sigma = stress_comp.second.getMatrix();
 			sigma_rot = rotation_inv*(sigma*rotation);
-			stress_comp.second = sys.symmetrise(sigma_rot);
+			stress_comp.second.setSymmetrize(sigma_rot);
 		}
 	}
 	double sr = sys.get_shear_rate();
@@ -727,13 +726,14 @@ void Simulation::outputData()
 
 void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 {
-	snapshot_header << "# " << sys.get_cumulated_strain() << ' ';
-	snapshot_header << sys.shear_disp.x << ' ';
-	snapshot_header << getRate() << ' ';
-	snapshot_header << target_stress_input << ' ';
-	snapshot_header << sys.get_cumulated_strain() << ' ';
-	snapshot_header << sys.get_cumulated_strain()-sys.strain_retrim+sys.strain_retrim_interval << ' ';//6
-	snapshot_header << sys.get_shear_rate() << ' '; //7
+	snapshot_header << "# "; //1
+	snapshot_header << sys.get_cumulated_strain() << ' ';//2
+	snapshot_header << sys.shear_disp.x << ' ';//3
+	snapshot_header << getRate() << ' ';//4
+	snapshot_header << target_stress_input << ' ';//5
+	snapshot_header << sys.get_cumulated_strain() << ' ';//6
+	snapshot_header << sys.get_cumulated_strain()-sys.strain_retrim+sys.strain_retrim_interval << ' ';//7
+	snapshot_header << sys.get_shear_rate() << ' '; //8
 	snapshot_header << endl;
 }
 
@@ -897,7 +897,6 @@ void Simulation::outputIntFileTxt()
 		 */
 		if (sys.lubrication) {
 			if (inter.get_reduced_gap() > 0) {
-
 				double normal_part = -dot(inter.lubrication.getTotalForce(), inter.nvec);
 				outdata_int.entryData("normal part of the lubrication force (positive for compression)", "force", 1, \
 									  normal_part);
@@ -933,6 +932,7 @@ void Simulation::outputConfigurationData()
 	if (p.out_data_interaction) {
 		outputIntFileTxt();
 	}
+	sys.yaplotBoxing(fout_boxing); // for debugging.
 }
 
 void Simulation::outputFinalConfiguration(const string& filename_import_positions)

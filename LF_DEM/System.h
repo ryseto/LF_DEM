@@ -325,8 +325,6 @@ private:
 	 * Extensional flow using Kraynik-Reinelt Method was originally implemented                         *
 	 * by Antonio Martiniello and Giulio Giuseppe Giusteri from Auguest to November 2016 at OIST.       *
 	 ****************************************************************************************************/
-	//Sym2Tensor E_infinity; // Extension flow
-	//matrix O_infinity; // Extension flow
 	matrix deform_forward; // Extension flow
 	matrix deform_backward; // Extension flow
 	matrix dot_deform_forward; // Extension flow
@@ -346,9 +344,6 @@ private:
 	double strain_retrim; // APR
 	double strain_retrim_interval; // APR
 	std::vector <int> overlap_particles;
-	/****************************************/
-
-	
 	/****************************************/
 	void setSystemVolume();
 	void setConfiguration(const std::vector <vec3d>& initial_positions,
@@ -370,7 +365,7 @@ private:
 	void declareResistance(int p0, int p1);
 	void eraseResistance(int p0, int p1);
 	void updateInteractions();
-	int periodize(vec3d&);
+	int periodize(vec3d& pos);
 	void periodizeExtFlow(const int &i, bool &pd_transport);
 	vec3d periodized(const vec3d& pos_diff);
 	int periodizeDiff(vec3d& pos_diff);
@@ -528,19 +523,5 @@ private:
 		return na_disp;
 	}
 	
-	Sym2Tensor symmetrise(matrix &m)
-	{
-		Sym2Tensor m_sym;
-		// 0(0,0) 1(0,1) 2(0,2)
-		// 3(1,0) 4(1,1) 5(1,2)
-		// 6(2,0) 7(2,1) 8(2,2)
-		m_sym.elm[0] = m.elm[0];
-		m_sym.elm[1] = 0.5*(m.elm[1]+m.elm[3]);
-		m_sym.elm[2] = 0.5*(m.elm[2]+m.elm[6]);
-		m_sym.elm[3] = 0.5*(m.elm[5]+m.elm[7]);
-		m_sym.elm[4] = m.elm[4];
-		m_sym.elm[5] = m.elm[8];
-		return m_sym;
-	}
 };
 #endif /* defined(__LF_DEM__System__) */

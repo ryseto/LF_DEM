@@ -10,6 +10,9 @@
 #define Matrix_h
 #include <vector>
 #include "vec3d.h"
+#include "Sym2Tensor.h"
+
+class Sym2Tensor;
 
 class matrix {
 public:
@@ -125,7 +128,7 @@ public:
 		}
 		return m_unsym;
 	}
-	
+
 	vec3d getLine(int i)
 	{
 		// 0(0,0) 1(0,1) 2(0,2)
@@ -216,4 +219,3 @@ public:
 };
 
 #endif /* Matrix_h */
-

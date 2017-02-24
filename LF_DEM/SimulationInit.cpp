@@ -11,8 +11,6 @@
 #include <sstream>
 #include <stdexcept>
 #include "Configuration.h"
-
-
 using namespace std;
 
 void Simulation::contactForceParameter(string filename)
@@ -106,7 +104,6 @@ void Simulation::importPreSimulationData(string filename)
 			break;
 		}
 	}
-	shear_rate_expectation = shear_rate_;
 }
 
 void Simulation::echoInputFiles(string in_args,
@@ -397,7 +394,7 @@ void Simulation::setUnitScaleRateControlled()
 void Simulation::exportForceAmplitudes()
 {
 	/**
-	 \brief Copy the input force alues in the ForceAmplitude struct of the System class
+	 \brief Copyrthe input force alues in the ForceAmplitude struct of the System class
 	 */
 	string indent = "  Simulation::\t";
 	cout << indent+"Forces used:" << endl;
@@ -577,9 +574,24 @@ void Simulation::setupSimulation(string in_args,
 	string filename_parameters = input_files[1];
 	sys.p.flow_type = flow_type; // shear or extension or mix (not implemented yet)
 	if (!sys.ext_flow) { //@@@ Where is the optimal place? This function is called twice in the current code.
-		sys.set_shear_rate(dimensionlessnumber);
+		sys.setImposedFlow({0, 0, 0.5, 0, 0, 0},
+						   {0, 0.5, 0});
+		//sys.set_shear_rate(dimensionlessnumber);
 	} else {
-		sys.set_extension_rate(dimensionlessnumber); //@@@ Need to be checked
+		// extensional flow
+		p.magic_angle = atan(0.5*(sqrt(5)-1)); // simulation box needs to be tilted in this angle.
+		matrix grad_u_orig(1, 0, 0,
+						   0, 0, 0,
+						   0, 0,-1);
+		matrix rotation, rotation_inv;
+		rotation.set_rotation(-p.magic_angle, 'y');
+		rotation_inv.set_rotation(p.magic_angle, 'y');
+		sys.grad_u = rotation_inv*grad_u_orig*rotation;
+		Sym2Tensor Einf;
+		Einf.setSymmetrize(sys.grad_u);
+		vec3d Omegainf(0, 0, 0);
+		sys.setImposedFlow(Einf, Omegainf);
+		//sys.set_extension_rate(dimensionlessnumber); //@@@ Need to be checked
 	}
 	
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
@@ -661,11 +673,6 @@ void Simulation::setupSimulation(string in_args,
 					break;
 				}
 		}
-	}
-	if (!sys.ext_flow) {
-		sys.set_shear_rate(dimensionlessnumber);
-	} else {
-		sys.set_extension_rate(dimensionlessnumber); //@@@ Need to be checked
 	}
 	p_initial = p;
 	simu_name = prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
@@ -926,24 +933,23 @@ void Simulation::setDefaultParameters(string input_scale)
 	autoSetParameters("keep_input_strain", "false");
 }
 
-
-inline string columnDefinition(int &cnb, const string &type, const string &name)
-{
-	stringstream defs;
-	if (type == "vec3d") {
-		array<string, 3> xyz = {"x", "y", "z"};
-		for (auto &u : xyz) {
-			stringstream col_def_complement;
-			defs << "#" << cnb << ": "<< name << " " << u << "\n";
-			cnb ++;
-		}
-	} else if (type=="scalar") {
-		defs << "#" << cnb << ": "<< name << "\n";
-	} else {
-		throw runtime_error(" unknown type for column def\n");
-	}
-	return defs.str();
-}
+//inline string columnDefinition(int &cnb, const string &type, const string &name)
+//{
+//	stringstream defs;
+//	if (type == "vec3d") {
+//		array<string, 3> xyz = {"x", "y", "z"};
+//		for (auto &u : xyz) {
+//			stringstream col_def_complement;
+//			defs << "#" << cnb << ": "<< name << " " << u << "\n";
+//			cnb ++;
+//		}
+//	} else if (type=="scalar") {
+//		defs << "#" << cnb << ": "<< name << "\n";
+//	} else {
+//		throw runtime_error(" unknown type for column def\n");
+//	}
+//	return defs.str();
+//}
 
 void Simulation::openOutputFiles(string simu_name)
 {
@@ -1014,13 +1020,13 @@ string Simulation::prepareSimulationName(bool binary_conf,
 			}
 		}
 	}
-	if (control_var==rate) {
+	if (control_var == rate) {
 		string_control_parameters << "_" << "rate";
 	}
-	if (control_var==stress) {
+	if (control_var == stress) {
 		string_control_parameters << "_" << "stress";
 	}
-	if (control_var==viscnb) {
+	if (control_var == viscnb) {
 		string_control_parameters << "_" << "viscnb";
 	}
 	string_control_parameters << dimensionlessnumber << input_scale;

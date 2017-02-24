@@ -86,7 +86,6 @@ inline std::vector <struct contact_state> readContactStatesBStream(std::istream 
 	if (ushort_format) {
 		for (int i=0; i<ncont; i++) {
 			unsigned short p0, p1;
-			
 			input.read((char*)&p0, sizeof(unsigned short));
 			input.read((char*)&p1, sizeof(unsigned short));
 			input.read((char*)&dt_x, sizeof(double));
@@ -204,7 +203,6 @@ inline int getTxtConfigurationFileFormat(const std::string& filename_import_posi
 		return TXT_FORMAT_BASE_OLD;
 	}
 }
-
 
 inline struct base_configuration readBinaryBaseConfiguration(std::istream &input)
 {

@@ -42,7 +42,6 @@ private:
 	std::string header_imported_configulation[2];
 	double volume_fraction;
 	ControlVariable control_var;
-	double shear_rate_expectation;
 	double strain_end;
 	double time_end;
 	/*
