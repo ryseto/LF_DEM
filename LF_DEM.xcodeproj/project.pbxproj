@@ -578,6 +578,7 @@
 		D988E39A1654A18D0009949F /* System.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = System.cpp; sourceTree = "<group>"; };
 		D988E39B1654A18D0009949F /* System.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = System.h; sourceTree = "<group>"; };
 		D98B3CCD17CCF057002B2A4D /* LubricationFunctions.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = LubricationFunctions.h; sourceTree = "<group>"; };
+		D98F62131E62367200053198 /* convertMaterialFunctions.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; name = convertMaterialFunctions.pl; path = tools/convertMaterialFunctions.pl; sourceTree = SOURCE_ROOT; };
 		D9953512180713FB00FC99C9 /* cluster_life */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cluster_life; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9953514180713FB00FC99C9 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D9953516180713FB00FC99C9 /* cluster_life.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = cluster_life.1; sourceTree = "<group>"; };
@@ -1175,6 +1176,7 @@
 				D9A906691BF331EF00BE8640 /* generateYaplotFile_seto.pl */,
 				D9A9066A1BF331EF00BE8640 /* generateYaplotFile.pl */,
 				D9B4104F1E5BF8C400A2C9D5 /* generateYaplotFile_extflow.pl */,
+				D98F62131E62367200053198 /* convertMaterialFunctions.pl */,
 				D9825AF01C410E4B000AF86E /* circularrheo.pl */,
 				D97E6DFD1D3FA83300A3D747 /* timeEvolutionWideGap.pl */,
 				D93C105A1C34197200460301 /* analyzeCircularWideGap.pl */,
