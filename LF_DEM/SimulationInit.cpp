@@ -941,6 +941,7 @@ void Simulation::setDefaultParameters(string input_scale)
 	autoSetParameters("event_handler", "");
 	autoSetParameters("simulation_mode", "0");
 	autoSetParameters("keep_input_strain", "false");
+	autoSetParameters("out_bond_order_parameter6", "false");
 }
 
 //inline string columnDefinition(int &cnb, const string &type, const string &name)
