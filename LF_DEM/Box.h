@@ -44,18 +44,6 @@ public:
 	{
 		return static_neighbors;
 	}
-	const std::vector <Box*> & getNeighborBoxAll() //@@@@@@@@
-	{
-		std::vector <Box*> all_neighobrs;
-		for (const auto sn: static_neighbors) {
-			all_neighobrs.push_back(sn);
-		}
-		for (const auto mn: moving_neighbors) {
-			all_neighobrs.push_back(mn);
-		}
-		return all_neighobrs;
-	}
-
 	vec3d getPosition() const {return position;}
 	double getYPosition() const {return position.y;}
 	void setPosition(vec3d pos) {position = pos;}

@@ -15,8 +15,6 @@ $j = index($st_data, '.dat', $i-1);
 $name = substr($st_data, $i, $j-$i);
 
 $ii = index($name, '_extension', 0);
-printf "$name\n";
-printf "$ii\n";
 if ($ii == -1) {
 	$flow_type = "shear";
 } else {
@@ -31,6 +29,14 @@ if ($flow_type eq "shear") {
 	@e0tensor = (-0.5*$rate, 0, 0,
 				 0, -0.5*$rate, 0,
 				 0,    0, 1*$rate);
+	@e1tensor = (-$rate, 0, 0,
+	0, $rate, 0,
+	0, 0, 0);
+	
+	@e2tensor = (-$rate, 0, 0,
+	0, $rate, 0,
+	0, 0, 0);
+	
 	@e3tensor = (-$rate, 0, 0,
 				  0, $rate, 0,
 				  0, 0, 0);
@@ -76,8 +82,6 @@ $cnt_sum = 0;
 
 &readHeader;
 &InStress;
-
-
 
 sub InStress {
 	while (1) {
@@ -131,8 +135,7 @@ sub readHeader {
 	}
 	for ($i = 0; $i<$number_of_header; $i++) {
 		$line = <IN_stress>;
-		printf "$line";
+		#printf "$line";
 	}
-
-	printf "=====\n";
+	#	printf "=====\n";
 }
