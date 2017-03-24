@@ -57,6 +57,8 @@ private:
 	time_t time_strain_end;
 	int timestep_1;
 	int timestep_end;
+	Sym2Tensor stress_basis_0;
+	Sym2Tensor stress_basis_3;
 	/*
 	 * For output data.
 	 */

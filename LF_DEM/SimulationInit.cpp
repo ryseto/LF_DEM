@@ -429,11 +429,7 @@ void Simulation::exportForceAmplitudes()
 	cout << indent+"Rolling contact stiffness (in \"" << input_values["kr"].unit << "\" units): " << p.kr << endl;
 
 	if (input_values.find("hydro") != input_values.end()) { // == if rate controlled
-		if (!sys.ext_flow) {
 			sys.set_shear_rate(*(input_values["hydro"].value));
-		} else {
-			sys.set_extension_rate(*(input_values["hydro"].value));
-		}
 	}
 }
 
@@ -557,9 +553,9 @@ void Simulation::resolveTimeOrStrainParameters()
 
 void Simulation::setupSimulation(string in_args,
                                  vector<string>& input_files,
-                                 bool binary_conf,
-                                 double dimensionlessnumber,
-                                 string input_scale,
+								 bool binary_conf,
+								 double dimensionlessnumber,
+								 string input_scale,
 								 string flow_type,
                                  string simu_identifier)
 {
@@ -573,27 +569,36 @@ void Simulation::setupSimulation(string in_args,
 	string filename_import_positions = input_files[0];
 	string filename_parameters = input_files[1];
 	sys.p.flow_type = flow_type; // shear or extension or mix (not implemented yet)
-	if (!sys.ext_flow) { //@@@ Where is the optimal place? This function is called twice in the current code.
-		sys.setImposedFlow({0, 0, 0.5, 0, 0, 0},
-						   {0, 0.5, 0});
-		//sys.set_shear_rate(dimensionlessnumber);
+	
+	double dimensionless_deformation_rate = 0.5;
+	stress_basis_0.set(-dimensionless_deformation_rate/2, 0, 0, 0,
+					   dimensionless_deformation_rate, -dimensionless_deformation_rate/2);
+	if (!sys.ext_flow) {
+		/* simple shear flow
+		 * shear_rate = 2*dot_epsilon
+		 */
+		Sym2Tensor Einf_common(0, 0, dimensionless_deformation_rate, 0, 0, 0);
+		vec3d Omegainf(0, dimensionless_deformation_rate, 0);
+		sys.setImposedFlow(Einf_common, Omegainf);
+		stress_basis_3.set(-dimensionless_deformation_rate, 0, 0, 0, 0, dimensionless_deformation_rate);
 	} else {
-		// extensional flow
+		/* extensional flow
+		 *
+		 */
 		p.magic_angle = atan(0.5*(sqrt(5)-1)); // simulation box needs to be tilted in this angle.
-		matrix grad_u_orig(1, 0, 0,
+		matrix grad_u_orig(dimensionless_deformation_rate, 0, 0,
 						   0, 0, 0,
-						   0, 0,-1);
+						   0, 0, -dimensionless_deformation_rate);
 		matrix rotation, rotation_inv;
 		rotation.set_rotation(-p.magic_angle, 'y');
 		rotation_inv.set_rotation(p.magic_angle, 'y');
 		sys.grad_u = rotation_inv*grad_u_orig*rotation;
-		Sym2Tensor Einf;
-		Einf.setSymmetrize(sys.grad_u);
+		Sym2Tensor Einf_common;
+		Einf_common.setSymmetrize(sys.grad_u);
 		vec3d Omegainf(0, 0, 0);
-		sys.setImposedFlow(Einf, Omegainf);
-		//sys.set_extension_rate(dimensionlessnumber); //@@@ Need to be checked
+		sys.setImposedFlow(Einf_common, Omegainf);
+		stress_basis_3.set(0, 0, dimensionless_deformation_rate, 0, 0, 0);
 	}
-	
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		cout << "init_relax" << endl;
 		sys.zero_shear = true;
@@ -607,6 +612,10 @@ void Simulation::setupSimulation(string in_args,
 	}
 	setupOptionalSimulation(indent);
 	tagStrainParameters();
+	/* Both simple shear and extensional simulations
+	 * dimensionlessnumber means 2 times of dot_epsilon.
+	 *
+	 */
 	setupNonDimensionalization(dimensionlessnumber, input_scale);
 
 	assertParameterCompatibility();

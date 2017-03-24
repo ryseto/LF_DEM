@@ -164,7 +164,7 @@ int main(int argc, char **argv)
 				/* getopt already printed an error message. */
 				break;
 			default:
-				abort ();
+				abort();
 		}
 	}
 	ostringstream in_args;

@@ -576,7 +576,7 @@ void System::setupSystemPostConfiguration()
 	}
 	if (ext_flow) {
 		// extensional flow
-		strain_retrim_interval = log(0.5*(3+sqrt(5))); // every this strain, the main simulation box is retrimmed.
+		strain_retrim_interval = 2*log(0.5*(3+sqrt(5))); // every this strain, the main simulation box is retrimmed.
 		strain_retrim = strain_retrim_interval; // Setting the first value of strain to retrim.
 		double cos_ma = cos(p.magic_angle);
 		double sin_ma = sin(p.magic_angle);
@@ -584,7 +584,7 @@ void System::setupSystemPostConfiguration()
 		sq_sin_ma = sin_ma*sin_ma;
 		cos_ma_sin_ma = cos_ma*sin_ma;
 		//setH_dot(1);
-		updateH(cumulated_strain); // cumulated_strain = 0
+		updateH(0.5*cumulated_strain); // cumulated_strain = 0
 	}
 	initializeBoxing();
 	checkNewInteraction();
@@ -659,11 +659,13 @@ void System::timeStepBoxing()
 		\brief Apply a strain step to the boxing system.
 	 */
 	if (!zero_shear) {
+		double strain_increment = shear_rate*dt;
+		cumulated_strain += strain_increment;
 		if (!ext_flow) {
-			vec3d strain_increment = 2*dot(E_infinity, {0, 0, 1})*dt;
-			cumulated_strain += strain_increment.norm();
-			shear_strain += strain_increment;
-			shear_disp += strain_increment*lz;
+			// simple shear flow
+			vec3d shear_strain_increment = 2*dot(E_infinity, {0, 0, 1})*dt;
+			shear_strain += shear_strain_increment;
+			shear_disp += shear_strain_increment*lz;
 			int m = (int)(shear_disp.x/lx);
 			if (shear_disp.x < 0) {
 				m--;
@@ -674,9 +676,6 @@ void System::timeStepBoxing()
 				m--;
 			}
 			shear_disp.y = shear_disp.y-m*ly;
-		} else {
-			double strain_increment = dt*shear_rate;
-			cumulated_strain += strain_increment;
 		}
 	} else {
 		if (wall_rheology || p.simulation_mode == 31) {
@@ -1048,14 +1047,18 @@ void System::timeStepMove(double time_end, double strain_end)
 	/**
 	 \brief Moves particle positions according to previously computed velocities, Euler method step.
 	 */
-
+	/* @@@@ NOTE
+	 * shear_rate = 1 for both simple shear and extensional flow
+	 * dot_epsion = shear_rate / 2 is always true.
+	 * cumulated_strain = shear_rate * t for both simple shear and extensional flow.
+	 */
 	/* Adapt dt to get desired p.disp_max	 */
 	if (!p.fixed_dt) {
 		adaptTimeStep(time_end, strain_end);
 	}
 	if (ext_flow) {
-		if (time_+dt > strain_retrim) { // shear_rate = 1 is assumed
-			dt = strain_retrim-time_;
+		if (shear_rate*(time_+dt) > strain_retrim) {
+			dt = (strain_retrim/shear_rate)-time_;
 		}
 	}
 	time_ += dt;
@@ -1068,7 +1071,7 @@ void System::timeStepMove(double time_end, double strain_end)
 	/* evolve PBC */
 	timeStepBoxing();
 	if (ext_flow) {
-		updateH(cumulated_strain);
+		updateH(0.5*cumulated_strain);
 	}
 	/* move particles */
 	for (int i=0; i<np; i++) {
@@ -1120,7 +1123,7 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
 	 */
 	timeStepBoxing();
 	if (ext_flow) {
-		updateH(cumulated_strain);
+		updateH(0.5*cumulated_strain);
 	}
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
@@ -1875,13 +1878,6 @@ void System::set_shear_rate(double shear_rate_)
 	E_infinity = Ehat_infinity*shear_rate;
 }
 
-void System::set_extension_rate(double shear_rate_)
-{
-	shear_rate = shear_rate_; //note: shear_rate = 2*extension_rate (@@@ 
-	omega_inf.reset();
-	E_infinity = Ehat_infinity*shear_rate;
-}
-
 void System::setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty)
 {
 	Ehat_infinity = EhatInfty;
@@ -2568,20 +2564,24 @@ void System::retrim(vec3d& pos)
 	}
 }
 
-void System::updateH(double strainH)
+void System::updateH(double extensional_strain)
 {
+	/*
+	 * strainH is twice of extensional strain.
+	 *
+	 */
 	/**** extensional flow ****/
 	/* H_orig = (exp(epsilon_dot t) 0 0 / 0 1 0 / 0 0 exp(-epsilon_dot t))
 	 * H = R(-magicangle) H_orig R(magicangle)
 	 */
 	double exp_strain_x;
 	double exp_strain_z;
-	if (strainH == strain_retrim) {
+	if (2*extensional_strain == strain_retrim) {
 		exp_strain_x = 1;
 		exp_strain_z = 1;
 	} else {
-		// strain rate = 1
-		exp_strain_x = exp(strainH-strain_retrim+strain_retrim_interval);
+		// strainH 
+		exp_strain_x = exp(extensional_strain-0.5*(strain_retrim-strain_retrim_interval));
 		exp_strain_z = 1.0/exp_strain_x;
 	}
 	/******** Set H     *****************************************/
@@ -2593,12 +2593,14 @@ void System::updateH(double strainH)
 								1, // 11
 								exp_strain_x*sq_sin_ma+exp_strain_z*sq_cos_ma); // 22
 	/******** Set H_dot *****************************************/
-	dot_deform_forward.setSymmetric(shear_rate*(exp_strain_x*sq_cos_ma-exp_strain_z*sq_sin_ma), // 00
-									0, // 01
-									-shear_rate*(exp_strain_x+exp_strain_z)*cos_ma_sin_ma, // 02
-									0, // 12
-									0, // 11
-									shear_rate*(exp_strain_x*sq_sin_ma-exp_strain_z*sq_cos_ma)); //22
+	//cerr << "### " << dot_epsilon << ' ' << shear_rate << endl;
+	//	dot_deform_forward.setSymmetric(dot_epsilon*(exp_strain_x*sq_cos_ma-exp_strain_z*sq_sin_ma), // 00
+	//									0, // 01
+	//									-dot_epsilon*(exp_strain_x+exp_strain_z)*cos_ma_sin_ma, // 02
+	//									0, // 12
+	//									0, // 11
+	//									dot_epsilon*(exp_strain_x*sq_sin_ma-exp_strain_z*sq_cos_ma)); //22
+	//
 	deform_backward = deform_forward.inverse();
 	/* grad_u is not neccesary to update.
 	 *
@@ -2637,7 +2639,7 @@ void System::yaplotBoxing(std::ofstream &fout_boxing)
 		//fout_boxing << "@ " << boxset.boxType(i) << endl;
 		fout_boxing << "c " << position[i]-2*dy << endl;
 	}
-	if (0) {
+	if (1) {
 		fout_boxing << "@ 2" << endl;
 		int i = 0;
 		fout_boxing << "r 1\n";

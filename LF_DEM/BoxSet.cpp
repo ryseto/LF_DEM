@@ -98,9 +98,6 @@ void BoxSet::initExtFlow(double interaction_dist,
 	box_xsize = sys->get_lx_ext_flow()/x_box_nb;
 	box_ysize = sys->get_ly_ext_flow()/y_box_nb;
 	box_zsize = sys->get_lz_ext_flow()/z_box_nb;
-	
-	cerr << "box_size = "  << box_xsize << ' ' << box_ysize << ' ' << box_zsize << endl;
-	cerr << "interaction_dist = " << interaction_dist << endl;
 	box_nb = x_box_nb*yz_box_nb;
 	allocateBoxes();
 	// give them their position

@@ -161,10 +161,9 @@ void Simulation::generateOutput(const set<string> &output_events, int& binconf_c
 	}
 }
 
-
 void Simulation::setupOptionalSimulation(string indent)
 {
-	cerr << indent << "simulation_mode = " << sys.p.simulation_mode << endl;
+	cout << indent << "simulation_mode = " << sys.p.simulation_mode << endl;
 	switch (sys.p.simulation_mode) {
 		case 0:
 			cout << indent << "basic simulation" << endl;
@@ -598,11 +597,8 @@ void Simulation::outputData()
 	}
 	outdata.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 	outdata.setUnit(output_unit_scales);
-	double rate;
-	if (sys.p.flow_type == "shear") {
-		rate = sys.get_shear_rate();
-	} else { //extension
-		rate = sys.get_shear_rate(); // strain_rate = 1 in the rate control simulation
+	double sr = sys.get_shear_rate();
+	if (sys.ext_flow) {
 		matrix rotation, rotation_inv;
 		matrix sigma, sigma_rot;
 		rotation.set_rotation(p.magic_angle, 'y');
@@ -616,8 +612,9 @@ void Simulation::outputData()
 			stress_comp.second.setSymmetrize(sigma_rot);
 		}
 	}
-	double sr = sys.get_shear_rate();
-	double shear_stress = doubledot(sys.total_stress, sys.getEinfty()/sr);
+	double viscous_material_function   = doubledot(sys.total_stress, sys.getEinfty())/ sys.getEinfty().selfdoubledot();
+	double inviscid_material_function0 = doubledot(sys.total_stress, stress_basis_0) / stress_basis_0.selfdoubledot();
+	double inviscid_material_function3 = doubledot(sys.total_stress, stress_basis_3) / stress_basis_3.selfdoubledot();
 	outdata.entryData("time", "time", 1, sys.get_time());
 	if (sys.get_omega_wheel() == 0 || sys.wall_rheology == false) {
 		// Simple shear geometry
@@ -628,7 +625,7 @@ void Simulation::outputData()
 		outdata.entryData("rotation angle", "none", 1, sys.get_angle_wheel());
 		outdata.entryData("omega wheel", "rate", 1, sys.get_omega_wheel());
 	}
-	outdata.entryData("viscosity", "viscosity", 1, shear_stress/sr);
+	outdata.entryData("viscosity", "viscosity", 1, 0.5*viscous_material_function);
 	for (const auto &stress_comp: sys.total_stress_groups) {
 		string entry_name = "Viscosity("+stress_comp.first+")";
 		outdata.entryData(entry_name, "viscosity", 1, doubledot(stress_comp.second, sys.getEinfty()/sr)/sr);
@@ -636,10 +633,12 @@ void Simulation::outputData()
 	/*
 	 * Stress
 	 */
-	outdata.entryData("shear stress", "stress", 1, shear_stress);
+	//outdata.entryData("shear stress", "stress", 1, shear_stress);
 	auto stress_diag = sys.total_stress.diag();
 	outdata.entryData("N1 viscosity", "viscosity", 1, (stress_diag.x-stress_diag.z)/sr);
 	outdata.entryData("N2 viscosity", "viscosity", 1, (stress_diag.z-stress_diag.y)/sr);
+	outdata.entryData("inviscid function 0th", "viscosity", 1, inviscid_material_function0);
+	outdata.entryData("inviscid function 3rd", "viscosity", 1, inviscid_material_function3);
 	outdata.entryData("particle pressure", "stress", 1, -sys.total_stress.trace()/3);
 	outdata.entryData("particle pressure contact", "stress", 1, -sys.total_stress_groups["contact"].trace()/3);
 	/* energy
@@ -932,7 +931,9 @@ void Simulation::outputConfigurationData()
 	if (p.out_data_interaction) {
 		outputIntFileTxt();
 	}
-	//sys.yaplotBoxing(fout_boxing); // for debugging.
+	if (sys.ext_flow) {
+		sys.yaplotBoxing(fout_boxing); // for debugging.
+	}
 }
 
 void Simulation::outputFinalConfiguration(const string& filename_import_positions)

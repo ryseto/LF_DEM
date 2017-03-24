@@ -18,12 +18,11 @@ my $xz_shift = 0;
 my $axis = 0;
 my $reversibility_test = 0;
 my $monodisperse = 0;
-my $teta=atan(0.5*(-1+sqrt(5)));
 my $epsilondot=0;
 my $timeper=0;
-my $scale=0.52;
+my $scale=0.5;
 my $axisrotation=1;
-my $pd_color = 0;
+my $pd_color = 1;
 my $draw_cross = 1;
 my $flow_type = "shear";
 my $draw_trajectory = 0;
@@ -71,8 +70,9 @@ $shearrate_positive = 1;
 $particlecolor = 3;
 $i_trac = 3;
 
-$magicangle = atan(0.5*(sqrt(5)-1));
-
+my $magicangle = atan(0.5*(sqrt(5)-1));
+my $cos_ma = cos($magicangle);
+my $sin_ma = sin($magicangle);
 
 while (1) {
 	if ($cnt_interval == 0 ||
@@ -141,7 +141,7 @@ sub readHeader {
 	if ($Ly == 0) {
 		$number_of_header = 8;
 	} else {
-		$number_of_header = 8;
+		$number_of_header = 7;
 	}
 	for ($i = 0; $i<$number_of_header; $i++) {
 		$line = <IN_particle>;
@@ -171,6 +171,7 @@ sub InParticles {
 			printf "line = $line";
 			exit;
 		}
+		printf "ed = $epsilondot \n";
 		printf "$flow_type\n";
 		printf "$time_\n";
 		for ($i = 0; $i < $np; $i ++){
@@ -317,10 +318,11 @@ sub OutYaplotData{
 	printf OUT "y 1\n";
 	printf OUT "@ 8\n";
 	## visualize particles
-	$ax = exp( $epsilondot*($timeper))*cos($teta)*cos($teta)+exp(-$epsilondot*($timeper))*sin($teta)*sin($teta);
-	$az = exp(-$epsilondot*($timeper))*cos($teta)*sin($teta)-exp($epsilondot*($timeper))*sin($teta)*cos($teta);
-	$bx = exp(-$epsilondot*($timeper))*cos($teta)*sin($teta)-exp($epsilondot*($timeper))*sin($teta)*cos($teta);
-	$bz = exp(-$epsilondot*($timeper))*cos($teta)*cos($teta)+exp($epsilondot*($timeper))*sin($teta)*sin($teta);
+	$epsilondot = 0.5;
+	$ax = exp( $epsilondot*($timeper))*$cos_ma*$cos_ma+exp(-$epsilondot*($timeper))*$sin_ma*$sin_ma;
+	$az = exp(-$epsilondot*($timeper))*$cos_ma*$sin_ma-exp( $epsilondot*($timeper))*$sin_ma*$cos_ma;
+	$bx = exp(-$epsilondot*($timeper))*$cos_ma*$sin_ma-exp( $epsilondot*($timeper))*$sin_ma*$cos_ma;
+	$bz = exp(-$epsilondot*($timeper))*$cos_ma*$cos_ma+exp( $epsilondot*($timeper))*$sin_ma*$sin_ma;
 	printf "$ax \t $az\n";
 	printf "$Lx \t $Lz \n";
 	#        if ($cnt2 == 10) {
@@ -345,8 +347,8 @@ sub OutYaplotData{
 				$xx = $posx[$i_trac] + $pd_xshift;
 				$zz = $posz[$i_trac] + $pd_zshift;
 				if ($axisrotation) {
-					$xx2 = cos($magicangle)*$xx - sin($magicangle)*$zz;
-					$zz2 = sin($magicangle)*$xx + cos($magicangle)*$zz;
+					$xx2 = $cos_ma*$xx - $sin_ma*$zz;
+					$zz2 = $sin_ma*$xx + $cos_ma*$zz;
 				} else {
 					$xx2 = $xx;
 					$zz2 = $zz;
@@ -536,7 +538,7 @@ sub OutParticleExtension {
 					if ($phi6_data == 1) {
 						$op = 119*(1-$phi6abs[$i])+4;
 						$color = int $op;
-						printf OUT "@ $color\n";
+						## printf OUT "@ $color\n";
 					} else {
 						if ($draw_trajectory) {
 							if ($i == $i_trac) {

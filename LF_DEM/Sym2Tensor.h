@@ -35,10 +35,21 @@ public:
 		reset();
 	}
 	
+	Sym2Tensor (double _xx, double _xy, double _xz, double _yz, double _yy, double _zz)
+	{
+		elm[0] = _xx;
+		elm[1] = _xy;
+		elm[2] = _xz;
+		elm[3] = _yz;
+		elm[4] = _yy;
+		elm[5] = _zz;
+	}
+	
 	Sym2Tensor(double a)
 	{
-		for (unsigned int i=0; i<6; i++)
+		for (unsigned int i=0; i<6; i++) {
 			elm[i] = a;
+		}
 	}
 	
 	Sym2Tensor(std::initializer_list<double> il)
@@ -81,6 +92,16 @@ public:
 		return *this;
 	}
 	
+	void set(double _xx, double _xy, double _xz, double _yz, double _yy, double _zz)
+	{
+		elm[0] = _xx;
+		elm[1] = _xy;
+		elm[2] = _xz;
+		elm[3] = _yz;
+		elm[4] = _yy;
+		elm[5] = _zz;
+	}
+	
 	void reset() {
 		for (int i=0; i<6; i++) {
 			elm[i] = 0;
@@ -95,6 +116,16 @@ public:
 	double trace()
 	{
 		return elm[0]+elm[4]+elm[5];
+	}
+
+	double selfdoubledot()
+	{
+		return elm[0]*elm[0]
+		+ 2*elm[1]*elm[1]
+		+ 2*elm[2]*elm[2]
+		+ 2*elm[3]*elm[3]
+		+ elm[4]*elm[4]
+		+ elm[5]*elm[5];
 	}
 	
 	void setSymmetrize(matrix &m)
@@ -221,7 +252,7 @@ inline vec3d dot(const vec3d& v,
 
 inline double doubledot(const Sym2Tensor& s1, const Sym2Tensor& s2)
 {
-	return   s1.elm[0]*s2.elm[0]
+	return s1.elm[0]*s2.elm[0]
 	+ 2*s1.elm[1]*s2.elm[1]
 	+ 2*s1.elm[2]*s2.elm[2]
 	+ 2*s1.elm[3]*s2.elm[3]

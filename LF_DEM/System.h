@@ -326,7 +326,7 @@ private:
 	 ****************************************************************************************************/
 	matrix deform_forward; // Extension flow
 	matrix deform_backward; // Extension flow
-	matrix dot_deform_forward; // Extension flow
+	//matrix dot_deform_forward; // Extension flow
 	matrix grad_u; // = L Extension flow
 	/*****************************
 	 * Domains in the simulation box are numbered as follows.
@@ -451,8 +451,6 @@ private:
 	}
 
 	void set_shear_rate(double shear_rate);
-
-	void set_extension_rate(double shear_rate);
 
 	vec3d get_vel_difference()
 	{
