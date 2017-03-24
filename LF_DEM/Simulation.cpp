@@ -598,20 +598,6 @@ void Simulation::outputData()
 	outdata.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 	outdata.setUnit(output_unit_scales);
 	double sr = sys.get_shear_rate();
-	if (sys.ext_flow) {
-		matrix rotation, rotation_inv;
-		matrix sigma, sigma_rot;
-		rotation.set_rotation(p.magic_angle, 'y');
-		rotation_inv.set_rotation(-p.magic_angle, 'y');
-		sigma = sys.total_stress.getMatrix();
-		sigma_rot = rotation_inv*(sigma*rotation);
-		sys.total_stress.setSymmetrize(sigma_rot);
-		for (auto &stress_comp: sys.total_stress_groups) {
-			sigma = stress_comp.second.getMatrix();
-			sigma_rot = rotation_inv*(sigma*rotation);
-			stress_comp.second.setSymmetrize(sigma_rot);
-		}
-	}
 	double viscous_material_function   = doubledot(sys.total_stress, sys.getEinfty())/ sys.getEinfty().selfdoubledot();
 	double inviscid_material_function0 = doubledot(sys.total_stress, stress_basis_0) / stress_basis_0.selfdoubledot();
 	double inviscid_material_function3 = doubledot(sys.total_stress, stress_basis_3) / stress_basis_3.selfdoubledot();
@@ -628,17 +614,18 @@ void Simulation::outputData()
 	outdata.entryData("viscosity", "viscosity", 1, 0.5*viscous_material_function);
 	for (const auto &stress_comp: sys.total_stress_groups) {
 		string entry_name = "Viscosity("+stress_comp.first+")";
-		outdata.entryData(entry_name, "viscosity", 1, doubledot(stress_comp.second, sys.getEinfty()/sr)/sr);
+		double viscous_mf_component = doubledot(stress_comp.second, sys.getEinfty())/sys.getEinfty().selfdoubledot();
+		outdata.entryData(entry_name, "viscosity", 1, 0.5*viscous_mf_component);
 	}
 	/*
 	 * Stress
 	 */
 	//outdata.entryData("shear stress", "stress", 1, shear_stress);
 	auto stress_diag = sys.total_stress.diag();
-	outdata.entryData("N1 viscosity", "viscosity", 1, (stress_diag.x-stress_diag.z)/sr);
-	outdata.entryData("N2 viscosity", "viscosity", 1, (stress_diag.z-stress_diag.y)/sr);
 	outdata.entryData("inviscid function 0th", "viscosity", 1, inviscid_material_function0);
 	outdata.entryData("inviscid function 3rd", "viscosity", 1, inviscid_material_function3);
+	outdata.entryData("N1 viscosity", "viscosity", 1, (stress_diag.x-stress_diag.z)/sr);
+	outdata.entryData("N2 viscosity", "viscosity", 1, (stress_diag.z-stress_diag.y)/sr);
 	outdata.entryData("particle pressure", "stress", 1, -sys.total_stress.trace()/3);
 	outdata.entryData("particle pressure contact", "stress", 1, -sys.total_stress_groups["contact"].trace()/3);
 	/* energy

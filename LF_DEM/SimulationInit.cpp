@@ -571,8 +571,7 @@ void Simulation::setupSimulation(string in_args,
 	sys.p.flow_type = flow_type; // shear or extension or mix (not implemented yet)
 	
 	double dimensionless_deformation_rate = 0.5;
-	stress_basis_0.set(-dimensionless_deformation_rate/2, 0, 0, 0,
-					   dimensionless_deformation_rate, -dimensionless_deformation_rate/2);
+	
 	if (!sys.ext_flow) {
 		/* simple shear flow
 		 * shear_rate = 2*dot_epsilon
@@ -580,6 +579,8 @@ void Simulation::setupSimulation(string in_args,
 		Sym2Tensor Einf_common(0, 0, dimensionless_deformation_rate, 0, 0, 0);
 		vec3d Omegainf(0, dimensionless_deformation_rate, 0);
 		sys.setImposedFlow(Einf_common, Omegainf);
+		stress_basis_0.set(-dimensionless_deformation_rate/2, 0, 0, 0,
+						   dimensionless_deformation_rate, -dimensionless_deformation_rate/2);
 		stress_basis_3.set(-dimensionless_deformation_rate, 0, 0, 0, 0, dimensionless_deformation_rate);
 	} else {
 		/* extensional flow
@@ -597,7 +598,16 @@ void Simulation::setupSimulation(string in_args,
 		Einf_common.setSymmetrize(sys.grad_u);
 		vec3d Omegainf(0, 0, 0);
 		sys.setImposedFlow(Einf_common, Omegainf);
-		stress_basis_3.set(0, 0, dimensionless_deformation_rate, 0, 0, 0);
+		matrix mat_stress_basis_0(-dimensionless_deformation_rate/2, 0, 0,
+								  0, dimensionless_deformation_rate, 0,
+								  0, 0, -dimensionless_deformation_rate/2);
+		matrix mat_stress_basis_3(0, 0, dimensionless_deformation_rate,
+								  0, 0, 0,
+								  dimensionless_deformation_rate, 0, 0);
+		mat_stress_basis_0 = rotation_inv*mat_stress_basis_0*rotation;
+		mat_stress_basis_3 = rotation_inv*mat_stress_basis_3*rotation;
+		stress_basis_0.setSymmetrize(mat_stress_basis_0);
+		stress_basis_3.setSymmetrize(mat_stress_basis_3);
 	}
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		cout << "init_relax" << endl;
