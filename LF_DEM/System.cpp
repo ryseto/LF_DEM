@@ -1056,9 +1056,11 @@ void System::timeStepMove(double time_end, double strain_end)
 	if (!p.fixed_dt) {
 		adaptTimeStep(time_end, strain_end);
 	}
+	retrim_ext_flow = false; // used in ext_flow simulation
 	if (ext_flow) {
-		if (shear_rate*(time_+dt) > strain_retrim) {
-			dt = (strain_retrim/shear_rate)-time_;
+		if (cumulated_strain+shear_rate*dt > strain_retrim) {
+			dt = (strain_retrim-cumulated_strain)/shear_rate;
+			retrim_ext_flow = true;
 		}
 	}
 	time_ += dt;
@@ -1082,14 +1084,9 @@ void System::timeStepMove(double time_end, double strain_end)
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
-	if (ext_flow) {
-		if (cumulated_strain == strain_retrim) {
-			cerr << "cumulated_strain = " << cumulated_strain << endl;
-			retrimProcess();
-		} else if (cumulated_strain > strain_retrim){
-			cerr << "cumulated_strain = " << cumulated_strain << " > " << strain_retrim << endl;
-			exit(1);
-		}
+	if (retrim_ext_flow) {
+		cerr << "cumulated_strain = " << cumulated_strain << endl;
+		retrimProcess();
 	}
 	checkNewInteraction();
 	updateInteractions();
@@ -1100,14 +1097,16 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
 	/**
 	 \brief Moves particle positions according to previously computed velocities, predictor step.
 	 */
+	retrim_ext_flow = false; // used in ext_flow simulation
 	if (!brownian) { // adaptative time-step for non-Brownian cases
 		if (!p.fixed_dt) {
 			adaptTimeStep(time_end, strain_end);
 		}
 	}
 	if (ext_flow) {
-		if (time_+dt > strain_retrim) { // shear_rate = 1 is assumed
-			dt = strain_retrim-time_;
+		if (cumulated_strain+shear_rate*dt > strain_retrim) {
+			dt = (strain_retrim-cumulated_strain)/shear_rate;
+			retrim_ext_flow = true;
 		}
 	}
 	time_ += dt;
@@ -1161,11 +1160,9 @@ void System::timeStepMoveCorrector()
 			angle[i] += (ang_velocity[i].y-ang_velocity_predictor[i].y)*dt; // no cross_shear in 2d
 		}
 	}
-	if (cumulated_strain == strain_retrim) {
+	if (retrim_ext_flow) {
+		cerr << "cumulated_strain = " << cumulated_strain << endl;
 		retrimProcess();
-	} else if (cumulated_strain > strain_retrim){
-		cerr << "cumulated_strain = " << cumulated_strain << " > " << strain_retrim << endl;
-		exit(1);
 	}
 	checkNewInteraction();
 	updateInteractions();
