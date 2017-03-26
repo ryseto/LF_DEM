@@ -373,8 +373,6 @@ void Simulation::simulationInverseYield(string in_args,
 		}
 		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_cumulated_strain());
 		generateOutput(output_events, binconf_counter);
-
-
 		cout << "time: " << sys.get_time() << " / " << p.time_end << endl;
 		if (!sys.zero_shear
 			&& abs(sys.get_shear_rate()) < p.rest_threshold) {

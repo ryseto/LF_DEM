@@ -53,7 +53,7 @@ void Simulation::contactForceParameter(string filename)
 
 void Simulation::contactForceParameterBrownian(string filename)
 {
-	/** @@@ DEPRECATED?
+	/**
 	 \brief Load a file containing spring constants and time steps as functions of the volume fraction and Peclet number.
 	 
 	 Input file must be formatted as:
@@ -629,7 +629,15 @@ void Simulation::setupSimulation(string in_args,
 	setupNonDimensionalization(dimensionlessnumber, input_scale);
 
 	assertParameterCompatibility();
-
+	
+	if (input_files[2] != "not_given") {
+		if (sys.brownian && !p.auto_determine_knkt) {
+			contactForceParameterBrownian(input_files[2]);
+		} else {
+			contactForceParameter(input_files[2]);
+		}
+	}
+	
 	if (input_files[3] != "not_given") {
 		throw runtime_error("pre-simulation data deprecated?");
 	}
