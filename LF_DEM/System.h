@@ -200,7 +200,6 @@ private:
 	bool lubrication;
 	bool pairwise_resistance;
 	// Simulation parameters
-	double volume_fraction;
 	bool twodimension;
 	ControlVariable control;
 	bool zero_shear;

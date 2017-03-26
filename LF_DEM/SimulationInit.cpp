@@ -21,6 +21,7 @@ void Simulation::contactForceParameter(string filename)
 	 Input file must be formatted as:
 	 phi kn kt dt
 	 */
+	auto conf = sys.getConfiguration();
 	ifstream fin_knktdt;
 	fin_knktdt.open(filename.c_str());
 	if (!fin_knktdt) {
@@ -33,7 +34,7 @@ void Simulation::contactForceParameter(string filename)
 	// To find parameters for considered volume fraction phi.
 	bool found = false;
 	while (fin_knktdt >> phi_ >> kn_ >> kt_ >> dt_) {
-		if (phi_ == sys.volume_fraction) {
+		if (abs(phi_-conf.volume_or_area_fraction) < 1e-10) {
 			found = true;
 			break;
 		}
@@ -46,7 +47,7 @@ void Simulation::contactForceParameter(string filename)
 		cout << indent << "Input for kn, kt, dt = " << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_ << endl;
 	} else {
 		ostringstream error_str;
-		error_str  << " Error: file " << filename.c_str() << " contains no data for vf = " << sys.volume_fraction << endl;
+		error_str  << " Error: file " << filename.c_str() << " contains no data for vf = " << conf.volume_or_area_fraction << endl;
 		throw runtime_error(error_str.str());
 	}
 }
@@ -59,6 +60,7 @@ void Simulation::contactForceParameterBrownian(string filename)
 	 Input file must be formatted as:
 	 phi peclet kn kt dt
 	 */
+	auto conf = sys.getConfiguration();
 	ifstream fin_knktdt;
 	fin_knktdt.open(filename.c_str());
 	if (!fin_knktdt) {
@@ -70,7 +72,7 @@ void Simulation::contactForceParameterBrownian(string filename)
 	double phi_, peclet_, kn_, kt_, dt_;
 	bool found = false;
 	while (fin_knktdt >> phi_ >> peclet_ >> kn_ >> kt_ >> dt_) {
-		if (phi_ == sys.volume_fraction && peclet_ == force_ratios["hydro/thermal"]) {
+		if (abs(phi_-conf.volume_or_area_fraction) < 1e-10 && peclet_ == force_ratios["hydro/thermal"]) {
 			found = true;
 			break;
 		}
@@ -83,7 +85,7 @@ void Simulation::contactForceParameterBrownian(string filename)
 		cout << indent << "Input for vf = " << phi_ << " and Pe = " << peclet_ << " : kn = " << kn_ << ", kt = " << kt_ << " and dt = " << dt_ << endl;
 	} else {
 		ostringstream error_str;
-		error_str  << " Error: file " << filename.c_str() << " contains no data for vf = " << sys.volume_fraction << " and Pe = " << force_ratios["hydro/thermal"] << endl;
+		error_str  << " Error: file " << filename.c_str() << " contains no data for vf = " << conf.volume_or_area_fraction << " and Pe = " << force_ratios["hydro/thermal"] << endl;
 		throw runtime_error(error_str.str());
 	}
 }

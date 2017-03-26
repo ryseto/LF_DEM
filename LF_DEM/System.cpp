@@ -498,7 +498,6 @@ void System::setupConfiguration(struct base_configuration conf, ControlVariable 
 void System::setupConfiguration(struct fixed_velo_configuration conf, ControlVariable control_)
 {
 	p.np_fixed = conf.fixed_velocities.size();
-	volume_fraction = conf.volume_or_area_fraction;
 	setupGenericConfiguration(conf, control_);
 	setFixedVelocities(conf.fixed_velocities);
 }
