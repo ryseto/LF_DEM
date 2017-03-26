@@ -40,7 +40,6 @@ private:
 	std::map <std::string, DimensionalValue> input_values;
 	std::map <std::string, double*> force_value_ptr;
 	std::string header_imported_configulation[2];
-	double volume_fraction;
 	ControlVariable control_var;
 	double strain_end;
 	double time_end;
