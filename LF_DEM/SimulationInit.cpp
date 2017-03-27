@@ -698,7 +698,7 @@ void Simulation::setupSimulation(string in_args,
 				}
 		}
 	}
-	
+	 //@@@@ temporary repair
 	if (input_files[2] != "not_given") {
 		if (sys.brownian && !p.auto_determine_knkt) {
 			contactForceParameterBrownian(input_files[2]);
@@ -707,7 +707,10 @@ void Simulation::setupSimulation(string in_args,
 		}
 	}
 	
+	cerr << p.kn;
 	p_initial = p;
+	sys.resetContactModelParameer(); //@@@@ temporary repair
+
 	simu_name = prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
 									  simu_identifier, dimensionlessnumber, input_scale);
 	if (!sys.ext_flow) {
@@ -1017,8 +1020,8 @@ void Simulation::openOutputFiles(string simu_name)
 	if (p.out_data_interaction) {
 		outdata_int.setFile("int_"+simu_name+".dat", data_header.str(), force_to_run);
 	}
-	string box_name = "box_"+simu_name+".dat";
-	fout_boxing.open(box_name);
+	//string box_name = "box_"+simu_name+".dat";
+	//fout_boxing.open(box_name);
 	return;
 }
 
