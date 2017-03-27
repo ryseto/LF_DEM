@@ -36,7 +36,6 @@ void Contact::setSpringConstants()
 {
 	double ro_12 = (a0+a1)/2;
 	kn_scaled = ro_12*ro_12*sys->p.kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
-	std::cerr << "set kn_scaled  " << kn_scaled << std::endl;
 	if (sys->friction) {
 		kt_scaled = ro_12*sys->p.kt; // F = kt_scaled * disp_tan <-- disp is not scaled
 		if (sys->rolling_friction) {
@@ -217,7 +216,6 @@ void Contact::calcContactSpringForce()
 		return;
 	}
 	f_spring_normal_norm = -kn_scaled*interaction->get_reduced_gap();
-	std::cerr << kn_scaled << std::endl;
 	f_spring_normal = -f_spring_normal_norm*interaction->nvec;
 	if (sys->friction) {
 		disp_tan.vertical_projection(interaction->nvec);
