@@ -268,9 +268,6 @@ void Simulation::setLowPeclet()
 {
 	sys.lowPeclet = true;
 	double scale_factor_SmallPe = p.Pe_switch/force_ratios["hydro/thermal"];
-	p.memory_strain_k /= scale_factor_SmallPe;
-	p.memory_strain_avg /= scale_factor_SmallPe;
-	p.start_adjust /= scale_factor_SmallPe;
 	p.dt *= p.Pe_switch; // to make things continuous at Pe_switch
 }
 

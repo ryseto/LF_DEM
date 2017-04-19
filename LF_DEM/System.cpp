@@ -335,7 +335,7 @@ void System::setupParametersLubrication()
 	if (p.lub_reduce_parameter > 1) {
 		cout << indent+" p.lub_reduce_parameter>1, log terms in lubrication set to 0." << endl;
 	}
-	
+
 	if (p.lubrication_model != "normal" &&
 		p.lubrication_model != "none" &&
 		p.lubrication_model != "tangential") {
@@ -458,7 +458,7 @@ void System::setupGenericConfiguration(T conf, ControlVariable control_){
 	np = conf.position.size();
 	np_mobile = np - p.np_fixed;
 	control = control_;
-	
+
 	setBoxSize(conf.lx,conf.ly,conf.lz);
 	twodimension = ly == 0;
 
