@@ -14,11 +14,11 @@ struct base_configuration {
 	double lx, ly, lz;
 	double volume_or_area_fraction;
 	vec3d lees_edwards_disp;
-	
+
 	std::vector <vec3d> position;
 	std::vector <double> radius;
 	std::vector <double> angle;
-	
+
 	std::vector <struct contact_state> contact_states;
 };
 
@@ -26,12 +26,12 @@ struct fixed_velo_configuration {
 	double lx, ly, lz;
 	double volume_or_area_fraction;
 	vec3d lees_edwards_disp;
-	
+
 	std::vector <vec3d> position;
 	std::vector <double> radius;
 	std::vector <double> angle;
 	std::vector<vec3d> fixed_velocities;
-	
+
 	std::vector <struct contact_state> contact_states;
 };
 
@@ -40,15 +40,15 @@ struct circular_couette_configuration {
 	int np_wall2;
 	double radius_in;
 	double radius_out;
-	
+
 	double lx, ly, lz;
 	double volume_or_area_fraction;
 	vec3d lees_edwards_disp;
-	
+
 	std::vector <vec3d> position;
 	std::vector <double> radius;
 	std::vector <double> angle;
-	
+
 	std::vector <struct contact_state> contact_states;
 };
 
@@ -123,7 +123,7 @@ inline std::pair<std::vector <vec3d>, std::vector <double>> readPositionsBStream
 
 
 inline std::string getMetaParameter(std::map<std::string,std::string> &meta_data,
-									std::string &key)
+                                    std::string &key)
 {
 	if (meta_data.find(key) != meta_data.end()) {
 		return meta_data[key];
@@ -135,8 +135,8 @@ inline std::string getMetaParameter(std::map<std::string,std::string> &meta_data
 }
 
 inline std::string getMetaParameter(std::map<std::string,std::string> &meta_data,
-									std::string &key,
-									const std::string &default_val)
+                                    std::string &key,
+                                    const std::string &default_val)
 {
 	if (meta_data.find(key) != meta_data.end()) {
 		return meta_data[key];
@@ -189,11 +189,11 @@ inline int getTxtConfigurationFileFormat(const std::string& filename_import_posi
 		error_str  << " Position file '" << filename_import_positions << "' not found." << std::endl;
 		throw std::runtime_error(error_str.str());
 	}
-	
+
 	std::string header_imported_configulation[2];
 	getline(file_import, header_imported_configulation[0]);
 	getline(file_import, header_imported_configulation[1]);
-	
+
 	auto meta_data = getConfMetaData(header_imported_configulation[0], header_imported_configulation[1]);
 	if (meta_data.find("format") != meta_data.end()) {
 		return atoi(meta_data["format"].c_str());
@@ -208,7 +208,7 @@ inline struct base_configuration readBinaryBaseConfiguration(std::istream &input
 {
 	struct base_configuration c;
 	c.lees_edwards_disp.reset();
-	
+
 	int switch_, version_format_;
 	input.read((char*)&switch_, sizeof(int));
 	input.read((char*)&version_format_, sizeof(int));
@@ -227,12 +227,12 @@ inline struct base_configuration readBinaryBaseConfiguration(std::istream &input
 	input.read((char*)&c.lz, sizeof(double));
 	input.read((char*)&c.lees_edwards_disp.x, sizeof(double));
 	input.read((char*)&c.lees_edwards_disp.y, sizeof(double));
-	
+
 	std::tie(c.position, c.radius) = readPositionsBStream(input, np);
 	if (c.ly == 0) { //2d
 		c.angle.resize(c.position.size(), 0);
 	}
-	
+
 	c.contact_states = readContactStatesBStream(input, np);
 	return c;
 }
@@ -240,7 +240,7 @@ inline struct base_configuration readBinaryBaseConfiguration(std::istream &input
 inline struct fixed_velo_configuration readBinaryFixedVeloConfiguration(std::istream &input)
 {
 	struct fixed_velo_configuration c;
-	
+
 	c.lees_edwards_disp.reset();
 	int switch_, version_format_;
 	input.read((char*)&switch_, sizeof(int));
@@ -257,12 +257,12 @@ inline struct fixed_velo_configuration readBinaryFixedVeloConfiguration(std::ist
 	input.read((char*)&c.lz, sizeof(double));
 	input.read((char*)&c.lees_edwards_disp.x, sizeof(double));
 	input.read((char*)&c.lees_edwards_disp.y, sizeof(double));
-	
+
 	std::tie(c.position, c.radius) = readPositionsBStream(input, np);
 	if (c.ly == 0) { //2d
 		c.angle.resize(c.position.size(), 0);
 	}
-	
+
 	double vx_, vy_, vz_;
 	for (int i=0; i<np_fixed; i++) {
 		input.read((char*)&vx_, sizeof(double));
@@ -270,7 +270,7 @@ inline struct fixed_velo_configuration readBinaryFixedVeloConfiguration(std::ist
 		input.read((char*)&vz_, sizeof(double));
 		c.fixed_velocities.push_back(vec3d(vx_, vy_, vz_));
 	}
-	
+
 	c.contact_states = readContactStatesBStream(input, np);
 	return c;
 }
@@ -278,11 +278,11 @@ inline struct fixed_velo_configuration readBinaryFixedVeloConfiguration(std::ist
 template<typename T>
 inline void setMetadataBase(std::istream &input, T &conf)
 {
-	
+
 	std::string header_imported_configulation[2];
 	getline(input, header_imported_configulation[0]);
 	getline(input, header_imported_configulation[1]);
-	
+
 	auto meta_data = getConfMetaData(header_imported_configulation[0], header_imported_configulation[1]);
 	std::string key, def;
 	key = "lx";
@@ -306,16 +306,16 @@ inline struct base_configuration readTxtBaseConfiguration(std::istream &input)
 {
 	/**
 		\brief Import a text file base configuration.
-	 
+
 		File format:
 		# header
-	 
+
 		x y z radius
 		...
 	 */
 	struct base_configuration c;
 	setMetadataBase(input, c);
-	
+
 	double x_, y_, z_, a_;
 	while (input >> x_ >> y_ >> z_ >> a_) {
 		c.position.push_back(vec3d(x_, y_, z_));
@@ -331,20 +331,20 @@ inline struct fixed_velo_configuration readTxtFixedVeloConfiguration(std::istrea
 {
 	/**
 		\brief Import a text file configuration with imposed velocity particles.
-	 
+
 		File format:
 		# header
-	 
+
 		x y z radius
 		...
 		x y z radius vx vy vz
 		...
 	 */
 	// http://stackoverflow.com/questions/743191/how-to-parse-lines-with-differing-number-of-fields-in-c
-	
+
 	struct fixed_velo_configuration c;
 	setMetadataBase(input, c);
-	
+
 	double x_, y_, z_, a_, vx_, vy_, vz_;
 	std::string line;
 	while (getline(input, line)) {
@@ -372,7 +372,7 @@ inline void setMetadataCircularCouette(std::istream &file_import, struct circula
 	std::string header_imported_configulation[2];
 	getline(file_import, header_imported_configulation[0]);
 	getline(file_import, header_imported_configulation[1]);
-	
+
 	auto meta_data = getConfMetaData(header_imported_configulation[0], header_imported_configulation[1]);
 	std::string key, def;
 	key = "lx";
@@ -408,16 +408,16 @@ inline struct circular_couette_configuration readTxtCircularCouetteConfiguration
 {
 	/**
 		\brief Import a text file circular Couette configuration.
-	 
+
 		File format:
 		# header
-	 
+
 		x y z radius
 		...
 	 */
 	struct circular_couette_configuration c;
 	setMetadataCircularCouette(input, c);
-	
+
 	double x_, y_, z_, a_;
 	while (input >> x_ >> y_ >> z_ >> a_) {
 		c.position.push_back(vec3d(x_, y_, z_));
