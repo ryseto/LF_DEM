@@ -41,7 +41,6 @@ private:
 	std::map <std::string, double*> force_value_ptr;
 	std::string header_imported_configulation[2];
 	ControlVariable control_var;
-	double shear_rate_expectation;
 	double strain_end;
 	double time_end;
 	/*
@@ -57,6 +56,8 @@ private:
 	time_t time_strain_end;
 	int timestep_1;
 	int timestep_end;
+	Sym2Tensor stress_basis_0;
+	Sym2Tensor stress_basis_3;
 	/*
 	 * For output data.
 	 */
@@ -67,7 +68,7 @@ private:
 	OutputData outdata_pst;
 	OutputData outdata_par;
 	OutputData outdata_int;
-
+	std::ofstream fout_boxing;
 	/*
 	 * For inputs
 	 */
@@ -85,6 +86,7 @@ public:
 							   double dimensionless_number,
 							   std::string input_scale,
 							   ControlVariable control_variable,
+							   std::string flow_type,
 							   std::string simu_identifier);
 	// void simulationfinedSequence(std::string seq_type, std::string in_args, std::vector<std::string> &input_files, bool binary_conf, std::string control_variable);
 
@@ -94,6 +96,7 @@ public:
 								double dimensionless_number,
 								std::string input_scale,
 								ControlVariable control_variable,
+								std::string flow_type,
 								std::string simu_identifier);
 
 	void setupSimulation(std::string in_args,
@@ -101,6 +104,7 @@ public:
 						 bool binary_conf,
 						 double dimensionlessnumber,
 						 std::string input_scale,
+						 std::string flow_type,
 						 std::string simu_identifier);
 	TimeKeeper initTimeKeeper();
 	ParameterSet p;

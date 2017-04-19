@@ -119,7 +119,6 @@ void System::allocateRessources()
 	if (twodimension) {
 		angle.resize(np, 0);
 	}
-
 	// Velocity
 	velocity.resize(np);
 	for (auto &v: velocity) {
@@ -158,6 +157,7 @@ void System::allocateRessources()
 	torqueResultant.resize(np);
 	declareStressComponents();
 	total_stress_pp.resize(np);
+	phi6.resize(np);
 }
 
 void System::declareForceComponents()
@@ -223,6 +223,7 @@ void System::setInteractions_GenerateInitConfig()
 	calcInteractionRange = &System::calcLubricationRange;
 
 	shear_strain = {0, 0, 0};
+	cumulated_strain = 0;
 	shear_disp.reset();
 	vel_difference.reset();
 	initializeBoxing();
@@ -283,7 +284,6 @@ void System::setContacts(const vector <struct contact_state>& cs)
 
 		Used to restart the simulation from a given state.
 	 */
-
 	for (const auto& c : cs) {
 		for (auto &inter: interaction) {
 			unsigned int p0, p1;
@@ -389,7 +389,6 @@ void System::setupParameters()
 	setupParametersLubrication();
 	setupParametersContacts();
 	pairwise_resistance = lubrication || p.contact_relaxation_time != 0 || p.contact_relaxation_time_tan != 0;
-
 	if (p.interaction_range == -1) {
 		/* If interaction_range is not indicated,
 		 * interaction object is created at the lubrication cutoff.
@@ -400,12 +399,11 @@ void System::setupParameters()
 		calcInteractionRange = &System::calcInteractionRangeDefault;
 	}
 
-
 	if (p.repulsive_length <= 0) {
 		repulsiveforce = false;
 		p.repulsive_length = 0;
 	}
-	setShearDirection(p.theta_shear);
+		setShearDirection(p.theta_shear);
 
 	if (p.auto_determine_knkt) {
 		kn_avg.setRelaxationTime(p.memory_strain_avg);
@@ -576,6 +574,18 @@ void System::setupSystemPostConfiguration()
 	if (pairwise_resistance) {
 		stokes_solver.init(np, np_mobile);
 	}
+	if (ext_flow) {
+		// extensional flow
+		strain_retrim_interval = 2*log(0.5*(3+sqrt(5))); // every this strain, the main simulation box is retrimmed.
+		strain_retrim = strain_retrim_interval; // Setting the first value of strain to retrim.
+		double cos_ma = cos(p.magic_angle);
+		double sin_ma = sin(p.magic_angle);
+		sq_cos_ma = cos_ma*cos_ma;
+		sq_sin_ma = sin_ma*sin_ma;
+		cos_ma_sin_ma = cos_ma*sin_ma;
+		//setH_dot(1);
+		updateH(0.5*cumulated_strain); // cumulated_strain = 0
+	}
 	initializeBoxing();
 	checkNewInteraction();
 	dt = p.dt;
@@ -601,11 +611,28 @@ void System::initializeBoxing()
 			}
 		}
 	}
-	boxset.init(max_range, this);
-	for (int i=0; i<np; i++) {
-		boxset.box(i);
+	if (!ext_flow) {
+		// simple shear
+		boxset.init(max_range, this);
+		for (int i=0; i<np; i++) {
+			boxset.box(i);
+		}
+		boxset.update();
+	} else {
+		// extensional flow
+		double dl = max_range;
+		int num_x = (int)(lx/dl);
+		int num_z = (int)(lz/dl);
+		lx_ext_flow = 3*dl*(num_x+1)+2*dl;
+		ly_ext_flow = ly;
+		lz_ext_flow = 2*dl*(num_z+1)+2*dl;
+		vec3d box_origin(dl*(num_x+2), 0, dl*(num_z+2));
+		boxset.initExtFlow(max_range, box_origin, this);
+		for (int i=0; i<np; i++) {
+			boxset.box(i);
+		}
+		boxset.updateExtFlow();
 	}
-	boxset.update();
 }
 
 struct base_configuration System::getConfiguration()
@@ -632,20 +659,24 @@ void System::timeStepBoxing()
 		\brief Apply a strain step to the boxing system.
 	 */
 	if (!zero_shear) {
-		vec3d strain_increment = 2*dot(E_infinity, {0, 0, 1})*dt;
-		cumulated_strain += strain_increment.norm();
-		shear_strain += strain_increment;
-		shear_disp += strain_increment*lz;
-		int m = (int)(shear_disp.x/lx);
-		if (shear_disp.x < 0) {
-			m--;
+		double strain_increment = shear_rate*dt;
+		cumulated_strain += strain_increment;
+		if (!ext_flow) {
+			// simple shear flow
+			vec3d shear_strain_increment = 2*dot(E_infinity, {0, 0, 1})*dt;
+			shear_strain += shear_strain_increment;
+			shear_disp += shear_strain_increment*lz;
+			int m = (int)(shear_disp.x/lx);
+			if (shear_disp.x < 0) {
+				m--;
+			}
+			shear_disp.x = shear_disp.x-m*lx;
+			m = (int)(shear_disp.y/ly);
+			if (shear_disp.y < 0) {
+				m--;
+			}
+			shear_disp.y = shear_disp.y-m*ly;
 		}
-		shear_disp.x = shear_disp.x-m*lx;
-		m = (int)(shear_disp.y/ly);
-		if (shear_disp.y < 0) {
-			m--;
-		}
-		shear_disp.y = shear_disp.y-m*ly;
 	} else {
 		if (wall_rheology || p.simulation_mode == 31) {
 			vec3d strain_increment = 2*dot(E_infinity, {0, 0, 1})*dt;
@@ -654,7 +685,13 @@ void System::timeStepBoxing()
 			angle_wheel += dt*(omega_wheel_in-omega_wheel_out);
 		}
 	}
-	boxset.update();
+	if (!ext_flow) {
+		/**** simple shear flow ****/
+		boxset.update();
+	} else {
+		/**** extensional flow ****/
+		boxset.updateExtFlow();
+	}
 }
 
 void System::eventShearJamming()
@@ -877,7 +914,10 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	 + \f$ \bm{X}(t + dt) = \bm{X}(t) + \frac{1}{2}(\bm{U}^{+}+\bm{U}^{-})dt =  \bm{X}' + \frac{1}{2}(\bm{U}^{+}-\bm{U}^{-})dt \f$
 
 	 */
-
+	if (ext_flow) {
+		cerr << "Predictor Corrector Method is not reliable for extensional flow.\n";
+		exit(1);
+	}
 	/* predictor */
 	in_predictor = true;
 	in_corrector = false;
@@ -924,6 +964,34 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	}
 }
 
+void System::calcOrderParameter()
+{
+	if (twodimension == false) {
+		cerr << "The bond-orientation order parameter can be calculated only 2D simulation." << endl;
+		throw runtime_error("  The bond-orientation order parameter is only for 2D simulation. out_bond_order_parameter6 must be false for 3D simulation\n");
+	}
+	for (auto phi6_ : phi6) {
+		phi6_.real(0);
+		phi6_.imag(0);
+	}
+	vector<int> n_neighobr(np, 0);
+	for (auto &inter: interaction) {
+		double phase = inter.nvec.angle_elevation_xz()+M_PI; // nvec = p1 - p0
+		complex<double> bond_phase1(cos(6*phase), sin(6*phase));
+		/*
+		 complex<double> bond_phase2(cos(6*(phase+M_PI)), sin(6*(phase+M_PI)));
+		 bond_phase2 = bond_phase1
+		 */
+		phi6[inter.get_p0()] += bond_phase1;
+		phi6[inter.get_p1()] += bond_phase1;
+		n_neighobr[inter.get_p0()] ++;
+		n_neighobr[inter.get_p1()] ++;
+	}
+	for (int i=0; i<np; i++) {
+		phi6[i] *= 1.0/n_neighobr[i];
+	}
+}
+
 void System::adaptTimeStep()
 {
 	/**
@@ -963,15 +1031,37 @@ void System::adaptTimeStep(double time_end, double strain_end)
 	}
 }
 
+void System::retrimProcess()
+{
+	cerr << "retrim" << endl;
+	strain_retrim += strain_retrim_interval;
+	for (int i=0; i<np; i++) {
+		retrim(position[i]);
+		boxset.box(i);
+	}
+	boxset.updateExtFlow();
+}
+
 void System::timeStepMove(double time_end, double strain_end)
 {
 	/**
 	 \brief Moves particle positions according to previously computed velocities, Euler method step.
 	 */
-
+	/* @@@@ NOTE
+	 * shear_rate = 1 for both simple shear and extensional flow
+	 * dot_epsion = shear_rate / 2 is always true.
+	 * cumulated_strain = shear_rate * t for both simple shear and extensional flow.
+	 */
 	/* Adapt dt to get desired p.disp_max	 */
 	if (!p.fixed_dt) {
 		adaptTimeStep(time_end, strain_end);
+	}
+	retrim_ext_flow = false; // used in ext_flow simulation
+	if (ext_flow) {
+		if (cumulated_strain+shear_rate*dt > strain_retrim) {
+			dt = (strain_retrim-cumulated_strain)/shear_rate;
+			retrim_ext_flow = true;
+		}
 	}
 	time_ += dt;
 	if (ratio_unit_time != NULL) {
@@ -982,6 +1072,9 @@ void System::timeStepMove(double time_end, double strain_end)
 	total_num_timesteps ++;
 	/* evolve PBC */
 	timeStepBoxing();
+	if (ext_flow) {
+		updateH(0.5*cumulated_strain);
+	}
 	/* move particles */
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
@@ -990,6 +1083,10 @@ void System::timeStepMove(double time_end, double strain_end)
 		for (int i=0; i<np; i++) {
 			angle[i] += ang_velocity[i].y*dt;
 		}
+	}
+	if (retrim_ext_flow) {
+		cerr << "cumulated_strain = " << cumulated_strain << endl;
+		retrimProcess();
 	}
 	checkNewInteraction();
 	updateInteractions();
@@ -1000,9 +1097,16 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
 	/**
 	 \brief Moves particle positions according to previously computed velocities, predictor step.
 	 */
+	retrim_ext_flow = false; // used in ext_flow simulation
 	if (!brownian) { // adaptative time-step for non-Brownian cases
 		if (!p.fixed_dt) {
 			adaptTimeStep(time_end, strain_end);
+		}
+	}
+	if (ext_flow) {
+		if (cumulated_strain+shear_rate*dt > strain_retrim) {
+			dt = (strain_retrim-cumulated_strain)/shear_rate;
+			retrim_ext_flow = true;
 		}
 	}
 	time_ += dt;
@@ -1017,6 +1121,9 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
 	 * It must not be updated in corrector.
 	 */
 	timeStepBoxing();
+	if (ext_flow) {
+		updateH(0.5*cumulated_strain);
+	}
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
@@ -1052,6 +1159,10 @@ void System::timeStepMoveCorrector()
 		for (int i=0; i<np; i++) {
 			angle[i] += (ang_velocity[i].y-ang_velocity_predictor[i].y)*dt; // no cross_shear in 2d
 		}
+	}
+	if (retrim_ext_flow) {
+		cerr << "cumulated_strain = " << cumulated_strain << endl;
+		retrimProcess();
 	}
 	checkNewInteraction();
 	updateInteractions();
@@ -1176,22 +1287,42 @@ void System::checkNewInteraction()
 {
 	/**
 	 \brief Checks if there are new pairs of interacting particles. If so, creates and sets up the corresponding Interaction objects.
-
+	 
 	 To be called after particle moved.
 	 */
 	vec3d pos_diff;
 	double sq_dist;
-	for (int i=0; i<np-1; i++) {
-		for (auto j : boxset.neighborhood(i)) {
-			if (j > i) {
-				if (!hasNeighbor(i, j)) {
-					pos_diff = position[j]-position[i];
-					periodizeDiff(pos_diff);
-					sq_dist = pos_diff.sq_norm();
-					double scaled_interaction_range = (this->*calcInteractionRange)(i, j);
-					double sq_dist_lim = scaled_interaction_range*scaled_interaction_range;
-					if (sq_dist < sq_dist_lim) {
-						createNewInteraction(i, j, scaled_interaction_range);
+	if (!ext_flow) {
+		for (int i=0; i<np-1; i++) {
+			for (auto j : boxset.neighborhood(i)) {
+				if (j > i) {
+					if (!hasNeighbor(i, j)) {
+						pos_diff = position[j]-position[i];
+						periodizeDiff(pos_diff);
+						sq_dist = pos_diff.sq_norm();
+						double scaled_interaction_range = (this->*calcInteractionRange)(i, j);
+						double sq_dist_lim = scaled_interaction_range*scaled_interaction_range;
+						if (sq_dist < sq_dist_lim) {
+							createNewInteraction(i, j, scaled_interaction_range);
+						}
+					}
+				}
+			}
+		}
+	} else {
+		vec3d pd_shift;
+		for (int i=0; i<np-1; i++) {
+			for (auto j : boxset.neighborhood(i)) {
+				if (j > i) {
+					if (!hasNeighbor(i, j)) {
+						pos_diff = position[j]-position[i];
+						periodizeDiffExtFlow(pos_diff, pd_shift, i, j);
+						sq_dist = pos_diff.sq_norm();
+						double scaled_interaction_range = (this->*calcInteractionRange)(i, j);
+						double sq_dist_lim = scaled_interaction_range*scaled_interaction_range;
+						if (sq_dist < sq_dist_lim) {
+							createNewInteraction(i, j, scaled_interaction_range);
+						}
 					}
 				}
 			}
@@ -1737,43 +1868,43 @@ void System::setVelocityDifference()
 	vel_difference = 2*dot(E_infinity, {0, 0, lz});
 }
 
-void System::set_shear_rate(double sr)
+void System::set_shear_rate(double shear_rate_)
 {
-	shear_rate = sr;
+	shear_rate = shear_rate_;
 	omega_inf = omegahat_inf*shear_rate;
 	E_infinity = Ehat_infinity*shear_rate;
-	setVelocityDifference();
 }
 
 void System::setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty)
 {
 	Ehat_infinity = EhatInfty;
 	omegahat_inf = OhatInfty;
-	if(twodimension) {
-		if (fabs(Ehat_infinity.elm[3])>1e-15 || fabs(Ehat_infinity.elm[4])>1e-15) {
+	if (twodimension) {
+		if (fabs(Ehat_infinity.elm[3]) > 1e-15 || fabs(Ehat_infinity.elm[4]) > 1e-15) {
 			throw runtime_error(" System:: Error: 2d simulation with Einf_{y?} != 0");
 		} else {
 			Ehat_infinity.elm[3] = 0;
 			Ehat_infinity.elm[4] = 0;
 		}
-		if (fabs(omegahat_inf.x)>1e-15 || fabs(omegahat_inf.z)>1e-15) {
+		if (fabs(omegahat_inf.x) > 1e-15 || fabs(omegahat_inf.z) > 1e-15) {
 			throw runtime_error(" System:: Error: 2d simulation with Omega_inf not along y");
 		} else {
 			omegahat_inf.x = 0;
 			omegahat_inf.z = 0;
 		}
 	}
-	omega_inf = omegahat_inf*shear_rate;
-	E_infinity = Ehat_infinity*shear_rate;
-	setVelocityDifference();
+	//	omega_inf = omegahat_inf*shear_rate;
+	//E_infinity = Ehat_infinity*shear_rate;
 }
 
 void System::setShearDirection(double theta_shear) // will probably be deprecated soon
 {
-	double costheta_shear = cos(theta_shear);
-	double sintheta_shear = sin(theta_shear);
-	setImposedFlow({0, 0, costheta_shear/2, sintheta_shear/2, 0, 0},
-	               {-0.5*sintheta_shear, 0.5*costheta_shear, 0});
+	if (!ext_flow) {
+		double costheta_shear = cos(theta_shear);
+		double sintheta_shear = sin(theta_shear);
+		setImposedFlow({0, 0, costheta_shear/2, sintheta_shear/2, 0, 0},
+					   {-0.5*sintheta_shear, 0.5*costheta_shear, 0});
+	}
 }
 
 void System::computeShearRate()
@@ -2024,14 +2155,14 @@ void System::computeVelocities(bool divided_velocities)
 	 */
 	stokes_solver.resetRHS();
 	resetForceComponents();
-	if (divided_velocities || control==stress) {
-		if (control==stress) {
+	if (divided_velocities || control == stress) {
+		if (control == stress) {
 			set_shear_rate(1);
 		}
 		computeUInf();
 		setFixedParticleVelocities();
 		computeVelocityByComponents();
-		if (control==stress) {
+		if (control == stress) {
 			if (p.simulation_mode != 31) {
 				computeShearRate();
 			} else {
@@ -2110,7 +2241,7 @@ void System::computeUInf()
 
 void System::adjustVelocityPeriodicBoundary()
 {
-	if (control==stress) { // in rate control it is already done in computeVelocities()
+	if (control == stress) { // in rate control it is already done in computeVelocities()
 		computeUInf();
 	}
 	for (int i=0; i<np; i++) {
@@ -2118,9 +2249,17 @@ void System::adjustVelocityPeriodicBoundary()
 		ang_velocity[i] = na_ang_velocity[i];
 	}
 	if (!zero_shear) {
-		for (int i=0; i<np; i++) {
-			velocity[i] += u_inf[i];
-			ang_velocity[i] += omega_inf;
+		if (!ext_flow) {
+			/**** simple shear flow ****/
+			for (int i=0; i<np; i++) {
+				velocity[i] += u_inf[i];
+				ang_velocity[i] += omega_inf;
+			}
+		} else {
+			/**** extensional flow ****/
+			for (int i=0; i<np; i++) {
+				velocity[i] += u_inf[i];
+			}
 		}
 	}
 }
@@ -2152,16 +2291,61 @@ void System::rushWorkFor2DBrownian(vector<vec3d> &vel, vector<vec3d> &ang_vel)
 void System::displacement(int i, const vec3d& dr)
 {
 	position[i] += dr;
-	int z_shift = periodize(position[i]);
 	/* Note:
 	 * When the position of the particle is periodized,
 	 * we need to modify the velocity, which was already evaluated.
 	 * The position and velocity will be used to calculate the contact forces.
 	 */
-	if (z_shift != 0) {
-		velocity[i] += z_shift*vel_difference;
+	if (!ext_flow) {
+		/**** simple shear flow ****/
+		int z_shift = periodize(position[i]);
+		if (z_shift != 0) {
+			velocity[i] += z_shift*vel_difference;
+		}
+	} else {
+		/**** extensional flow ****/
+		bool pd_transport = false;
+		periodizeExtFlow(i, pd_transport);
+		if (pd_transport) {
+			velocity[i] -= u_inf[i];
+			u_inf[i] = grad_u*position[i];
+			velocity[i] +=  u_inf[i];
+		}
 	}
 	boxset.box(i);
+}
+
+void System::periodizeExtFlow(const int &i, bool &pd_transport)
+{
+	if (boxset.boxType(i) != 1) {
+		vec3d s = deform_backward*position[i];
+		//deform_backward.print();
+		while (s.z >= lz) {
+			s.z -= lz;
+			pd_transport = true;
+		}
+		while (s.z < 0) {
+			s.z += lz;
+			pd_transport = true;
+		}
+		while (s.x >= lx) {
+			s.x -= lx;
+			pd_transport = true;
+		}
+		while (s.x < 0) {
+			s.x += lx;
+			pd_transport = true;
+		}
+		position[i] = deform_forward*s;
+		//deform_forward.print();
+	}
+	if (!twodimension) {
+		if (position[i].y >= ly) {
+			position[i].y -= ly;
+		} else if (position[i].y < 0) {
+			position[i].y += ly;
+		}
+	}
 }
 
 // [0,l]
@@ -2235,6 +2419,21 @@ int System::periodizeDiff(vec3d& pos_diff)
 		}
 	}
 	return zshift;
+}
+
+void System::periodizeDiffExtFlow(vec3d& pos_diff, vec3d& pd_shift, const int &i, const int &j)
+{
+	pd_shift = boxset.periodicDiffShift(i, j);
+	if (twodimension == false) {
+		if (pos_diff.y > ly_half) {
+			pd_shift.y -= ly;
+		} else if (pos_diff.y < -ly_half) {
+			pd_shift.y += ly;
+		}
+	}
+	if (pd_shift.is_nonzero()) {
+		pos_diff += pd_shift;
+	}
 }
 
 void System::setSystemVolume()
@@ -2322,11 +2521,13 @@ void System::adjustContactModelParameters()
 		dt = p.max_dt;
 	}
 	previous_cumulated_strain = cumulated_strain;
+	resetContactModelParameer();
+}
 
+void System::resetContactModelParameer()
+{
 	for (auto &inter: interaction) {
-		if (inter.contact.is_active()) {
-			inter.contact.setSpringConstants();
-		}
+		inter.contact.setSpringConstants();
 	}
 }
 
@@ -2345,3 +2546,129 @@ double System::calcLubricationRange(int i, int j)
 		return radius[i]+radius[j]+p.lub_max_gap*minradius;
 	}
 }
+
+void System::retrim(vec3d& pos)
+{
+	while (pos.z >= lz) {
+		pos.z -= lz;
+	}
+	while (pos.z < 0) {
+		pos.z += lz;
+	}
+	while (pos.x >= lx) {
+		pos.x -= lx;
+	}
+	while (pos.x < 0) {
+		pos.x += lx;
+	}
+}
+
+void System::updateH(double extensional_strain)
+{
+	/*
+	 * strainH is twice of extensional strain.
+	 *
+	 */
+	/**** extensional flow ****/
+	/* H_orig = (exp(epsilon_dot t) 0 0 / 0 1 0 / 0 0 exp(-epsilon_dot t))
+	 * H = R(-magicangle) H_orig R(magicangle)
+	 */
+	double exp_strain_x;
+	double exp_strain_z;
+	if (2*extensional_strain == strain_retrim) {
+		exp_strain_x = 1;
+		exp_strain_z = 1;
+	} else {
+		// strainH 
+		exp_strain_x = exp(extensional_strain-0.5*(strain_retrim-strain_retrim_interval));
+		exp_strain_z = 1.0/exp_strain_x;
+	}
+	/******** Set H     *****************************************/
+	// 00, 01, 02, 12, 11, 22
+	deform_forward.setSymmetric(exp_strain_x*sq_cos_ma+exp_strain_z*sq_sin_ma, // 00
+								0, // 01
+								-(exp_strain_x-exp_strain_z)*cos_ma_sin_ma, // 02
+								0, // 12
+								1, // 11
+								exp_strain_x*sq_sin_ma+exp_strain_z*sq_cos_ma); // 22
+	/******** Set H_dot *****************************************/
+	//cerr << "### " << dot_epsilon << ' ' << shear_rate << endl;
+	//	dot_deform_forward.setSymmetric(dot_epsilon*(exp_strain_x*sq_cos_ma-exp_strain_z*sq_sin_ma), // 00
+	//									0, // 01
+	//									-dot_epsilon*(exp_strain_x+exp_strain_z)*cos_ma_sin_ma, // 02
+	//									0, // 12
+	//									0, // 11
+	//									dot_epsilon*(exp_strain_x*sq_sin_ma-exp_strain_z*sq_cos_ma)); //22
+	//
+	deform_backward = deform_forward.inverse();
+	/* grad_u is not neccesary to update.
+	 *
+	 */
+	//grad_u = dot_deform_forward*deform_backward;
+	//E_infinity = symmetrise(grad_u);
+	//O_infinity = grad_u.antiSymmetrise();
+	/************** for boxing **************************************/
+	box_axis1 = lx*deform_forward.getLine(0); // 6--7 = 10--11
+	box_axis2 = lz*deform_forward.getLine(2); // 6--10 = 7--11
+	box_diagonal_6_11 = box_axis1+box_axis2; // 6--11
+	box_diagonal_7_10 = box_axis2-box_axis1; // 7--10
+}
+
+void System::yaplotBoxing(std::ofstream &fout_boxing)
+{
+	boxset.yaplotBox(fout_boxing);
+	vec3d e1;
+	vec3d e2;
+	vec3d dy(0, 0, 0);
+	if (twodimension) {
+		dy.y = 0.01;
+	}
+	e1 = lx*deform_forward.getLine(0);
+	e2 = lz*deform_forward.getLine(2);
+	fout_boxing << "@ 0" << endl;
+	fout_boxing << "r 0.2\n";
+	fout_boxing << "s 0 -0.01 0 " << e1 -dy<< endl;
+	fout_boxing << "s 0 -0.01 0 " << e2 -dy << endl;
+	fout_boxing << "s " << e1 -dy << ' ' << e1+e2 -dy << endl;
+	fout_boxing << "s " << e2 -dy << ' ' << e1+e2 -dy << endl;
+	fout_boxing << "@ 0" << endl;
+	
+	fout_boxing << "r 0.5\n";
+	for (int i=0; i<np; i++) {
+		//fout_boxing << "@ " << boxset.boxType(i) << endl;
+		fout_boxing << "c " << position[i]-2*dy << endl;
+	}
+	if (1) {
+		fout_boxing << "@ 2" << endl;
+		int i = 0;
+		fout_boxing << "r 1\n";
+		fout_boxing << "c " << position[i] << endl;
+		fout_boxing << "@ 4" << endl;
+		for (auto j : boxset.neighborhood(i)) {
+			if (i != j) {
+				fout_boxing << "c " << position[j] << endl;
+			}
+		}
+	}
+	fout_boxing << "y 5" << endl;
+	fout_boxing << "@ 5" << endl;
+	fout_boxing << "r 1\n";
+	for (auto op: overlap_particles) {
+		fout_boxing << "c " << position[op]-3*dy << endl;
+	}
+	overlap_particles.clear(); // @@@ for debuging
+	
+	if (/* DISABLES CODE */ (0)) {
+		fout_boxing << "@ 8" << endl;
+		for (unsigned int k=0; k<interaction.size(); k++) {
+			int p0 = interaction[k].get_p0();
+			int p1 = interaction[k].get_p1();
+			vec3d nvec = interaction[k].nvec;
+			fout_boxing << "l " << position[p0]-3*dy << ' ' << position[p0]-3*dy + nvec  << endl;
+			fout_boxing << "l " << position[p1]-3*dy << ' ' << position[p1]-3*dy - nvec  << endl;
+		}
+	}
+	
+	fout_boxing << endl;
+}
+

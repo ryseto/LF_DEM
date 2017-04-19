@@ -11,9 +11,84 @@
 #include <sstream>
 #include <stdexcept>
 #include "Configuration.h"
-
-
 using namespace std;
+
+void Simulation::contactForceParameter(string filename)
+{
+	/**
+	 \brief Load a file containing spring constants and time steps as functions of the volume fraction.
+	 
+	 Input file must be formatted as:
+	 phi kn kt dt
+	 */
+	auto conf = sys.getConfiguration();
+	ifstream fin_knktdt;
+	fin_knktdt.open(filename.c_str());
+	if (!fin_knktdt) {
+		ostringstream error_str;
+		error_str  << " Contact parameter file '" << filename << "' not found." << endl;
+		throw runtime_error(error_str.str());
+	}
+	// temporal variables to keep imported values.
+	double phi_, kn_, kt_, dt_;
+	// To find parameters for considered volume fraction phi.
+	bool found = false;
+	while (fin_knktdt >> phi_ >> kn_ >> kt_ >> dt_) {
+		if (abs(phi_-conf.volume_or_area_fraction) < 1e-10) {
+			found = true;
+			break;
+		}
+	}
+	fin_knktdt.close();
+	if (found) {
+		// Set the parameter object
+		p.kn = kn_, p.kt = kt_, p.dt = dt_;
+		string indent = "  Simulation::\t";
+		cout << indent << "Input for kn, kt, dt = " << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_ << endl;
+	} else {
+		ostringstream error_str;
+		error_str  << " Error: file " << filename.c_str() << " contains no data for vf = " << conf.volume_or_area_fraction << endl;
+		throw runtime_error(error_str.str());
+	}
+}
+
+void Simulation::contactForceParameterBrownian(string filename)
+{
+	/**
+	 \brief Load a file containing spring constants and time steps as functions of the volume fraction and Peclet number.
+	 
+	 Input file must be formatted as:
+	 phi peclet kn kt dt
+	 */
+	auto conf = sys.getConfiguration();
+	ifstream fin_knktdt;
+	fin_knktdt.open(filename.c_str());
+	if (!fin_knktdt) {
+		ostringstream error_str;
+		error_str  << " Contact parameter file '" << filename << "' not found." << endl;
+		throw runtime_error(error_str.str());
+	}
+	// temporal variables to keep imported values.
+	double phi_, peclet_, kn_, kt_, dt_;
+	bool found = false;
+	while (fin_knktdt >> phi_ >> peclet_ >> kn_ >> kt_ >> dt_) {
+		if (abs(phi_-conf.volume_or_area_fraction) < 1e-10 && peclet_ == force_ratios["hydro/thermal"]) {
+			found = true;
+			break;
+		}
+	}
+	fin_knktdt.close();
+	
+	if (found) {
+		p.kn = kn_, p.kt = kt_, p.dt = dt_;
+		string indent = "  Simulation::\t";
+		cout << indent << "Input for vf = " << phi_ << " and Pe = " << peclet_ << " : kn = " << kn_ << ", kt = " << kt_ << " and dt = " << dt_ << endl;
+	} else {
+		ostringstream error_str;
+		error_str  << " Error: file " << filename.c_str() << " contains no data for vf = " << conf.volume_or_area_fraction << " and Pe = " << force_ratios["hydro/thermal"] << endl;
+		throw runtime_error(error_str.str());
+	}
+}
 
 void Simulation::importPreSimulationData(string filename)
 {
@@ -31,7 +106,6 @@ void Simulation::importPreSimulationData(string filename)
 			break;
 		}
 	}
-	shear_rate_expectation = shear_rate_;
 }
 
 void Simulation::echoInputFiles(string in_args,
@@ -260,7 +334,7 @@ void Simulation::setupNonDimensionalizationRateControlled(double dimensionlessnu
 	setUnitScaleRateControlled();
 	// convert from hydro scale to chosen scale
 	for (auto& x: input_values) {
-			changeUnit(x.second, internal_unit_scales);
+		changeUnit(x.second, internal_unit_scales);
 	}
 }
 
@@ -319,7 +393,7 @@ void Simulation::setUnitScaleRateControlled()
 void Simulation::exportForceAmplitudes()
 {
 	/**
-	 \brief Copy the input force alues in the ForceAmplitude struct of the System class
+	 \brief Copyrthe input force alues in the ForceAmplitude struct of the System class
 	 */
 	string indent = "  Simulation::\t";
 	cout << indent+"Forces used:" << endl;
@@ -354,7 +428,7 @@ void Simulation::exportForceAmplitudes()
 	cout << indent+"Rolling contact stiffness (in \"" << input_values["kr"].unit << "\" units): " << p.kr << endl;
 
 	if (input_values.find("hydro") != input_values.end()) { // == if rate controlled
-		sys.set_shear_rate(*(input_values["hydro"].value));
+			sys.set_shear_rate(*(input_values["hydro"].value));
 	}
 }
 
@@ -478,9 +552,10 @@ void Simulation::resolveTimeOrStrainParameters()
 
 void Simulation::setupSimulation(string in_args,
                                  vector<string>& input_files,
-                                 bool binary_conf,
-                                 double dimensionlessnumber,
-                                 string input_scale,
+								 bool binary_conf,
+								 double dimensionlessnumber,
+								 string input_scale,
+								 string flow_type,
                                  string simu_identifier)
 {
 	/**
@@ -492,7 +567,47 @@ void Simulation::setupSimulation(string in_args,
 	cout << indent << "Simulation setup starting... " << endl;
 	string filename_import_positions = input_files[0];
 	string filename_parameters = input_files[1];
-
+	sys.p.flow_type = flow_type; // shear or extension or mix (not implemented yet)
+	
+	double dimensionless_deformation_rate = 0.5;
+	
+	if (!sys.ext_flow) {
+		/* simple shear flow
+		 * shear_rate = 2*dot_epsilon
+		 */
+		Sym2Tensor Einf_common(0, 0, dimensionless_deformation_rate, 0, 0, 0);
+		vec3d Omegainf(0, dimensionless_deformation_rate, 0);
+		sys.setImposedFlow(Einf_common, Omegainf);
+		stress_basis_0.set(-dimensionless_deformation_rate/2, 0, 0, 0,
+						   dimensionless_deformation_rate, -dimensionless_deformation_rate/2);
+		stress_basis_3.set(-dimensionless_deformation_rate, 0, 0, 0, 0, dimensionless_deformation_rate);
+	} else {
+		/* extensional flow
+		 *
+		 */
+		p.magic_angle = atan(0.5*(sqrt(5)-1)); // simulation box needs to be tilted in this angle.
+		matrix grad_u_orig(dimensionless_deformation_rate, 0, 0,
+						   0, 0, 0,
+						   0, 0, -dimensionless_deformation_rate);
+		matrix rotation, rotation_inv;
+		rotation.set_rotation(-p.magic_angle, 'y');
+		rotation_inv.set_rotation(p.magic_angle, 'y');
+		sys.grad_u = rotation_inv*grad_u_orig*rotation;
+		Sym2Tensor Einf_common;
+		Einf_common.setSymmetrize(sys.grad_u);
+		vec3d Omegainf(0, 0, 0);
+		sys.setImposedFlow(Einf_common, Omegainf);
+		matrix mat_stress_basis_0(-dimensionless_deformation_rate/2, 0, 0,
+								  0, dimensionless_deformation_rate, 0,
+								  0, 0, -dimensionless_deformation_rate/2);
+		matrix mat_stress_basis_3(0, 0, dimensionless_deformation_rate,
+								  0, 0, 0,
+								  dimensionless_deformation_rate, 0, 0);
+		mat_stress_basis_0 = rotation_inv*mat_stress_basis_0*rotation;
+		mat_stress_basis_3 = rotation_inv*mat_stress_basis_3*rotation;
+		stress_basis_0.setSymmetrize(mat_stress_basis_0);
+		stress_basis_3.setSymmetrize(mat_stress_basis_3);
+	}
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		cout << "init_relax" << endl;
 		sys.zero_shear = true;
@@ -501,12 +616,19 @@ void Simulation::setupSimulation(string in_args,
 	}
 	setDefaultParameters(input_scale);
 	readParameterFile(filename_parameters);
+	if (sys.ext_flow) {
+		p.origin_zero_flow = false;
+	}
 	setupOptionalSimulation(indent);
 	tagStrainParameters();
+	/* Both simple shear and extensional simulations
+	 * dimensionlessnumber means 2 times of dot_epsilon.
+	 *
+	 */
 	setupNonDimensionalization(dimensionlessnumber, input_scale);
 
 	assertParameterCompatibility();
-
+	
 	if (input_files[3] != "not_given") {
 		throw runtime_error("pre-simulation data deprecated?");
 	}
@@ -573,10 +695,28 @@ void Simulation::setupSimulation(string in_args,
 				}
 		}
 	}
-
+	 //@@@@ temporary repair
+	if (input_files[2] != "not_given") {
+		if (sys.brownian && !p.auto_determine_knkt) {
+			contactForceParameterBrownian(input_files[2]);
+		} else {
+			contactForceParameter(input_files[2]);
+		}
+	}
+	
+	cerr << p.kn;
 	p_initial = p;
+	sys.resetContactModelParameer(); //@@@@ temporary repair
+
 	simu_name = prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
 									  simu_identifier, dimensionlessnumber, input_scale);
+	if (!sys.ext_flow) {
+		// simple shear
+		sys.setVelocityDifference();
+	} else {
+		// extensional flow
+		sys.vel_difference.reset();
+	}
 	openOutputFiles(simu_name);
 	echoInputFiles(in_args, input_files);
 	cout << indent << "Simulation setup [ok]" << endl;
@@ -703,6 +843,8 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "out_particle_stress") {
 		p.out_particle_stress = value;
 		p.out_particle_stress.erase(remove(p.out_particle_stress.begin(), p.out_particle_stress.end(), '\"' ), p.out_particle_stress.end());
+	} else if (keyword == "out_bond_order_parameter6") {
+		p.out_bond_order_parameter6 = str2bool(value);
 	} else if (keyword == "out_binary_conf") {
 		p.out_binary_conf = str2bool(value);
 	} else if (keyword == "np_fixed") {
@@ -829,26 +971,26 @@ void Simulation::setDefaultParameters(string input_scale)
 	autoSetParameters("event_handler", "");
 	autoSetParameters("simulation_mode", "0");
 	autoSetParameters("keep_input_strain", "false");
+	autoSetParameters("out_bond_order_parameter6", "false");
 }
 
-
-inline string columnDefinition(int &cnb, const string &type, const string &name)
-{
-	stringstream defs;
-	if (type == "vec3d") {
-		array<string, 3> xyz = {"x", "y", "z"};
-		for (auto &u : xyz) {
-			stringstream col_def_complement;
-			defs << "#" << cnb << ": "<< name << " " << u << "\n";
-			cnb ++;
-		}
-	} else if (type=="scalar") {
-		defs << "#" << cnb << ": "<< name << "\n";
-	} else {
-		throw runtime_error(" unknown type for column def\n");
-	}
-	return defs.str();
-}
+//inline string columnDefinition(int &cnb, const string &type, const string &name)
+//{
+//	stringstream defs;
+//	if (type == "vec3d") {
+//		array<string, 3> xyz = {"x", "y", "z"};
+//		for (auto &u : xyz) {
+//			stringstream col_def_complement;
+//			defs << "#" << cnb << ": "<< name << " " << u << "\n";
+//			cnb ++;
+//		}
+//	} else if (type=="scalar") {
+//		defs << "#" << cnb << ": "<< name << "\n";
+//	} else {
+//		throw runtime_error(" unknown type for column def\n");
+//	}
+//	return defs.str();
+//}
 
 void Simulation::openOutputFiles(string simu_name)
 {
@@ -875,6 +1017,9 @@ void Simulation::openOutputFiles(string simu_name)
 	if (p.out_data_interaction) {
 		outdata_int.setFile("int_"+simu_name+".dat", data_header.str(), force_to_run);
 	}
+	//string box_name = "box_"+simu_name+".dat";
+	//fout_boxing.open(box_name);
+	return;
 }
 
 string Simulation::prepareSimulationName(bool binary_conf,
@@ -916,17 +1061,18 @@ string Simulation::prepareSimulationName(bool binary_conf,
 			}
 		}
 	}
-	if (control_var==rate) {
+	if (control_var == rate) {
 		string_control_parameters << "_" << "rate";
 	}
-	if (control_var==stress) {
+	if (control_var == stress) {
 		string_control_parameters << "_" << "stress";
 	}
-	if (control_var==viscnb) {
+	if (control_var == viscnb) {
 		string_control_parameters << "_" << "viscnb";
 	}
 	string_control_parameters << dimensionlessnumber << input_scale;
 	ss_simu_name << string_control_parameters.str();
+	ss_simu_name << "_" << sys.p.flow_type;
 	if (simu_identifier != "") {
 		ss_simu_name << "_";
 		ss_simu_name << simu_identifier;
@@ -937,7 +1083,8 @@ string Simulation::prepareSimulationName(bool binary_conf,
 	return ss_simu_name.str();
 }
 
-TimeKeeper Simulation::initTimeKeeper() {
+TimeKeeper Simulation::initTimeKeeper()
+{
 	TimeKeeper tk;
 	if (p.log_time_interval) {
 		tk.addClock("data", LogClock(p.initial_log_time,

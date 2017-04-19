@@ -130,7 +130,6 @@
 		CDE4695916BC4CB800923139 /* StokesSolver.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = StokesSolver.cpp; sourceTree = "<group>"; };
 		D9032D731B79D1A00062A6F3 /* Events.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Events.h; sourceTree = "<group>"; };
 		D9032D741B79DFE60062A6F3 /* SimulationInit.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SimulationInit.cpp; sourceTree = "<group>"; };
-		D90971261E042E9000EAB3B7 /* Matrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Matrix.h; sourceTree = "<group>"; };
 		D90AF33D1AF9FFBA00E15C7E /* _averager_8h_source.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = _averager_8h_source.html; sourceTree = "<group>"; };
 		D90AF33E1AF9FFBA00E15C7E /* _box_8h_source.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = _box_8h_source.html; sourceTree = "<group>"; };
 		D90AF33F1AF9FFBA00E15C7E /* _box_set_8h_source.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = _box_set_8h_source.html; sourceTree = "<group>"; };
@@ -579,6 +578,7 @@
 		D988E39A1654A18D0009949F /* System.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = System.cpp; sourceTree = "<group>"; };
 		D988E39B1654A18D0009949F /* System.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = System.h; sourceTree = "<group>"; };
 		D98B3CCD17CCF057002B2A4D /* LubricationFunctions.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = LubricationFunctions.h; sourceTree = "<group>"; };
+		D98F62131E62367200053198 /* convertMaterialFunctions.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; name = convertMaterialFunctions.pl; path = tools/convertMaterialFunctions.pl; sourceTree = SOURCE_ROOT; };
 		D9953512180713FB00FC99C9 /* cluster_life */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cluster_life; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9953514180713FB00FC99C9 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D9953516180713FB00FC99C9 /* cluster_life.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = cluster_life.1; sourceTree = "<group>"; };
@@ -605,6 +605,10 @@
 		D9A906701BF331EF00BE8640 /* trajectory.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = trajectory.pl; path = tools/trajectory.pl; sourceTree = SOURCE_ROOT; };
 		D9AD32F11D8CAD3D00819471 /* SystemHelperFunctions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SystemHelperFunctions.h; sourceTree = "<group>"; };
 		D9B0FF381D1A810C00FFCBFD /* Timer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Timer.h; sourceTree = "<group>"; };
+		D9B4104A1E53E52F00A2C9D5 /* Matrix.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Matrix.h; sourceTree = "<group>"; };
+		D9B4104B1E5BE26600A2C9D5 /* Sym2Tensor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sym2Tensor.h; sourceTree = "<group>"; };
+		D9B4104C1E5BF15900A2C9D5 /* Configuration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Configuration.h; sourceTree = "<group>"; };
+		D9B4104F1E5BF8C400A2C9D5 /* generateYaplotFile_extflow.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = generateYaplotFile_extflow.pl; path = tools/generateYaplotFile_extflow.pl; sourceTree = SOURCE_ROOT; };
 		D9B659F81998FD14003DA63E /* LF_DEM.profdata */ = {isa = PBXFileReference; lastKnownFileType = file; path = LF_DEM.profdata; sourceTree = "<group>"; };
 		D9BA0B8B1C7010930077D0AC /* analyzeWallShear.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; name = analyzeWallShear.pl; path = tools/analyzeWallShear.pl; sourceTree = SOURCE_ROOT; };
 		D9BC20971AAD607B0033D4A8 /* algorithm.graffle */ = {isa = PBXFileReference; lastKnownFileType = file; path = algorithm.graffle; sourceTree = "<group>"; };
@@ -631,7 +635,6 @@
 		D9DA50DC1678F61E00E864E4 /* note_LF_DEM.tex */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.tex; sourceTree = "<group>"; };
 		D9EA979A1BBCF2560041B4B0 /* analyze */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = analyze; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9EA97A51BBCF29C0041B4B0 /* analyzeLFDEM */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = analyzeLFDEM; sourceTree = BUILT_PRODUCTS_DIR; };
-		D9F6A29A171DA1C20034E186 /* StressTensor.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = StressTensor.h; sourceTree = "<group>"; };
 		D9FAAA2F1960685B00E601A9 /* Interaction.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = Interaction.cpp; sourceTree = "<group>"; };
 		D9FB0BD61D6934E800E315B1 /* libamd.2.4.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libamd.2.4.6.dylib; path = /usr/local/lib/libamd.2.4.6.dylib; sourceTree = "<absolute>"; };
 		D9FB0BD71D6934E800E315B1 /* libcholmod.3.0.11.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcholmod.3.0.11.dylib; path = /usr/local/lib/libcholmod.3.0.11.dylib; sourceTree = "<absolute>"; };
@@ -1172,6 +1175,8 @@
 			children = (
 				D9A906691BF331EF00BE8640 /* generateYaplotFile_seto.pl */,
 				D9A9066A1BF331EF00BE8640 /* generateYaplotFile.pl */,
+				D9B4104F1E5BF8C400A2C9D5 /* generateYaplotFile_extflow.pl */,
+				D98F62131E62367200053198 /* convertMaterialFunctions.pl */,
 				D9825AF01C410E4B000AF86E /* circularrheo.pl */,
 				D97E6DFD1D3FA83300A3D747 /* timeEvolutionWideGap.pl */,
 				D93C105A1C34197200460301 /* analyzeCircularWideGap.pl */,
@@ -1235,13 +1240,13 @@
 				D9CE1B441B066B5E00E052D9 /* dSFMT-common.h */,
 				D9CE1B451B066B5E00E052D9 /* dSFMT-params.h */,
 				D9CE1B461B066B5E00E052D9 /* dSFMT-params19937.h */,
-				D90971261E042E9000EAB3B7 /* Matrix.h */,
 				D988E38D165441750009949F /* main.cpp */,
 				D9752C881B18285100DDE5E4 /* global.h */,
 				D9032D731B79D1A00062A6F3 /* Events.h */,
 				D91EB7AA1D7B027C000868CE /* ForceComponent.h */,
 				D972B3AB1DC785C400024381 /* StressComponent.h */,
 				D972B3AC1DC785C400024381 /* VelocityComponent.h */,
+				D9B4104C1E5BF15900A2C9D5 /* Configuration.h */,
 				D9878876165545680047A87E /* Simulation.h */,
 				D9878875165545680047A87E /* Simulation.cpp */,
 				D9032D741B79DFE60062A6F3 /* SimulationInit.cpp */,
@@ -1269,12 +1274,13 @@
 				D9573FAE16797A000081E903 /* Box.cpp */,
 				D9573FB116797A000081E903 /* BoxSet.h */,
 				D9573FB016797A000081E903 /* BoxSet.cpp */,
-				D9F6A29A171DA1C20034E186 /* StressTensor.h */,
 				D91539E316718D3200FBD57E /* GenerateInitConfig.h */,
 				D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */,
+				D9B4104A1E53E52F00A2C9D5 /* Matrix.h */,
 				D9278EA61A93050700ABCD87 /* Averager.h */,
 				D9B0FF381D1A810C00FFCBFD /* Timer.h */,
 				D988E399165443C10009949F /* vec3d.h */,
+				D9B4104B1E5BE26600A2C9D5 /* Sym2Tensor.h */,
 				D92F19C21676450800411650 /* MersenneTwister.h */,
 				D988E38F165441750009949F /* LF_DEM.1 */,
 			);
