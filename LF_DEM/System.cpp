@@ -176,11 +176,6 @@ void System::declareForceComponents()
 		force_components["contact"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setContactForceToParticle);
 	}
 
-	/******* Contact force, dashpot part ***********/
-	// note that we keep the torque on, as there is nothing else to prevent tangential motion when in contact
-	// (apart from Stokes drag, which can be set arbitrarily small)
-	force_components["dashpot"] = ForceComponent(np, RATE_PROPORTIONAL, torque, &System::setDashpotForceToParticle);
-
 	/*********** Hydro force, i.e.  R_FE:E_inf *****************/
 	if (!zero_shear) {
 		if (p.lubrication_model == "normal") {
@@ -189,6 +184,10 @@ void System::declareForceComponents()
 		if (p.lubrication_model == "tangential") {
 			force_components["hydro"] = ForceComponent(np, RATE_PROPORTIONAL, torque, &System::setHydroForceToParticle_squeeze_tangential);
 		}
+		/******* Contact force, dashpot part, U_inf only, i.e. R_FU^{dashpot}.U_inf ***********/
+		// note that we keep the torque on, as there is nothing else to prevent tangential motion when in contact
+		// (apart from Stokes drag, which can be set arbitrarily small)
+		force_components["dashpot"] = ForceComponent(np, RATE_PROPORTIONAL, torque, &System::setDashpotForceToParticle);
 	}
 	if (repulsiveforce) {
 		force_components["repulsion"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setRepulsiveForceToParticle);
@@ -1287,7 +1286,7 @@ void System::checkNewInteraction()
 {
 	/**
 	 \brief Checks if there are new pairs of interacting particles. If so, creates and sets up the corresponding Interaction objects.
-	 
+
 	 To be called after particle moved.
 	 */
 	vec3d pos_diff;
@@ -1365,7 +1364,7 @@ void System::declareResistance(int p0, int p1)
 	if (p1 < np_mobile) { // i and j mobile
 		nb_blocks_mm[p0]++;
 	} else if (p0 >= np_mobile) { // i and j fixed
-		nb_blocks_ff[p0]++;
+		nb_blocks_ff[p0-np_mobile]++;
 	} else {
 		nb_blocks_mf[p0]++;
 	}
@@ -1377,7 +1376,7 @@ void System::eraseResistance(int p0, int p1)
 	if (p1 < np_mobile) { // i and j mobile
 		nb_blocks_mm[p0]--;
 	} else if (p0 >= np_mobile) { // i and j fixed
-		nb_blocks_ff[p0]--;
+		nb_blocks_ff[p0-np_mobile]--;
 	} else {
 		nb_blocks_mf[p0]--;
 	}
@@ -2579,7 +2578,7 @@ void System::updateH(double extensional_strain)
 		exp_strain_x = 1;
 		exp_strain_z = 1;
 	} else {
-		// strainH 
+		// strainH
 		exp_strain_x = exp(extensional_strain-0.5*(strain_retrim-strain_retrim_interval));
 		exp_strain_z = 1.0/exp_strain_x;
 	}
@@ -2632,7 +2631,7 @@ void System::yaplotBoxing(std::ofstream &fout_boxing)
 	fout_boxing << "s " << e1 -dy << ' ' << e1+e2 -dy << endl;
 	fout_boxing << "s " << e2 -dy << ' ' << e1+e2 -dy << endl;
 	fout_boxing << "@ 0" << endl;
-	
+
 	fout_boxing << "r 0.5\n";
 	for (int i=0; i<np; i++) {
 		//fout_boxing << "@ " << boxset.boxType(i) << endl;
@@ -2657,7 +2656,7 @@ void System::yaplotBoxing(std::ofstream &fout_boxing)
 		fout_boxing << "c " << position[op]-3*dy << endl;
 	}
 	overlap_particles.clear(); // @@@ for debuging
-	
+
 	if (/* DISABLES CODE */ (0)) {
 		fout_boxing << "@ 8" << endl;
 		for (unsigned int k=0; k<interaction.size(); k++) {
@@ -2668,7 +2667,6 @@ void System::yaplotBoxing(std::ofstream &fout_boxing)
 			fout_boxing << "l " << position[p1]-3*dy << ' ' << position[p1]-3*dy - nvec  << endl;
 		}
 	}
-	
+
 	fout_boxing << endl;
 }
-
