@@ -356,6 +356,7 @@ private:
 	void setupConfiguration(struct base_configuration c, ControlVariable control_);
 	void setupConfiguration(struct fixed_velo_configuration c, ControlVariable control_);
 	void setupConfiguration(struct circular_couette_configuration c, ControlVariable control_);
+	void resetContactModelParameer();
 	void allocateRessources();
 	void timeEvolution(double time_end, double strain_end);
 	void displacement(int i, const vec3d& dr);

@@ -2521,11 +2521,13 @@ void System::adjustContactModelParameters()
 		dt = p.max_dt;
 	}
 	previous_cumulated_strain = cumulated_strain;
+	resetContactModelParameer();
+}
 
+void System::resetContactModelParameer()
+{
 	for (auto &inter: interaction) {
-		if (inter.contact.is_active()) {
-			inter.contact.setSpringConstants();
-		}
+		inter.contact.setSpringConstants();
 	}
 }
 
