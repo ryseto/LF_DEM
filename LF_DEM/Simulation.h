@@ -171,6 +171,7 @@ public:
 	void outputFinalConfiguration(const std::string&);
 	void outputIntFileTxt();
 	void outputParFileTxt();
+	void outputPstFileTxt();
 	void outputConfigurationBinary();
 	void outputConfigurationBinary(std::string);
 	double getRate();

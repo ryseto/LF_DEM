@@ -17,7 +17,7 @@ void Simulation::contactForceParameter(string filename)
 {
 	/**
 	 \brief Load a file containing spring constants and time steps as functions of the volume fraction.
-	 
+
 	 Input file must be formatted as:
 	 phi kn kt dt
 	 */
@@ -56,7 +56,7 @@ void Simulation::contactForceParameterBrownian(string filename)
 {
 	/**
 	 \brief Load a file containing spring constants and time steps as functions of the volume fraction and Peclet number.
-	 
+
 	 Input file must be formatted as:
 	 phi peclet kn kt dt
 	 */
@@ -78,7 +78,7 @@ void Simulation::contactForceParameterBrownian(string filename)
 		}
 	}
 	fin_knktdt.close();
-	
+
 	if (found) {
 		p.kn = kn_, p.kt = kt_, p.dt = dt_;
 		string indent = "  Simulation::\t";
@@ -342,9 +342,6 @@ void Simulation::setLowPeclet()
 {
 	sys.lowPeclet = true;
 	double scale_factor_SmallPe = p.Pe_switch/force_ratios["hydro/thermal"];
-	p.memory_strain_k /= scale_factor_SmallPe;
-	p.memory_strain_avg /= scale_factor_SmallPe;
-	p.start_adjust /= scale_factor_SmallPe;
 	p.dt *= p.Pe_switch; // to make things continuous at Pe_switch
 }
 
@@ -571,19 +568,19 @@ void Simulation::setupSimulation(string in_args,
 	string filename_import_positions = input_files[0];
 	string filename_parameters = input_files[1];
 	sys.p.flow_type = flow_type; // shear or extension or mix (not implemented yet)
-	
+
 	double dimensionless_deformation_rate = 0.5;
-	
+
 	if (!sys.ext_flow) {
 		/* simple shear flow
 		 * shear_rate = 2*dot_epsilon
 		 */
-		Sym2Tensor Einf_common(0, 0, dimensionless_deformation_rate, 0, 0, 0);
+		Sym2Tensor Einf_common = {0, 0, dimensionless_deformation_rate, 0, 0, 0};
 		vec3d Omegainf(0, dimensionless_deformation_rate, 0);
 		sys.setImposedFlow(Einf_common, Omegainf);
-		stress_basis_0.set(-dimensionless_deformation_rate/2, 0, 0, 0,
-						   dimensionless_deformation_rate, -dimensionless_deformation_rate/2);
-		stress_basis_3.set(-dimensionless_deformation_rate, 0, 0, 0, 0, dimensionless_deformation_rate);
+		stress_basis_0 = {-dimensionless_deformation_rate/2, 0, 0, 0,
+		                  dimensionless_deformation_rate, -dimensionless_deformation_rate/2};
+		stress_basis_3 = {-dimensionless_deformation_rate, 0, 0, 0, 0, dimensionless_deformation_rate};
 	} else {
 		/* extensional flow
 		 *
@@ -631,7 +628,7 @@ void Simulation::setupSimulation(string in_args,
 	setupNonDimensionalization(dimensionlessnumber, input_scale);
 
 	assertParameterCompatibility();
-	
+
 	if (input_files[3] != "not_given") {
 		throw runtime_error("pre-simulation data deprecated?");
 	}
@@ -706,7 +703,7 @@ void Simulation::setupSimulation(string in_args,
 			contactForceParameter(input_files[2]);
 		}
 	}
-	
+
 	cerr << p.kn;
 	p_initial = p;
 	sys.resetContactModelParameer(); //@@@@ temporary repair
