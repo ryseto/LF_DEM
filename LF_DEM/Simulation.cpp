@@ -818,6 +818,9 @@ void Simulation::outputParFileTxt()
 		if (!sys.ext_flow) {
 			outdata_par.entryData("non affine displacement (x, y, z)", "none", 3, na_disp[i]);
 		}
+		if (sys.twodimension) {
+			outdata_par.entryData("angle", "none", 1, sys.angle[i]);
+		}
 		if (sys.couette_stress) {
 			double stress_rr, stress_thetatheta, stress_rtheta;
 			sys.getStressCouette(i, stress_rr, stress_thetatheta, stress_rtheta);
@@ -825,9 +828,6 @@ void Simulation::outputParFileTxt()
 			outdata_par.entryData("stress_rr", "viscosity", 1, stress_rr/sr);
 			outdata_par.entryData("stress_thetatheta", "viscosity", 1, stress_thetatheta/sr);
 			outdata_par.entryData("stress_rtheta", "viscosity", 1, stress_rtheta/sr);
-		}
-		if (sys.twodimension) {
-			outdata_par.entryData("angle", "none", 1, sys.angle[i]);
 		}
 		if (p.out_data_vel_components) {
 			for (const auto &vc: sys.na_velo_components) {
