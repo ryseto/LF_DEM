@@ -821,14 +821,14 @@ void Simulation::outputParFileTxt()
 		if (sys.twodimension) {
 			outdata_par.entryData("angle", "none", 1, sys.angle[i]);
 		}
-		if (sys.couette_stress) {
-			double stress_rr, stress_thetatheta, stress_rtheta;
-			sys.getStressCouette(i, stress_rr, stress_thetatheta, stress_rtheta);
-			double sr = sys.get_shear_rate();
-			outdata_par.entryData("stress_rr", "viscosity", 1, stress_rr/sr);
-			outdata_par.entryData("stress_thetatheta", "viscosity", 1, stress_thetatheta/sr);
-			outdata_par.entryData("stress_rtheta", "viscosity", 1, stress_rtheta/sr);
-		}
+		//		if (sys.couette_stress) {
+		//			double stress_rr, stress_thetatheta, stress_rtheta;
+		//			sys.getStressCouette(i, stress_rr, stress_thetatheta, stress_rtheta);
+		//			double sr = sys.get_shear_rate();
+		//			outdata_par.entryData("stress_rr", "viscosity", 1, stress_rr/sr);
+		//			outdata_par.entryData("stress_thetatheta", "viscosity", 1, stress_thetatheta/sr);
+		//			outdata_par.entryData("stress_rtheta", "viscosity", 1, stress_rtheta/sr);
+		//		}
 		if (p.out_data_vel_components) {
 			for (const auto &vc: sys.na_velo_components) {
 				string entry_name_vel = "non-affine "+vc.first+" velocity (x, y, z)";
