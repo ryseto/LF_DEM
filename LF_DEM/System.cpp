@@ -1899,6 +1899,7 @@ void System::setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty)
 void System::setShearDirection(double theta_shear) // will probably be deprecated soon
 {
 	if (!ext_flow) {
+		p.theta_shear = theta_shear;
 		double costheta_shear = cos(theta_shear);
 		double sintheta_shear = sin(theta_shear);
 		setImposedFlow({0, 0, costheta_shear/2, sintheta_shear/2, 0, 0},
