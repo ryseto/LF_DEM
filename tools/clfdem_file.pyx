@@ -27,8 +27,8 @@ cdef extern from "lfdem_files.cpp":
 
     cdef cppclass lf_snapshot_file(lf_file):
         lf_snapshot_file(string) except +
-        Frame get_frame(size_t)
-        Frame next_frame()
+        Frame get_frame(size_t) except +
+        Frame next_frame() except +
 
 
 cdef class generic_file:

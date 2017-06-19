@@ -23,14 +23,12 @@ nvec(0),
 z_offset(0)
 {
 	init();
-
 	if (j > i) {
 		p0 = i, p1 = j;
 	} else {
 		p0 = j, p1 = i;
 	}
 	ro = sys->radius[p0]+sys->radius[p1]; // ro=a0+a1
-
 	// tell it to particles i and j
 	sys->interaction_list[i].insert(this);
 	sys->interaction_list[j].insert(this);
@@ -56,11 +54,10 @@ z_offset(other.z_offset)
 	activateForceMembers();
 }
 
-Interaction & Interaction::operator = (const Interaction &inter)
+Interaction &Interaction::operator = (const Interaction &inter)
 {
 	Interaction tmp(inter);
 	swap(tmp);
-
 	init();
 	sys->interaction_list[p0].insert(this);
 	sys->interaction_list[p1].insert(this);
@@ -127,7 +124,11 @@ void Interaction::init()
 void Interaction::calcNormalVectorDistanceGap()
 {
 	rvec = sys->position[p1]-sys->position[p0];
-	z_offset = sys->periodizeDiff(rvec);
+	if (!sys->ext_flow) {
+		z_offset = sys->periodizeDiff(rvec);
+	} else {
+		sys->periodizeDiffExtFlow(rvec, pd_shift, p0, p1);
+	}
 	r = rvec.norm();
 	nvec = rvec/r;
 	reduced_gap = 2*r/ro-2;
@@ -173,9 +174,7 @@ void Interaction::updateState(bool& deactivated)
 		// (VERY IMPORTANT): we increment displacements BEFORE updating the normal vector not to mess up with Lees-Edwards PBC
 		contact.incrementDisplacements();
 	}
-
 	calcNormalVectorDistanceGap();
-
 	if (r > interaction_range) {
 		/* all forces are switched off, but NOT the interaction itself
 		This has to be done by the caller, based on the value of deactivated */
@@ -183,7 +182,6 @@ void Interaction::updateState(bool& deactivated)
 		deactivated = true;
 		return;
 	}
-
 	updateContactState();
 	if (contact.is_active()) {
 		contact.calcContactSpringForce();

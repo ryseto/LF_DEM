@@ -141,7 +141,8 @@ public:
 		output_data[name].push_back(str_value.str());
 	}
 
-	void writeFileHeader() {
+	void writeFileHeader()
+	{
 		fout << "# data in " << out_unit << " units." << std::endl;
 		int i = 1;
 		for (const auto &name : insert_order) {
@@ -158,7 +159,8 @@ public:
 		fout << std::endl;
 	}
 
-	void writeColsToFile() {
+	void writeColsToFile()
+	{
 		int line_nb = getLineNumber();
 		for (int i=0; i<line_nb; i++) {
 			for (const auto& name : insert_order) {

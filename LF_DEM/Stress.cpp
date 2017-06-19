@@ -11,12 +11,10 @@
 #include "System.h"
 #include "global.h"
 #include "StressComponent.h"
-
-
 using namespace std;
 
-
-void System::declareStressComponents() {
+void System::declareStressComponents()
+{
 	// It is essential that the stresses in stress_components sum up to the total stress.
 	// exemple: if the total stress is S_TOTAL = S_A + S_B,
 	// you should declare A and B, but not TOTAL.
@@ -32,9 +30,9 @@ void System::declareStressComponents() {
 		for (const auto &vc: na_velo_components) {
 			if (vc.first != "brownian") {
 				stress_components[vc.first] = StressComponent(VELOCITY_STRESS,
-				                                                vc.second.vel.size(),
-			                                                  vc.second.rate_dependence,
-			                                                  vc.first);
+															  vc.second.vel.size(),
+															  vc.second.rate_dependence,
+															  vc.first);
 			}
 		}
 	}
@@ -53,7 +51,7 @@ void System::declareStressComponents() {
 	}
 
 	/****************  xF stresses *****************/
-	if (control==rate) {
+	if (control == rate) {
 		stress_components["xF_contact"] = StressComponent(XF_STRESS, np, RATE_DEPENDENT, "contact"); // rate dependent through xFdashpot
 	} else { // stress controlled
 		stress_components["xF_contact_rateprop"] = StressComponent(XF_STRESS, np, RATE_PROPORTIONAL, "contact");
@@ -63,7 +61,7 @@ void System::declareStressComponents() {
 		stress_components["xF_repulsion"] = StressComponent(XF_STRESS, np, RATE_INDEPENDENT, "repulsion");
 	}
 
-	if (control==stress) {
+	if (control == stress) {
 		for (const auto &sc: stress_components) {
 			if (sc.second.rate_dependence == RATE_DEPENDENT) {
 				ostringstream error_msg;
@@ -80,7 +78,6 @@ void System::declareStressComponents() {
 	}
 }
 
-
 void System::addUpInteractionStressGU(std::vector<Sym2Tensor> &stress_comp,
                                       const std::vector<vec3d> &non_affine_vel,
                                       const std::vector<vec3d> &non_affine_ang_vel)
@@ -94,8 +91,8 @@ void System::addUpInteractionStressGU(std::vector<Sym2Tensor> &stress_comp,
 			unsigned int i, j;
 			std::tie(i, j) = inter.get_par_num();
 			inter.lubrication.addGUStresslet(non_affine_vel[i], non_affine_vel[j],
-		                                   non_affine_ang_vel[i], non_affine_ang_vel[j],
-		                                   stress_comp[i], stress_comp[j]);
+											 non_affine_ang_vel[i], non_affine_ang_vel[j],
+											 stress_comp[i], stress_comp[j]);
 		}
 	}
 }
@@ -110,8 +107,8 @@ void System::addUpInteractionStressME(std::vector<Sym2Tensor> &stress_comp)
 			unsigned int i, j;
 			std::tie(i, j) = inter.get_par_num();
 			inter.lubrication.addMEStresslet(E_infinity,
-			                                 stress_comp[i],
-			                                 stress_comp[j]); // R_SE:Einf-R_SU*v
+											 stress_comp[i],
+											 stress_comp[j]); // R_SE:Einf-R_SU*v
 		}
 	}
 }
@@ -167,8 +164,8 @@ void System::calcContactXFPerParticleStressControlled()
 	gatherVelocitiesByRateDependencies(rateprop_vel, rateprop_ang_vel,
 	                                   rateindep_vel, rateindep_ang_vel);
 
-	auto &rateprop_XF = stress_components["xF_contact_rateprop"].particle_stress;
-	auto &rateindep_XF = stress_components["xF_contact_rateindep"].particle_stress;
+	auto &rateprop_XF = stress_components.at("xF_contact_rateprop").particle_stress;
+	auto &rateindep_XF = stress_components.at("xF_contact_rateindep").particle_stress;
 
 	for (const auto &inter: interaction) {
 		unsigned int i, j;
@@ -252,8 +249,8 @@ void System::calcStressPerParticle()
 			addUpInteractionStressME(sc.second.particle_stress);
 		}
 	}
-	if (control==rate) {
-		auto &cstress_XF = stress_components["xF_contact"].particle_stress;
+	if (control == rate) {
+		auto &cstress_XF = stress_components.at("xF_contact").particle_stress;
 		for (auto &inter: interaction) {
 			if (inter.contact.is_active()) {
 				unsigned int i, j;
@@ -266,7 +263,7 @@ void System::calcStressPerParticle()
 	}
 
 	if (repulsiveforce) {
-		auto &rstress_XF = stress_components["xF_repulsion"].particle_stress;
+		auto &rstress_XF = stress_components.at("xF_repulsion").particle_stress;
 		for (auto &inter: interaction) {
 			unsigned int i, j;
 			std::tie(i, j) = inter.get_par_num();
@@ -275,8 +272,8 @@ void System::calcStressPerParticle()
 	}
 
 	if (brownian) {
-		auto &bstress_predictor = stress_components["GU_brownian_predictor"].particle_stress;
-		auto &bstress = stress_components["GU_brownian"].particle_stress;
+		auto &bstress_predictor = stress_components.at("brownian_predictor").particle_stress;
+		auto &bstress = stress_components.at("brownian").particle_stress;
 
 		if (in_predictor) {
 			for (unsigned int i=0; i<bstress.size(); i++) {
@@ -291,9 +288,7 @@ void System::calcStressPerParticle()
 			}
 		}
 	}
-
 }
-
 
 void System::calcTotalStressPerParticle()
 {

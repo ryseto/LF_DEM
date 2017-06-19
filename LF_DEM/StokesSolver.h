@@ -148,7 +148,6 @@ private:
 	std::vector<int> dblocks_cntnonzero;
 
 	void factorizeResistanceMatrix();
-
 	void allocateResistanceMatrix();
 	void allocateRessources();
 	void completeResistanceMatrix_MobileMobile();
@@ -169,7 +168,7 @@ private:
 						  const std::vector<int> &index_values,
 						  int top_row_nb);
 	void insertBlockColumnIndices(int *matrix_p,
-										const std::vector<int> &pvalues);
+								  const std::vector<int> &pvalues);
 	void insertODBlockValues(double *matrix_x,
 							 const std::vector<int>& index_chol_ix,
 							 const struct ODBlock& b);
@@ -207,21 +206,18 @@ public:
 							   int nb_of_interactions_mf,
 							   int nb_of_interactions_ff,
 							   const std::vector<struct DBlock>& reset_resmat_dblocks,
-							 bool matrix_pattern_changed);
+							   bool matrix_pattern_changed);
 	void addResistanceBlocks(int i,
-                           int j,
-                           const std::pair<struct DBlock, struct DBlock> &DiagBlocks_i_and_j,
-                           const struct ODBlock& ODBlock_ij);
+							 int j,
+							 const std::pair<struct DBlock, struct DBlock> &DiagBlocks_i_and_j,
+							 const struct ODBlock& ODBlock_ij);
 	/*
 	 This must be called with order (ii < jj),
 	 because we have to fill according to the lower-triangular
 	 storage.
 	 */
-
 	void startNewColumn();
 	void matrixFillingDone();
-
-
 	/*
 	   Right-hand vector access methods
 	*/
@@ -230,7 +226,6 @@ public:
 	void addToRHS(double*);
 	void addToRHS(const std::vector<double>&);
 	void addToRHS(int, const std::vector<double>&);
-
 	void addToRHSForce(int, const vec3d&);
 	void addToRHSTorque(int, const vec3d&);
 	void setRHS(const std::vector<vec3d>&);
@@ -245,7 +240,6 @@ public:
 	 */
 	 void solve(vec3d* velocity, vec3d* ang_velocity);
 	 void solve(std::vector<vec3d> &velocity, std::vector<vec3d> &ang_velocity);
-
     /*
 	 compute_LTRHS(double* X) :
 	 - once the resistance matrix and the RHS vector are built

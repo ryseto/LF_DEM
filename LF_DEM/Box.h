@@ -31,27 +31,55 @@ private:
 	vec3d position;
 
 public:
-	Box(){};
+	Box()
+	{
+		type = 0;
+	};
 	~Box();
 
 	void addStaticNeighbor(Box* neigh_box);
 	void addMovingNeighbor(Box* neigh_box);
 	void resetMovingNeighbors();
-	const std::vector <Box*> & getNeighborBox(){return static_neighbors;}
-
+	const std::vector <Box*> & getNeighborBox()
+	{
+		return static_neighbors;
+	}
 	vec3d getPosition() const {return position;}
+	double getYPosition() const {return position.y;}
 	void setPosition(vec3d pos) {position = pos;}
-	// void is_top(bool it) {_is_top = it;};
-	// void is_bottom(bool ib) {_is_bottom = ib;};
-	// bool is_top() const {return _is_top;};
-	// bool is_bottom() const {return _is_bottom;};
-
 	void add(int);
 	void remove(int);
-
 	const std::set <int> & getContainer() const {return container;}
-	const std::vector <int> & getNeighborhoodContainer() const {return neighborhood_container;};
+	const std::vector <int> & getNeighborhoodContainer() const {return neighborhood_container;}
 	void buildNeighborhoodContainer();
+	void resetTypes()
+	{
+		type = 0;
+		type_neighborhood = 0;
+	}
+	/********************************************************************************
+	 * `type' of cell is determined according to the location.
+	 * 1:bulk
+	 * 2:left
+	 * 3:right
+	 * 4:bottom
+	 * 8:top
+	 * 6 =2+4:left bottom
+	 * 7 =3+4:right bottom
+	 * 10=2+8:left top
+	 * 11=3+8:right top
+	 *  10 - 8 --11
+	 *  |         |
+	 *  2    1    3
+	 *  |         |
+	 *  6 -- 4 ---7
+	 * If all self + 8 neighboring cells are 1, `type_neighborhood' is also 1.
+	 * If one of 2/3/8/4 is included, `type_neighborhood' is 2/3/8/4.
+	 * if two of 2/3/8/4 is included, `type_neighborhood' is the sum of them,
+	 * i.e., 2 and 8 is included in self + 8 neighboring cells, the value is 10.
+	 *****************************************************************************/
+	int type;
+	int type_neighborhood;
 };
 
 #endif /* defined(__LF_DEM__Box__) */

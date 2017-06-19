@@ -135,7 +135,14 @@ void Contact::incrementTangentialDisplacement()
 	 zshift = -1; //  p1 (z ~ lz), p0 (z ~ 0)
 
 	******************************************************/
-	vec3d vel_offset = interaction->z_offset*sys->get_vel_difference();
+	vec3d vel_offset;
+	if (!sys->ext_flow) {
+		// simple shear
+		vel_offset = interaction->z_offset*sys->get_vel_difference();
+	} else {
+		// extensional flow
+		vel_offset = sys->get_vel_difference_extension(interaction->pd_shift);
+	}
 	vec3d translational_deltav = sys->velocity[p1]-sys->velocity[p0]+vel_offset;
 	vec3d rotational_deltav = -cross(a0*sys->ang_velocity[p0]+a1*sys->ang_velocity[p1], interaction->nvec);
 
@@ -464,7 +471,7 @@ double Contact::calcEnergy() const
 	/* normal */
 	double energy = 0.5*kn_scaled*overlap*overlap;
 	if (state >= 2) {
-			/* sliding */
+		/* sliding */
 		energy += 0.5*kt_scaled*sq_tan_norm;
 		if (sys->rolling_friction) {
 			/* roling */
