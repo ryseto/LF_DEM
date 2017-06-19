@@ -284,13 +284,16 @@ void System::setContacts(const vector <struct contact_state>& cs)
 		Used to restart the simulation from a given state.
 	 */
 	for (const auto& c : cs) {
+		bool existing_interaction = false;
 		for (auto &inter: interaction) {
 			unsigned int p0, p1;
 			std::tie(p0, p1) = inter.get_par_num();
 			if (p0 == c.p0 && p1 == c.p1) {
 				inter.contact.setState(c);
+				existing_interaction = true;
 			}
 		}
+		assert(existing_interaction); // otherwise you probably messed up the initialisation
 	}
 }
 
@@ -485,6 +488,8 @@ void System::setupGenericConfiguration(T conf, ControlVariable control_){
 	}
 
 	setConfiguration(conf.position, conf.radius);
+	initializeBoxing();
+	checkNewInteraction();
 	setContacts(conf.contact_states);
 	setupSystemPostConfiguration();
 }
@@ -585,8 +590,6 @@ void System::setupSystemPostConfiguration()
 		//setH_dot(1);
 		updateH(0.5*cumulated_strain); // cumulated_strain = 0
 	}
-	initializeBoxing();
-	checkNewInteraction();
 	dt = p.dt;
 	if (p.fixed_dt) {
 		avg_dt = dt;
