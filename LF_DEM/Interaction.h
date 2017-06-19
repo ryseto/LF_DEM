@@ -96,8 +96,8 @@ public:
 	 * - State (deactivation, contact)
 	 */
 	void updateState(bool& deactivated);
-
 	double separation_distance() const {return r;}
+
 
 	//======= particles data  ====================//
 	int partner(unsigned int i) const {return (i == p0 ? p1 : p0);}

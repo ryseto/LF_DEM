@@ -16,7 +16,7 @@ CXX = icc
 # Libraries
 #
 # SuiteSparse library install folder
-SUITESPARSE_ROOT = ~/usr/
+SUITESPARSE_ROOT = /home/rjm238/usr/
 
 # Extra flags to the compiler, if needed (e.g. optimization flags)
 CXXFLAGS_EXTRA = -xSSE4.2 -axAVX
