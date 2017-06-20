@@ -488,6 +488,20 @@ void System::setupGenericConfiguration(T conf, ControlVariable control_){
 	}
 
 	setConfiguration(conf.position, conf.radius);
+	if (ext_flow) {
+		// extensional flow
+		// @@@ Some variables need to be set before initializeBoxing() @@@
+		// @@@ This part is very messy. Needs to be rewritten careffuly.
+		strain_retrim_interval = 2*log(0.5*(3+sqrt(5))); // every this strain, the main simulation box is retrimmed.
+		strain_retrim = strain_retrim_interval; // Setting the first value of strain to retrim.
+		double cos_ma = cos(p.magic_angle);
+		double sin_ma = sin(p.magic_angle);
+		sq_cos_ma = cos_ma*cos_ma;
+		sq_sin_ma = sin_ma*sin_ma;
+		cos_ma_sin_ma = cos_ma*sin_ma;
+		//setH_dot(1);
+		updateH(0.5*cumulated_strain); // cumulated_strain = 0
+	}
 	initializeBoxing();
 	checkNewInteraction();
 	setContacts(conf.contact_states);
@@ -578,18 +592,19 @@ void System::setupSystemPostConfiguration()
 	if (pairwise_resistance) {
 		stokes_solver.init(np, np_mobile);
 	}
-	if (ext_flow) {
-		// extensional flow
-		strain_retrim_interval = 2*log(0.5*(3+sqrt(5))); // every this strain, the main simulation box is retrimmed.
-		strain_retrim = strain_retrim_interval; // Setting the first value of strain to retrim.
-		double cos_ma = cos(p.magic_angle);
-		double sin_ma = sin(p.magic_angle);
-		sq_cos_ma = cos_ma*cos_ma;
-		sq_sin_ma = sin_ma*sin_ma;
-		cos_ma_sin_ma = cos_ma*sin_ma;
-		//setH_dot(1);
-		updateH(0.5*cumulated_strain); // cumulated_strain = 0
-	}
+	//	if (ext_flow) {
+	//		// extensional flow
+	//		strain_retrim_interval = 2*log(0.5*(3+sqrt(5))); // every this strain, the main simulation box is retrimmed.
+	//		strain_retrim = strain_retrim_interval; // Setting the first value of strain to retrim.
+	//		double cos_ma = cos(p.magic_angle);
+	//		double sin_ma = sin(p.magic_angle);
+	//		sq_cos_ma = cos_ma*cos_ma;
+	//		sq_sin_ma = sin_ma*sin_ma;
+	//		cos_ma_sin_ma = cos_ma*sin_ma;
+	//		//setH_dot(1);
+	//		cerr << "cumulated_strain= " << cumulated_strain << endl ;
+	//		updateH(0.5*cumulated_strain); // cumulated_strain = 0
+	//	}
 	dt = p.dt;
 	if (p.fixed_dt) {
 		avg_dt = dt;
