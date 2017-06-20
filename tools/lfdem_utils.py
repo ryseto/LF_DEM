@@ -1,6 +1,7 @@
 import numpy as np
 import dict_utils as du
 
+
 def periodize(x, box_lim, lees_edwards_strain, gradient_direction=2):
     """ Periodize x according to Lees-Edwards in a box with limits box_lim.
 
@@ -11,10 +12,13 @@ def periodize(x, box_lim, lees_edwards_strain, gradient_direction=2):
         Note that the Lees-Edwards strain must be 0 along the
         gradient direction.
     """
+
     if lees_edwards_strain[gradient_direction] != 0:
         raise RuntimeError("lees_edwards_strain[gradient_direction] != 0")
+
     g = gradient_direction
 
+    box_lim = np.asarray(box_lim)
     box_min = np.array(box_lim[:, 0])
     box_max = np.array(box_lim[:, 1])
     box_size = box_max - box_min
@@ -62,6 +66,10 @@ def pdist(x,  box_lim, lees_edwards_strain, gradient_direction=2):
         Note that the Lees-Edwards strain must be 0
         along the gradient direction.
     """
+    box_lim = np.asarray(box_lim)
+    # [-L/2,L/2] in any direction
+    box_lim -= np.mean(box_lim, axis=1)[:, np.newaxis]
+    lees_edwards_strain = np.asarray(lees_edwards_strain)
 
     pairwise_separation = x[:, np.newaxis, :] - x
     periodize(pairwise_separation,

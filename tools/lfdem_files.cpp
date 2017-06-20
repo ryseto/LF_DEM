@@ -205,12 +205,16 @@ inline std::vector<std::vector<double>> lf_data_file::get_data() const {
 /********** Private lf_data_file methods *************/
 inline void lf_data_file::read_data() {
   std::vector<double> record (col_nb());
-  do {
+  while (true) {
     for (auto &r: record) {
       f >> r;
     }
-    data.push_back(record);
-  } while (!f.eof());
+    if (!f.eof()) {
+        data.push_back(record);
+    } else {
+        return;
+    }
+  };
 }
 
 
@@ -312,11 +316,11 @@ inline void lf_snapshot_file::read_frame_data(struct Frame &frame) {
       ss >> r;
       if (ss.fail()) {
         if (r == std::numeric_limits<double>::max()) {
-          throw std::runtime_error(" double overflow");
+          throw std::runtime_error(" double overflow in line\n"+line);
         } else if (r == std::numeric_limits<double>::min()) {
           r = 0;
         } else {
-          throw std::runtime_error(" unknown parsing error");
+          throw std::runtime_error(" unknown parsing error in line:\n"+line);
         }
       }
     }
