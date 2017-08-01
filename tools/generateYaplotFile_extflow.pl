@@ -22,8 +22,8 @@ my $epsilondot=0;
 my $timeper=0;
 my $scale=0.5;
 my $axisrotation=1;
-my $pd_color = 1;
-my $draw_cross = 1;
+my $pd_color = 0;
+my $draw_cross = 0;
 my $flow_type = "shear";
 my $draw_trajectory = 0;
 my $phi6_data = 1;
@@ -218,7 +218,7 @@ sub InParticles {
 				$omegay[$i] = $oy;
 				$omegaz[$i] = $oz;
 				$omegay[$i] = $oy;
-
+				
 				if ($radius_max < $a) {
 					$radius_max = $a;
 				}
@@ -518,7 +518,7 @@ sub OutParticleExtension {
 				#			if ($i == $np-1) {
 				#				printf OUT "@ 4\n";
 				#			}
-			
+				
 				$pd_xshift = $Lx*$ax*($ii)+$Lz*$bx*($jj);
 				$pd_zshift = $Lx*$az*($ii)+$Lz*$bz*($jj);
 				$xx = $posx[$i] + $pd_xshift;
@@ -904,5 +904,5 @@ sub yapColor {
 #	printf OUT"@ 120 220 49 36\n";
 #	printf OUT"@ 121 220 44 35\n";
 #	printf OUT"@ 122 219 38 34\n";
-#	
+#
 #}

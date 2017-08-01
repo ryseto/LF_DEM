@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 48;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -571,6 +571,7 @@
 		D9573FB116797A000081E903 /* BoxSet.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = BoxSet.h; sourceTree = "<group>"; };
 		D95FE8081D4E2E40004D2C8A /* ContactDashpot.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ContactDashpot.cpp; sourceTree = "<group>"; };
 		D95FE8091D4E2E40004D2C8A /* ContactDashpot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ContactDashpot.h; sourceTree = "<group>"; };
+		D9632A401F3021A100741C43 /* averageConfigdata.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; name = averageConfigdata.pl; path = tools/averageConfigdata.pl; sourceTree = SOURCE_ROOT; };
 		D96731B117A042AD005D02F8 /* percolation_LF_DEM */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = percolation_LF_DEM; sourceTree = BUILT_PRODUCTS_DIR; };
 		D96731B317A042AD005D02F8 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D96731B517A042AD005D02F8 /* percolation_LF_DEM.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = percolation_LF_DEM.1; sourceTree = "<group>"; };
@@ -1208,6 +1209,7 @@
 			children = (
 				D9A906691BF331EF00BE8640 /* generateYaplotFile_seto.pl */,
 				D9A9066A1BF331EF00BE8640 /* generateYaplotFile.pl */,
+				D9632A401F3021A100741C43 /* averageConfigdata.pl */,
 				D9B4104F1E5BF8C400A2C9D5 /* generateYaplotFile_extflow.pl */,
 				D98F62131E62367200053198 /* convertMaterialFunctions.pl */,
 				D9825AF01C410E4B000AF86E /* circularrheo.pl */,
@@ -1535,7 +1537,7 @@
 				};
 			};
 			buildConfigurationList = D988E383165441750009949F /* Build configuration list for PBXProject "LF_DEM" */;
-			compatibilityVersion = "Xcode 3.2";
+			compatibilityVersion = "Xcode 8.0";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
