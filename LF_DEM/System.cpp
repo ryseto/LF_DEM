@@ -931,10 +931,6 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	 + \f$ \bm{X}(t + dt) = \bm{X}(t) + \frac{1}{2}(\bm{U}^{+}+\bm{U}^{-})dt =  \bm{X}' + \frac{1}{2}(\bm{U}^{+}-\bm{U}^{-})dt \f$
 
 	 */
-	if (ext_flow) {
-		cerr << "Predictor Corrector Method is not reliable for extensional flow.\n";
-		exit(1);
-	}
 	/* predictor */
 	in_predictor = true;
 	in_corrector = false;

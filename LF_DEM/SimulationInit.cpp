@@ -72,7 +72,7 @@ void Simulation::contactForceParameterBrownian(string filename)
 	double phi_, peclet_, kn_, kt_, dt_;
 	bool found = false;
 	while (fin_knktdt >> phi_ >> peclet_ >> kn_ >> kt_ >> dt_) {
-		if (abs(phi_-conf.volume_or_area_fraction) < 1e-10 && peclet_ == force_ratios["hydro/thermal"]) {
+		if (abs(phi_-conf.volume_or_area_fraction) < 1e-10 && peclet_ == force_ratios["hydro/brownian"]) {
 			found = true;
 			break;
 		}
@@ -276,7 +276,7 @@ void Simulation::setupNonDimensionalizationStressControlled(double dimensionless
 		 If you give a \f$\tilde{S}\f$ outside this range (for example \f$\tilde{S}=0.5\f$), you run into troubles.
 		 */
 	}
-	if (stress_unit == "thermal") {
+	if (stress_unit == "brownian") {
 		throw runtime_error(" Error: stress controlled Brownian simulations are not yet implemented.");
 	}
 	sys.set_shear_rate(0);
@@ -317,32 +317,47 @@ void Simulation::setupNonDimensionalizationRateControlled(double dimensionlessnu
 	 i.e.  is the ratio between the hydrodynamic force and the "force_type" force.
 	 So in hydrodynamic force units, the value of the "force_type" force is 1/dimensionlessnumber.
 	 */
-	if (dimensionlessnumber == 0) {
-		throw runtime_error("Vanishing rate not handled... yet! ");
-	}
-	DimensionalValue inv;
-	inv.type = "force";
-	inv.value = force_value_ptr[input_scale];
-	inv.unit = "hydro";
-	input_values[input_scale] = inv;
-	*(input_values[input_scale].value) = 1/dimensionlessnumber;
-	force_ratios[input_scale+"/hydro"] = *(input_values[input_scale].value);
-	// convert all other forces to hydro
-	resolveUnitSystem("hydro");
-	// chose simulation unit
-	// the chosen unit is called internal_unit_scales
-	setUnitScaleRateControlled();
-	// convert from hydro scale to chosen scale
-	for (auto& x: input_values) {
-		changeUnit(x.second, internal_unit_scales);
+	if (dimensionlessnumber != 0) {
+		DimensionalValue inv;
+		inv.type = "force";
+		inv.value = force_value_ptr[input_scale];
+		inv.unit = "hydro";
+		input_values[input_scale] = inv;
+		*(input_values[input_scale].value) = 1/dimensionlessnumber;
+		force_ratios[input_scale+"/hydro"] = *(input_values[input_scale].value);
+		// convert all other forces to hydro
+		resolveUnitSystem("hydro");
+		// chose simulation unit
+		// the chosen unit is called internal_unit_scales
+		setUnitScaleRateControlled();
+		// convert from hydro scale to chosen scale
+		for (auto& x: input_values) {
+			changeUnit(x.second, internal_unit_scales);
+		}
+	} else {
+		// @@@@ WORKING HERE
+		// Is it the correct way for Pe = 0 simulation?
+		DimensionalValue inv;
+		inv.type = "force";
+		inv.value = force_value_ptr[input_scale];
+		inv.unit = "brownian";
+		input_values[input_scale] = inv;
+		force_ratios[input_scale+"/brownian"] = 1;
+		internal_unit_scales = "brownian";
+		resolveUnitSystem("brownian");
+		setUnitScaleRateControlled();
+		for (auto& x: input_values) {
+			changeUnit(x.second, internal_unit_scales);
+		}
+		cerr << " input_scale = " << input_scale << endl;
 	}
 }
 
 void Simulation::setLowPeclet()
 {
 	sys.lowPeclet = true;
-	double scale_factor_SmallPe = p.Pe_switch/force_ratios["hydro/thermal"];
-	p.dt *= p.Pe_switch; // to make things continuous at Pe_switch
+	//double scale_factor_SmallPe = p.Pe_switch/force_ratios["hydro/thermal"]; @@@ What is this?
+	p.dt *= p.Pe_switch; // to make things continuous at Pe_switch @@@ Why this works?
 }
 
 void Simulation::changeUnit(DimensionalValue &x, string new_unit)
@@ -373,17 +388,20 @@ void Simulation::setUnitScaleRateControlled()
 		If the system is non-Brownian, the hydrodynamic force unit is taken (\b note: this will change in the future). If the system is Brownian, the Brownian force unit is selected at low Peclet (i.e., Peclet numbers smaller that ParameterSet::Pe_switch) and the hydrodynamic force unit is selected at high Peclet.
 	 */
 	bool is_brownian;
-	if (force_ratios.find("hydro/thermal") != force_ratios.end()) {
+	if (force_ratios.find("hydro/brownian") != force_ratios.end()
+		|| force_ratios.find("brownian/brownian") != force_ratios.end()) {
 		is_brownian = true;
 	} else {
 		is_brownian = false;
 	}
+	
 	if (is_brownian) {
-		if (force_ratios["hydro/thermal"] > p.Pe_switch && !sys.zero_shear) { // hydro units
+		if (force_ratios["hydro/brownian"] > p.Pe_switch && !sys.zero_shear) { // hydro units
 			internal_unit_scales = "hydro";
 		} else { // low Peclet mode
-			internal_unit_scales = "thermal";
+			internal_unit_scales = "brownian";
 			setLowPeclet();
+			
 		}
 	} else {
 		internal_unit_scales = "hydro";
@@ -441,7 +459,7 @@ void Simulation::setupNonDimensionalization(double dimensionlessnumber,
 	 */
 	input_scale = unit_longname[input_scale];
 	if (control_var == rate) {
-		input_rate = dimensionlessnumber; // @@@ Renaming is required?
+		input_rate = dimensionlessnumber;
 	}
 	if (control_var == rate) {
 		setupNonDimensionalizationRateControlled(dimensionlessnumber, input_scale);
@@ -568,51 +586,63 @@ void Simulation::setupSimulation(string in_args,
 	string filename_import_positions = input_files[0];
 	string filename_parameters = input_files[1];
 	sys.p.flow_type = flow_type; // shear or extension or mix (not implemented yet)
-
-	double dimensionless_deformation_rate = 0.5;
-
-	if (!sys.ext_flow) {
-		/* simple shear flow
-		 * shear_rate = 2*dot_epsilon
-		 */
-		Sym2Tensor Einf_common = {0, 0, dimensionless_deformation_rate, 0, 0, 0};
-		vec3d Omegainf(0, dimensionless_deformation_rate, 0);
-		sys.setImposedFlow(Einf_common, Omegainf);
-		stress_basis_0 = {-dimensionless_deformation_rate/2, 0, 0, 0,
-		                  dimensionless_deformation_rate, -dimensionless_deformation_rate/2};
-		stress_basis_3 = {-dimensionless_deformation_rate, 0, 0, 0, 0, dimensionless_deformation_rate};
-	} else {
-		/* extensional flow
-		 *
-		 */
-		p.magic_angle = atan(0.5*(sqrt(5)-1)); // simulation box needs to be tilted in this angle.
-		matrix grad_u_orig(dimensionless_deformation_rate, 0, 0,
-						   0, 0, 0,
-						   0, 0, -dimensionless_deformation_rate);
-		matrix rotation, rotation_inv;
-		rotation.set_rotation(-p.magic_angle, 'y');
-		rotation_inv.set_rotation(p.magic_angle, 'y');
-		sys.grad_u = rotation_inv*grad_u_orig*rotation;
-		Sym2Tensor Einf_common;
-		Einf_common.setSymmetrize(sys.grad_u);
-		vec3d Omegainf(0, 0, 0);
-		sys.setImposedFlow(Einf_common, Omegainf);
-		matrix mat_stress_basis_0(-dimensionless_deformation_rate/2, 0, 0,
-								  0, dimensionless_deformation_rate, 0,
-								  0, 0, -dimensionless_deformation_rate/2);
-		matrix mat_stress_basis_3(0, 0, dimensionless_deformation_rate,
-								  0, 0, 0,
-								  dimensionless_deformation_rate, 0, 0);
-		mat_stress_basis_0 = rotation_inv*mat_stress_basis_0*rotation;
-		mat_stress_basis_3 = rotation_inv*mat_stress_basis_3*rotation;
-		stress_basis_0.setSymmetrize(mat_stress_basis_0);
-		stress_basis_3.setSymmetrize(mat_stress_basis_3);
-	}
+	/*
+	 * @@@@ This way to prepare relaxed initial configuration should be changed.
+	 */
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		cout << "init_relax" << endl;
 		sys.zero_shear = true;
 	} else {
 		sys.zero_shear = false;
+	}
+	/* dot_gamma = 1 --> dot_epsilon = 0;
+	 *
+	 */
+	if (dimensionlessnumber != 0) {
+		double dimensionless_deformation_rate = 0.5;
+		if (!sys.ext_flow) {
+			/* simple shear flow
+			 * shear_rate = 2*dot_epsilon
+			 */
+			Sym2Tensor Einf_common = {0, 0, dimensionless_deformation_rate, 0, 0, 0};
+			vec3d Omegainf(0, dimensionless_deformation_rate, 0);
+			sys.setImposedFlow(Einf_common, Omegainf);
+			stress_basis_0 = {-dimensionless_deformation_rate/2, 0, 0, 0,
+				dimensionless_deformation_rate, -dimensionless_deformation_rate/2};
+			stress_basis_3 = {-dimensionless_deformation_rate, 0, 0, 0, 0, dimensionless_deformation_rate};
+		} else {
+			/* extensional flow
+			 *
+			 */
+			p.magic_angle = atan(0.5*(sqrt(5)-1)); // simulation box needs to be tilted in this angle.
+			matrix grad_u_orig(dimensionless_deformation_rate, 0, 0,
+							   0, 0, 0,
+							   0, 0, -dimensionless_deformation_rate);
+			matrix rotation, rotation_inv;
+			rotation.set_rotation(-p.magic_angle, 'y');
+			rotation_inv.set_rotation(p.magic_angle, 'y');
+			sys.grad_u = rotation_inv*grad_u_orig*rotation;
+			Sym2Tensor Einf_common;
+			Einf_common.setSymmetrize(sys.grad_u);
+			vec3d Omegainf(0, 0, 0);
+			sys.setImposedFlow(Einf_common, Omegainf);
+			matrix mat_stress_basis_0(-dimensionless_deformation_rate/2, 0, 0,
+									  0, dimensionless_deformation_rate, 0,
+									  0, 0, -dimensionless_deformation_rate/2);
+			matrix mat_stress_basis_3(0, 0, dimensionless_deformation_rate,
+									  0, 0, 0,
+									  dimensionless_deformation_rate, 0, 0);
+			mat_stress_basis_0 = rotation_inv*mat_stress_basis_0*rotation;
+			mat_stress_basis_3 = rotation_inv*mat_stress_basis_3*rotation;
+			stress_basis_0.setSymmetrize(mat_stress_basis_0);
+			stress_basis_3.setSymmetrize(mat_stress_basis_3);
+		}
+	} else {
+		cerr << " dimensionlessnumber = " << dimensionlessnumber << endl;
+		Sym2Tensor Einf_common = {0, 0, 0, 0, 0, 0};
+		vec3d Omegainf(0, 0, 0);
+		sys.setImposedFlow(Einf_common, Omegainf);
+		sys.zero_shear = true;
 	}
 	setDefaultParameters(input_scale);
 	readParameterFile(filename_parameters);
@@ -623,7 +653,6 @@ void Simulation::setupSimulation(string in_args,
 	tagStrainParameters();
 	/* Both simple shear and extensional simulations
 	 * dimensionlessnumber means 2 times of dot_epsilon.
-	 *
 	 */
 	setupNonDimensionalization(dimensionlessnumber, input_scale);
 

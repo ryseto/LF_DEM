@@ -86,7 +86,6 @@ while (1) {
 			&keepInitialConfig;
 		}
 	}
-	
 	if ($output == 1) {
 		&OutYaplotData;
 	}
@@ -118,7 +117,7 @@ sub readHeader {
 	$line = <IN_particle>; ($buf, $buf, $Lz) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $flwtyp) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $dataunit) = split(/\s+/, $line);
-	
+
 	if ($Ly==0) {
 		$number_of_header = 8;
 	} else {
@@ -128,12 +127,14 @@ sub readHeader {
 		$line = <IN_particle>;
 		printf "$line";
 	}
-	printf "=====\n";
-	for ($i = 0; $i<18; $i++) {
-		$line = <IN_interaction>;
-		printf "$line";
+	if ($Ly==0) {
+		$number_of_header_int = 20;
+	} else {
+		$number_of_header_int = 20;
 	}
-	printf "=====\n";
+	for ($i = 0; $i<$number_of_header_int; $i++) {
+		$line = <IN_interaction>;
+	}
 }
 
 sub yaplotColor {
@@ -275,10 +276,12 @@ sub InInteractions{
 		$fc_norm, # 12
 		$fc_tan_x, $fc_tan_y, $fc_tan_z, # 13, 14, 15
 		$fr_norm, $s_xF) = split(/\s+/, $line);
-		if ($i eq '#') {
+		if ($i eq '#' || $i eq NU) {
 			last;
 		}
-		
+		if (! defined $i) {
+			last;
+		}
 		#		"#1: particle 1 label\n"
 		#		"#2: particle 2 label\n"
 		#		"#3: contact state (0 = no contact, 1 = frictionless contact, 1 = non-sliding frictional, 2 = sliding frictional)\n"
@@ -301,10 +304,12 @@ sub InInteractions{
 			$int1[$k] = $j;
 			$contactstate[$k] = $contact;
 			if ($contact > 0) {
-				$force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
-				
+				#$force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
+				#$force[$k] = $fc_norm + $fr_norm;
+				$force[$k] = $fc_norm;
 			} else {
-				$force[$k] = $f_lub_norm + $fr_norm;
+				#$force[$k] = $f_lub_norm + $fr_norm;
+				$force[$k] = 0;
 			}
 			$F_lub[$k] = $f_lub_norm;
 			$Fc_n[$k] = $fc_norm;
@@ -358,13 +363,15 @@ sub OutYaplotData{
 	printf OUT "@ 7\n";
 	printf "num $num_interaction \n";
 	for ($k = 0; $k < $num_interaction; $k ++) {
-		
 		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
 		#if (1 || $force[$k] >= 0) {
 		#	&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
 		#}
-		&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
+		if ($force[$k] > 0 ) {
+			&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
+		}
 	}
+
 	#	printf OUT "y 3\n";
 	#	printf OUT "@ 5\n";
 	#	for ($k = 0; $k < $num_interaction; $k ++) {

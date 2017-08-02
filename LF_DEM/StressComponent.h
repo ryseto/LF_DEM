@@ -13,9 +13,9 @@ struct StressComponent
 
 	StressComponent(){};
 	StressComponent(unsigned int _type,
-	                std::size_t size,
-	                unsigned int _rate_dependence,
-	                const std::string &_group):
+					std::size_t size,
+					unsigned int _rate_dependence,
+					const std::string &_group):
 	type(_type),
 	rate_dependence(_rate_dependence), group(_group)
 	{
