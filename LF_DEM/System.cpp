@@ -1212,6 +1212,7 @@ void System::timeEvolution(double time_end, double strain_end)
 	retrim_ext_flow = false;
 	avg_dt = 0;
 	avg_dt_nb = 0;
+	double dt_bak = -1;
 	while (keepRunning(time_end, strain_end)) {
 		retrim_ext_flow = false; // used in ext_flow simulation
 		if (!brownian && !p.fixed_dt) { // adaptative time-step for non-Brownian cases
@@ -1220,21 +1221,26 @@ void System::timeEvolution(double time_end, double strain_end)
 		if (ext_flow) {
 			if (cumulated_strain+shear_rate*dt > strain_retrim) {
 				cerr << "strain_retrim = " << strain_retrim << endl;
+				dt_bak = dt;
 				dt = (strain_retrim-cumulated_strain)/shear_rate;
 				retrim_ext_flow = true;
-				break;
+				strain_end = strain_retrim;
+				calc_stress = true;
 			}
 		}
 		(this->*timeEvolutionDt)(calc_stress, time_end, strain_end); // no stress computation except at low Peclet
 		avg_dt += dt;
 		avg_dt_nb++;
+		if (dt_bak != -1){
+			dt = dt_bak;
+		}
 	};
 	if (avg_dt_nb > 0) {
 		avg_dt /= avg_dt_nb;
 	} else {
 		avg_dt = dt;
 	}
-	if (events.empty()) {
+	if (events.empty() && retrim_ext_flow == false) {
 		calc_stress = true;
 		(this->*timeEvolutionDt)(calc_stress, time_end, strain_end); // last time step, compute the stress
 	}
