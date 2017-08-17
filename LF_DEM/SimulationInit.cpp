@@ -353,13 +353,6 @@ void Simulation::setupNonDimensionalizationRateControlled(double dimensionlessnu
 	}
 }
 
-void Simulation::setLowPeclet()
-{
-	sys.lowPeclet = true;
-	//double scale_factor_SmallPe = p.Pe_switch/force_ratios["hydro/thermal"]; @@@ What is this?
-	p.dt *= p.Pe_switch; // to make things continuous at Pe_switch @@@ Why this works?
-}
-
 void Simulation::changeUnit(DimensionalValue &x, string new_unit)
 {
 	/**
@@ -400,8 +393,7 @@ void Simulation::setUnitScaleRateControlled()
 			internal_unit_scales = "hydro";
 		} else { // low Peclet mode
 			internal_unit_scales = "brownian";
-			setLowPeclet();
-			
+			sys.brownian_dominated = true;
 		}
 	} else {
 		internal_unit_scales = "hydro";
@@ -482,6 +474,7 @@ void Simulation::assertParameterCompatibility()
 	// test for incompatibilities
 	if (sys.brownian == true) {
 		if (sys.pairwise_resistance && p.integration_method != 1) {
+			 // @@@@ This test is broken as System has not yet set pairwise resistance. For now test is duplicated later on in System
 			ostringstream error_str;
 			error_str << "Brownian simulation needs to use the Predictor-Corrector method." << endl;
 			error_str << "Modify the parameter file." << endl;

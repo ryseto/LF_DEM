@@ -117,7 +117,6 @@ private:
 	void setBrownianForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setSolverRHS(const ForceComponent &fc);
 	void addToSolverRHS(const ForceComponent &fc);
-	void resetForceComponents();
 	void computeVelocities(bool divided_velocities);
 	void computeVelocitiesStokesDrag();
 	void computeVelocityWithoutComponents();
@@ -196,7 +195,7 @@ private:
 	bool repulsiveforce;
 	bool cohesion;
 	bool critical_load;
-	bool lowPeclet;
+	bool brownian_dominated;
 	bool lubrication;
 	bool pairwise_resistance;
 	// Simulation parameters

@@ -67,7 +67,7 @@ rolling_friction(false),
 repulsiveforce(false),
 cohesion(false),
 critical_load(false),
-lowPeclet(false),
+brownian_dominated(false),
 twodimension(false),
 control(rate),
 zero_shear(false),
@@ -415,9 +415,15 @@ void System::setupParameters()
 	}
 
 	if (brownian) {
-		if (lowPeclet) {
+		if (brownian_dominated) {
 			double stress_avg_relaxation_parameter = 10*p.time_interval_output_data; // 0 --> no average
 			stress_avg.setRelaxationTime(stress_avg_relaxation_parameter);
+		}
+		if (pairwise_resistance && p.integration_method != 1) {
+			ostringstream error_str;
+			error_str << "Brownian simulation needs to use the Predictor-Corrector method." << endl;
+			error_str << "Modify the parameter file." << endl;
+			throw runtime_error(error_str.str());
 		}
 	}
 	if (p.simulation_mode == 31) {
@@ -964,7 +970,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	}
 	if (calc_stress) {
 		calcStressPerParticle(); // stress compornents
-		if (wall_rheology || lowPeclet) {
+		if (wall_rheology || brownian_dominated) {
 			calcStress();
 		}
 		if (!p.out_particle_stress.empty() || couette_stress) {
@@ -1222,7 +1228,7 @@ void System::timeEvolution(double time_end, double strain_end)
 		firsttime = false;
 	}
 	bool calc_stress = false;
-	if (lowPeclet) {
+	if (brownian_dominated) {
 		calc_stress = true;
 	}
 
@@ -1655,6 +1661,12 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 	if (mobile_fixed) {
 		throw runtime_error("Brownian algorithm with fixed particles not implemented yet.\n");
 	}
+	for(auto &f: force) {
+		f.reset();
+	}
+	for(auto &t: torque) {
+		t.reset();
+	}
 	double sqrt_2_dt_amp = sqrt(2*p.brownian/dt);
 	for (unsigned int i=0; i<force.size(); i++) {
 		force[i].x = sqrt_2_dt_amp*GRANDOM; // \sqrt(2kT/dt) * random vector A (force and torque)
@@ -1692,6 +1704,12 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 void System::setDashpotForceToParticle(vector<vec3d> &force,
 									   vector<vec3d> &torque)
 {
+	for(auto &f: force) {
+		f.reset();
+	}
+	for(auto &t: torque) {
+		t.reset();
+	}
 	vec3d GEi, GEj, HEi, HEj;
 	unsigned int i, j;
 	for (const auto &inter: interaction) {
@@ -1709,6 +1727,12 @@ void System::setDashpotForceToParticle(vector<vec3d> &force,
 void System::setHydroForceToParticle_squeeze(vector<vec3d> &force,
 											 vector<vec3d> &torque)
 {
+	for(auto &f: force) {
+		f.reset();
+	}
+	for(auto &t: torque) {
+		t.reset();
+	}
 	vec3d GEi, GEj;
 	unsigned int i, j;
 	for (const auto &inter: interaction) {
@@ -1724,6 +1748,12 @@ void System::setHydroForceToParticle_squeeze(vector<vec3d> &force,
 void System::setHydroForceToParticle_squeeze_tangential(vector<vec3d> &force,
 														vector<vec3d> &torque)
 {
+	for(auto &f: force) {
+		f.reset();
+	}
+	for(auto &t: torque) {
+		t.reset();
+	}
 	vec3d GEi, GEj, HEi, HEj;
 	unsigned int i, j;
 	for (const auto &inter: interaction) {
@@ -1741,6 +1771,12 @@ void System::setHydroForceToParticle_squeeze_tangential(vector<vec3d> &force,
 void System::setContactForceToParticle(vector<vec3d> &force,
 									   vector<vec3d> &torque)
 {
+	for(auto &f: force) {
+		f.reset();
+	}
+	for(auto &t: torque) {
+		t.reset();
+	}
 	for (const auto &inter: interaction) {
 		if (inter.contact.is_active()) {
 			inter.contact.addUpForceTorque(force, torque);
@@ -1751,6 +1787,12 @@ void System::setContactForceToParticle(vector<vec3d> &force,
 void System::setRepulsiveForceToParticle(vector<vec3d> &force,
 										 vector<vec3d> &torque)
 {
+	for(auto &f: force) {
+		f.reset();
+	}
+	for(auto &t: torque) {
+		t.reset();
+	}
 	for (const auto &inter: interaction) {
 		inter.repulsion.addUpForce(force);
 	}
@@ -1781,13 +1823,6 @@ void System::setFixedParticleForceToParticle(vector<vec3d> &force,
 		torque[i].x = force_torque_from_fixed[i6+3];
 		torque[i].y = force_torque_from_fixed[i6+4];
 		torque[i].z = force_torque_from_fixed[i6+5];
-	}
-}
-
-void System::resetForceComponents()
-{
-	for (auto &fc: force_components) {
-		fc.second.reset();
 	}
 }
 
@@ -1849,7 +1884,9 @@ void System::computeVelocityWithoutComponents()
 {
 	buildResistanceMatrix();
 	for (auto &fc: force_components) {
-		CALL_MEMBER_FN(*this, fc.second.getForceTorque)(fc.second.force, fc.second.torque);
+		if (fc.first != "brownian" || in_predictor) {
+			CALL_MEMBER_FN(*this, fc.second.getForceTorque)(fc.second.force, fc.second.torque);
+		}
 		addToSolverRHS(fc.second);
 	}
 	stokes_solver.solve(na_velocity, na_ang_velocity); // get V
@@ -1865,7 +1902,9 @@ void System::computeVelocityByComponents()
 	 */
 	buildResistanceMatrix();
 	for (auto &fc: force_components) {
-		CALL_MEMBER_FN(*this, fc.second.getForceTorque)(fc.second.force, fc.second.torque);
+		if (fc.first != "brownian" || in_predictor) {
+			CALL_MEMBER_FN(*this, fc.second.getForceTorque)(fc.second.force, fc.second.torque);
+		}
 		setSolverRHS(fc.second);
 		stokes_solver.solve(na_velo_components[fc.first].vel,
 							na_velo_components[fc.first].ang_vel);
@@ -2168,7 +2207,7 @@ void System::computeVelocities(bool divided_velocities)
 	 simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
 	 */
 	stokes_solver.resetRHS();
-	resetForceComponents();
+
 	if (divided_velocities || control == stress) {
 		if (control == stress) {
 			set_shear_rate(1);
@@ -2220,7 +2259,9 @@ void System::computeVelocitiesStokesDrag()
 		na_ang_velocity[i].reset();
 	}
 	for (auto &fc: force_components) {
-		CALL_MEMBER_FN(*this, fc.second.getForceTorque)(fc.second.force, fc.second.torque);
+		if (fc.first != "brownian" || in_predictor) {
+			CALL_MEMBER_FN(*this, fc.second.getForceTorque)(fc.second.force, fc.second.torque);
+		}
 		if (fc.first != "brownian") {
 			for (unsigned int i=0; i<na_velocity.size(); i++) {
 				na_velocity[i] += fc.second.force[i]/stokesdrag_coeff_f[i];

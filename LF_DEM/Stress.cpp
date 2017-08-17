@@ -28,19 +28,15 @@ void System::declareStressComponents()
 	}
 	if (lubrication) {
 		for (const auto &vc: na_velo_components) {
-			if (vc.first != "brownian") {
-				stress_components[vc.first] = StressComponent(VELOCITY_STRESS,
-															  vc.second.vel.size(),
-															  vc.second.rate_dependence,
-															  vc.first);
-			}
+			stress_components[vc.first] = StressComponent(VELOCITY_STRESS,
+														  vc.second.vel.size(),
+														  vc.second.rate_dependence,
+														  vc.first);
 		}
 	}
 
 	// Brownian
 	if (brownian) { // Brownian is different than other GU, needs predictor data too
-		stress_components["brownian"] = StressComponent(BROWNIAN_STRESS,
-		                                                np, RATE_DEPENDENT, "brownian");// rate dependent for now
 		stress_components["brownian_predictor"] = StressComponent(BROWNIAN_STRESS,
 		                                                          np, RATE_DEPENDENT, "brownian");// rate dependent for now
 	}
@@ -364,7 +360,7 @@ void System::calcStress()
 	for (const auto &sc: total_stress_groups) {
 		total_stress += sc.second;
 	}
-	if (brownian && lowPeclet) {
+	if (brownian && brownian_dominated) {
 		// take an averaged stress instead of instantaneous
 		stress_avg.update(total_stress, get_time());
 		total_stress = stress_avg.get();

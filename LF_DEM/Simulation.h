@@ -143,7 +143,6 @@ public:
 	std::string getMetaParameter(std::map<std::string,std::string> &, std::string &, const std::string &);
 	std::string getMetaParameter(std::map<std::string,std::string> &, std::string &);
 	void exportForceAmplitudes();
-	void setLowPeclet();
 	void changeUnit(DimensionalValue &x, std::string new_unit);
 	void buildFullSetOfForceRatios();
 
