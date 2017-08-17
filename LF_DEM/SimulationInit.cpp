@@ -726,7 +726,6 @@ void Simulation::setupSimulation(string in_args,
 		}
 	}
 
-	cerr << p.kn;
 	p_initial = p;
 	sys.resetContactModelParameer(); //@@@@ temporary repair
 

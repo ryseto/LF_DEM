@@ -90,7 +90,6 @@ private:
 	double sq_cos_ma; // magic angle @@@@
 	double sq_sin_ma; // magic angle @@@@
 	double cos_ma_sin_ma; // magic angle @@@@
-	bool retrim_ext_flow;
 	/* data */
 	bool keepRunning(double time_end, double strain_end);
 	bool keepRunning(const std::string& time_or_strain, const double& value_end);
@@ -208,6 +207,7 @@ private:
 	double system_height;
 	bool in_predictor;
 	bool in_corrector;
+	bool retrim_ext_flow;
 	std::vector<vec3d> position;
 	std::vector<vec3d> forceResultant;
 	std::vector<vec3d> torqueResultant;

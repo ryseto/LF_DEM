@@ -304,6 +304,10 @@ void Simulation::simulationSteadyShear(string in_args,
 		timeEvolutionUntilNextOutput(tk);
 
 		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_cumulated_strain());
+		if (sys.retrim_ext_flow) {
+			output_events.insert("data");
+			output_events.insert("config");
+		}
 		generateOutput(output_events, binconf_counter);
 
 		printProgress();
@@ -701,6 +705,11 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 	snapshot_header << sys.get_cumulated_strain() << ' ';//6
 	snapshot_header << sys.get_cumulated_strain()-sys.strain_retrim+sys.strain_retrim_interval << ' ';//7
 	snapshot_header << sys.get_shear_rate() << ' '; //8
+	if (sys.ext_flow) {
+		if (sys.retrim_ext_flow) {
+			snapshot_header << "retrim" << ' '; //9
+		}
+	}
 	snapshot_header << endl;
 }
 
