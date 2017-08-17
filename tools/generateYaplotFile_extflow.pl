@@ -514,7 +514,7 @@ sub OutParticleExtension {
 			}
 			for ($i = 0; $i < $np; $i++) {
 				$rr = $yap_radius*$radius[$i];
-				#printf OUT "r $rr\n";
+				printf OUT "r $rr\n";
 				#			if ($i == $np-1) {
 				#				printf OUT "@ 4\n";
 				#			}
