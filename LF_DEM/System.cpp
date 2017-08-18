@@ -1054,6 +1054,7 @@ void System::retrimProcess()
 {
 	cerr << "retrim" << endl;
 	strain_retrim += strain_retrim_interval;
+	updateH(0.5*cumulated_strain);
 	for (int i=0; i<np; i++) {
 		retrim(position[i]);
 		boxset.box(i);
@@ -1358,7 +1359,7 @@ void System::updateInteractions()
 	for (unsigned int k=0; k<interaction.size(); k++) {
 		bool deactivated = false;
 		interaction[k].updateState(deactivated);
-		if (interaction[k].contact.is_active()) {
+		if (friction && interaction[k].contact.is_active()) {
 			double sq_sliding_velocity = interaction[k].contact.relative_surface_velocity_sqnorm;
 			if (sq_sliding_velocity > sq_max_sliding_velocity) {
 				sq_max_sliding_velocity = sq_sliding_velocity;
@@ -2625,14 +2626,8 @@ void System::updateH(double extensional_strain)
 	 */
 	double exp_strain_x;
 	double exp_strain_z;
-	if (2*extensional_strain == strain_retrim) {
-		exp_strain_x = 1;
-		exp_strain_z = 1;
-	} else {
-		// strainH
-		exp_strain_x = exp(extensional_strain-0.5*(strain_retrim-strain_retrim_interval));
-		exp_strain_z = 1.0/exp_strain_x;
-	}
+	exp_strain_x = exp(extensional_strain-0.5*(strain_retrim-strain_retrim_interval));
+	exp_strain_z = 1.0/exp_strain_x;
 	/******** Set H     *****************************************/
 	// 00, 01, 02, 12, 11, 22
 	deform_forward.setSymmetric(exp_strain_x*sq_cos_ma+exp_strain_z*sq_sin_ma, // 00

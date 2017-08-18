@@ -238,6 +238,8 @@ vec3d Contact::getTotalForce() const
 		\brief Compute the total contact forces (spring+dashpot).
 		!!! Needs to have the correct velocities in the System class!
 		(This contains the dashpot, it is NOT only a static force.)
+		@@@ Actually, the velocities are not correct after retrimming in the extensioanl flow simulation.
+		@@@ It seems this affects only visualization data
 		*/
 	if (is_active()) {
 		return f_spring_total + dashpot.getForceOnP0(sys->velocity[p0],

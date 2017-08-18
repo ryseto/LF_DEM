@@ -22,7 +22,7 @@ my $epsilondot=0;
 my $timeper=0;
 my $scale=0.5;
 my $axisrotation=1;
-my $pd_color = 0;
+my $pd_color = 1;
 my $draw_cross = 0;
 my $flow_type = "shear";
 my $draw_trajectory = 0;
@@ -262,24 +262,18 @@ sub InInteractions{
 			last;
 		}
 		last unless defined $line;
-		
-		#		"#1: particle 1 label\n"
-		#		"#2: particle 2 label\n"
-		#		"#3: contact state (0 = no contact, 1 = frictionless contact, 1 = non-sliding frictional, 2 = sliding frictional)\n"
-		#		"#4: normal vector, oriented from particle 1 to particle 2 x\n"
-		#		"#5: normal vector, oriented from particle 1 to particle 2 y\n"
-		#		"#6: normal vector, oriented from particle 1 to particle 2 z\n"
-		#		"#7: dimensionless gap = s-2, s = 2r/(a1+a2)\n"
-		#		"#8: norm of the normal part of the lubrication force\n"
-		#		"#9: tangential part of the lubrication force x\n"
-		#		"#10: tangential part of the lubrication force y\n"
-		#		"#11: tangential part of the lubrication force z\n"
-		#		"#12: norm of the normal part of the contact force\n"
-		#		"#13: tangential part of the contact force, x\n"
-		#		"#14: tangential part of the contact force, y\n"
-		#		"#15: tangential part of the contact force, z\n"
-		#		"#16: norm of the normal repulsive force\n"
-		#		"#17: Viscosity contribution of contact xF\n";
+		#1: particle 1 label
+		#2: particle 2 label
+		#3: contact state (0 = no contact, 1 = frictionless contact, 2 = non-sliding frictional, 3 = sliding frictional)
+		#4-6: normal vector, oriented from particle 1 to particle 2
+		#7: dimensionless gap = s-2, s = 2r/(a1+a2)
+		#8: normal part of the lubrication force (positive for compression)
+		#9-11: tangential part of the lubrication force
+		#12: norm of the normal part of the contact force
+		#13-15: tangential part of the contact force
+		#16: norm of the normal repulsive force
+		#17: Viscosity contribution of contact xF
+
 		if ($output == 1) {
 			$int0[$k] = $i;
 			$int1[$k] = $j;
@@ -297,9 +291,11 @@ sub InInteractions{
 			$Gap[$k] = $gap;
 			
 			if ($gap < 0) {
-				$force[$k] = $fc_norm + $fr_norm;
+				$force[$k] = $fc_norm;
+				#$force[$k] = 0;
 			} else {
-				$force[$k] = $f_lub_norm + $fr_norm;
+				#$force[$k] = $f_lub_norm ;
+				$force[$k] = 0;
 			}
 			
 			
