@@ -259,12 +259,12 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 
 	particle_volume = 0;
 	if (twodimension) {
-		for(auto r: radius) {
+		for (auto r: radius) {
 			particle_volume += r*r;
 		}
 		particle_volume *= M_PI;
 	} else {
-		for(auto r: radius) {
+		for (auto r: radius) {
 			particle_volume += r*r*r;
 		}
 		particle_volume *= 4*M_PI/3.;
@@ -1657,10 +1657,10 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 	if (mobile_fixed) {
 		throw runtime_error("Brownian algorithm with fixed particles not implemented yet.\n");
 	}
-	for(auto &f: force) {
+	for (auto &f: force) {
 		f.reset();
 	}
-	for(auto &t: torque) {
+	for (auto &t: torque) {
 		t.reset();
 	}
 	double sqrt_2_dt_amp = sqrt(2*p.brownian/dt);
@@ -1700,10 +1700,10 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 void System::setDashpotForceToParticle(vector<vec3d> &force,
 									   vector<vec3d> &torque)
 {
-	for(auto &f: force) {
+	for (auto &f: force) {
 		f.reset();
 	}
-	for(auto &t: torque) {
+	for (auto &t: torque) {
 		t.reset();
 	}
 	vec3d GEi, GEj, HEi, HEj;
@@ -1723,10 +1723,10 @@ void System::setDashpotForceToParticle(vector<vec3d> &force,
 void System::setHydroForceToParticle_squeeze(vector<vec3d> &force,
 											 vector<vec3d> &torque)
 {
-	for(auto &f: force) {
+	for (auto &f: force) {
 		f.reset();
 	}
-	for(auto &t: torque) {
+	for (auto &t: torque) {
 		t.reset();
 	}
 	vec3d GEi, GEj;
@@ -1744,10 +1744,10 @@ void System::setHydroForceToParticle_squeeze(vector<vec3d> &force,
 void System::setHydroForceToParticle_squeeze_tangential(vector<vec3d> &force,
 														vector<vec3d> &torque)
 {
-	for(auto &f: force) {
+	for (auto &f: force) {
 		f.reset();
 	}
-	for(auto &t: torque) {
+	for (auto &t: torque) {
 		t.reset();
 	}
 	vec3d GEi, GEj, HEi, HEj;
@@ -1767,10 +1767,10 @@ void System::setHydroForceToParticle_squeeze_tangential(vector<vec3d> &force,
 void System::setContactForceToParticle(vector<vec3d> &force,
 									   vector<vec3d> &torque)
 {
-	for(auto &f: force) {
+	for (auto &f: force) {
 		f.reset();
 	}
-	for(auto &t: torque) {
+	for (auto &t: torque) {
 		t.reset();
 	}
 	for (const auto &inter: interaction) {
@@ -1783,10 +1783,10 @@ void System::setContactForceToParticle(vector<vec3d> &force,
 void System::setRepulsiveForceToParticle(vector<vec3d> &force,
 										 vector<vec3d> &torque)
 {
-	for(auto &f: force) {
+	for (auto &f: force) {
 		f.reset();
 	}
-	for(auto &t: torque) {
+	for (auto &t: torque) {
 		t.reset();
 	}
 	for (const auto &inter: interaction) {

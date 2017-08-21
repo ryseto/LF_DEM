@@ -19,28 +19,28 @@ struct ForceComponent
 	ForceComponent(std::size_t size,
 				   unsigned int _rate_dependence,
 				   bool _has_torque,
-	               sysGetForceTorque _getForceTorque):
+				   sysGetForceTorque _getForceTorque):
 	rate_dependence(_rate_dependence),
 	has_torque(_has_torque),
 	getForceTorque(_getForceTorque)
 	{
 		force.resize(size);
 		torque.resize(size);
-		for(auto &f: force) {
+		for (auto &f: force) {
 			f.reset();
 		}
-		for(auto &t: torque) {
+		for (auto &t: torque) {
 			t.reset();
 		}
 	}
 
 	void reset()
 	{
-		for(auto &f: force) {
+		for (auto &f: force) {
 			f.reset();
 		}
 		if (has_torque) {
-			for(auto &t: torque) {
+			for (auto &t: torque) {
 				t.reset();
 			}
 		}
@@ -49,11 +49,11 @@ struct ForceComponent
 	template <typename T>
 	struct ForceComponent&	operator*=(const T& a)
 	{
-		for(auto &f: force) {
+		for (auto &f: force) {
 			f *= a;
 		}
 		if (has_torque) {
-			for(auto &t: torque) {
+			for (auto &t: torque) {
 				t *= a;
 			}
 		}

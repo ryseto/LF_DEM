@@ -229,11 +229,11 @@ void System::calcStressPerParticle()
 		}
 	}
 
-	for(auto &sc: stress_components) {
+	for (auto &sc: stress_components) {
 		sc.second.reset();
 	}
 
-	for(auto &sc: stress_components) {
+	for (auto &sc: stress_components) {
 		auto type = sc.second.type;
 		const auto &component_name = sc.first;
 		if (type == VELOCITY_STRESS) {

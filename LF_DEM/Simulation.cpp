@@ -770,7 +770,7 @@ void Simulation::outputPstFileTxt()
 		particle_stress[group_name] = getParticleStressGroup(group_name);
 	}
 	for (int i=0; i<sys.get_np(); i++) {
-		for(const auto &pst: particle_stress) {
+		for (const auto &pst: particle_stress) {
 			outdata_pst.entryData(pst.first + " stress (xx, xy, xz, yz, yy, zz)", "stress", 6, pst.second[i]);
 		}
 	}

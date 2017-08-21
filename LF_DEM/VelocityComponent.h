@@ -21,20 +21,20 @@ struct VelocityComponent
 	
 	void reset()
 	{
-		for(auto &v: vel) {
+		for (auto &v: vel) {
 			v.reset();
 		}
-		for(auto &av: ang_vel) {
+		for (auto &av: ang_vel) {
 			av.reset();
 		}
 	}
 	
 	struct VelocityComponent&	operator*=(double d)
 	{
-		for(auto &v: vel) {
+		for (auto &v: vel) {
 			v *= d;
 		}
-		for(auto &av: ang_vel) {
+		for (auto &av: ang_vel) {
 			av *= d;
 		}
 		return *this;

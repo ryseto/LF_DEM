@@ -26,7 +26,7 @@ struct StressComponent
 	Sym2Tensor getTotalStress() const
 	{
 		Sym2Tensor total_stress;
-		for(const auto &s: particle_stress) {
+		for (const auto &s: particle_stress) {
 			total_stress += s;
 		}
 		return total_stress;
@@ -34,7 +34,7 @@ struct StressComponent
 
 	void reset()
 	{
-		for(auto &s: particle_stress) {
+		for (auto &s: particle_stress) {
 			s.reset();
 		}
 	}
