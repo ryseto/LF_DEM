@@ -291,7 +291,8 @@ sub InInteractions{
 			$Gap[$k] = $gap;
 			
 			if ($gap < 0) {
-				$force[$k] = $fc_norm;
+				$force[$k] = -10*$gap;
+				#$force[$k] = $fc_norm;
 				#$force[$k] = 0;
 			} else {
 				#$force[$k] = $f_lub_norm ;

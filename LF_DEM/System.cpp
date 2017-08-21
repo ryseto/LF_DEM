@@ -505,8 +505,7 @@ void System::setupGenericConfiguration(T conf, ControlVariable control_){
 		sq_cos_ma = cos_ma*cos_ma;
 		sq_sin_ma = sin_ma*sin_ma;
 		cos_ma_sin_ma = cos_ma*sin_ma;
-		//setH_dot(1);
-		updateH(0.5*cumulated_strain); // cumulated_strain = 0
+		updateH(); // cumulated_strain = 0
 	}
 	initializeBoxing();
 	checkNewInteraction();
@@ -598,19 +597,6 @@ void System::setupSystemPostConfiguration()
 	if (pairwise_resistance) {
 		stokes_solver.init(np, np_mobile);
 	}
-	//	if (ext_flow) {
-	//		// extensional flow
-	//		strain_retrim_interval = 2*log(0.5*(3+sqrt(5))); // every this strain, the main simulation box is retrimmed.
-	//		strain_retrim = strain_retrim_interval; // Setting the first value of strain to retrim.
-	//		double cos_ma = cos(p.magic_angle);
-	//		double sin_ma = sin(p.magic_angle);
-	//		sq_cos_ma = cos_ma*cos_ma;
-	//		sq_sin_ma = sin_ma*sin_ma;
-	//		cos_ma_sin_ma = cos_ma*sin_ma;
-	//		//setH_dot(1);
-	//		cerr << "cumulated_strain= " << cumulated_strain << endl ;
-	//		updateH(0.5*cumulated_strain); // cumulated_strain = 0
-	//	}
 	dt = p.dt;
 	if (p.fixed_dt) {
 		avg_dt = dt;
@@ -707,6 +693,9 @@ void System::timeStepBoxing()
 			shear_strain += strain_increment;
 			angle_wheel += dt*(omega_wheel_in-omega_wheel_out);
 		}
+	}
+	if (ext_flow) {
+		updateH(); // update cell axes
 	}
 	if (!ext_flow) {
 		/**** simple shear flow ****/
@@ -1054,10 +1043,13 @@ void System::retrimProcess()
 {
 	cerr << "retrim" << endl;
 	strain_retrim += strain_retrim_interval;
-	updateH(0.5*cumulated_strain);
+	updateH();
 	for (int i=0; i<np; i++) {
 		retrim(position[i]);
 		boxset.box(i);
+		velocity[i] -= u_inf[i];
+		u_inf[i] = grad_u*position[i];
+		velocity[i] +=  u_inf[i];
 	}
 	boxset.updateExtFlow();
 }
@@ -1082,9 +1074,7 @@ void System::timeStepMove(double time_end, double strain_end)
 	total_num_timesteps ++;
 	/* evolve PBC */
 	timeStepBoxing();
-	if (ext_flow) {
-		updateH(0.5*cumulated_strain);
-	}
+
 	/* move particles */
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
@@ -1119,13 +1109,9 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
 	 * It must not be updated in corrector.
 	 */
 	timeStepBoxing();
-	if (ext_flow) {
-		updateH(0.5*cumulated_strain);
-	}
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
-
 	if (angle_output) {
 		for (int i=0; i<np; i++) {
 			angle[i] += ang_velocity[i].y*dt;
@@ -2370,25 +2356,24 @@ void System::periodizeExtFlow(const int &i, bool &pd_transport)
 {
 	if (boxset.boxType(i) != 1) {
 		vec3d s = deform_backward*position[i];
-		//deform_backward.print();
-		while (s.z >= lz) {
+		pd_transport = false;
+		if (s.z >= lz) {
 			s.z -= lz;
 			pd_transport = true;
-		}
-		while (s.z < 0) {
+		} else if (s.z < 0) {
 			s.z += lz;
 			pd_transport = true;
 		}
-		while (s.x >= lx) {
+		if (s.x >= lx) {
 			s.x -= lx;
 			pd_transport = true;
-		}
-		while (s.x < 0) {
+		} else if (s.x < 0) {
 			s.x += lx;
 			pd_transport = true;
 		}
-		position[i] = deform_forward*s;
-		//deform_forward.print();
+		if (pd_transport) {
+			position[i] = deform_forward*s;
+		}
 	}
 	if (!twodimension) {
 		if (position[i].y >= ly) {
@@ -2614,7 +2599,7 @@ void System::retrim(vec3d& pos)
 	}
 }
 
-void System::updateH(double extensional_strain)
+void System::updateH()
 {
 	/*
 	 * strainH is twice of extensional strain.
@@ -2624,10 +2609,9 @@ void System::updateH(double extensional_strain)
 	/* H_orig = (exp(epsilon_dot t) 0 0 / 0 1 0 / 0 0 exp(-epsilon_dot t))
 	 * H = R(-magicangle) H_orig R(magicangle)
 	 */
-	double exp_strain_x;
-	double exp_strain_z;
-	exp_strain_x = exp(extensional_strain-0.5*(strain_retrim-strain_retrim_interval));
-	exp_strain_z = 1.0/exp_strain_x;
+	double diff_ext_strain = 0.5*(cumulated_strain-(strain_retrim-strain_retrim_interval));
+	double exp_strain_x = exp(diff_ext_strain); // extensional strain = 0.5*(shear strain)
+	double exp_strain_z = 1.0/exp_strain_x;
 	/******** Set H     *****************************************/
 	// 00, 01, 02, 12, 11, 22
 	deform_forward.setSymmetric(exp_strain_x*sq_cos_ma+exp_strain_z*sq_sin_ma, // 00
@@ -2636,22 +2620,7 @@ void System::updateH(double extensional_strain)
 								0, // 12
 								1, // 11
 								exp_strain_x*sq_sin_ma+exp_strain_z*sq_cos_ma); // 22
-	/******** Set H_dot *****************************************/
-	//cerr << "### " << dot_epsilon << ' ' << shear_rate << endl;
-	//	dot_deform_forward.setSymmetric(dot_epsilon*(exp_strain_x*sq_cos_ma-exp_strain_z*sq_sin_ma), // 00
-	//									0, // 01
-	//									-dot_epsilon*(exp_strain_x+exp_strain_z)*cos_ma_sin_ma, // 02
-	//									0, // 12
-	//									0, // 11
-	//									dot_epsilon*(exp_strain_x*sq_sin_ma-exp_strain_z*sq_cos_ma)); //22
-	//
 	deform_backward = deform_forward.inverse();
-	/* grad_u is not neccesary to update.
-	 *
-	 */
-	//grad_u = dot_deform_forward*deform_backward;
-	//E_infinity = symmetrise(grad_u);
-	//O_infinity = grad_u.antiSymmetrise();
 	/************** for boxing **************************************/
 	box_axis1 = lx*deform_forward.getLine(0); // 6--7 = 10--11
 	box_axis2 = lz*deform_forward.getLine(2); // 6--10 = 7--11
