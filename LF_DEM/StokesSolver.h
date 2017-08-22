@@ -19,7 +19,15 @@
 #include "vec3d.h"
 #include "MatrixBlocks.h"
 #include "cholmod.h"
-
+// uncomment below to use long integer cholmod (necessary for GPU)
+#define USE_CHOLMOD_LONG 1
+#ifndef USE_CHOLMOD_LONG
+#define CHOL_FUNC(NAME) cholmod_ ## NAME
+typedef int chol_int;
+#else
+#define CHOL_FUNC(NAME) cholmod_l_ ## NAME
+typedef long chol_int;
+#endif
 
 class StokesSolver{
 	/*
@@ -107,9 +115,9 @@ class StokesSolver{
 	 */
 
 private:
-	int np;
-	int mobile_particle_nb;
-	int fixed_particle_nb;
+	chol_int np;
+	chol_int mobile_particle_nb;
+	chol_int fixed_particle_nb;
 	bool mobile_matrix_done;
 	bool to_be_factorized;
 
@@ -130,22 +138,22 @@ private:
 	// cholmod_dense* chol_PTsolution;
 	cholmod_dense* chol_Psolution;
 	// resistance matrix building
-	int dblocks_size;
-	int current_column;
+	chol_int dblocks_size;
+	chol_int current_column;
 	std::vector<struct DBlock> dblocks;
 	std::vector<struct ODBlock> odblocks;
-	std::vector<int> odbrows;
-	std::vector<int> odbrows_table;
+	std::vector<chol_int> odbrows;
+	std::vector<chol_int> odbrows_table;
 	std::vector<struct ODBlock> odblocks_mf;
-	std::vector<int> odbrows_mf;
-	std::vector<int> odbrows_table_mf;
+	std::vector<chol_int> odbrows_mf;
+	std::vector<chol_int> odbrows_table_mf;
 	std::vector<struct DBlock> dblocks_ff;
 	std::vector<struct ODBlock> odblocks_ff;
-	std::vector<int> odbrows_ff;
-	std::vector<int> odbrows_table_ff;
-	std::vector<std::vector <int> > odb_layout;
-	std::vector<std::vector <int> > db_layout;
-	std::vector<int> dblocks_cntnonzero;
+	std::vector<chol_int> odbrows_ff;
+	std::vector<chol_int> odbrows_table_ff;
+	std::vector<std::vector <chol_int> > odb_layout;
+	std::vector<std::vector <chol_int> > db_layout;
+	std::vector<chol_int> dblocks_cntnonzero;
 
 	void factorizeResistanceMatrix();
 	void allocateResistanceMatrix();
@@ -154,29 +162,29 @@ private:
 	void completeResistanceMatrix_MobileFixed();
 	void completeResistanceMatrix_FixedFixed();
 	void insertODBlock(cholmod_sparse *matrix,
-					   const std::vector<int> &index_chol_ix,
-					   int top_row_nb,
+					   const std::vector<chol_int> &index_chol_ix,
+					   chol_int top_row_nb,
 					   const struct ODBlock &offdiagblock);
 	void insertDBlock(cholmod_sparse *matrix,
-					  const std::vector<int> &index_chol_ix,
-					  int top_row_nb,
+					  const std::vector<chol_int> &index_chol_ix,
+					  chol_int top_row_nb,
 					  const struct DBlock &diagblock);
-	void insertODBlockRows(int *matrix_i,
-						   const std::vector<int> &index_values,
-						   int top_row_nb);
-	void insertDBlockRows(int *matrix_i,
-						  const std::vector<int> &index_values,
-						  int top_row_nb);
-	void insertBlockColumnIndices(int *matrix_p,
-								  const std::vector<int> &pvalues);
+	void insertODBlockRows(chol_int *matrix_i,
+						   const std::vector<chol_int> &index_values,
+						   chol_int top_row_nb);
+	void insertDBlockRows(chol_int *matrix_i,
+						  const std::vector<chol_int> &index_values,
+						  chol_int top_row_nb);
+	void insertBlockColumnIndices(chol_int *matrix_p,
+								  const std::vector<chol_int> &pvalues);
 	void insertODBlockValues(double *matrix_x,
-							 const std::vector<int>& index_chol_ix,
+							 const std::vector<chol_int>& index_chol_ix,
 							 const struct ODBlock& b);
 	void insertDBlockValues(double *matrix_x,
-							const std::vector<int>& index_chol_ix,
+							const std::vector<chol_int>& index_chol_ix,
 							const struct DBlock& b);
-	void setOffDiagBlock(int jj, const struct ODBlock& b);
-	void addToDiagBlock(int ii, const struct DBlock &b);
+	void setOffDiagBlock(chol_int jj, const struct ODBlock& b);
+	void addToDiagBlock(chol_int ii, const struct DBlock &b);
 	/*
 	 completeResistanceMatrix() :
 	 - transforms temporary arrays/vectors used to build resistance
@@ -191,24 +199,24 @@ private:
 public:
 	StokesSolver();
 	~StokesSolver();
-	void init(int np_total, int np_mobile);
+	void init(chol_int np_total, chol_int np_mobile);
 	void printResistanceMatrix(std::ostream&, std::string);
 	void printFactor(std::ostream&);
 	void printRHS();
 	void convertDirectToIterative();
     // R_FU filling methods
-    /* resetResistanceMatrix(string solver_type, int nb_of_interactions) :
+    /* resetResistanceMatrix(string solver_type, chol_int nb_of_interactions) :
 	 - initialize arrays/vectors used for building
 	 - to be called before adding elements
 	 - nb_of_interactions is the number of odblocks in the matrix
 	 */
-	void resetResistanceMatrix(int nb_of_interactions_mm,
-							   int nb_of_interactions_mf,
-							   int nb_of_interactions_ff,
+	void resetResistanceMatrix(chol_int nb_of_interactions_mm,
+							   chol_int nb_of_interactions_mf,
+							   chol_int nb_of_interactions_ff,
 							   const std::vector<struct DBlock>& reset_resmat_dblocks,
 							   bool matrix_pattern_changed);
-	void addResistanceBlocks(int i,
-							 int j,
+	void addResistanceBlocks(chol_int i,
+							 chol_int j,
 							 const std::pair<struct DBlock, struct DBlock> &DiagBlocks_i_and_j,
 							 const struct ODBlock& ODBlock_ij);
 	/*
@@ -225,13 +233,13 @@ public:
 	void resetRHStorque();
 	void addToRHS(double*);
 	void addToRHS(const std::vector<double>&);
-	void addToRHS(int, const std::vector<double>&);
-	void addToRHSForce(int, const vec3d&);
-	void addToRHSTorque(int, const vec3d&);
+	void addToRHS(chol_int, const std::vector<double>&);
+	void addToRHSForce(chol_int, const vec3d&);
+	void addToRHSTorque(chol_int, const vec3d&);
 	void setRHS(const std::vector<vec3d>&);
 	void setRHS(const std::vector<vec3d>&, const std::vector<vec3d>& torque);
-	void setRHSForce(int, const vec3d&);
-	void setRHSTorque(int, const vec3d&);
+	void setRHSForce(chol_int, const vec3d&);
+	void setRHSTorque(chol_int, const vec3d&);
 	/*
 	 solve(vec3d* velocity, vec3d* ang_velocity) :
 	 - once the resistance matrix and the RHS vector are built
