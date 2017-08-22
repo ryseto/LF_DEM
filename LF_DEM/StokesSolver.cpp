@@ -682,7 +682,11 @@ void StokesSolver::solve(vector<vec3d> &velocity, vector<vec3d> &ang_velocity)
 		ang_velocity[i].y = solx[i6+4];
 		ang_velocity[i].z = solx[i6+5];
 	}
-  cholmod_l_gpu_stats(&chol_c);
+#ifdef DEV
+#ifdef USE_CHOLMOD_LONG
+  cholmod_l_gpu_stats(&chol_c); // debug only
+#endif
+#endif
 }
 
 void StokesSolver::vec3dToDouble(double *a, const vector<vec3d>& b, const vector<vec3d>& c)
@@ -847,7 +851,9 @@ void StokesSolver::allocateRessources()
 	odbrows_table_ff.resize(fixed_particle_nb+1);
 	dblocks_ff.resize(fixed_particle_nb);
 	CHOL_FUNC(start) (&chol_c);
+#ifdef USE_CHOLMOD_LONG
 	chol_c.useGPU = 1;
+#endif
 	auto size_mm = 6*mobile_particle_nb;
 	auto size_ff = 6*fixed_particle_nb;
 	chol_rhs       = CHOL_FUNC(allocate_dense) (size_mm, 1, size_mm, CHOLMOD_REAL, &chol_c);
