@@ -285,6 +285,8 @@ private:
 
 	vec3d shear_disp; // lees-edwards shift between top and bottom. only shear_disp.x, shear_disp.y is used
 	double max_velocity;
+	double max_velocity_brownian;
+	double max_velocity_contact;
 	double max_sliding_velocity;
 	double target_stress;
 	double init_strain_shear_rate_limit;

@@ -1852,14 +1852,34 @@ void System::computeMaxNAVelocity()
 			sq_max_na_velocity = sq_na_velocity;
 		}
 	}
+	max_velocity = sqrt(sq_max_na_velocity);
+	if (brownian) {
+		double sq_max_na_velocity_br = 0;
+		double sq_na_velocity_br;
+		for (int i=0; i<np; i++) {
+			sq_na_velocity_br = na_velo_components["brownian"].vel[i].sq_norm();
+			if (sq_na_velocity_br > sq_max_na_velocity_br) {
+				sq_max_na_velocity_br = sq_na_velocity_br;
+			}
+		}
+		max_velocity_brownian = sqrt(sq_max_na_velocity_br);
+		double sq_max_na_velocity_con = 0;
+		double sq_na_velocity_con;
+		for (int i=0; i<np; i++) {
+			sq_na_velocity_con = na_velo_components["contact"].vel[i].sq_norm();
+			if (sq_na_velocity_con > sq_max_na_velocity_con) {
+				sq_max_na_velocity_con = sq_na_velocity_con;
+			}
+		}
+		max_velocity_contact = sqrt(sq_max_na_velocity_con);
+	}
 	//	double sq_na_ang_velocity;
 	//	for (int i=0; i<np; i++) {
 	//		sq_na_ang_velocity = na_ang_velocity[i].sq_norm()*radius_squared[i];
 	//		if (sq_max_na_velocity < sq_na_ang_velocity) {
 	//			sq_max_na_velocity = sq_na_ang_velocity;
 	//		}
-	//	}
-	max_velocity = sqrt(sq_max_na_velocity);
+	//	}	
 }
 
 void System::computeVelocityWithoutComponents()
