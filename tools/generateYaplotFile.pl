@@ -17,7 +17,7 @@ my $output_interval = 1;
 my $xz_shift = 0;
 my $axis = 0;
 my $reversibility_test = 0;
-my $monodisperse = 1;
+my $monodisperse = 0;
 
 GetOptions(
 'forcefactor=f' => \$force_factor,
@@ -305,11 +305,11 @@ sub InInteractions{
 			$contactstate[$k] = $contact;
 			if ($contact > 0) {
 				#$force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
-				#$force[$k] = $fc_norm + $fr_norm;
-				$force[$k] = $fc_norm;
+				$force[$k] = $fc_norm + $fr_norm;
+				#$force[$k] = $fc_norm;
 			} else {
-				#$force[$k] = $f_lub_norm + $fr_norm;
-				$force[$k] = 0;
+				$force[$k] = $f_lub_norm + $fr_norm;
+				#$force[$k] = 0;
 			}
 			$F_lub[$k] = $f_lub_norm;
 			$Fc_n[$k] = $fc_norm;
@@ -369,6 +369,8 @@ sub OutYaplotData{
 		#}
 		if ($force[$k] > 0 ) {
 			&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
+		} else {
+			&OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k], 0.01);
 		}
 	}
 
@@ -383,10 +385,12 @@ sub OutYaplotData{
 	
 	## visualize rotation in 2D
 	if ($Ly == 0) {
-		printf OUT "y 6\n";
-		printf OUT "@ 1\n";
-		for ($i = 0; $i < $np; $i++) {
-			OutCross($i);
+		if (0) {
+			printf OUT "y 6\n";
+			printf OUT "@ 1\n";
+			for ($i = 0; $i < $np; $i++) {
+				OutCross($i);
+			}
 		}
 	}
 	if ($reversibility_test) {

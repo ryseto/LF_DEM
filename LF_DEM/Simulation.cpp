@@ -680,6 +680,10 @@ void Simulation::outputData()
 		outdata.entryData("force top wall", "force", 3, sys.force_upwall);
 		outdata.entryData("force bottom wall", "force", 3, sys.force_downwall);
 	}
+	if (sys.brownian) {
+		outdata.entryData("max_velocity_brownian", "velocity", 1, sys.max_velocity_brownian);
+		outdata.entryData("max_velocity_contact", "velocity", 1, sys.max_velocity_contact);
+	}
 	outdata.writeToFile();
 	/****************************   Stress Tensor Output *****************/
 	outdata_st.setDimensionlessNumber(force_ratios[dimless_nb_label]);
