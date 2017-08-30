@@ -271,13 +271,10 @@ inline void lf_data_file::read_data_cols() {
   std::istream_iterator<double> iit (file_stream);
   std::vector<int> col_diff (col_nb());
   std::adjacent_difference(cols_to_read.begin(), cols_to_read.end(), col_diff.begin());
-  for (auto &cd : col_diff) {
-      cd--;
-  }
   while (true) {
     for (unsigned i=0; i<col_diff.size(); i++){
       std::advance(iit, col_diff[i]);
-      file_stream >> record[i];
+      record[i] = *iit;
     }
     std::advance(iit, _col_nb - cols_to_read.back());
     if (!file_stream.eof()) {

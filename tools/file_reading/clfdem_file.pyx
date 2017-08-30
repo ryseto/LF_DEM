@@ -137,3 +137,7 @@ cdef class snapshot_file(generic_file):
             return frame.meta_data, np.array(frame.data, dtype=np.float)
         else:
             raise IndexError
+
+def column_def(fname):
+    f = generic_file(fname)
+    return f.column_def()
