@@ -7,7 +7,7 @@ ifneq ("$(wildcard $(makeconfig))","")
 endif
 
 install:
-	python setup.py build_ext --inplace
+	cd file_reading; python setup.py build_ext --inplace; cd ..
 	cp generateYaplotFile.pl $(INSTALL_DIR)
 	cp lfdem_file.py $(ANACONDA_DIR)
 	cp lfdem_utils.py $(ANACONDA_DIR)
@@ -16,5 +16,5 @@ install:
 	cp yapgen.py $(ANACONDA_DIR)
 	cp binconf_info.py $(INSTALL_DIR)
 	cp wall_conf.py $(INSTALL_DIR)
-	cp clfdem_file*so $(ANACONDA_DIR)
-	cp clfdem_file.pyx $(ANACONDA_DIR)
+	cp file_reading/clfdem_file*so $(ANACONDA_DIR)
+	cp file_reading/clfdem_file.pyx $(ANACONDA_DIR)
