@@ -18,6 +18,7 @@
 /**** Public lf_file methods ***************/
 
 inline lf_file::lf_file(std::string fname):
+_col_nb(0),
 post_header_pos(0)
 {
   open_file(fname);
@@ -27,6 +28,7 @@ post_header_pos(0)
 inline lf_file::lf_file(std::string fname,
                         std::vector<int> columns_to_read):
 cols_to_read(columns_to_read),
+_col_nb(0),
 post_header_pos(0)
 {
   std::sort(cols_to_read.begin(), cols_to_read.end());
@@ -37,6 +39,7 @@ post_header_pos(0)
 
 inline lf_file::lf_file(std::string fname,
                         std::vector<std::string> fields_to_read):
+_col_nb(0),
 post_header_pos(0)
 {
   open_file(fname);
