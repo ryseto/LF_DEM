@@ -1972,10 +1972,21 @@ void System::computeShearRate()
 	Sym2Tensor rate_prop_stress;
 	Sym2Tensor rate_indep_stress;
 	gatherStressesByRateDependencies(rate_prop_stress, rate_indep_stress);
-	double newtonian_viscosity = doubledot(rate_prop_stress, getEinfty()); // computed with rate=1, o here it is also the viscosity.
-	double newtonian_stress = target_stress - doubledot(rate_indep_stress, getEinfty());
-
-	set_shear_rate(newtonian_stress/newtonian_viscosity);
+	/*
+	 *  target_stress = rate_indep_stress_ + rate * rate_prop_stress_at_1
+	 *  rate = (target_stress - rate_indep_stress)/rate_prop_stress_at_1
+	 *  
+	 *  kappa = (Sigma.E)/(E.E)
+	 *  sigama = -p*I + 2 eta*E + ... = -p*I + kappa*E + ...
+	 *  E.E = 1/2 (if shear rate = 1)
+	 *  eta = kappa / 2 = (Sigma.E)/(2*E.E) = Sigma.E
+	 *  sigma_target = rate_prop_shearstress(rate=1)*(rate/1) + rate_indep_shearstress
+	 *  rate = (sigma_target - rate_indep_shearstress) / rate_prop_shearstress(rate=1)
+	 */
+	double rate_prop_shearstress_rate1 = doubledot(rate_prop_stress, getEinfty()); // computed with rate=1, o here it is also the viscosity.
+	double rate_indep_shearstress = doubledot(rate_indep_stress, getEinfty());
+	double rate = (target_stress-rate_indep_shearstress)/rate_prop_shearstress_rate1;
+	set_shear_rate(rate);
 	if (cumulated_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
 			set_shear_rate(init_shear_rate_limit);

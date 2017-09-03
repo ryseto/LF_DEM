@@ -610,11 +610,18 @@ void Simulation::outputData()
 		// @@@ tentative ouptut for Pe = 0 simulation
 		// output xz component of stress tensor
 		viscous_material_function = sys.total_stress.elm[2];
+		inviscid_material_function0 = 0;
+		inviscid_material_function3 = 0;
 	}
 	outdata.entryData("time", "time", 1, sys.get_time());
 	if (sys.get_omega_wheel() == 0 || sys.wall_rheology == false) {
 		// Simple shear geometry
 		outdata.entryData("cumulated shear strain", "none", 1, sys.get_cumulated_strain());
+		/* Note: shear rate
+		 * shear rate = 2*sqrt(sys.getEinfty().selfdoubledot()/2);
+		 * - shear rate (\dot{\gamma}) in simple shear flow
+		 * - twice of extensional rate (\dot{\varepsilon})in extensional flow
+		 */
 		outdata.entryData("shear rate", "rate", 1, sys.get_shear_rate());
 	} else {
 		// Rotary Couette geometry
