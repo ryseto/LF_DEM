@@ -38,7 +38,7 @@ void System::declareStressComponents()
 	// Brownian
 	if (brownian) { // Brownian is different than other GU, needs predictor data too
 		stress_components["brownian_predictor"] = StressComponent(BROWNIAN_STRESS,
-		                                                          np, RATE_DEPENDENT, "brownian");// rate dependent for now
+		                                                          np, RATE_INDEPENDENT, "brownian");// rate dependent for now --> @ WORKING NOW @
 	}
 
 	/****************  ME stress ********************/

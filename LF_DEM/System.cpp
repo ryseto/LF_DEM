@@ -193,7 +193,7 @@ void System::declareForceComponents()
 		force_components["repulsion"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setRepulsiveForceToParticle);
 	}
 	if (brownian) {
-		force_components["brownian"] = ForceComponent(np, RATE_DEPENDENT, torque, &System::setBrownianForceToParticle);// declared rate dependent for now
+		force_components["brownian"] = ForceComponent(np, RATE_INDEPENDENT, torque, &System::setBrownianForceToParticle);// declared rate dependent for now --> @@ Now time to try stress-controlled Brownian @@
 	}
 
 	/********** Force R_FU^{mf}*(U^f-U^f_inf)  *************/

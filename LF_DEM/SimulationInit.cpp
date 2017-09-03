@@ -277,7 +277,8 @@ void Simulation::setupNonDimensionalizationStressControlled(double dimensionless
 		 */
 	}
 	if (stress_unit == "brownian") {
-		throw runtime_error(" Error: stress controlled Brownian simulations are not yet implemented.");
+		cerr << " NOTE: stress controlled Brownian simulations are not well-tested yet.\n";
+		//throw runtime_error(" Error: stress controlled Brownian simulations are not yet implemented.");
 	}
 	sys.set_shear_rate(0);
 	// we take as a unit scale the one given by the user with the stress
