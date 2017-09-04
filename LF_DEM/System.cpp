@@ -418,6 +418,8 @@ void System::setupParameters()
 		if (brownian_dominated) {
 			double stress_avg_relaxation_parameter = 10*p.time_interval_output_data; // 0 --> no average
 			stress_avg.setRelaxationTime(stress_avg_relaxation_parameter);
+			rate_prop_shearstress_rate1_ave.setRelaxationTime(0.1);
+			rate_indep_shearstress_ave.setRelaxationTime(0.1);
 		}
 		if (pairwise_resistance && p.integration_method != 1) {
 			ostringstream error_str;
@@ -1985,8 +1987,16 @@ void System::computeShearRate()
 	 */
 	double rate_prop_shearstress_rate1 = doubledot(rate_prop_stress, getEinfty()); // computed with rate=1, o here it is also the viscosity.
 	double rate_indep_shearstress = doubledot(rate_indep_stress, getEinfty());
-	double rate = (target_stress-rate_indep_shearstress)/rate_prop_shearstress_rate1;
-	set_shear_rate(rate);
+	if (brownian) {
+		rate_prop_shearstress_rate1_ave.update(rate_prop_shearstress_rate1, get_time());
+		rate_indep_shearstress_ave.update(rate_indep_shearstress, get_time());
+		rate_prop_shearstress_rate1 = rate_prop_shearstress_rate1_ave.get();
+		rate_indep_shearstress = rate_indep_shearstress_ave.get();
+	}
+	if (rate_prop_shearstress_rate1 != 0) {
+		double rate = (target_stress-rate_indep_shearstress)/rate_prop_shearstress_rate1;
+		set_shear_rate(rate);
+	}
 	if (cumulated_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
 			set_shear_rate(init_shear_rate_limit);

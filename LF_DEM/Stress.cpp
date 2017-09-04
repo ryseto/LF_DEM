@@ -120,7 +120,7 @@ void System::gatherVelocitiesByRateDependencies(vector<vec3d> &rateprop_vel,
 			[Note] The rate proportional part is a total velocity, and as such must be dealt with proper Lees-Edwards BC.
 						 The rate independent part is always a non-affine velocity.
 	*/
-	assert(control==stress || control==viscnb);
+	assert(control == stress || control == viscnb);
 	for (unsigned int i=0; i<rateprop_vel.size(); i++) {
 		rateprop_vel[i].reset();
 		rateprop_ang_vel[i].reset();
@@ -176,13 +176,13 @@ void System::calcContactXFPerParticleStressControlled()
 			                                                                          rateprop_vel[j],
 			                                                                          rateprop_ang_vel[i],
 			                                                                          rateprop_ang_vel[j]));
-			double r_ij = radius[i] + radius[j];
+			double r_ij = radius[i]+radius[j];
 			rateprop_XF[i] += (radius[i]/r_ij)*rateprop_stress;
 			rateprop_XF[j] += (radius[j]/r_ij)*rateprop_stress;
 
 			Sym2Tensor rateindep_stress = outer_sym(inter.rvec,
-			                                        inter.contact.dashpot.getForceOnP0_nonaffine(rateindep_vel[i],
-			                                                                                     rateindep_vel[j],
+													inter.contact.dashpot.getForceOnP0_nonaffine(rateindep_vel[i],
+																								 rateindep_vel[j],
 			                                                                                     rateindep_ang_vel[i],
 			                                                                                     rateindep_ang_vel[j]));
 			rateindep_XF[i] += (radius[i]/r_ij)*rateindep_stress;
