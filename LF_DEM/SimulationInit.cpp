@@ -874,6 +874,8 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.np_fixed = atoi(value.c_str());
 	} else if (keyword == "keep_input_strain") {
 		p.keep_input_strain = str2bool(value);
+	} else if (keyword == "brownian_relaxation_time") {
+		p.brownian_relaxation_time = atof(value.c_str());
 	} else {
 		ostringstream error_str;
 		error_str  << "keyword " << keyword << " is not associated with an parameter" << endl;
@@ -994,6 +996,7 @@ void Simulation::setDefaultParameters(string input_scale)
 	autoSetParameters("event_handler", "");
 	autoSetParameters("simulation_mode", "0");
 	autoSetParameters("keep_input_strain", "false");
+	autoSetParameters("brownian_relaxation_time", "1");
 	autoSetParameters("out_bond_order_parameter6", "false");
 }
 

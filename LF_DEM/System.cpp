@@ -418,8 +418,8 @@ void System::setupParameters()
 		if (brownian_dominated) {
 			double stress_avg_relaxation_parameter = 10*p.time_interval_output_data; // 0 --> no average
 			stress_avg.setRelaxationTime(stress_avg_relaxation_parameter);
-			rate_prop_shearstress_rate1_ave.setRelaxationTime(0.1);
-			rate_indep_shearstress_ave.setRelaxationTime(0.1);
+			rate_prop_shearstress_rate1_ave.setRelaxationTime(p.brownian_relaxation_time);
+			rate_indep_shearstress_ave.setRelaxationTime(p.brownian_relaxation_time);
 		}
 		if (pairwise_resistance && p.integration_method != 1) {
 			ostringstream error_str;
