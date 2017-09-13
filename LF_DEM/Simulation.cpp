@@ -321,15 +321,16 @@ void Simulation::simulationSteadyShear(string in_args,
 			timestep_1 = sys.get_total_num_timesteps();
 		}
 		if (p.simulation_mode == 22) {
-			if (abs(sys.get_cumulated_strain()-1) < 1e-10) {
+			if (sys.get_cumulated_strain() > 0.2) {
 				sys.zero_shear = true;
 				sys.set_shear_rate(0);
+				sys.setVelocityDifference();
 				sys.dt = 1e-5;
 				if (cnt_tmp == 0) {
 					cerr << "Stop shear" << endl;
 					tk.removeClock();
-					tk.addClock("data", LogClock(1+1e-4, 2, 100, false));
-					tk.addClock("config", LogClock(1+1e-4, 2, 100, false));
+					tk.addClock("data", LogClock(sys.get_time()+1e-4, sys.get_time()+1, 100, false));
+					tk.addClock("config", LogClock(sys.get_time()+1e-4, sys.get_time()+1, 100, false));
 					cnt_tmp ++;
 				}
 			}
