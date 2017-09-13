@@ -215,6 +215,9 @@ void Simulation::setupOptionalSimulation(string indent)
 		case 21:
 			cout << indent << "Test simulation for shear reversibility" << endl;
 			break;
+		case 22:
+			cout << indent << "Test simulation for shear stop" << endl;
+			break;
 		case 31:
 			cout << indent << "Test simulation (wtest1), simple shear with walls" << endl;
 			sys.zero_shear = true;
@@ -298,7 +301,7 @@ void Simulation::simulationSteadyShear(string in_args,
 	setupEvents();
 	cout << indent << "Time evolution started" << endl << endl;
 	TimeKeeper tk = initTimeKeeper();
-
+	int cnt_tmp = 0; //@@temp
 	int binconf_counter = 0;
 	while (keepRunning()) {
 		timeEvolutionUntilNextOutput(tk);
@@ -316,6 +319,20 @@ void Simulation::simulationSteadyShear(string in_args,
 			now = time(NULL);
 			time_strain_1 = now;
 			timestep_1 = sys.get_total_num_timesteps();
+		}
+		if (p.simulation_mode == 22) {
+			if (abs(sys.get_cumulated_strain()-1) < 1e-10) {
+				sys.zero_shear = true;
+				sys.set_shear_rate(0);
+				sys.dt = 1e-5;
+				if (cnt_tmp == 0) {
+					cerr << "Stop shear" << endl;
+					tk.removeClock();
+					tk.addClock("data", LogClock(1+1e-4, 2, 100, false));
+					tk.addClock("config", LogClock(1+1e-4, 2, 100, false));
+					cnt_tmp ++;
+				}
+			}
 		}
 	}
 	now = time(NULL);

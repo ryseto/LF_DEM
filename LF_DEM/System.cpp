@@ -1156,7 +1156,7 @@ void System::timeStepMoveCorrector()
 
 bool System::keepRunning(double time_end, double strain_end)
 {
-	if (cumulated_strain > strain_end-1e-8 && strain_end>=0) {
+	if (cumulated_strain > strain_end-1e-8 && strain_end >= 0) {
 		return false;
 	}
 	if (get_time() > time_end-1e-8 && time_end>=0) {
@@ -1202,6 +1202,7 @@ void System::timeEvolution(double time_end, double strain_end)
 	avg_dt = 0;
 	avg_dt_nb = 0;
 	double dt_bak = -1;
+
 	while (keepRunning(time_end, strain_end)) {
 		retrim_ext_flow = false; // used in ext_flow simulation
 		if (!brownian && !p.fixed_dt) { // adaptative time-step for non-Brownian cases
