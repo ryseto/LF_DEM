@@ -291,12 +291,12 @@ sub InInteractions{
 			$Gap[$k] = $gap;
 			
 			if ($gap < 0) {
-				$force[$k] = -10*$gap;
-				#$force[$k] = $fc_norm;
+				#$force[$k] = -10*$gap;
+				$force[$k] = $fc_norm;
 				#$force[$k] = 0;
 			} else {
-				#$force[$k] = $f_lub_norm ;
-				$force[$k] = 0;
+				$force[$k] = $f_lub_norm ;
+				#$force[$k] = 0;
 			}
 			
 			
@@ -401,7 +401,7 @@ sub OutYaplotData{
 						$bulk = 1;
 						&OutString_width($int0[$k], $int1[$k], $w, 0.01, $pd_xshift, $pd_zshift);
 						if ($bulk == 0) {
-							&OutString_width_nvec($i, $j, $nrvec_x[$k], $nrvec_y[$k], $nrvec_z[$k],	$w, 0.01, $pd_xshift, $pd_zshift);
+							&OutString_width_nvec($i, $j, $nrvec_x[$k], $nrvec_y[$k], $nrvec_z[$k], $Gap[$k], $w, 0.01, $pd_xshift, $pd_zshift);
 						}
 					}
 				}
@@ -473,6 +473,7 @@ sub OutYaplotData{
 	}
 	&OutBoundaryBox;
 }
+
 sub OutParticleShear {
 	for ($i = 0; $i < $np; $i++) {
 		$rr = $yap_radius*$radius[$i];
@@ -497,25 +498,19 @@ sub OutParticleShear {
 
 
 sub OutParticleExtension {
-	$particlecolor = 3;
+	$particlecolor = 8;
 	printf OUT "@ 8\n";
 	$j = 0;
 	for ($ii = -3; $ii <= 3; $ii++) {
 		for ($jj = -3; $jj <= 3; $jj++) {
 			if ($pd_color) {
-				if ($particlecolor == 12){
-					$particlecolor = 3;
+				if ($particlecolor == 10){
+					$particlecolor = 8;
 				}
 				printf OUT "@ $particlecolor\n";
 				$particlecolor ++;
 			}
 			for ($i = 0; $i < $np; $i++) {
-				$rr = $yap_radius*$radius[$i];
-				printf OUT "r $rr\n";
-				#			if ($i == $np-1) {
-				#				printf OUT "@ 4\n";
-				#			}
-				
 				$pd_xshift = $Lx*$ax*($ii)+$Lz*$bx*($jj);
 				$pd_zshift = $Lx*$az*($ii)+$Lz*$bz*($jj);
 				$xx = $posx[$i] + $pd_xshift;
@@ -531,7 +526,6 @@ sub OutParticleExtension {
 				}
 				#if ($xx2> 0 && $xx2 < $Lx &&  $zz2 > 0 && $zz2 < $Lz){
 				if (abs($xx2)<$scale*$Lx && abs($zz2) < $scale*$Lz) {
-					
 					if ($phi6_data == 1) {
 						$op = 119*(1-$phi6abs[$i])+4;
 						$color = int $op;
@@ -545,6 +539,8 @@ sub OutParticleExtension {
 							}
 						}
 					}
+					$rr = $yap_radius*$radius[$i];
+					printf OUT "r $rr\n";
 					$posx2[$j] = $xx2;
 					$posy2[$j] = $posy[$i];
 					$posz2[$j] = $zz2;
@@ -670,14 +666,15 @@ sub OutString2{
 }
 
 sub OutString_width_nvec {
-	($i, $j, $nx, $ny, $nz, $w, $delta, $dx, $dz) = @_;
+	($i, $j, $nx, $ny, $nz, $gap, $w, $delta, $dx, $dz) = @_;
+	$rr =  $radius[$i] + $radius[$j] + $gap;
 	printf OUT "r $w\n";
 	$xi = $posx[$i] + $dx;
 	$yi = $posy[$i] - $delta- $ly2;
 	$zi = $posz[$i] + $dz;
-	$xj = $posx[$i] + 2*$nx + $dx;
+	$xj = $posx[$i] + $rr*$nx + $dx;
 	$yj = $posy[$i] - $delta- $ly2;
-	$zj = $posz[$i] + 2*$nz + $dz;
+	$zj = $posz[$i] + $rr*$nz + $dz;
 	if ($axisrotation) {
 		$xi2 = cos($magicangle)*$xi - sin($magicangle)*$zi;
 		$zi2 = sin($magicangle)*$xi + cos($magicangle)*$zi;
@@ -694,9 +691,9 @@ sub OutString_width_nvec {
 	$xi = $posx[$j] + $dx;
 	$yi = $posy[$j] - $delta- $ly2;
 	$zi = $posz[$j] + $dz;
-	$xj = $posx[$j] - 2*$nx + $dx;
+	$xj = $posx[$j] - $rr*$nx + $dx;
 	$yj = $posy[$j] - $delta- $ly2;
-	$zj = $posz[$j] - 2*$nz + $dz;
+	$zj = $posz[$j] - $rr*$nz + $dz;
 	if ($axisrotation) {
 		$xi2 = cos($magicangle)*$xi - sin($magicangle)*$zi;
 		$zi2 = sin($magicangle)*$xi + cos($magicangle)*$zi;
