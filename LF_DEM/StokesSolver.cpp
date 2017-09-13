@@ -1,5 +1,11 @@
 #include <fstream>
 #include "StokesSolver.h"
+#ifdef USE_GPU
+#include <cuda_runtime_api.h>
+#endif
+#ifndef CUDA_DEVICE
+#define CUDA_DEVICE 0
+#endif
 
 using namespace std;
 
@@ -683,7 +689,7 @@ void StokesSolver::solve(vector<vec3d> &velocity, vector<vec3d> &ang_velocity)
 		ang_velocity[i].z = solx[i6+5];
 	}
 #ifdef DEV
-#ifdef USE_CHOLMOD_LONG
+#ifdef USE_GPU
   cholmod_l_gpu_stats(&chol_c); // debug only
 #endif
 #endif
@@ -850,8 +856,12 @@ void StokesSolver::allocateRessources()
 	odbrows_table_mf.resize(mobile_particle_nb+1);
 	odbrows_table_ff.resize(fixed_particle_nb+1);
 	dblocks_ff.resize(fixed_particle_nb);
+#ifdef USE_GPU
+		cout << " Using CUDA Device : " << CUDA_DEVICE << endl;
+		if (cudaSetDevice(CUDA_DEVICE) != cudaSuccess) exit(1);
+#endif
 	CHOL_FUNC(start) (&chol_c);
-#ifdef USE_CHOLMOD_LONG
+#ifdef USE_GPU
 	chol_c.useGPU = 1;
 #endif
 	auto size_mm = 6*mobile_particle_nb;
