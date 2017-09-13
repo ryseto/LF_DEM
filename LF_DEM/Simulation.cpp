@@ -719,19 +719,17 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 
 vec3d Simulation::shiftUpCoordinate(double x, double y, double z)
 {
-	if (p.origin_zero_flow) {
-		z += 0.5*sys.get_lz();
-		if (z > 0.5*sys.get_lz()) {
-			x -= sys.shear_disp.x;
-			y -= sys.shear_disp.y;
-			if (x < -0.5*sys.get_lx()) {
-				x += sys.get_lx();
-			}
-			if (y < -0.5*sys.get_ly()) {
-				y += sys.get_ly();
-			}
-			z -= sys.get_lz();
+	z += 0.5*sys.get_lz();
+	if (z > 0.5*sys.get_lz()) {
+		x -= sys.shear_disp.x;
+		y -= sys.shear_disp.y;
+		if (x < -0.5*sys.get_lx()) {
+			x += sys.get_lx();
 		}
+		if (y < -0.5*sys.get_ly()) {
+			y += sys.get_ly();
+		}
+		z -= sys.get_lz();
 	}
 	return vec3d(x,y,z);
 }
@@ -795,17 +793,19 @@ void Simulation::outputParFileTxt()
 	outdata_int.setDefaultPrecision(output_precision);
 	vector<vec3d> pos(np);
 	vector<vec3d> vel(np);
-	if (!sys.ext_flow) {
-		for (int i=0; i<np; i++) {
-			pos[i] = shiftUpCoordinate(sys.position[i].x-0.5*sys.get_lx(),
-									   sys.position[i].y-0.5*sys.get_ly(),
-									   sys.position[i].z-0.5*sys.get_lz());
-		}
-	} else {
-		for (int i=0; i<np; i++) {
-			pos[i] = shiftUpCoordinate(sys.position[i].x,
-									   sys.position[i].y,
-									   sys.position[i].z);
+	if (p.origin_zero_flow) {
+		if (!sys.ext_flow) {
+			for (int i=0; i<np; i++) {
+				pos[i] = shiftUpCoordinate(sys.position[i].x-0.5*sys.get_lx(),
+										   sys.position[i].y-0.5*sys.get_ly(),
+										   sys.position[i].z-0.5*sys.get_lz());
+			}
+		} else {
+			for (int i=0; i<np; i++) {
+				pos[i] = shiftUpCoordinate(sys.position[i].x,
+										   sys.position[i].y,
+										   sys.position[i].z);
+			}
 		}
 	}
 	/* If the origin is shifted,

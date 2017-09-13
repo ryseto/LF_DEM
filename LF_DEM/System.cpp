@@ -680,11 +680,13 @@ void System::timeStepBoxing()
 				m--;
 			}
 			shear_disp.x = shear_disp.x-m*lx;
-			m = (int)(shear_disp.y/ly);
-			if (shear_disp.y < 0) {
-				m--;
+			if (!twodimension) {
+				m = (int)(shear_disp.y/ly);
+				if (shear_disp.y < 0) {
+					m--;
+				}
+				shear_disp.y = shear_disp.y-m*ly;
 			}
-			shear_disp.y = shear_disp.y-m*ly;
 		}
 	} else {
 		if (wall_rheology || p.simulation_mode == 31) {
@@ -697,6 +699,7 @@ void System::timeStepBoxing()
 	if (ext_flow) {
 		updateH(); // update cell axes
 	}
+
 	if (!ext_flow) {
 		/**** simple shear flow ****/
 		boxset.update();
@@ -1879,7 +1882,7 @@ void System::computeMaxNAVelocity()
 	//		if (sq_max_na_velocity < sq_na_ang_velocity) {
 	//			sq_max_na_velocity = sq_na_ang_velocity;
 	//		}
-	//	}	
+	//	}
 }
 
 void System::computeVelocityWithoutComponents()
@@ -2209,7 +2212,6 @@ void System::computeVelocities(bool divided_velocities)
 	 simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
 	 */
 	stokes_solver.resetRHS();
-
 	if (divided_velocities || control == stress) {
 		if (control == stress) {
 			set_shear_rate(1);

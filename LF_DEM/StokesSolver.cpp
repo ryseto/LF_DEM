@@ -646,7 +646,6 @@ void StokesSolver::compute_LTRHS(vector<vec3d> &F, vector<vec3d> &T)
 								 &chol_solveY_workspace,   // reusable workspace
 								 &chol_solveE_workspace,   // reusable workspace
 								 &chol_c);
-
 	auto size = chol_solution->nrow/6;
 	for (decltype(size) i=0; i<size; i++) {
 		auto i6 = 6*i;
@@ -856,13 +855,15 @@ void StokesSolver::allocateRessources()
 	odbrows_table_mf.resize(mobile_particle_nb+1);
 	odbrows_table_ff.resize(fixed_particle_nb+1);
 	dblocks_ff.resize(fixed_particle_nb);
-#ifdef USE_GPU
-		cout << " Using CUDA Device : " << CUDA_DEVICE << endl;
-		if (cudaSetDevice(CUDA_DEVICE) != cudaSuccess) exit(1);
-#endif
 	CHOL_FUNC(start) (&chol_c);
 #ifdef USE_GPU
-	chol_c.useGPU = 1;
+	if (cudaSetDevice(CUDA_DEVICE) == cudaSuccess) {
+		cout << " Using CUDA Device : " << CUDA_DEVICE << endl;
+		chol_c.useGPU = 1;
+	} else {
+		cout << " CUDA Device " << CUDA_DEVICE << " not found " << endl;
+		chol_c.useGPU = 0;
+	};
 #endif
 	auto size_mm = 6*mobile_particle_nb;
 	auto size_ff = 6*fixed_particle_nb;
@@ -952,8 +953,8 @@ void StokesSolver::factorizeResistanceMatrix()
 #endif
 		chol_L = CHOL_FUNC(analyze) (chol_res_matrix, &chol_c);
 	}
-
 	CHOL_FUNC(factorize) (chol_res_matrix, chol_L, &chol_c);
+
 	if (chol_c.status) {
 		// This should not happen if the matrix is sym-pos-def.
 		// If this is used, then it is most probably the sign
