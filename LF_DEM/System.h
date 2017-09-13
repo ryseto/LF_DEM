@@ -278,6 +278,8 @@ private:
 	std::map<std::string, StressComponent> stress_components;
 	std::map<std::string, VelocityComponent> na_velo_components;
 	Averager<Sym2Tensor> stress_avg;
+	Averager<double> rate_prop_shearstress_rate1_ave;
+	Averager<double> rate_indep_shearstress_ave;
 	double dt;
 	double avg_dt;
 	int avg_dt_nb;

@@ -193,7 +193,7 @@ void System::declareForceComponents()
 		force_components["repulsion"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setRepulsiveForceToParticle);
 	}
 	if (brownian) {
-		force_components["brownian"] = ForceComponent(np, RATE_DEPENDENT, torque, &System::setBrownianForceToParticle);// declared rate dependent for now
+		force_components["brownian"] = ForceComponent(np, RATE_INDEPENDENT, torque, &System::setBrownianForceToParticle);// declared rate dependent for now --> @@ Now time to try stress-controlled Brownian @@
 	}
 
 	/********** Force R_FU^{mf}*(U^f-U^f_inf)  *************/
@@ -418,6 +418,8 @@ void System::setupParameters()
 		if (brownian_dominated) {
 			double stress_avg_relaxation_parameter = 10*p.time_interval_output_data; // 0 --> no average
 			stress_avg.setRelaxationTime(stress_avg_relaxation_parameter);
+			rate_prop_shearstress_rate1_ave.setRelaxationTime(p.brownian_relaxation_time);
+			rate_indep_shearstress_ave.setRelaxationTime(p.brownian_relaxation_time);
 		}
 		if (pairwise_resistance && p.integration_method != 1) {
 			ostringstream error_str;
@@ -1157,7 +1159,7 @@ void System::timeStepMoveCorrector()
 
 bool System::keepRunning(double time_end, double strain_end)
 {
-	if (cumulated_strain > strain_end-1e-8 && strain_end>=0) {
+	if (cumulated_strain > strain_end-1e-8 && strain_end >= 0) {
 		return false;
 	}
 	if (get_time() > time_end-1e-8 && time_end>=0) {
@@ -1203,6 +1205,7 @@ void System::timeEvolution(double time_end, double strain_end)
 	avg_dt = 0;
 	avg_dt_nb = 0;
 	double dt_bak = -1;
+
 	while (keepRunning(time_end, strain_end)) {
 		retrim_ext_flow = false; // used in ext_flow simulation
 		if (!brownian && !p.fixed_dt) { // adaptative time-step for non-Brownian cases
@@ -1975,10 +1978,29 @@ void System::computeShearRate()
 	Sym2Tensor rate_prop_stress;
 	Sym2Tensor rate_indep_stress;
 	gatherStressesByRateDependencies(rate_prop_stress, rate_indep_stress);
-	double newtonian_viscosity = doubledot(rate_prop_stress, getEinfty()); // computed with rate=1, o here it is also the viscosity.
-	double newtonian_stress = target_stress - doubledot(rate_indep_stress, getEinfty());
-
-	set_shear_rate(newtonian_stress/newtonian_viscosity);
+	/*
+	 *  target_stress = rate_indep_stress_ + rate * rate_prop_stress_at_1
+	 *  rate = (target_stress - rate_indep_stress)/rate_prop_stress_at_1
+	 *  
+	 *  kappa = (Sigma.E)/(E.E)
+	 *  sigama = -p*I + 2 eta*E + ... = -p*I + kappa*E + ...
+	 *  E.E = 1/2 (if shear rate = 1)
+	 *  eta = kappa / 2 = (Sigma.E)/(2*E.E) = Sigma.E
+	 *  sigma_target = rate_prop_shearstress(rate=1)*(rate/1) + rate_indep_shearstress
+	 *  rate = (sigma_target - rate_indep_shearstress) / rate_prop_shearstress(rate=1)
+	 */
+	double rate_prop_shearstress_rate1 = doubledot(rate_prop_stress, getEinfty()); // computed with rate=1, o here it is also the viscosity.
+	double rate_indep_shearstress = doubledot(rate_indep_stress, getEinfty());
+	if (brownian) {
+		rate_prop_shearstress_rate1_ave.update(rate_prop_shearstress_rate1, get_time());
+		rate_indep_shearstress_ave.update(rate_indep_shearstress, get_time());
+		rate_prop_shearstress_rate1 = rate_prop_shearstress_rate1_ave.get();
+		rate_indep_shearstress = rate_indep_shearstress_ave.get();
+	}
+	if (rate_prop_shearstress_rate1 != 0) {
+		double rate = (target_stress-rate_indep_shearstress)/rate_prop_shearstress_rate1;
+		set_shear_rate(rate);
+	}
 	if (cumulated_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
 			set_shear_rate(init_shear_rate_limit);

@@ -215,6 +215,9 @@ void Simulation::setupOptionalSimulation(string indent)
 		case 21:
 			cout << indent << "Test simulation for shear reversibility" << endl;
 			break;
+		case 22:
+			cout << indent << "Test simulation for shear stop" << endl;
+			break;
 		case 31:
 			cout << indent << "Test simulation (wtest1), simple shear with walls" << endl;
 			sys.zero_shear = true;
@@ -298,7 +301,7 @@ void Simulation::simulationSteadyShear(string in_args,
 	setupEvents();
 	cout << indent << "Time evolution started" << endl << endl;
 	TimeKeeper tk = initTimeKeeper();
-
+	int cnt_tmp = 0; //@@temp
 	int binconf_counter = 0;
 	while (keepRunning()) {
 		timeEvolutionUntilNextOutput(tk);
@@ -316,6 +319,21 @@ void Simulation::simulationSteadyShear(string in_args,
 			now = time(NULL);
 			time_strain_1 = now;
 			timestep_1 = sys.get_total_num_timesteps();
+		}
+		if (p.simulation_mode == 22) {
+			if (sys.get_cumulated_strain() > 0.2) {
+				sys.zero_shear = true;
+				sys.set_shear_rate(0);
+				sys.setVelocityDifference();
+				sys.dt = 1e-5;
+				if (cnt_tmp == 0) {
+					cerr << "Stop shear" << endl;
+					tk.removeClock();
+					tk.addClock("data", LogClock(sys.get_time()+1e-4, sys.get_time()+1, 100, false));
+					tk.addClock("config", LogClock(sys.get_time()+1e-4, sys.get_time()+1, 100, false));
+					cnt_tmp ++;
+				}
+			}
 		}
 	}
 	now = time(NULL);
@@ -610,11 +628,18 @@ void Simulation::outputData()
 		// @@@ tentative ouptut for Pe = 0 simulation
 		// output xz component of stress tensor
 		viscous_material_function = sys.total_stress.elm[2];
+		inviscid_material_function0 = 0;
+		inviscid_material_function3 = 0;
 	}
 	outdata.entryData("time", "time", 1, sys.get_time());
 	if (sys.get_omega_wheel() == 0 || sys.wall_rheology == false) {
 		// Simple shear geometry
 		outdata.entryData("cumulated shear strain", "none", 1, sys.get_cumulated_strain());
+		/* Note: shear rate
+		 * shear rate = 2*sqrt(sys.getEinfty().selfdoubledot()/2);
+		 * - shear rate (\dot{\gamma}) in simple shear flow
+		 * - twice of extensional rate (\dot{\varepsilon})in extensional flow
+		 */
 		outdata.entryData("shear rate", "rate", 1, sys.get_shear_rate());
 	} else {
 		// Rotary Couette geometry

@@ -18,6 +18,8 @@
 #include <map>
 #include <set>
 #include <stdexcept>
+#include <iostream>
+#include <iomanip>
 
 class Clock
 {
@@ -51,6 +53,7 @@ public:
 		time_step = step;
 		first_non_zero = step;
 	}
+	
 	LinearClock(double start, double step, bool strain_units)
 	: Clock(strain_units)
 	{
@@ -62,8 +65,9 @@ public:
 			first_non_zero = step;
 		}
 	}
+	
 	virtual void tick() {
-		if (next_time!=0) {
+		if (next_time != 0) {
 			next_time += time_step;
 		} else {
 			next_time = first_non_zero;
@@ -83,8 +87,10 @@ public:
 		time_step = (log(stop) - log(start))/nb_step;
 		first_non_zero = start;
 	}
-	virtual void tick() {
-		if (next_time>0) {
+
+	virtual void tick()
+	{
+		if (next_time > 0) {
 			next_time = exp(log(next_time)+time_step);
 		} else {
 			next_time = first_non_zero;
@@ -108,6 +114,11 @@ public:
 		clocks[label] = std::unique_ptr<Clock>(new LogClock(c));
 	}
 
+	void removeClock()
+	{
+		clocks.clear();
+	}
+	
 	std::pair<double,std::string> nextTime() const
 	{
 		if (clocks.size() == 0) {

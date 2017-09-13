@@ -19,7 +19,7 @@ CUDA_HOME=/usr/
 # Libraries
 #
 # SuiteSparse library install folder
-SUITESPARSE_ROOT = /home/romain/src/SuiteSparse/
+SUITESPARSE_ROOT = /home/romain/usr/
 
 
 # Extra flags to the compiler, if needed (e.g. optimization flags)
@@ -40,3 +40,4 @@ Lapack_Linking_Flags = -llapack
 Extra_Linking_Flags = $(CUDA_HOME)/lib/x86_64-linux-gnu/libcudart.so
 # for OpenMP with g++
 # Extra_Linking_Flags = -fopenmp
+CXXFLAGS_EXTRA = -march=native -flto
