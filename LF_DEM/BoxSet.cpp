@@ -38,6 +38,7 @@ void BoxSet::init(double interaction_dist, System* sys_)
 		b->setPosition({0, 0, 0});
 		TopBottomBoxes.insert(b);
 		box_labels.push_back(b);
+		b->type = 1;
 	} else {
 		_is_boxed = true;
 		box_xsize = sys->get_lx()/x_box_nb;
@@ -118,7 +119,7 @@ void BoxSet::initExtFlow(double interaction_dist,
 	box_corners[1] = vec3d( 0.5*box_xsize, 0, -0.5*box_zsize);
 	box_corners[2] = vec3d( 0.5*box_xsize, 0,  0.5*box_zsize);
 	box_corners[3] = vec3d(-0.5*box_xsize, 0,  0.5*box_zsize);
-	
+
 	next_of_periodicimage.resize(4);
 	if (sys->twodimension) {
 		nb_movingneighbor_part = 3;

@@ -23,7 +23,8 @@ Simulation::Simulation():
 sys(System(p, events)),
 internal_unit_scales("hydro"),
 target_stress_input(0),
-diminish_output(false)
+diminish_output(false),
+timestep_1(0)
 {
 	unit_longname["h"] = "hydro";
 	unit_longname["r"] = "repulsion";
@@ -743,12 +744,12 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 	snapshot_header << sys.shear_disp.x << ' ';//3
 	snapshot_header << getRate() << ' ';//4
 	snapshot_header << target_stress_input << ' ';//5
-	snapshot_header << sys.get_cumulated_strain() << ' ';//6
-	snapshot_header << sys.get_cumulated_strain()-sys.strain_retrim+sys.strain_retrim_interval << ' ';//7
-	snapshot_header << sys.get_shear_rate() << ' '; //8
+	if (sys.ext_flow) {
+		snapshot_header << sys.get_cumulated_strain()-sys.strain_retrim+sys.strain_retrim_interval << ' ';
+	}
 	if (sys.ext_flow) {
 		if (sys.retrim_ext_flow) {
-			snapshot_header << "retrim" << ' '; //9
+			snapshot_header << "retrim" << ' ';
 		}
 	}
 	snapshot_header << endl;
@@ -756,19 +757,17 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 
 vec3d Simulation::shiftUpCoordinate(double x, double y, double z)
 {
-	if (p.origin_zero_flow) {
-		z += 0.5*sys.get_lz();
-		if (z > 0.5*sys.get_lz()) {
-			x -= sys.shear_disp.x;
-			y -= sys.shear_disp.y;
-			if (x < -0.5*sys.get_lx()) {
-				x += sys.get_lx();
-			}
-			if (y < -0.5*sys.get_ly()) {
-				y += sys.get_ly();
-			}
-			z -= sys.get_lz();
+	z += 0.5*sys.get_lz();
+	if (z > 0.5*sys.get_lz()) {
+		x -= sys.shear_disp.x;
+		y -= sys.shear_disp.y;
+		if (x < -0.5*sys.get_lx()) {
+			x += sys.get_lx();
 		}
+		if (y < -0.5*sys.get_ly()) {
+			y += sys.get_ly();
+		}
+		z -= sys.get_lz();
 	}
 	return vec3d(x,y,z);
 }
@@ -832,17 +831,19 @@ void Simulation::outputParFileTxt()
 	outdata_int.setDefaultPrecision(output_precision);
 	vector<vec3d> pos(np);
 	vector<vec3d> vel(np);
-	if (!sys.ext_flow) {
-		for (int i=0; i<np; i++) {
-			pos[i] = shiftUpCoordinate(sys.position[i].x-0.5*sys.get_lx(),
-									   sys.position[i].y-0.5*sys.get_ly(),
-									   sys.position[i].z-0.5*sys.get_lz());
-		}
-	} else {
-		for (int i=0; i<np; i++) {
-			pos[i] = shiftUpCoordinate(sys.position[i].x,
-									   sys.position[i].y,
-									   sys.position[i].z);
+	if (p.origin_zero_flow) {
+		if (!sys.ext_flow) {
+			for (int i=0; i<np; i++) {
+				pos[i] = shiftUpCoordinate(sys.position[i].x-0.5*sys.get_lx(),
+										   sys.position[i].y-0.5*sys.get_ly(),
+										   sys.position[i].z-0.5*sys.get_lz());
+			}
+		} else {
+			for (int i=0; i<np; i++) {
+				pos[i] = shiftUpCoordinate(sys.position[i].x,
+										   sys.position[i].y,
+										   sys.position[i].z);
+			}
 		}
 	}
 	/* If the origin is shifted,

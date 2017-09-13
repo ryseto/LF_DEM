@@ -14,6 +14,8 @@ install_dir = ~/bin/
 # C++ compiler
 CXX = g++
 
+CUDA_HOME=/usr/
+
 # Libraries
 #
 # SuiteSparse library install folder
@@ -21,10 +23,9 @@ SUITESPARSE_ROOT = /home/romain/usr/
 
 
 # Extra flags to the compiler, if needed (e.g. optimization flags)
-CXXFLAGS_EXTRA = -L${CUDA_PATH}/lib -lcuda -L/usr/lib64/nvidia/
+CXXFLAGS_EXTRA =  -DUSE_GPU=1
 Cholmod_GPU_libpath = $(SUITESPARSE_ROOT)/lib/
 Cholmod_GPU = $(Cholmod_GPU_libpath)libSuiteSparse_GPURuntime.so $(Cholmod_GPU_libpath)libGPUQREngine.so
-
 
 #======== Linking ==================
 
@@ -36,7 +37,7 @@ Blas_Linking_Flags = -lopenblas
 Lapack_Linking_Flags = -llapack
 
 # Extra linking here, if needed
-Extra_Linking_Flags =
+Extra_Linking_Flags = $(CUDA_HOME)/lib/x86_64-linux-gnu/libcudart.so
 # for OpenMP with g++
 # Extra_Linking_Flags = -fopenmp
 CXXFLAGS_EXTRA = -march=native -flto

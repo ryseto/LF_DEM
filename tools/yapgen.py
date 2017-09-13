@@ -12,29 +12,10 @@ from __future__ import print_function
 import sys
 import numpy as np
 import argparse
-import lfdem_file as lf
+import clfdem_file as clff
 import lfdem_utils as lfu
 import dict_utils as du
 import pyaplot as pyp
-
-
-def read_data(posfile, intfile):
-    """
-    Purpose:
-        Read a par_ and int_ file.
-
-    Returning values:
-        pos_frames: a list of snapshots from the par_ file
-        int_frames: a list of snapshots from the int_ file
-        strains: the associated strains
-        shear_rates: the associated strain rates
-    """
-    pos_frames, strains, shear_rates, dumb, meta_pos =\
-        lf.read_snapshot_file(posfile)
-
-    int_frames, strains, shear_rates, dumb, meta_int =\
-        lf.read_snapshot_file(intfile)
-    return pos_frames, int_frames, strains, shear_rates, meta_pos, meta_int
 
 
 def filter_interactions_crossing_PBC(f, r1r2, cutoff=4):
@@ -161,17 +142,19 @@ def snaps2yap(pos_fname,
               f_chain_thresh=None):
 
     forces_fname = pos_fname.replace("par_", "int_")
-    positions, forces, strains, shear_rates, meta_pos, meta_int =\
-        read_data(pos_fname, forces_fname)
-    pcols = lf.convert_columndef_to_indices(meta_pos['column def'])
-    icols = lf.convert_columndef_to_indices(meta_int['column def'])
+    par_f = clff.snapshot_file(pos_fname)
+    int_f = clff.snapshot_file(forces_fname)
 
-    nb_of_frames = len(strains)
-    is2d = meta_pos['Ly'] == 0
+
+    pcols = par_f.column_def()
+    icols = int_f.column_def()
+
+    is2d = par_f.meta_data()['Ly'] == 0
     i = 0
-    for f, p, strain, rate in zip(forces, positions, strains, shear_rates):
+    for frame_par, frame_int in zip(par_f, int_f):
         yap_out, f_factor =\
-            interactions_bonds_yaparray(f, p, icols, pcols,
+            interactions_bonds_yaparray(frame_int[1], frame_par[1],
+                                        icols, pcols,
                                         f_factor=f_factor,
                                         f_chain_thresh=f_chain_thresh,
                                         layer_contacts=1,
@@ -187,10 +170,10 @@ def snaps2yap(pos_fname,
             pos_slice = pcols['position (x, y, z)']
         else:
             pos_slice = slice(pcols['position x'], pcols['position z']+1)
-        pos = p[:, pos_slice].astype(np.float)
-        rad = p[:, pcols['radius']].astype(np.float)
+        pos = frame_par[1][:, pos_slice].astype(np.float)
+        rad = frame_par[1][:, pcols['radius']].astype(np.float)
         if is2d:
-            angle = p[:, pcols['angle']].astype(np.float)
+            angle = frame_par[1][:, pcols['angle']].astype(np.float)
             particles, crosses = particles_yaparray(pos, rad, angles=angle)
             yap_out = np.row_stack((yap_out, particles))
             yap_out = pyp.add_color_switch(yap_out, 1)
@@ -201,9 +184,9 @@ def snaps2yap(pos_fname,
         # display bounding box
         yap_out = pyp.add_layer_switch(yap_out, 4)
         yap_out = pyp.add_color_switch(yap_out, 0)
-        lx2 = meta_pos['Lx']/2
-        ly2 = meta_pos['Ly']/2
-        lz2 = meta_pos['Lz']/2
+        lx2 = par_f.meta_data()['Lx']/2
+        ly2 = par_f.meta_data()['Ly']/2
+        lz2 = par_f.meta_data()['Lz']/2
         if not is2d:
             yap_out = pyp.add_cmd(yap_out, 'l', cuboid(lx2, ly2, lz2))
         else:
@@ -212,6 +195,7 @@ def snaps2yap(pos_fname,
         # display strain
         yap_out = pyp.add_layer_switch(yap_out, 5)
         yap_out = pyp.add_color_switch(yap_out, 1)
+        strain = frame_par[0]['curvilinear strain']
         yap_out = np.row_stack((yap_out,
                                 ['t', str(10.), str(0.), str(10.),
                                     'strain='+str(strain), '', '']))
@@ -220,7 +204,7 @@ def snaps2yap(pos_fname,
         np.savetxt(yap_file, yap_out, fmt="%s "*7)
         yap_file.write("\n".encode('utf-8'))
         i += 1
-        out_str = "\r frame " + str(i) + "/"+str(nb_of_frames) +\
+        out_str = "\r frame " + str(i) +\
                   " - " + yap_filename + \
                   "   [force factor " + str(f_factor) + "]"
         try:

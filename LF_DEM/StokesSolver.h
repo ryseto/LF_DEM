@@ -20,8 +20,7 @@
 #include "MatrixBlocks.h"
 #include "cholmod.h"
 // uncomment below to use long integer cholmod (necessary for GPU)
-// #define USE_CHOLMOD_LONG 1
-#ifndef USE_CHOLMOD_LONG
+#ifndef USE_GPU
 #define CHOL_FUNC(NAME) cholmod_ ## NAME
 typedef int chol_int;
 #else
