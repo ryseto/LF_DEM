@@ -304,8 +304,10 @@ void Simulation::simulationSteadyShear(string in_args,
 	int cnt_tmp = 0; //@@temp
 	int binconf_counter = 0;
 	while (keepRunning()) {
+		if (p.simulation_mode == 22) {
+			stopShearing(tk, cnt_tmp);
+		}
 		timeEvolutionUntilNextOutput(tk);
-
 		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_cumulated_strain());
 		if (sys.retrim_ext_flow) {
 			output_events.insert("data");
@@ -319,21 +321,6 @@ void Simulation::simulationSteadyShear(string in_args,
 			now = time(NULL);
 			time_strain_1 = now;
 			timestep_1 = sys.get_total_num_timesteps();
-		}
-		if (p.simulation_mode == 22) {
-			if (sys.get_cumulated_strain() > 0.2) {
-				sys.zero_shear = true;
-				sys.set_shear_rate(0);
-				sys.setVelocityDifference();
-				sys.dt = 1e-5;
-				if (cnt_tmp == 0) {
-					cerr << "Stop shear" << endl;
-					tk.removeClock();
-					tk.addClock("data", LogClock(sys.get_time()+1e-4, sys.get_time()+1, 100, false));
-					tk.addClock("config", LogClock(sys.get_time()+1e-4, sys.get_time()+1, 100, false));
-					cnt_tmp ++;
-				}
-			}
 		}
 	}
 	now = time(NULL);
@@ -352,6 +339,30 @@ void Simulation::simulationSteadyShear(string in_args,
 	cout << indent << "Time evolution done" << endl << endl;
 }
 
+void Simulation::stopShearing(TimeKeeper &tk, int &cnt_tmp)
+{
+	if (sys.get_cumulated_strain() > 1) {
+		sys.zero_shear = true;
+		sys.set_shear_rate(0);
+		if (!sys.ext_flow) {
+			// simple shear
+			sys.setVelocityDifference();
+		} else {
+			// extensional flow
+			sys.vel_difference.reset();
+			sys.grad_u.set_zero();
+		}
+		if (cnt_tmp == 0) {
+			cerr << "Stop shear" << endl;
+			tk.removeClock();
+			tk.addClock("data", LogClock(sys.get_time()+1e-4, sys.get_time()+1, 100, false));
+			tk.addClock("config", LogClock(sys.get_time()+1e-4, sys.get_time()+1, 100, false));
+			cnt_tmp ++;
+		}
+	}
+}
+
+		
 void Simulation::simulationInverseYield(string in_args,
 										vector<string>& input_files,
 										bool binary_conf,
@@ -627,7 +638,8 @@ void Simulation::outputData()
 	} else {
 		// @@@ tentative ouptut for Pe = 0 simulation
 		// output xz component of stress tensor
-		viscous_material_function = sys.total_stress.elm[2];
+		//viscous_material_function = sys.total_stress.elm[2];
+		viscous_material_function = doubledot(sys.total_stress, sys.getEhatinfity())/ sys.getEhatinfity().selfdoubledot();
 		inviscid_material_function0 = 0;
 		inviscid_material_function3 = 0;
 	}

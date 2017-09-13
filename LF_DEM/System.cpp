@@ -1695,16 +1695,18 @@ void System::setDashpotForceToParticle(vector<vec3d> &force,
 	for (auto &t: torque) {
 		t.reset();
 	}
-	vec3d GEi, GEj, HEi, HEj;
-	unsigned int i, j;
-	for (const auto &inter: interaction) {
-		if (inter.contact.is_active() && inter.contact.dashpot.is_active()) {
-			std::tie(i, j) = inter.get_par_num();
-			std::tie(GEi, GEj, HEi, HEj) = inter.contact.dashpot.getRFU_Uinf(u_inf[i], u_inf[j], omega_inf);
-			force[i] += GEi;
-			force[j] += GEj;
-			torque[i] += HEi;
-			torque[j] += HEj;
+	if (!zero_shear) {
+		vec3d GEi, GEj, HEi, HEj;
+		unsigned int i, j;
+		for (const auto &inter: interaction) {
+			if (inter.contact.is_active() && inter.contact.dashpot.is_active()) {
+				std::tie(i, j) = inter.get_par_num();
+				std::tie(GEi, GEj, HEi, HEj) = inter.contact.dashpot.getRFU_Uinf(u_inf[i], u_inf[j], omega_inf);
+				force[i] += GEi;
+				force[j] += GEj;
+				torque[i] += HEi;
+				torque[j] += HEj;
+			}
 		}
 	}
 }
@@ -1718,14 +1720,16 @@ void System::setHydroForceToParticle_squeeze(vector<vec3d> &force,
 	for (auto &t: torque) {
 		t.reset();
 	}
-	vec3d GEi, GEj;
-	unsigned int i, j;
-	for (const auto &inter: interaction) {
-		if (inter.lubrication.is_active()) {
-			std::tie(i, j) = inter.get_par_num();
-			std::tie(GEi, GEj) = inter.lubrication.calcGE_squeeze(E_infinity); // G*E_\infty term
-			force[i] += GEi;
-			force[j] += GEj;
+	if (!zero_shear) {
+		vec3d GEi, GEj;
+		unsigned int i, j;
+		for (const auto &inter: interaction) {
+			if (inter.lubrication.is_active()) {
+				std::tie(i, j) = inter.get_par_num();
+				std::tie(GEi, GEj) = inter.lubrication.calcGE_squeeze(E_infinity); // G*E_\infty term
+				force[i] += GEi;
+				force[j] += GEj;
+			}
 		}
 	}
 }
@@ -1739,16 +1743,18 @@ void System::setHydroForceToParticle_squeeze_tangential(vector<vec3d> &force,
 	for (auto &t: torque) {
 		t.reset();
 	}
-	vec3d GEi, GEj, HEi, HEj;
-	unsigned int i, j;
-	for (const auto &inter: interaction) {
-		if (inter.lubrication.is_active()) {
-			std::tie(i, j) = inter.get_par_num();
-			std::tie(GEi, GEj, HEi, HEj) = inter.lubrication.calcGEHE_squeeze_tangential(E_infinity); // G*E_\infty term, no gamma dot
-			force[i] += GEi;
-			force[j] += GEj;
-			torque[i] += HEi;
-			torque[j] += HEj;
+	if (!zero_shear) {
+		vec3d GEi, GEj, HEi, HEj;
+		unsigned int i, j;
+		for (const auto &inter: interaction) {
+			if (inter.lubrication.is_active()) {
+				std::tie(i, j) = inter.get_par_num();
+				std::tie(GEi, GEj, HEi, HEj) = inter.lubrication.calcGEHE_squeeze_tangential(E_infinity); // G*E_\infty term, no gamma dot
+				force[i] += GEi;
+				force[j] += GEj;
+				torque[i] += HEi;
+				torque[j] += HEj;
+			}
 		}
 	}
 }
@@ -2385,7 +2391,7 @@ void System::displacement(int i, const vec3d& dr)
 		/**** extensional flow ****/
 		bool pd_transport = false;
 		periodizeExtFlow(i, pd_transport);
-		if (pd_transport) {
+		if (!zero_shear && pd_transport) {
 			velocity[i] -= u_inf[i];
 			u_inf[i] = grad_u*position[i];
 			velocity[i] +=  u_inf[i];

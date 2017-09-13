@@ -159,6 +159,8 @@ public:
 										  std::string keyword,
 										  std::string value_str,
 										  double* value_ptr);
+	void stopShearing(TimeKeeper &tk, int &cnt_tmp); //simulation mode 22
+
 	/*
 	 * For outputs
 	 */

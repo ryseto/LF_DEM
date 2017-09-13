@@ -387,7 +387,7 @@ sub OutYaplotData{
 	## visualize force chain network
 	if (1) {
 		printf OUT "y 4\n";
-		printf OUT "@ 126\n";
+		printf OUT "@ 7\n";
 		printf "int = $num_interaction\n";
 		for ($k = 0; $k < $num_interaction; $k ++) {
 			$forcetmp = $force[$k];
