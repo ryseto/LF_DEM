@@ -749,11 +749,16 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 	snapshot_header << getRate() << ' ';//4
 	snapshot_header << target_stress_input << ' ';//5
 	if (sys.ext_flow) {
-		snapshot_header << sys.get_cumulated_strain() << ' ';//6
-		snapshot_header << sys.get_cumulated_strain()-sys.strain_retrim+sys.strain_retrim_interval << ' ';
-		snapshot_header << sys.get_shear_rate() << ' ';
+		/* The following snapshot data is required to
+		 * construct visualization file for extensional flow simulation in the script
+		 * generateYaplotFile_extflow.pl
+		 */
+		double strain_retrimed = sys.strain_retrim-sys.strain_retrim_interval;
+		snapshot_header << sys.get_cumulated_strain()-strain_retrimed << ' '; //6
 		if (sys.retrim_ext_flow) {
-			snapshot_header << "retrim" << ' ';
+			snapshot_header << 1 << ' '; // 7
+		} else {
+			snapshot_header << 0 << ' '; // 7
 		}
 	}
 	snapshot_header << endl;

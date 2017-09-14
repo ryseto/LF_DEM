@@ -36,7 +36,6 @@ GetOptions(
 'reversibility' => \$reversibility_test,
 'monodisperse' => \$monodisperse);
 
-
 printf "force_factor = $force_factor\n";
 printf "output_interval = $output_interval\n";
 printf "xz_shift = $xz_shift\n";
@@ -158,14 +157,7 @@ sub InParticles {
 	$radius_max = 0;
 	$line = <IN_particle>;
 	if (defined $line) {
-		# 1 sys.get_shear_strain()
-		# 2 sys.shear_disp
-		# 3 getRate()
-		# 4 target_stress_input
-		# 5 sys.get_time()
-		# 6 sys.angle_external_magnetic_field
-		#
-		($buf, $shear_strain, $shear_disp, $shear_rate, $shear_stress, $time_, $timeper, $epsilondot) = split(/\s+/, $line);
+		($buf, $shear_strain, $shear_disp, $epsilondot, $shear_stress, $timeper) = split(/\s+/, $line);
 		if ($buf ne '#') {
 			printf "InParticles  $buf\n";
 			printf "line = $line";
@@ -173,7 +165,6 @@ sub InParticles {
 		}
 		printf "ed = $epsilondot \n";
 		printf "$flow_type\n";
-		printf "$time_\n";
 		for ($i = 0; $i < $np; $i ++){
 			$line = <IN_particle>;
 			if ($output == 1) {
