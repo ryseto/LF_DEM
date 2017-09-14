@@ -749,9 +749,9 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 	snapshot_header << getRate() << ' ';//4
 	snapshot_header << target_stress_input << ' ';//5
 	if (sys.ext_flow) {
+		snapshot_header << sys.get_cumulated_strain() << ' ';//6
 		snapshot_header << sys.get_cumulated_strain()-sys.strain_retrim+sys.strain_retrim_interval << ' ';
-	}
-	if (sys.ext_flow) {
+		snapshot_header << sys.get_shear_rate() << ' ';
 		if (sys.retrim_ext_flow) {
 			snapshot_header << "retrim" << ' ';
 		}
