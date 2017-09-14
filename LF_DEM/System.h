@@ -515,7 +515,12 @@ private:
 	{
 		return E_infinity;
 	}
-
+	
+	Sym2Tensor getEhatinfity()
+	{
+		return Ehat_infinity;
+	}
+	
 	void setShearDirection(double theta_shear);
 	
 	void setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty);

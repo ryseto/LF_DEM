@@ -41,7 +41,7 @@ public:
 			elm[i] = a;
 		}
 	}
-
+	
 	Sym2Tensor(std::initializer_list<double> il)
 	{
 		std::copy(il.begin(), il.end(), elm);
@@ -81,7 +81,20 @@ public:
 		}
 		return *this;
 	}
+	
+	void set(double elm_xx, double elm_xy, double elm_xz,
+			 double elm_yz, double elm_yy, double elm_zz)
+	{
+	
+		elm[0] = elm_xx;
+		elm[1] = elm_xy;
+		elm[2] = elm_xz;
+		elm[3] = elm_yz;
+		elm[4] = elm_yy;
+		elm[5] = elm_zz;
+	}
 
+	
 	void reset() {
 		for (int i=0; i<6; i++) {
 			elm[i] = 0;

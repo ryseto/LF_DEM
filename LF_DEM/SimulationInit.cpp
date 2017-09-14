@@ -599,9 +599,9 @@ void Simulation::setupSimulation(string in_args,
 			/* simple shear flow
 			 * shear_rate = 2*dot_epsilon
 			 */
-			Sym2Tensor Einf_common = {0, 0, dimensionless_deformation_rate, 0, 0, 0};
-			vec3d Omegainf(0, dimensionless_deformation_rate, 0);
-			sys.setImposedFlow(Einf_common, Omegainf);
+			Einf_base.set(0, 0, dimensionless_deformation_rate, 0, 0, 0);
+			Omegainf_base.set(0, dimensionless_deformation_rate, 0);
+			sys.setImposedFlow(Einf_base, Omegainf_base);
 			stress_basis_0 = {-dimensionless_deformation_rate/2, 0, 0, 0,
 				dimensionless_deformation_rate, -dimensionless_deformation_rate/2};
 			stress_basis_3 = {-dimensionless_deformation_rate, 0, 0, 0, 0, dimensionless_deformation_rate};
@@ -617,10 +617,9 @@ void Simulation::setupSimulation(string in_args,
 			rotation.set_rotation(-p.magic_angle, 'y');
 			rotation_inv.set_rotation(p.magic_angle, 'y');
 			sys.grad_u = rotation_inv*grad_u_orig*rotation;
-			Sym2Tensor Einf_common;
-			Einf_common.setSymmetrize(sys.grad_u);
-			vec3d Omegainf(0, 0, 0);
-			sys.setImposedFlow(Einf_common, Omegainf);
+			Einf_base.setSymmetrize(sys.grad_u);
+			Omegainf_base.set(0, 0, 0);
+			sys.setImposedFlow(Einf_base, Omegainf_base);
 			matrix mat_stress_basis_0(-dimensionless_deformation_rate/2, 0, 0,
 									  0, dimensionless_deformation_rate, 0,
 									  0, 0, -dimensionless_deformation_rate/2);
