@@ -817,8 +817,8 @@ void Simulation::outputParFileTxt()
 	}
 	outdata_par.setDefaultPrecision(output_precision);
 	outdata_int.setDefaultPrecision(output_precision);
-	vector<vec3d> pos(np);
-	vector<vec3d> vel(np);
+	auto pos = sys.position;
+	auto vel = sys.velocity;
 	if (p.origin_zero_flow) {
 		if (!sys.ext_flow) {
 			for (int i=0; i<np; i++) {
@@ -838,7 +838,6 @@ void Simulation::outputParFileTxt()
 	 * we need to change the velocities of particles as well.
 	 */
 	for (int i=0; i<np; i++) {
-		vel[i] = sys.velocity[i];
 		if (p.origin_zero_flow) {
 			if (pos[i].z < 0) {
 				vel[i] -= sys.vel_difference;
