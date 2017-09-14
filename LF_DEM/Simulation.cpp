@@ -347,6 +347,9 @@ void Simulation::stopShearing(TimeKeeper &tk, int &cnt_tmp)
 		sys.set_shear_rate(0);
 		if (!sys.ext_flow) {
 			// simple shear
+			Sym2Tensor Einf_common = {0, 0, 0, 0, 0, 0};
+			vec3d Omegainf(0, 0, 0);
+			sys.setImposedFlow(Einf_common, Omegainf);
 			sys.setVelocityDifference();
 		} else {
 			// extensional flow
@@ -634,13 +637,14 @@ void Simulation::outputData()
 	if (sr != 0) {
 		// generalized viscosity kappa (= 2*eta)
 		viscous_material_function   = doubledot(sys.total_stress, sys.getEinfty())/ sys.getEinfty().selfdoubledot();
+		cerr << "stress = " << sys.total_stress.elm[2] << ' ' << 0.5*viscous_material_function << endl;
 		inviscid_material_function0 = doubledot(sys.total_stress, stress_basis_0) / stress_basis_0.selfdoubledot();
 		inviscid_material_function3 = doubledot(sys.total_stress, stress_basis_3) / stress_basis_3.selfdoubledot();
 	} else {
 		// @@@ tentative ouptut for Pe = 0 simulation
 		// output xz component of stress tensor
 		//viscous_material_function = sys.total_stress.elm[2];
-		viscous_material_function = doubledot(sys.total_stress, sys.getEhatinfity())/ sys.getEhatinfity().selfdoubledot();
+		viscous_material_function = doubledot(sys.total_stress, Einf_base)/ Einf_base.selfdoubledot();
 		inviscid_material_function0 = 0;
 		inviscid_material_function3 = 0;
 	}
@@ -757,17 +761,19 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 
 vec3d Simulation::shiftUpCoordinate(double x, double y, double z)
 {
-	z += 0.5*sys.get_lz();
-	if (z > 0.5*sys.get_lz()) {
-		x -= sys.shear_disp.x;
-		y -= sys.shear_disp.y;
-		if (x < -0.5*sys.get_lx()) {
-			x += sys.get_lx();
+	if (p.origin_zero_flow) {
+		z += 0.5*sys.get_lz();
+		if (z > 0.5*sys.get_lz()) {
+			x -= sys.shear_disp.x;
+			y -= sys.shear_disp.y;
+			if (x < -0.5*sys.get_lx()) {
+				x += sys.get_lx();
+			}
+			if (y < -0.5*sys.get_ly()) {
+				y += sys.get_ly();
+			}
+			z -= sys.get_lz();
 		}
-		if (y < -0.5*sys.get_ly()) {
-			y += sys.get_ly();
-		}
-		z -= sys.get_lz();
 	}
 	return vec3d(x,y,z);
 }
@@ -831,19 +837,17 @@ void Simulation::outputParFileTxt()
 	outdata_int.setDefaultPrecision(output_precision);
 	vector<vec3d> pos(np);
 	vector<vec3d> vel(np);
-	if (p.origin_zero_flow) {
-		if (!sys.ext_flow) {
-			for (int i=0; i<np; i++) {
-				pos[i] = shiftUpCoordinate(sys.position[i].x-0.5*sys.get_lx(),
-										   sys.position[i].y-0.5*sys.get_ly(),
-										   sys.position[i].z-0.5*sys.get_lz());
-			}
-		} else {
-			for (int i=0; i<np; i++) {
-				pos[i] = shiftUpCoordinate(sys.position[i].x,
-										   sys.position[i].y,
-										   sys.position[i].z);
-			}
+	if (!sys.ext_flow) {
+		for (int i=0; i<np; i++) {
+			pos[i] = shiftUpCoordinate(sys.position[i].x-0.5*sys.get_lx(),
+									   sys.position[i].y-0.5*sys.get_ly(),
+									   sys.position[i].z-0.5*sys.get_lz());
+		}
+	} else {
+		for (int i=0; i<np; i++) {
+			pos[i] = shiftUpCoordinate(sys.position[i].x,
+									   sys.position[i].y,
+									   sys.position[i].z);
 		}
 	}
 	/* If the origin is shifted,
@@ -868,6 +872,7 @@ void Simulation::outputParFileTxt()
 	outdata_par.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 	outdata_par.setUnit(output_unit_scales);
 	auto na_disp = sys.getNonAffineDisp();
+	
 	for (int i=0; i<sys.get_np(); i++) {
 		outdata_par.entryData("particle index", "none", 1, i);
 		outdata_par.entryData("radius", "none", 1, sys.radius[i]);

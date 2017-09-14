@@ -105,6 +105,11 @@ public:
 		}
 	}
 
+	void set(double elm_x, double elm_y, double elm_z)
+	{
+		x = elm_x, y = elm_y, z = elm_z;
+	}
+
 	void reset()
 	{
 		x = 0, y = 0, z = 0;
