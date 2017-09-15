@@ -49,23 +49,23 @@ public:
 	LinearClock(double step, bool strain_units)
 	: Clock(strain_units)
 	{
-		next_time = 0;
+		next_time = step;
 		time_step = step;
 		first_non_zero = step;
 	}
 	
-	LinearClock(double start, double step, bool strain_units)
-	: Clock(strain_units)
-	{
-		next_time = 0;
-		time_step = step;
-		if (start != 0) {
-			first_non_zero = start;
-		} else {
-			first_non_zero = step;
-		}
-	}
-	
+//	LinearClock(double start, double step, bool strain_units)
+//	: Clock(strain_units)
+//	{
+//		next_time = start;
+//		time_step = step;
+//		if (start != 0) {
+//			first_non_zero = start;
+//		} else {
+//			first_non_zero = step;
+//		}
+//	}
+
 	virtual void tick() {
 		if (next_time != 0) {
 			next_time += time_step;
@@ -83,7 +83,7 @@ public:
 	LogClock(double start, double stop, double nb_step, bool strain_units)
 	: Clock(strain_units)
 	{
-		next_time = 0; // to allow for init actions
+		next_time = start; // to allow for init actions
 		time_step = (log(stop) - log(start))/nb_step;
 		first_non_zero = start;
 	}

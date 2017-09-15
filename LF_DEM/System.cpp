@@ -1205,8 +1205,11 @@ void System::timeEvolution(double time_end, double strain_end)
 	avg_dt = 0;
 	avg_dt_nb = 0;
 	double dt_bak = -1;
-
-	while (keepRunning(time_end, strain_end)) {
+	double loop_time_adjust = 0;
+	if (p.fixed_dt == true) {
+		loop_time_adjust = dt;
+	}
+	while (keepRunning(time_end - loop_time_adjust, strain_end - loop_time_adjust)) {
 		retrim_ext_flow = false; // used in ext_flow simulation
 		if (!brownian && !p.fixed_dt) { // adaptative time-step for non-Brownian cases
 			adaptTimeStep(time_end, strain_end);

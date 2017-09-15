@@ -342,7 +342,13 @@ void Simulation::simulationSteadyShear(string in_args,
 
 void Simulation::stopShearing(TimeKeeper &tk, int &cnt_tmp)
 {
-	if (sys.get_cumulated_strain() > 1) {
+	double strain_to_stop;
+	if (!sys.ext_flow) {
+		strain_to_stop = 2;
+	} else {
+		strain_to_stop = sys.strain_retrim_interval;
+	}
+	if (sys.get_cumulated_strain() >= strain_to_stop) {
 		sys.zero_shear = true;
 		sys.set_shear_rate(0);
 		if (!sys.ext_flow) {
@@ -357,10 +363,10 @@ void Simulation::stopShearing(TimeKeeper &tk, int &cnt_tmp)
 			sys.grad_u.set_zero();
 		}
 		if (cnt_tmp == 0) {
-			cerr << "Stop shear" << endl;
+			cerr << "Stop shear at " << sys.get_cumulated_strain() << endl;
 			tk.removeClock();
-			tk.addClock("data", LogClock(sys.get_time()+1e-4, sys.get_time()+1, 100, false));
-			tk.addClock("config", LogClock(sys.get_time()+1e-4, sys.get_time()+1, 100, false));
+			tk.addClock("data", LogClock(sys.get_time()+sys.dt, sys.get_time()+1, 100, false));
+			tk.addClock("config", LogClock(sys.get_time()+sys.dt, sys.get_time()+1, 100, false));
 			cnt_tmp ++;
 		}
 	}
