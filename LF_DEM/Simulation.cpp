@@ -348,7 +348,7 @@ void Simulation::stopShearing(TimeKeeper &tk, int &cnt_tmp)
 	} else {
 		strain_to_stop = sys.strain_retrim_interval;
 	}
-	if (sys.get_cumulated_strain() >= strain_to_stop) {
+	if (sys.get_cumulated_strain() >= strain_to_stop-1e-8) {
 		sys.zero_shear = true;
 		sys.set_shear_rate(0);
 		if (!sys.ext_flow) {
@@ -643,7 +643,6 @@ void Simulation::outputData()
 	if (sr != 0) {
 		// generalized viscosity kappa (= 2*eta)
 		viscous_material_function   = doubledot(sys.total_stress, sys.getEinfty())/ sys.getEinfty().selfdoubledot();
-		cerr << "stress = " << sys.total_stress.elm[2] << ' ' << 0.5*viscous_material_function << endl;
 		inviscid_material_function0 = doubledot(sys.total_stress, stress_basis_0) / stress_basis_0.selfdoubledot();
 		inviscid_material_function3 = doubledot(sys.total_stress, stress_basis_3) / stress_basis_3.selfdoubledot();
 	} else {
