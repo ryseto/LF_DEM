@@ -302,11 +302,13 @@ void Simulation::simulationSteadyShear(string in_args,
 	setupEvents();
 	cout << indent << "Time evolution started" << endl << endl;
 	TimeKeeper tk = initTimeKeeper();
-	int cnt_tmp = 0; //@@temp
 	int binconf_counter = 0;
 	while (keepRunning()) {
 		if (p.simulation_mode == 22) {
-			stopShearing(tk, cnt_tmp);
+			stopShearing(tk);
+			if (sys.get_time() > 20) {
+				break;
+			}
 		}
 		timeEvolutionUntilNextOutput(tk);
 		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_cumulated_strain());
@@ -340,8 +342,9 @@ void Simulation::simulationSteadyShear(string in_args,
 	cout << indent << "Time evolution done" << endl << endl;
 }
 
-void Simulation::stopShearing(TimeKeeper &tk, int &cnt_tmp)
+void Simulation::stopShearing(TimeKeeper &tk)
 {
+	static bool initial_shearing = true;
 	double strain_to_stop;
 	if (!sys.ext_flow) {
 		strain_to_stop = 2;
@@ -362,12 +365,12 @@ void Simulation::stopShearing(TimeKeeper &tk, int &cnt_tmp)
 			sys.vel_difference.reset();
 			sys.grad_u.set_zero();
 		}
-		if (cnt_tmp == 0) {
+		if (initial_shearing) {
 			cerr << "Stop shear at " << sys.get_cumulated_strain() << endl;
 			tk.removeClock();
 			tk.addClock("data", LogClock(sys.get_time()+sys.dt, sys.get_time()+1, 100, false));
 			tk.addClock("config", LogClock(sys.get_time()+sys.dt, sys.get_time()+1, 100, false));
-			cnt_tmp ++;
+			initial_shearing = false;
 		}
 	}
 }

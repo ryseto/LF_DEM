@@ -27,7 +27,6 @@ GetOptions(
 'reversibility' => \$reversibility_test,
 'monodisperse' => \$monodisperse);
 
-
 printf "force_factor = $force_factor\n";
 printf "output_interval = $output_interval\n";
 printf "xz_shift = $xz_shift\n";
