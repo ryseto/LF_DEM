@@ -1942,6 +1942,11 @@ void System::set_shear_rate(double shear_rate_)
 	shear_rate = shear_rate_;
 	omega_inf = omegahat_inf*shear_rate;
 	E_infinity = Ehat_infinity*shear_rate;
+	if (!ext_flow) {
+		setVelocityDifference();
+	} else {
+		grad_u = shear_rate*grad_u_hat;
+	}
 }
 
 void System::setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty)

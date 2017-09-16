@@ -616,6 +616,7 @@ void Simulation::setupSimulation(string in_args,
 			matrix rotation, rotation_inv;
 			rotation.set_rotation(-p.magic_angle, 'y');
 			rotation_inv.set_rotation(p.magic_angle, 'y');
+			sys.grad_u_hat = rotation_inv*grad_u_orig*rotation;
 			sys.grad_u = rotation_inv*grad_u_orig*rotation;
 			Einf_base.setSymmetrize(sys.grad_u);
 			Omegainf_base.set(0, 0, 0);

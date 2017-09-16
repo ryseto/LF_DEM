@@ -331,6 +331,7 @@ private:
 	matrix deform_backward; // Extension flow
 	//matrix dot_deform_forward; // Extension flow
 	matrix grad_u; // = L Extension flow
+	matrix grad_u_hat; // = L Extension flow (1/rate)*grad_u
 	/*****************************
 	 * Domains in the simulation box are numbered as follows.
 	 *    10 - 8 --11
