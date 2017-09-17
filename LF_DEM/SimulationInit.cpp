@@ -779,6 +779,10 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		input_values[keyword] = str2DimensionalValue("time", keyword, value, &p.contact_relaxation_time_tan);
 	} else if (keyword == "disp_max") {
 		p.disp_max = atof(value.c_str());
+	} else if (keyword == "dt_max") {
+		p.dt_max = atof(value.c_str());
+	} else if (keyword == "dt_min") {
+		p.dt_min = atof(value.c_str());
 	} else if (keyword == "time_end") {
 		input_values[keyword] = str2DimensionalValue("time", keyword, value, &p.time_end);
 	} else if (keyword == "integration_method") {
@@ -837,18 +841,18 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.memory_strain_k = atof(value.c_str());
 	} else if (keyword == "start_adjust") {
 		p.start_adjust = atof(value.c_str());
-	} else if (keyword == "min_kn") {
-		input_values[keyword] = str2DimensionalValue("force", keyword, value, &p.min_kn);
-	} else if (keyword == "max_kn") {
-		input_values[keyword] = str2DimensionalValue("force", keyword, value, &p.max_kn);
-	} else if (keyword == "min_kt") {
-		input_values[keyword] = str2DimensionalValue("force", keyword, value, &p.min_kt);
-	} else if (keyword == "max_kt") {
-		input_values[keyword] = str2DimensionalValue("force", keyword, value, &p.max_kt);
-	} else if (keyword == "min_dt") {
-		p.min_dt = atof(value.c_str());
-	} else if (keyword == "max_dt") {
-		p.max_dt = atof(value.c_str());
+	} else if (keyword == "min_kn_auto_det") {
+		input_values[keyword] = str2DimensionalValue("force", keyword, value, &p.min_kn_auto_det);
+	} else if (keyword == "max_kn_auto_det") {
+		input_values[keyword] = str2DimensionalValue("force", keyword, value, &p.max_kn_auto_det);
+	} else if (keyword == "min_kt_auto_det") {
+		input_values[keyword] = str2DimensionalValue("force", keyword, value, &p.min_kt_auto_det);
+	} else if (keyword == "max_kt_auto_det") {
+		input_values[keyword] = str2DimensionalValue("force", keyword, value, &p.max_kt_auto_det);
+	} else if (keyword == "min_dt_auto_det") {
+		p.min_dt_auto_det = atof(value.c_str());
+	} else if (keyword == "max_dt_auto_det") {
+		p.max_dt_auto_det = atof(value.c_str());
 	} else if (keyword == "rest_threshold") {
 		p.rest_threshold = atof(value.c_str());
 	} else if (keyword == "ft_max") {
@@ -942,6 +946,8 @@ void Simulation::setDefaultParameters(string input_scale)
 	autoSetParameters("Pe_switch", "5");
 	autoSetParameters("dt", "1e-4");
 	autoSetParameters("disp_max", "1e-3");
+	autoSetParameters("dt_max", "-1");
+	autoSetParameters("dt_max", "-1");
 	autoSetParameters("monolayer", "false");
 	autoSetParameters("rest_threshold", "1e-4");
 	autoSetParameters("integration_method", "1");
@@ -957,14 +963,16 @@ void Simulation::setDefaultParameters(string input_scale)
 	autoSetParameters("contact_relaxation_time_tan", "-1"+input_scale);
 	if (input_scale != "kn") {
 		autoSetParameters("kn", "2000"+input_scale);
-		autoSetParameters("min_kn", "1000"+input_scale);
-		autoSetParameters("max_kn", "1000000"+input_scale);
+		autoSetParameters("min_kn_auto_det", "1000"+input_scale);
+		autoSetParameters("max_kn_auto_det", "1000000"+input_scale);
 	}
 	if (input_scale != "kt") {
 		autoSetParameters("kt", "0.5kn");
-		autoSetParameters("min_kt", "1000"+input_scale);
-		autoSetParameters("max_kt", "1000000"+input_scale);
+		autoSetParameters("min_kt_auto_det", "1000"+input_scale);
+		autoSetParameters("max_kt_auto_det", "1000000"+input_scale);
 	}
+	autoSetParameters("min_dt_auto_det", "1e-7");
+	autoSetParameters("max_dt_auto_det", "1e-3");
 	if (input_scale != "kr") {
 		autoSetParameters("kr", "0kn");
 	}
