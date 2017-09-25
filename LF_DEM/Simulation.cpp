@@ -747,7 +747,9 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 	snapshot_header << sys.get_cumulated_strain() << ' ';//2
 	snapshot_header << sys.shear_disp.x << ' ';//3
 	snapshot_header << getRate() << ' ';//4
-	snapshot_header << target_stress_input << ' ';//5
+	if (control_var == stress) {
+		snapshot_header << target_stress_input << ' ';//5
+	}
 	if (sys.ext_flow) {
 		/* The following snapshot data is required to
 		 * construct visualization file for extensional flow simulation in the script
