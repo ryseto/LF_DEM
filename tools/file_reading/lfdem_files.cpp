@@ -339,8 +339,12 @@ inline bool lf_snapshot_file::read_frame_meta(struct Frame &frame) {
   lfdem_helper::to_double(frame_meta[1], frame.meta_data["curvilinear strain"]);
   lfdem_helper::to_double(frame_meta[2], frame.meta_data["shear disp x"]);
   lfdem_helper::to_double(frame_meta[3], frame.meta_data["rate"]);
-  lfdem_helper::to_double(frame_meta[4], frame.meta_data["target stress"]);
-  lfdem_helper::to_double(frame_meta[5], frame.meta_data["time"]);
+  if (frame_meta.size()>4) {
+    lfdem_helper::to_double(frame_meta[4], frame.meta_data["target stress"]);
+  }
+  if (frame_meta.size()>5) {
+    lfdem_helper::to_double(frame_meta[5], frame.meta_data["time"]);
+  }
   return true;
 }
 

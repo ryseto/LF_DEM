@@ -149,7 +149,7 @@ def snaps2yap(pos_fname,
     pcols = par_f.column_def()
     icols = int_f.column_def()
 
-    is2d = par_f.meta_data()['Ly'] == 0
+    is2d = float(par_f.meta_data()['Ly']) == 0
     i = 0
     for frame_par, frame_int in zip(par_f, int_f):
         yap_out, f_factor =\
@@ -184,9 +184,9 @@ def snaps2yap(pos_fname,
         # display bounding box
         yap_out = pyp.add_layer_switch(yap_out, 4)
         yap_out = pyp.add_color_switch(yap_out, 0)
-        lx2 = par_f.meta_data()['Lx']/2
-        ly2 = par_f.meta_data()['Ly']/2
-        lz2 = par_f.meta_data()['Lz']/2
+        lx2 = float(par_f.meta_data()['Lx'])/2
+        ly2 = float(par_f.meta_data()['Ly'])/2
+        lz2 = float(par_f.meta_data()['Lz'])/2
         if not is2d:
             yap_out = pyp.add_cmd(yap_out, 'l', cuboid(lx2, ly2, lz2))
         else:
