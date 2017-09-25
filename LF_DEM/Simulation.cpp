@@ -302,11 +302,13 @@ void Simulation::simulationSteadyShear(string in_args,
 	setupEvents();
 	cout << indent << "Time evolution started" << endl << endl;
 	TimeKeeper tk = initTimeKeeper();
-	int cnt_tmp = 0; //@@temp
 	int binconf_counter = 0;
 	while (keepRunning()) {
 		if (p.simulation_mode == 22) {
-			stopShearing(tk, cnt_tmp);
+			stopShearing(tk);
+			if (sys.get_time() > 20) {
+				break;
+			}
 		}
 		timeEvolutionUntilNextOutput(tk);
 		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_cumulated_strain());
@@ -340,9 +342,16 @@ void Simulation::simulationSteadyShear(string in_args,
 	cout << indent << "Time evolution done" << endl << endl;
 }
 
-void Simulation::stopShearing(TimeKeeper &tk, int &cnt_tmp)
+void Simulation::stopShearing(TimeKeeper &tk)
 {
-	if (sys.get_cumulated_strain() > 1) {
+	static bool initial_shearing = true;
+	double strain_to_stop;
+	if (!sys.ext_flow) {
+		strain_to_stop = 2;
+	} else {
+		strain_to_stop = sys.strain_retrim_interval;
+	}
+	if (sys.get_cumulated_strain() >= strain_to_stop-1e-8) {
 		sys.zero_shear = true;
 		sys.set_shear_rate(0);
 		if (!sys.ext_flow) {
@@ -356,12 +365,12 @@ void Simulation::stopShearing(TimeKeeper &tk, int &cnt_tmp)
 			sys.vel_difference.reset();
 			sys.grad_u.set_zero();
 		}
-		if (cnt_tmp == 0) {
-			cerr << "Stop shear" << endl;
+		if (initial_shearing) {
+			cerr << "Stop shear at " << sys.get_cumulated_strain() << endl;
 			tk.removeClock();
-			tk.addClock("data", LogClock(sys.get_time()+1e-4, sys.get_time()+1, 100, false));
-			tk.addClock("config", LogClock(sys.get_time()+1e-4, sys.get_time()+1, 100, false));
-			cnt_tmp ++;
+			tk.addClock("data", LogClock(sys.get_time()+sys.dt, sys.get_time()+1, 100, false));
+			tk.addClock("config", LogClock(sys.get_time()+sys.dt, sys.get_time()+1, 100, false));
+			initial_shearing = false;
 		}
 	}
 }
@@ -637,7 +646,6 @@ void Simulation::outputData()
 	if (sr != 0) {
 		// generalized viscosity kappa (= 2*eta)
 		viscous_material_function   = doubledot(sys.total_stress, sys.getEinfty())/ sys.getEinfty().selfdoubledot();
-		cerr << "stress = " << sys.total_stress.elm[2] << ' ' << 0.5*viscous_material_function << endl;
 		inviscid_material_function0 = doubledot(sys.total_stress, stress_basis_0) / stress_basis_0.selfdoubledot();
 		inviscid_material_function3 = doubledot(sys.total_stress, stress_basis_3) / stress_basis_3.selfdoubledot();
 	} else {

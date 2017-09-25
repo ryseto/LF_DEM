@@ -1022,6 +1022,16 @@ void System::adaptTimeStep()
 	if (dt*shear_rate > p.disp_max) { // cases where na_velocity < \dotgamma*radius
 		dt = p.disp_max/shear_rate;
 	}
+	if (p.dt_max > 0) {
+		if (dt > p.dt_max) {
+			dt = p.dt_max;
+		}
+	}
+	if (p.dt_min > 0) {
+		if (dt < p.dt_min) {
+			dt = p.dt_min;
+		}
+	}
 }
 
 void System::adaptTimeStep(double time_end, double strain_end)
@@ -1205,8 +1215,11 @@ void System::timeEvolution(double time_end, double strain_end)
 	avg_dt = 0;
 	avg_dt_nb = 0;
 	double dt_bak = -1;
-
-	while (keepRunning(time_end, strain_end)) {
+	double loop_time_adjust = 0;
+	if (p.fixed_dt == true) {
+		loop_time_adjust = dt;
+	}
+	while (keepRunning(time_end - loop_time_adjust, strain_end - loop_time_adjust)) {
 		retrim_ext_flow = false; // used in ext_flow simulation
 		if (!brownian && !p.fixed_dt) { // adaptative time-step for non-Brownian cases
 			adaptTimeStep(time_end, strain_end);
@@ -1939,6 +1952,11 @@ void System::set_shear_rate(double shear_rate_)
 	shear_rate = shear_rate_;
 	omega_inf = omegahat_inf*shear_rate;
 	E_infinity = Ehat_infinity*shear_rate;
+	if (!ext_flow) {
+		setVelocityDifference();
+	} else {
+		grad_u = shear_rate*grad_u_hat;
+	}
 }
 
 void System::setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty)
@@ -2580,31 +2598,31 @@ void System::adjustContactModelParameters()
 	double dkn = (kn_target-p.kn)*deltagamma/p.memory_strain_k;
 
 	p.kn += dkn;
-	if (p.kn < p.min_kn) {
-		p.kn = p.min_kn;
+	if (p.kn < p.min_kn_auto_det) {
+		p.kn = p.min_kn_auto_det;
 	}
-	if (p.kn > p.max_kn) {
-		p.kn = p.max_kn;
+	if (p.kn > p.max_kn_auto_det) {
+		p.kn = p.max_kn_auto_det;
 	}
 	if (p.disp_tan_target != -1) {
 		double kt_target = kt_avg.get()*max_disp_tan_avg.get()/p.disp_tan_target;
 		double dkt = (kt_target-p.kt)*deltagamma/p.memory_strain_k;
 		p.kt += dkt;
-		if (p.kt < p.min_kt) {
-			p.kt = p.min_kt;
+		if (p.kt < p.min_kt_auto_det) {
+			p.kt = p.min_kt_auto_det;
 		}
-		if (p.kt > p.max_kt) {
-			p.kt = p.max_kt;
+		if (p.kt > p.max_kt_auto_det) {
+			p.kt = p.max_kt_auto_det;
 		}
 	} else {
 		p.kt = p.kn;
 	}
 	adaptTimeStep();
-	if (dt < p.min_dt) {
-		dt = p.min_dt;
+	if (dt < p.min_dt_auto_det) {
+		dt = p.min_dt_auto_det;
 	}
-	if (dt > p.max_dt) {
-		dt = p.max_dt;
+	if (dt > p.max_dt_auto_det) {
+		dt = p.max_dt_auto_det;
 	}
 	previous_cumulated_strain = cumulated_strain;
 	resetContactModelParameer();
