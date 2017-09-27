@@ -562,6 +562,12 @@
 		D92F19C21676450800411650 /* MersenneTwister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MersenneTwister.h; sourceTree = "<group>"; };
 		D932B8DF16C2EDCB00AD6E85 /* StokesSolver.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = StokesSolver.h; sourceTree = "<group>"; };
 		D93C105A1C34197200460301 /* analyzeCircularWideGap.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = analyzeCircularWideGap.pl; path = tools/analyzeCircularWideGap.pl; sourceTree = SOURCE_ROOT; };
+		D94177921F7BAFE600BB44C0 /* yapgen.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = yapgen.py; path = tools/yapgen.py; sourceTree = SOURCE_ROOT; };
+		D94177931F7BAFE600BB44C0 /* binconf_info.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = binconf_info.py; path = tools/binconf_info.py; sourceTree = SOURCE_ROOT; };
+		D94177941F7BAFE600BB44C0 /* pyaplot.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = pyaplot.py; path = tools/pyaplot.py; sourceTree = SOURCE_ROOT; };
+		D94177951F7BAFE600BB44C0 /* wall_conf.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = wall_conf.py; path = tools/wall_conf.py; sourceTree = SOURCE_ROOT; };
+		D94177961F7BAFE600BB44C0 /* lfdem_utils.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = lfdem_utils.py; path = tools/lfdem_utils.py; sourceTree = SOURCE_ROOT; };
+		D94177971F7BAFE700BB44C0 /* lfdem_file.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = lfdem_file.py; path = tools/lfdem_file.py; sourceTree = SOURCE_ROOT; };
 		D94AEF021C0BCEAC0061C679 /* README.rst */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.rst; sourceTree = "<group>"; };
 		D9506B9116D81A7C00A52CFF /* Stress.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Stress.cpp; sourceTree = "<group>"; };
 		D9532ADF1B9412FC0014831F /* CalcOrderParameter */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CalcOrderParameter; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1227,6 +1233,12 @@
 				D9A9066E1BF331EF00BE8640 /* particleconfig.pl */,
 				D9A9066F1BF331EF00BE8640 /* reduce_rheodata.pl */,
 				D9A906701BF331EF00BE8640 /* trajectory.pl */,
+				D94177931F7BAFE600BB44C0 /* binconf_info.py */,
+				D94177971F7BAFE700BB44C0 /* lfdem_file.py */,
+				D94177961F7BAFE600BB44C0 /* lfdem_utils.py */,
+				D94177941F7BAFE600BB44C0 /* pyaplot.py */,
+				D94177951F7BAFE600BB44C0 /* wall_conf.py */,
+				D94177921F7BAFE600BB44C0 /* yapgen.py */,
 			);
 			name = tools;
 			path = LF_DEM;
