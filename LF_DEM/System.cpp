@@ -1080,6 +1080,9 @@ void System::timeStepMove(double time_end, double strain_end)
 	 * cumulated_strain = shear_rate * t for both simple shear and extensional flow.
 	 */
 	/* Adapt dt to get desired p.disp_max	 */
+	if (!p.fixed_dt) {
+		adaptTimeStep(time_end, strain_end);
+	}
 	time_ += dt;
 	if (ratio_unit_time != NULL) {
 		time_in_simulation_units += dt*(*ratio_unit_time);
@@ -1112,6 +1115,11 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
 	/**
 	 \brief Moves particle positions according to previously computed velocities, predictor step.
 	 */
+	if (!brownian) { // adaptative time-step for non-Brownian cases
+ 		if (!p.fixed_dt) {
+ 			adaptTimeStep(time_end, strain_end);
+ 		}
+ 	}
 	time_ += dt;
 	if (ratio_unit_time != NULL) {
 		time_in_simulation_units += dt*(*ratio_unit_time);
@@ -2005,7 +2013,7 @@ void System::computeShearRate()
 	/*
 	 *  target_stress = rate_indep_stress_ + rate * rate_prop_stress_at_1
 	 *  rate = (target_stress - rate_indep_stress)/rate_prop_stress_at_1
-	 *  
+	 *
 	 *  kappa = (Sigma.E)/(E.E)
 	 *  sigama = -p*I + 2 eta*E + ... = -p*I + kappa*E + ...
 	 *  E.E = 1/2 (if shear rate = 1)
