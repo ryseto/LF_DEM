@@ -751,12 +751,13 @@ void Simulation::outputData()
 
 void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 {
-	snapshot_header << "# "; //1
-	snapshot_header << sys.get_cumulated_strain() << ' ';//2
-	snapshot_header << sys.shear_disp.x << ' ';//3
-	snapshot_header << getRate() << ' ';//4
+	string sep = " : ";
+	snapshot_header << "# cumulated strain" << sep << sys.get_cumulated_strain() << endl;
+	snapshot_header << "# shear disp" << sep << sys.shear_disp.x << endl;
+	snapshot_header << "# shear rate" << sep << getRate() << endl;
+
 	if (control_var == stress) {
-		snapshot_header << target_stress_input << ' ';//5
+		snapshot_header << "# target stress" << sep << target_stress_input << endl;
 	}
 	if (sys.ext_flow) {
 		/* The following snapshot data is required to
@@ -764,14 +765,13 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 		 * generateYaplotFile_extflow.pl
 		 */
 		double strain_retrimed = sys.strain_retrim-sys.strain_retrim_interval;
-		snapshot_header << sys.get_cumulated_strain()-strain_retrimed << ' '; //6
+		snapshot_header << "# cumulated strain - strain_retrim" << sep << sys.get_cumulated_strain()-strain_retrimed << endl;
 		if (sys.retrim_ext_flow) {
-			snapshot_header << 1 << ' '; // 7
+			snapshot_header << "# retrim ext flow " << sep << 1 << endl;
 		} else {
-			snapshot_header << 0 << ' '; // 7
+			snapshot_header << "# retrim ext flow " << sep << 0 << endl;
 		}
 	}
-	snapshot_header << endl;
 }
 
 vec3d Simulation::shiftUpCoordinate(double x, double y, double z)
