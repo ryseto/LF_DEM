@@ -55,7 +55,12 @@ wagnerhash(time_t t, clock_t c)
 #endif
 
 
-System::System(ParameterSet& ps, list <Event>& ev):
+System::System(ParameterSet& ps,
+	             list <Event>& ev,
+						   double _cumulated_strain,
+						   double _time):
+time_(_time),
+cumulated_strain(_cumulated_strain),
 pairwise_resistance_changed(true),
 shear_rate(0),
 omega_inf(0),
@@ -89,10 +94,8 @@ eventLookUp(NULL)
 	lx = 0;
 	ly = 0;
 	lz = 0;
-	time_ = 0;
 	time_in_simulation_units = 0;
 	shear_strain = 0;
-	cumulated_strain = 0;
 }
 
 System::~System()
@@ -1080,6 +1083,7 @@ void System::timeStepMove(double time_end, double strain_end)
 	 * cumulated_strain = shear_rate * t for both simple shear and extensional flow.
 	 */
 	/* Adapt dt to get desired p.disp_max	 */
+	adaptTimeStep(double time_end, double strain_end)
 	time_ += dt;
 	if (ratio_unit_time != NULL) {
 		time_in_simulation_units += dt*(*ratio_unit_time);
@@ -1239,6 +1243,9 @@ void System::timeEvolution(double time_end, double strain_end)
 		avg_dt_nb++;
 		if (dt_bak != -1){
 			dt = dt_bak;
+		}
+		if (sig_caught == SIGINT) {
+			return;
 		}
 	};
 	if (avg_dt_nb > 0) {
@@ -2005,7 +2012,7 @@ void System::computeShearRate()
 	/*
 	 *  target_stress = rate_indep_stress_ + rate * rate_prop_stress_at_1
 	 *  rate = (target_stress - rate_indep_stress)/rate_prop_stress_at_1
-	 *  
+	 *
 	 *  kappa = (Sigma.E)/(E.E)
 	 *  sigama = -p*I + 2 eta*E + ... = -p*I + kappa*E + ...
 	 *  E.E = 1/2 (if shear rate = 1)

@@ -101,9 +101,9 @@ void Simulation::handleEventsShearJamming()
 	if (p.disp_max < 1e-6) {
 		cout << "jammed" << endl;
 		sys.calcStress();
-		outputData(); // new
-		outputConfigurationBinary();
+		outputData();
 		outputConfigurationData();
+		checkpoint();
 		kill = true;
 	}
 }
@@ -144,7 +144,7 @@ void Simulation::handleEvents()
 
 void Simulation::generateOutput(const set<string> &output_events, int& binconf_counter)
 {
-	outputConfigurationBinary(); // generic, for recovery if crash
+	checkpoint(); // generic, for recovery if crash
 	if (output_events.find("data") != output_events.end()) {
 		sys.calcStress();
 		outputData();
@@ -257,6 +257,10 @@ void Simulation::timeEvolutionUntilNextOutput(const TimeKeeper &tk)
 		sys.timeEvolution(t.first, -1);
 	} else { // either next time or next strain
 		sys.timeEvolution(t.first, s.first);
+	}
+	if (sig_caught == SIGINT) {
+		checkpoint();
+		exit(1);
 	}
 	handleEvents();
 }
@@ -395,9 +399,9 @@ void Simulation::simulationInverseYield(string in_args,
 	time_strain_0 = now;
 	/******************** OUTPUT INITIAL DATA ********************/
 	sys.calcStress();
-	outputData(); // new
-	outputConfigurationBinary();
+	outputData();
 	outputConfigurationData();
+	checkpoint();
 	/*************************************************************/
 
 	TimeKeeper tk;
@@ -495,13 +499,6 @@ DimensionalValue Simulation::str2DimensionalValue(string type,
 }
 
 
-void Simulation::outputConfigurationBinary()
-{
-	string conf_filename;
-	conf_filename = "conf_" + simu_name + ".dat";
-	outputConfigurationBinary(conf_filename);
-}
-
 void Simulation::outputConfigurationBinary(string conf_filename)
 {
 	/**
@@ -589,8 +586,37 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 		conf_export.write((char*)&(cs[i].disp_rolling.y), sizeof(double));
 		conf_export.write((char*)&(cs[i].disp_rolling.z), sizeof(double));
 	}
-	//	conf_export.write((char*)&(sys.dt), sizeof(double));
 	conf_export.close();
+}
+
+void Simulation::outputStateBinary(string state_filename)
+{
+	/**
+		\brief Saves the current state of the simulation in a binary file.
+
+		Depending on the type of simulation, we store the data differently, defined by
+ 	 binary format version numbers, which is always the first data.
+	 */
+	ofstream state_export;
+	state_export.open(state_filename.c_str(), ios::binary | ios::out);
+
+	unsigned binary_conf_format = 1;
+	state_export.write((char*)&binary_conf_format, sizeof(unsigned));
+	double strain = sys.get_cumulated_strain();
+	state_export.write((char*)&strain, sizeof(double));
+	double _time = sys.get_time();
+	state_export.write((char*)&_time, sizeof(double));
+	state_export.close();
+}
+
+void Simulation::checkpoint()
+{
+	string conf_filename;
+	conf_filename = "conf_" + simu_name + ".dat";
+	outputConfigurationBinary(conf_filename);
+	string state_filename;
+	state_filename = "chk_" + simu_name + ".dat";
+	outputStateBinary(state_filename);
 }
 
 double Simulation::getRate()

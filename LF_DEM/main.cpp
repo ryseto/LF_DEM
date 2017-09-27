@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
+#include <csignal>
 #include <getopt.h>
 #include "global.h"
 #include "Simulation.h"
@@ -23,6 +24,8 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
+	std::signal(SIGINT, sigint_handler);
+
 	cout << endl << "LF_DEM version " << GIT_VERSION << endl << endl;
 	string usage = "(1) Simulation\n $ LF_DEM [-r Rate] [-s Stress] [-R Rate_Sequence] [-S Stress_Sequence]\
 	[-e] [-m ?] [-k kn_kt_File] [-v Simulation_Identifier] [-i Provisional_Data] [-n]\

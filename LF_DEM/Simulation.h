@@ -175,8 +175,9 @@ public:
 	void outputIntFileTxt();
 	void outputParFileTxt();
 	void outputPstFileTxt();
-	void outputConfigurationBinary();
 	void outputConfigurationBinary(std::string);
+	void outputStateBinary(std::string);
+	void checkpoint();
 	double getRate();
 	vec3d shiftUpCoordinate(double x, double y, double z);
 	void outputComputationTime();

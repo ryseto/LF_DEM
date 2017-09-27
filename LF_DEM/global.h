@@ -1,6 +1,7 @@
 #ifndef __LF_DEM__global__
 #define __LF_DEM__global__
 
+#include <csignal>
 #include <string>
 #include <algorithm>
 #include <ostream>
@@ -56,6 +57,14 @@
 #ifdef USE_DSFMT
 #include <limits.h>
 #endif
+
+static volatile sig_atomic_t sig_caught = 0;
+
+inline void sigint_handler(int signum) {
+	if (signum==SIGINT){
+		sig_caught = signum;
+	}
+}
 
 inline void removeBlank(std::string& str)
 {

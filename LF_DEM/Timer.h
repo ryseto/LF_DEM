@@ -53,25 +53,16 @@ public:
 		time_step = step;
 		first_non_zero = step;
 	}
-	
-//	LinearClock(double start, double step, bool strain_units)
-//	: Clock(strain_units)
-//	{
-//		next_time = start;
-//		time_step = step;
-//		if (start != 0) {
-//			first_non_zero = start;
-//		} else {
-//			first_non_zero = step;
-//		}
-//	}
+
+	LinearClock(double start, double step, bool strain_units)
+	: Clock(strain_units)
+	{
+		next_time = start;
+		time_step = step;
+	}
 
 	virtual void tick() {
-		if (next_time != 0) {
-			next_time += time_step;
-		} else {
-			next_time = first_non_zero;
-		}
+		next_time += time_step;
 	}
 };
 
@@ -83,18 +74,14 @@ public:
 	LogClock(double start, double stop, double nb_step, bool strain_units)
 	: Clock(strain_units)
 	{
-		next_time = start; // to allow for init actions
+		next_time = start;
 		time_step = (log(stop) - log(start))/nb_step;
 		first_non_zero = start;
 	}
 
 	virtual void tick()
 	{
-		if (next_time > 0) {
-			next_time = exp(log(next_time)+time_step);
-		} else {
-			next_time = first_non_zero;
-		}
+		next_time = exp(log(next_time)+time_step);
 	}
 };
 
@@ -118,7 +105,7 @@ public:
 	{
 		clocks.clear();
 	}
-	
+
 	std::pair<double,std::string> nextTime() const
 	{
 		if (clocks.size() == 0) {
