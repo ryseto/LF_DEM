@@ -1083,7 +1083,6 @@ void System::timeStepMove(double time_end, double strain_end)
 	 * cumulated_strain = shear_rate * t for both simple shear and extensional flow.
 	 */
 	/* Adapt dt to get desired p.disp_max	 */
-	adaptTimeStep(double time_end, double strain_end)
 	time_ += dt;
 	if (ratio_unit_time != NULL) {
 		time_in_simulation_units += dt*(*ratio_unit_time);
