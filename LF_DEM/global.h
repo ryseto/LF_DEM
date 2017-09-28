@@ -58,7 +58,7 @@
 #include <limits.h>
 #endif
 
-static volatile sig_atomic_t sig_caught = 0;
+extern volatile sig_atomic_t sig_caught;
 
 inline void sigint_handler(int signum) {
 	if (signum==SIGINT){

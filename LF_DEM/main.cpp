@@ -22,6 +22,8 @@
 
 using namespace std;
 
+volatile sig_atomic_t sig_caught = 0;
+
 int main(int argc, char **argv)
 {
 	std::signal(SIGINT, sigint_handler);

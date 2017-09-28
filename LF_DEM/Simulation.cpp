@@ -600,8 +600,33 @@ void Simulation::outputStateBinary(string state_filename)
 	ofstream state_export;
 	state_export.open(state_filename.c_str(), ios::binary | ios::out);
 
-	unsigned binary_conf_format = 1;
-	state_export.write((char*)&binary_conf_format, sizeof(unsigned));
+	unsigned binary_format = 1;
+	state_export.write((char*)&binary_format, sizeof(unsigned));
+	double strain = sys.get_cumulated_strain();
+	state_export.write((char*)&strain, sizeof(double));
+	double _time = sys.get_time();
+	state_export.write((char*)&_time, sizeof(double));
+	state_export.close();
+}
+
+struct BasicCheckpointState Simulation::inputStateBinary(string state_filename)
+{
+	/**
+		\brief Saves the current state of the simulation in a binary file.
+
+		Depending on the type of simulation, we store the data differently, defined by
+ 	 binary format version numbers, which is always the first data.
+	 */
+	ofstream state_export;
+	state_export.open(state_filename.c_str(), ios::binary | ios::in);
+
+	unsigned binary_format;
+	state_export.read((char*)&binary_format, sizeof(unsigned));
+	switch (binary_format){
+		case 1:
+			double strain;
+
+	}
 	double strain = sys.get_cumulated_strain();
 	state_export.write((char*)&strain, sizeof(double));
 	double _time = sys.get_time();

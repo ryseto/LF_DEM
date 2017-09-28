@@ -14,6 +14,8 @@
 #include "SystemHelperFunctions.h"
 #include "global.h"
 
+extern volatile sig_atomic_t sig_caught;
+
 #ifndef USE_DSFMT
 #define GRANDOM ( r_gen->randNorm(0., 1.) ) // RNG gaussian with mean 0. and variance 1.
 #endif
@@ -57,11 +59,9 @@ wagnerhash(time_t t, clock_t c)
 
 System::System(ParameterSet& ps,
 	             list <Event>& ev,
-						   double _cumulated_strain,
-						   double _time):
-time_(_time),
-cumulated_strain(_cumulated_strain),
+					     struct BasicCheckpointState):
 pairwise_resistance_changed(true),
+clock(BasicCheckpointState.clock),
 shear_rate(0),
 omega_inf(0),
 events(ev),
@@ -1251,7 +1251,7 @@ void System::timeEvolution(double time_end, double strain_end)
 		if (dt_bak != -1){
 			dt = dt_bak;
 		}
-		if (sig_caught == SIGINT) {
+		if (sig_caught == SIGINT) { // return to Simulation immediatly for checkpointing
 			return;
 		}
 	};

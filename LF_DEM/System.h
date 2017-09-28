@@ -48,6 +48,16 @@
 #include "dSFMT-src-2.2.3/dSFMT.h"
 #endif
 
+struct Clock {
+	double time_; ///< time elapsed since beginning of the time evolution.
+	double time_in_simulation_units; ///< time elapsed since beginning of the time evolution. \b note: this is measured in Simulation (output) units, not in internal System units.
+	double cumulated_strain;
+};
+
+struct BasicCheckpointState {
+	struct Clock clock;
+};
+
 class Simulation;
 // class Interaction;
 class BoxSet;
@@ -63,8 +73,6 @@ private:
 	int nb_of_contacts_ff;
 	bool pairwise_resistance_changed;
 	int total_num_timesteps;
-	double time_; ///< time elapsed since beginning of the time evolution.
-	double time_in_simulation_units; ///< time elapsed since beginning of the time evolution. \b note: this is measured in Simulation (output) units, not in internal System units.
 	double lx;
 	double ly;
 	double lz;
@@ -74,8 +82,8 @@ private:
 	double lx_ext_flow;
 	double ly_ext_flow;
 	double lz_ext_flow;
+	struct Clock clock;
 	vec3d shear_strain;
-	double cumulated_strain;
 	double angle_wheel; // rotational angle of rotary couette geometory
 	double shear_rate; //@@@ In the extensional-flow simulation, shear_rate is extensional rate.
 	Sym2Tensor Ehat_infinity; // E/shear_rate: "shape" of the flow
@@ -182,7 +190,7 @@ private:
 
  protected:
  public:
-	System(ParameterSet& ps, std::list <Event>& ev, double _cumulated_strain = 0, double _time = 0);
+	System(ParameterSet& ps, std::list <Event>& ev, struct BasicCheckpointState = {{0, 0, 0}});
 	~System();
 	ParameterSet& p;
 	int np_mobile; ///< number of mobile particles
