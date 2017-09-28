@@ -24,6 +24,20 @@ using namespace std;
 
 volatile sig_atomic_t sig_caught = 0;
 
+std::string prepareSimulationNameFromChkp(const std::string& filename_chkp)
+{
+	/**
+	 \brief Determine simulation name when starting from checkpoint
+	 */
+	std::string name = filename_chkp;
+	auto prefix = name.find("chk_");
+	name.erase(prefix, prefix+4);
+	auto suffix = name.rfind(".dat");
+	name.erase(suffix, std::string::npos);
+
+	return name;
+}
+
 int main(int argc, char **argv)
 {
 	std::signal(SIGINT, sigint_handler);
@@ -51,6 +65,8 @@ int main(int argc, char **argv)
 	string knkt_filename = "not_given";
 	string stress_rate_filename = "not_given";
 	string seq_filename = "not_given";
+	string chkp_filename = "";
+
 	string seq_type;
 	ControlVariable rheology_control = rate;
 	string simu_identifier = "";
@@ -67,13 +83,14 @@ int main(int argc, char **argv)
 		{"force-to-run",      no_argument,       0, 'f'},
 		{"long-file-name",    no_argument,       0, 'l'},
 		{"diminish-output",   no_argument,       0, 'd'},
+		{"checkpoint-file",   no_argument,       0, 'c'},
 		{"help",              no_argument,       0, 'h'},
 		{0, 0, 0, 0},
 	};
 
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hn8efldm:s:S:t:r:R:g::a:k:i:v:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hn8efldm:s:S:t:r:R:g::a:k:i:v:c:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
 				rheology_control = stress;
@@ -128,6 +145,9 @@ int main(int argc, char **argv)
 				break;
 			case 'k':
 				knkt_filename = optarg;
+				break;
+			case 'c':
+				chkp_filename = optarg;
 				break;
 			case 'i':
 				stress_rate_filename = optarg;
@@ -193,7 +213,16 @@ int main(int argc, char **argv)
 		input_files[2] = knkt_filename;
 		input_files[3] = stress_rate_filename;
 		input_files[4] = seq_filename;
-		Simulation simulation;
+
+		State::BasicCheckpoint state = State::zero_time_basicchkp;
+		if (!chkp_filename.empty()) {
+			state = State::readBasicCheckpoint(chkp_filename);
+		}
+		Simulation simulation(state);
+		if (!chkp_filename.empty()) {
+			simulation.simu_name = prepareSimulationNameFromChkp(chkp_filename);
+		}
+
 		simulation.force_to_run = force_to_run;
 		simulation.long_file_name = long_file_name;
 		simulation.diminish_output = diminish_output;

@@ -27,6 +27,7 @@
 #include <complex>
 #include "global.h"
 #include "Configuration.h"
+#include "States.h"
 #include "Sym2Tensor.h"
 #include "Interaction.h"
 #include "vec3d.h"
@@ -48,15 +49,7 @@
 #include "dSFMT-src-2.2.3/dSFMT.h"
 #endif
 
-struct Clock {
-	double time_; ///< time elapsed since beginning of the time evolution.
-	double time_in_simulation_units; ///< time elapsed since beginning of the time evolution. \b note: this is measured in Simulation (output) units, not in internal System units.
-	double cumulated_strain;
-};
 
-struct BasicCheckpointState {
-	struct Clock clock;
-};
 
 class Simulation;
 // class Interaction;
@@ -82,7 +75,7 @@ private:
 	double lx_ext_flow;
 	double ly_ext_flow;
 	double lz_ext_flow;
-	struct Clock clock;
+	struct State::Clock clk;
 	vec3d shear_strain;
 	double angle_wheel; // rotational angle of rotary couette geometory
 	double shear_rate; //@@@ In the extensional-flow simulation, shear_rate is extensional rate.
@@ -190,7 +183,7 @@ private:
 
  protected:
  public:
-	System(ParameterSet& ps, std::list <Event>& ev, struct BasicCheckpointState = {{0, 0, 0}});
+	System(ParameterSet& ps, std::list <Event>& ev, struct State::BasicCheckpoint = State::zero_time_basicchkp);
 	~System();
 	ParameterSet& p;
 	int np_mobile; ///< number of mobile particles
@@ -418,47 +411,47 @@ private:
 		lz_half = 0.5*lz;
 	}
 
-	double get_lx()
+	double get_lx() const
 	{
 		return lx;
 	}
 
-	double get_ly()
+	double get_ly() const
 	{
 		return ly;
 	}
 
-	double get_lz()
+	double get_lz() const
 	{
 		return lz;
 	}
 
-	double get_lx_ext_flow()
+	double get_lx_ext_flow() const
 	{
 		return lx_ext_flow;
 	}
 
-	double get_ly_ext_flow()
+	double get_ly_ext_flow() const
 	{
 		return ly_ext_flow;
 	}
 
-	double get_lz_ext_flow()
+	double get_lz_ext_flow() const
 	{
 		return lz_ext_flow;
 	}
 
-	double get_time_in_simulation_units()
+	double get_time_in_simulation_units() const
 	{
-		return time_in_simulation_units;
+		return clk.time_in_simulation_units;
 	}
 
-	double get_time()
+	double get_time() const
 	{
-		return time_;
+		return clk.time_;
 	}
 
-	double get_shear_rate()
+	double get_shear_rate() const
 	{
 		return shear_rate;
 	}
@@ -495,9 +488,9 @@ private:
 		return shear_strain;
 	}
 
-	double get_cumulated_strain()
+	double get_cumulated_strain() const
 	{
-		return cumulated_strain;
+		return clk.cumulated_strain;
 	}
 
 	double get_angle_wheel()
@@ -510,7 +503,7 @@ private:
 		return omega_wheel_in-omega_wheel_out;
 	}
 
-	std::size_t get_nb_interactions()
+	std::size_t get_nb_interactions() const
 	{
 		return interaction.size();
 	}

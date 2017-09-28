@@ -26,7 +26,6 @@ class Clock
 protected:
 	double next_time;
 	double time_step;
-	double first_non_zero;
 	bool _strain;
 public:
 	Clock(bool strain):
@@ -46,15 +45,7 @@ class LinearClock : public Clock
 private:
 
 public:
-	LinearClock(double step, bool strain_units)
-	: Clock(strain_units)
-	{
-		next_time = step;
-		time_step = step;
-		first_non_zero = step;
-	}
-
-	LinearClock(double start, double step, bool strain_units)
+	LinearClock(double step, bool strain_units, double start=0)
 	: Clock(strain_units)
 	{
 		next_time = start;
@@ -76,7 +67,6 @@ public:
 	{
 		next_time = start;
 		time_step = (log(stop) - log(start))/nb_step;
-		first_non_zero = start;
 	}
 
 	virtual void tick()
@@ -115,9 +105,9 @@ public:
 		std::string next_name = "";
 		for (const auto &c : clocks) {
 			const auto &label = c.first;
-			const auto &clock = c.second;
-			if (!clock->is_strain() && (clock->nextTime() < next_time || next_time < 0)) {
-				next_time = clock->nextTime();
+			const auto &clk = c.second;
+			if (!clk->is_strain() && (clk->nextTime() < next_time || next_time < 0)) {
+				next_time = clk->nextTime();
 				next_name = label;
 			}
 		}
@@ -129,32 +119,32 @@ public:
 		if (clocks.size() == 0) {
 			throw std::runtime_error( " TimeKeeper::nextStrain() : No clocks! ");
 		}
-		double next_t = -1;
+		double next_time = -1;
 		std::string next_name = "";
 		for (const auto &c : clocks) {
 			const auto &label = c.first;
-			const auto &clock = c.second;
-			if (clock->is_strain() && (clock->nextTime() < next_t || next_t < 0)) {
-				next_t = clock->nextTime();
+			const auto &clk = c.second;
+			if (clk->is_strain() && (clk->nextTime() < next_time || next_time < 0)) {
+				next_time = clk->nextTime();
 				next_name = label;
 			}
 		}
-		return std::make_pair(next_t, next_name);
+		return std::make_pair(next_time, next_name);
 	}
 
-	std::set<std::string> getElapsedClocks(double time, double strain)
+	std::set<std::string> getElapsedClocks(double time_, double strain)
 	{
 		std::set<std::string> elapsed_clocks;
 		for (auto &c : clocks) {
-			auto &clock = c.second;
-			if (clock->is_strain()) {
-				if (clock->nextTime() <= strain+1e-8) {
-					clock->tick();
+			auto &clk = c.second;
+			if (clk->is_strain()) {
+				if (clk->nextTime() <= strain+1e-8) {
+					clk->tick();
 					elapsed_clocks.insert(c.first);
 				}
 			} else {
-				if (clock->nextTime() <= time+1e-8) {
-					clock->tick();
+				if (clk->nextTime() <= time_+1e-8) {
+					clk->tick();
 					elapsed_clocks.insert(c.first);
 				}
 			}

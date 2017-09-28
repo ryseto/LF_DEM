@@ -5,6 +5,10 @@
 #include <string>
 #include <algorithm>
 #include <ostream>
+#include <iostream>
+#include <sstream>
+#include <fstream>
+#include <stdexcept>
 #include <vector>
 #include "vec3d.h"
 
@@ -15,14 +19,6 @@
 #define STRAIN_STRESS 1
 #define XF_STRESS 2
 #define BROWNIAN_STRESS 3
-
-#define BIN_FORMAT_BASE_OLD 1
-#define BIN_FORMAT_BASE_NEW 2
-#define BIN_FORMAT_FIXED_VEL 3
-#define TXT_FORMAT_BASE_OLD 1
-#define TXT_FORMAT_BASE_NEW 2
-#define TXT_FORMAT_FIXED_VEL 3
-#define TXT_FORMAT_CIRCULAR_COUETTE 4
 
 #define CALL_MEMBER_FN(object,ptrToMember)  ((object).*(ptrToMember))
 
@@ -165,4 +161,12 @@ enum ControlVariable {
 	viscnb
 };
 
+inline void checkInFile(std::string filename) {
+	std::ifstream file_import(filename.c_str(), std::ios::in);
+	if (!file_import) {
+		std::ostringstream error_str;
+		error_str  << " File '" << filename << "' not found." << std::endl;
+		throw std::runtime_error(error_str.str());
+	}
+}
 #endif /* defined(__LF_DEM__global__) */

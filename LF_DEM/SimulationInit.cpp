@@ -389,7 +389,7 @@ void Simulation::setUnitScaleRateControlled()
 	} else {
 		is_brownian = false;
 	}
-	
+
 	if (is_brownian) {
 		if (force_ratios["hydro/brownian"] > p.Pe_switch && !sys.zero_shear) { // hydro units
 			internal_unit_scales = "hydro";
@@ -563,6 +563,60 @@ void Simulation::resolveTimeOrStrainParameters()
 	}
 }
 
+
+void Simulation::setConfigToSystem(bool binary_conf, const std::string &filename)
+{
+	if (binary_conf) {
+		auto format = getBinaryConfigurationFileFormat(filename);
+		switch(format) {
+			case ConfFileFormat::bin_format_base_new:
+				{
+					auto conf = readBinaryBaseConfiguration(filename);
+					sys.setupConfiguration(conf, control_var);
+					break;
+				}
+			case ConfFileFormat::bin_format_fixed_vel:
+				{
+					auto conf = readBinaryFixedVeloConfiguration(filename);
+					sys.setupConfiguration(conf, control_var);
+					break;
+				}
+			default:
+				throw std::runtime_error("Unable to read config binary format "+to_string(static_cast<int>(format)));
+		}
+	} else {
+		auto format = getTxtConfigurationFileFormat(filename);
+		switch(format) {
+			case ConfFileFormat::txt_format_base_old:
+				{
+					auto conf = readTxtBaseConfiguration(filename);
+					sys.setupConfiguration(conf, control_var);
+					break;
+				}
+			case ConfFileFormat::txt_format_base_new:
+				{
+					auto conf = readTxtBaseConfiguration(filename);
+					sys.setupConfiguration(conf, control_var);
+					break;
+				}
+			case ConfFileFormat::txt_format_fixed_vel:
+				{
+					auto conf = readTxtFixedVeloConfiguration(filename);
+					sys.setupConfiguration(conf, control_var);
+					break;
+				}
+			case ConfFileFormat::txt_format_circular_couette:
+				{
+					auto conf = readTxtCircularCouetteConfiguration(filename);
+					sys.setupConfiguration(conf, control_var);
+					break;
+				}
+			default:
+				throw std::runtime_error("Unable to read config text format "+to_string(static_cast<int>(format)));
+		}
+	}
+}
+
 void Simulation::setupSimulation(string in_args,
                                  vector<string>& input_files,
 								 bool binary_conf,
@@ -658,67 +712,7 @@ void Simulation::setupSimulation(string in_args,
 	}
 	resolveTimeOrStrainParameters();
 
-	if (binary_conf) {
-		int format = getBinaryConfigurationFileFormat(filename_import_positions);
-		ifstream file_import;
-		file_import.open(filename_import_positions.c_str(), ios::binary | ios::in);
-		if (!file_import) {
-			ostringstream error_str;
-			error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
-			throw runtime_error(error_str.str());
-		}
-
-		switch(format) {
-			case BIN_FORMAT_BASE_NEW:
-				{
-					auto conf = readBinaryBaseConfiguration(file_import);
-					sys.setupConfiguration(conf, control_var);
-					break;
-				}
-			case BIN_FORMAT_FIXED_VEL:
-				{
-					auto conf = readBinaryFixedVeloConfiguration(file_import);
-					sys.setupConfiguration(conf, control_var);
-					break;
-				}
-		}
-	} else {
-		int format = getTxtConfigurationFileFormat(filename_import_positions);
-		ifstream file_import;
-		file_import.open(filename_import_positions.c_str());
-		if (!file_import) {
-			ostringstream error_str;
-			error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
-			throw runtime_error(error_str.str());
-		}
-
-		switch(format) {
-			case TXT_FORMAT_BASE_OLD:
-				{
-					auto conf = readTxtBaseConfiguration(file_import);
-					sys.setupConfiguration(conf, control_var);
-					break;
-				}
-			case TXT_FORMAT_BASE_NEW:
-				{
-					auto conf = readTxtBaseConfiguration(file_import);
-					sys.setupConfiguration(conf, control_var);
-					break;
-				}
-			case TXT_FORMAT_FIXED_VEL:
-				{
-					auto conf = readTxtFixedVeloConfiguration(file_import);
-					sys.setupConfiguration(conf, control_var);
-					break;
-				}
-			case TXT_FORMAT_CIRCULAR_COUETTE:
-				{
-					auto conf = readTxtCircularCouetteConfiguration(file_import);
-					sys.setupConfiguration(conf, control_var);
-					break;
-				}
-		}
-	}
+	setConfigToSystem(binary_conf, filename_import_positions);
 	 //@@@@ temporary repair
 	if (input_files[2] != "not_given") {
 		if (sys.brownian && !p.auto_determine_knkt) {
@@ -731,8 +725,7 @@ void Simulation::setupSimulation(string in_args,
 	p_initial = p;
 	sys.resetContactModelParameer(); //@@@@ temporary repair
 
-	simu_name = prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
-									  simu_identifier, dimensionlessnumber, input_scale);
+
 	if (!sys.ext_flow) {
 		// simple shear
 		sys.setVelocityDifference();
@@ -740,7 +733,11 @@ void Simulation::setupSimulation(string in_args,
 		// extensional flow
 		sys.vel_difference.reset();
 	}
-	openOutputFiles(simu_name);
+	if (!restart_from_chkp) {
+		simu_name = prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
+		                                  simu_identifier, dimensionlessnumber, input_scale);
+	}
+	openOutputFiles();
 	echoInputFiles(in_args, input_files);
 	cout << indent << "Simulation setup [ok]" << endl;
 }
@@ -1026,7 +1023,7 @@ void Simulation::setDefaultParameters(string input_scale)
 //	return defs.str();
 //}
 
-void Simulation::openOutputFiles(string simu_name)
+void Simulation::openOutputFiles()
 {
 	/**
 	 \brief Set up the output files
@@ -1036,20 +1033,32 @@ void Simulation::openOutputFiles(string simu_name)
 
 	stringstream data_header;
 	createDataHeader(data_header);
-	outdata.setFile("data_"+simu_name+".dat", data_header.str(), force_to_run);
-	outdata_st.setFile("st_"+simu_name+".dat", data_header.str(), force_to_run);
+	outdata.setFile("data_"+simu_name+".dat",
+	                data_header.str(), force_to_run, restart_from_chkp);
+	outdata_st.setFile("st_"+simu_name+".dat",
+	                   data_header.str(), force_to_run, restart_from_chkp);
+
 	if (!p.out_particle_stress.empty()) {
-		outdata_pst.setFile("pst_"+simu_name+".dat", data_header.str(), force_to_run);
+		outdata_pst.setFile("pst_"+simu_name+".dat",
+		                    data_header.str(), force_to_run, restart_from_chkp);
+
 	}
 	string time_filename = "t_"+simu_name+".dat";
 	fout_time.open(time_filename.c_str());
 	string input_filename = "input_"+simu_name+".dat";
-	fout_input.open(input_filename.c_str());
+	if (!restart_from_chkp) {
+		fout_input.open(input_filename.c_str());
+	} else {
+		fout_input.open(input_filename.c_str(), fstream::out | fstream::app);
+	}
 	if (p.out_data_particle) {
-		outdata_par.setFile("par_"+simu_name+".dat", data_header.str(), force_to_run);
+		outdata_par.setFile("par_"+simu_name+".dat",
+		                    data_header.str(), force_to_run, restart_from_chkp);
+
 	}
 	if (p.out_data_interaction) {
-		outdata_int.setFile("int_"+simu_name+".dat", data_header.str(), force_to_run);
+		outdata_int.setFile("int_"+simu_name+".dat",
+		                    data_header.str(), force_to_run, restart_from_chkp);
 	}
 	//string box_name = "box_"+simu_name+".dat";
 	//fout_boxing.open(box_name);

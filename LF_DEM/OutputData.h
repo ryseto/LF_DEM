@@ -27,6 +27,7 @@
 class OutputData {
 private:
 	bool first_time;
+	bool restart_from_chkp;
 	std::string out_unit;
 	std::map <std::string, std::vector<std::string> > output_data;
 	std::vector <std::string> insert_order;
@@ -70,28 +71,32 @@ private:
 	}
 
 public:
-	OutputData(): first_time(true), default_precision(6) {}
+	OutputData(): first_time(true), restart_from_chkp(false), default_precision(6) {}
 	~OutputData()
 	{
 		fout.close();
 	}
-	void setFile (const std::string& fname,
-					const std::string& data_header,
-					const bool force_to_run)
+	void setFile(const std::string& fname,
+	             const std::string& data_header,
+	             bool force_overwrite=false,
+	             bool append=false)
 	{
-		if (force_to_run == false) {
+		if (!force_overwrite && !append) {
 			std::ifstream file_test(fname.c_str());
 			if (file_test.good()) {
-				file_test.close();
 				std::cerr << "The file '" << fname << "' already exists." << std::endl;
 				std::cerr << "You need -f option to overwrite." << std::endl;
 				exit(1);
-			} else {
-				file_test.close();
 			}
 		}
-		fout.open(fname.c_str());
-		fout << data_header;
+		if (append) {
+			checkInFile(fname);
+			fout.open(fname.c_str(), std::ofstream::out | std::ofstream::app);
+			restart_from_chkp = true;
+		} else {
+			fout.open(fname.c_str(), std::ofstream::out);
+			fout << data_header;
+		}
 	}
 
 	void setUnit(std::string output_unit)
@@ -181,7 +186,9 @@ public:
 	void writeToFile(std::string header)
 	{
 		if (first_time) {
-			writeFileHeader();
+			if (!restart_from_chkp) {
+				writeFileHeader();
+			}
 			first_time = false;
 		}
 		fout << header;
@@ -191,7 +198,9 @@ public:
 	void writeToFile()
 	{
 		if (first_time) {
-			writeFileHeader();
+			if (!restart_from_chkp) {
+				writeFileHeader();
+			}
 			first_time = false;
 		}
 		writeColsToFile();

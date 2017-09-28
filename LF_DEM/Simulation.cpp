@@ -19,12 +19,13 @@
 
 using namespace std;
 
-Simulation::Simulation():
-sys(System(p, events)),
+Simulation::Simulation(State::BasicCheckpoint chkp):
+sys(System(p, events, chkp)),
 internal_unit_scales("hydro"),
 target_stress_input(0),
-diminish_output(false),
-timestep_1(0)
+restart_from_chkp(false),
+timestep_1(0),
+diminish_output(false)
 {
 	unit_longname["h"] = "hydro";
 	unit_longname["r"] = "repulsion";
@@ -46,6 +47,7 @@ timestep_1(0)
 	force_value_ptr["kt"] = &sys.p.kt;
 	force_value_ptr["kr"] = &sys.p.kr;
 	kill = false;
+	restart_from_chkp = !isZeroTimeChkp(chkp);
 };
 
 Simulation::~Simulation(){};
@@ -305,7 +307,15 @@ void Simulation::simulationSteadyShear(string in_args,
 
 	setupEvents();
 	cout << indent << "Time evolution started" << endl << endl;
+
 	TimeKeeper tk = initTimeKeeper();
+	if (restart_from_chkp) {
+		std::set<std::string> elapsed;
+		do {
+			elapsed = tk.getElapsedClocks(sys.get_time(), sys.get_cumulated_strain());
+		}
+		while (!elapsed.empty()); // flush tk to not output on first time step
+	}
 	int binconf_counter = 0;
 	while (keepRunning()) {
 		if (p.simulation_mode == 22) {
@@ -589,50 +599,6 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 	conf_export.close();
 }
 
-void Simulation::outputStateBinary(string state_filename)
-{
-	/**
-		\brief Saves the current state of the simulation in a binary file.
-
-		Depending on the type of simulation, we store the data differently, defined by
- 	 binary format version numbers, which is always the first data.
-	 */
-	ofstream state_export;
-	state_export.open(state_filename.c_str(), ios::binary | ios::out);
-
-	unsigned binary_format = 1;
-	state_export.write((char*)&binary_format, sizeof(unsigned));
-	double strain = sys.get_cumulated_strain();
-	state_export.write((char*)&strain, sizeof(double));
-	double _time = sys.get_time();
-	state_export.write((char*)&_time, sizeof(double));
-	state_export.close();
-}
-
-struct BasicCheckpointState Simulation::inputStateBinary(string state_filename)
-{
-	/**
-		\brief Saves the current state of the simulation in a binary file.
-
-		Depending on the type of simulation, we store the data differently, defined by
- 	 binary format version numbers, which is always the first data.
-	 */
-	ofstream state_export;
-	state_export.open(state_filename.c_str(), ios::binary | ios::in);
-
-	unsigned binary_format;
-	state_export.read((char*)&binary_format, sizeof(unsigned));
-	switch (binary_format){
-		case 1:
-			double strain;
-
-	}
-	double strain = sys.get_cumulated_strain();
-	state_export.write((char*)&strain, sizeof(double));
-	double _time = sys.get_time();
-	state_export.write((char*)&_time, sizeof(double));
-	state_export.close();
-}
 
 void Simulation::checkpoint()
 {
@@ -641,7 +607,7 @@ void Simulation::checkpoint()
 	outputConfigurationBinary(conf_filename);
 	string state_filename;
 	state_filename = "chk_" + simu_name + ".dat";
-	outputStateBinary(state_filename);
+	State::outputStateBinary(state_filename, sys);
 }
 
 double Simulation::getRate()
@@ -844,21 +810,16 @@ vec3d Simulation::shiftUpCoordinate(double x, double y, double z)
 
 void Simulation::createDataHeader(stringstream& data_header)
 {
-	auto conf = sys.getConfiguration();
-	data_header << "# LF_DEM version " << GIT_VERSION << endl;
-	data_header << "# np " << conf.position.size() << endl;
-	data_header << "# VF " << conf.volume_or_area_fraction << endl;
-	data_header << "# Lx " << conf.lx << endl;
-	data_header << "# Ly " << conf.ly << endl;
-	data_header << "# Lz " << conf.lz << endl;
-	data_header << "# flow_type " << sys.p.flow_type << endl;
-}
-
-void Simulation::outputDataHeader(ofstream& fout)
-{
-	stringstream data_header;
-	createDataHeader(data_header);
-	fout << data_header.str();
+	if (!restart_from_chkp) {
+		auto conf = sys.getConfiguration();
+		data_header << "# LF_DEM version " << GIT_VERSION << endl;
+		data_header << "# np " << conf.position.size() << endl;
+		data_header << "# VF " << conf.volume_or_area_fraction << endl;
+		data_header << "# Lx " << conf.lx << endl;
+		data_header << "# Ly " << conf.ly << endl;
+		data_header << "# Lz " << conf.lz << endl;
+		data_header << "# flow_type " << sys.p.flow_type << endl;
+	}
 }
 
 void Simulation::outputPstFileTxt()

@@ -13,6 +13,7 @@
 #include <assert.h>
 #include "SystemHelperFunctions.h"
 #include "global.h"
+#include "States.h"
 
 extern volatile sig_atomic_t sig_caught;
 
@@ -59,9 +60,9 @@ wagnerhash(time_t t, clock_t c)
 
 System::System(ParameterSet& ps,
 	             list <Event>& ev,
-					     struct BasicCheckpointState):
+					     State::BasicCheckpoint chkp):
 pairwise_resistance_changed(true),
-clock(BasicCheckpointState.clock),
+clk(chkp.clock),
 shear_rate(0),
 omega_inf(0),
 events(ev),
@@ -94,7 +95,6 @@ eventLookUp(NULL)
 	lx = 0;
 	ly = 0;
 	lz = 0;
-	time_in_simulation_units = 0;
 	shear_strain = 0;
 }
 
@@ -225,7 +225,7 @@ void System::setInteractions_GenerateInitConfig()
 	calcInteractionRange = &System::calcLubricationRange;
 
 	shear_strain = {0, 0, 0};
-	cumulated_strain = 0;
+	clk.cumulated_strain = 0;
 	shear_disp.reset();
 	vel_difference.reset();
 	initializeBoxing();
@@ -481,8 +481,6 @@ void System::setupGenericConfiguration(T conf, ControlVariable control_){
 		setupBrownian();
 	}
 
-	time_ = 0;
-	time_in_simulation_units = 0;
 	total_num_timesteps = 0;
 
 	angle_output = false;
@@ -674,7 +672,7 @@ void System::timeStepBoxing()
 	 */
 	if (!zero_shear) {
 		double strain_increment = shear_rate*dt;
-		cumulated_strain += strain_increment;
+		clk.cumulated_strain += strain_increment;
 		if (!ext_flow) {
 			// simple shear flow
 			vec3d shear_strain_increment = 2*dot(E_infinity, {0, 0, 1})*dt;
@@ -696,7 +694,7 @@ void System::timeStepBoxing()
 	} else {
 		if (wall_rheology || p.simulation_mode == 31) {
 			vec3d strain_increment = 2*dot(E_infinity, {0, 0, 1})*dt;
-			cumulated_strain += strain_increment.norm();
+			clk.cumulated_strain += strain_increment.norm();
 			shear_strain += strain_increment;
 			angle_wheel += dt*(omega_wheel_in-omega_wheel_out);
 		}
@@ -1046,8 +1044,8 @@ void System::adaptTimeStep(double time_end, double strain_end)
 	// To stop exactly at t == time_end or strain == strain_end,
 	// whatever comes first
 	if (strain_end >= 0) {
-		if (fabs(dt*shear_rate) > strain_end-cumulated_strain) {
-			dt = fabs((strain_end-cumulated_strain)/shear_rate);
+		if (fabs(dt*shear_rate) > strain_end-clk.cumulated_strain) {
+			dt = fabs((strain_end-clk.cumulated_strain)/shear_rate);
 		}
 	}
 	if (time_end >= 0) {
@@ -1080,17 +1078,17 @@ void System::timeStepMove(double time_end, double strain_end)
 	/* @@@@ NOTE
 	 * shear_rate = 1 for both simple shear and extensional flow
 	 * dot_epsion = shear_rate / 2 is always true.
-	 * cumulated_strain = shear_rate * t for both simple shear and extensional flow.
+	 * clk.cumulated_strain = shear_rate * t for both simple shear and extensional flow.
 	 */
 	/* Adapt dt to get desired p.disp_max	 */
 	if (!p.fixed_dt) {
 		adaptTimeStep(time_end, strain_end);
 	}
-	time_ += dt;
+	clk.time_ += dt;
 	if (ratio_unit_time != NULL) {
-		time_in_simulation_units += dt*(*ratio_unit_time);
+		clk.time_in_simulation_units += dt*(*ratio_unit_time);
 	} else {
-		time_in_simulation_units += dt;
+		clk.time_in_simulation_units += dt;
 	}
 	total_num_timesteps ++;
 	/* evolve PBC */
@@ -1106,7 +1104,7 @@ void System::timeStepMove(double time_end, double strain_end)
 		}
 	}
 	if (retrim_ext_flow) {
-		cerr << "cumulated_strain = " << cumulated_strain << endl;
+		cerr << "clk.cumulated_strain = " << clk.cumulated_strain << endl;
 		retrimProcess();
 	}
 	checkNewInteraction();
@@ -1123,11 +1121,11 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
  			adaptTimeStep(time_end, strain_end);
  		}
  	}
-	time_ += dt;
+	clk.time_ += dt;
 	if (ratio_unit_time != NULL) {
-		time_in_simulation_units += dt*(*ratio_unit_time);
+		clk.time_in_simulation_units += dt*(*ratio_unit_time);
 	} else {
-		time_in_simulation_units += dt;
+		clk.time_in_simulation_units += dt;
 	}
 	total_num_timesteps ++;
 	/* evolve PBC
@@ -1171,7 +1169,7 @@ void System::timeStepMoveCorrector()
 		}
 	}
 	if (retrim_ext_flow) {
-		cerr << "cumulated_strain = " << cumulated_strain << endl;
+		cerr << "clk.cumulated_strain = " << clk.cumulated_strain << endl;
 		retrimProcess();
 	}
 	checkNewInteraction();
@@ -1180,7 +1178,7 @@ void System::timeStepMoveCorrector()
 
 bool System::keepRunning(double time_end, double strain_end)
 {
-	if (cumulated_strain > strain_end-1e-8 && strain_end >= 0) {
+	if (clk.cumulated_strain > strain_end-1e-8 && strain_end >= 0) {
 		return false;
 	}
 	if (get_time() > time_end-1e-8 && time_end>=0) {
@@ -1236,10 +1234,10 @@ void System::timeEvolution(double time_end, double strain_end)
 			adaptTimeStep(time_end, strain_end);
 		}
 		if (ext_flow) {
-			if (cumulated_strain+shear_rate*dt > strain_retrim) {
+			if (clk.cumulated_strain+shear_rate*dt > strain_retrim) {
 				cerr << "strain_retrim = " << strain_retrim << endl;
 				dt_bak = dt;
-				dt = (strain_retrim-cumulated_strain)/shear_rate;
+				dt = (strain_retrim-clk.cumulated_strain)/shear_rate;
 				retrim_ext_flow = true;
 				strain_end = strain_retrim;
 				calc_stress = true;
@@ -1265,7 +1263,7 @@ void System::timeEvolution(double time_end, double strain_end)
 		(this->*timeEvolutionDt)(calc_stress, time_end, strain_end); // last time step, compute the stress
 	}
 	if (p.auto_determine_knkt
-		&& cumulated_strain > p.start_adjust) {
+		&& clk.cumulated_strain > p.start_adjust) {
 		adjustContactModelParameters();
 	}
 }
@@ -2039,7 +2037,7 @@ void System::computeShearRate()
 		double rate = (target_stress-rate_indep_shearstress)/rate_prop_shearstress_rate1;
 		set_shear_rate(rate);
 	}
-	if (cumulated_strain < init_strain_shear_rate_limit) {
+	if (clk.cumulated_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
 			set_shear_rate(init_shear_rate_limit);
 		}
@@ -2074,7 +2072,7 @@ void System::computeShearRateWalls()
 	// // the total_rate_dep_wall_shear_stress is computed above with shear_rate=1, so here it is also a viscosity.
 	set_shear_rate((-target_stress-total_rate_indep_wall_shear_stress)/total_rate_dep_wall_shear_stress);
 
-	if (cumulated_strain < init_strain_shear_rate_limit) {
+	if (clk.cumulated_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
 			set_shear_rate(init_shear_rate_limit);
 		}
@@ -2100,7 +2098,7 @@ void System::tmpMixedProblemSetVelocities()
 		 */
 		static double time_next = 16;
 		static double direction = 1;
-		if (time_ > time_next) {
+		if (get_time() > time_next) {
 			direction *= -1;
 			time_next += 16;
 			cerr << direction << endl;
@@ -2129,7 +2127,7 @@ void System::tmpMixedProblemSetVelocities()
 		na_velocity[np_mobile].x = 1;
 	} else if (p.simulation_mode == 4) {
 		static double time_next = 10;
-		if (time_ > time_next) {
+		if (get_time() > time_next) {
 			if (zero_shear == true) {
 				zero_shear = false;
 			} else {
@@ -2161,7 +2159,7 @@ void System::tmpMixedProblemSetVelocities()
 		}
 	} else if (p.simulation_mode == 21) {
 		static double time_next = p.strain_reversal;
-		if (time_ > time_next) {
+		if (get_time() > time_next) {
 			p.theta_shear += M_PI;
 			setShearDirection(p.theta_shear);
 			time_next += p.strain_reversal;
@@ -2600,14 +2598,14 @@ void System::adjustContactModelParameters()
 	 */
 
 	double overlap = -evaluateMinGap(*this);
-	overlap_avg.update(overlap, cumulated_strain);
+	overlap_avg.update(overlap, clk.cumulated_strain);
 	double max_disp_tan = evaluateMaxDispTan(*this);
-	max_disp_tan_avg.update(max_disp_tan, cumulated_strain);
-	kn_avg.update(p.kn, cumulated_strain);
-	kt_avg.update(p.kt, cumulated_strain);
+	max_disp_tan_avg.update(max_disp_tan, clk.cumulated_strain);
+	kn_avg.update(p.kn, clk.cumulated_strain);
+	kt_avg.update(p.kt, clk.cumulated_strain);
 
 	static double previous_cumulated_strain = 0;
-	double deltagamma = (cumulated_strain-previous_cumulated_strain);
+	double deltagamma = (clk.cumulated_strain-previous_cumulated_strain);
 	double kn_target = kn_avg.get()*overlap_avg.get()/p.overlap_target;
 	double dkn = (kn_target-p.kn)*deltagamma/p.memory_strain_k;
 
@@ -2638,7 +2636,7 @@ void System::adjustContactModelParameters()
 	if (dt > p.max_dt_auto_det) {
 		dt = p.max_dt_auto_det;
 	}
-	previous_cumulated_strain = cumulated_strain;
+	previous_cumulated_strain = clk.cumulated_strain;
 	resetContactModelParameer();
 }
 
@@ -2691,7 +2689,7 @@ void System::updateH()
 	/* H_orig = (exp(epsilon_dot t) 0 0 / 0 1 0 / 0 0 exp(-epsilon_dot t))
 	 * H = R(-magicangle) H_orig R(magicangle)
 	 */
-	double diff_ext_strain = 0.5*(cumulated_strain-(strain_retrim-strain_retrim_interval));
+	double diff_ext_strain = 0.5*(clk.cumulated_strain-(strain_retrim-strain_retrim_interval));
 	double exp_strain_x = exp(diff_ext_strain); // extensional strain = 0.5*(shear strain)
 	double exp_strain_z = 1.0/exp_strain_x;
 	/******** Set H     *****************************************/

@@ -3,12 +3,24 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <type_traits>
 #include "global.h"
 #include "Contact.h"
 #include "vec3d.h"
 
 #ifndef __LF_DEM__Configuration__
 #define __LF_DEM__Configuration__
+
+
+enum struct ConfFileFormat : int { // assign values as it is for output and otherwise may be compiler dependent.
+	bin_format_base_old = 1,
+	bin_format_base_new = 2,
+	bin_format_fixed_vel = 3,
+	txt_format_base_old = 4,
+	txt_format_base_new = 5,
+	txt_format_fixed_vel = 6,
+	txt_format_circular_couette = 7
+};
 
 struct base_configuration {
 	double lx, ly, lz;
@@ -159,36 +171,29 @@ inline std::map<std::string,std::string> getConfMetaData(const std::string &line
 	return meta_data;
 }
 
-inline int getBinaryConfigurationFileFormat(const std::string& filename_import_positions)
+inline ConfFileFormat getBinaryConfigurationFileFormat(const std::string& filename_import_positions)
 {
+	checkInFile(filename_import_positions);
 	std::ifstream file_import;
 	file_import.open(filename_import_positions.c_str(), std::ios::binary | std::ios::in);
-	if (!file_import) {
-		std::ostringstream error_str;
-		error_str  << " Position file '" << filename_import_positions << "' not found." << std::endl;
-		throw std::runtime_error(error_str.str());
-	}
-	int binary_format_version;
+	typedef std::underlying_type<ConfFileFormat>::type format_type;
+	format_type format_raw; // to read
 	int switch_;
-	file_import.read((char*)&switch_, sizeof(int));
+	file_import.read((char*)&switch_, sizeof(format_type));
 	if (switch_ == -1) {
-		file_import.read((char*)&binary_format_version, sizeof(int));
+		file_import.read((char*)&format_raw, sizeof(format_type));
+		return static_cast<ConfFileFormat>(format_raw);
 	} else {
-		binary_format_version = BIN_FORMAT_BASE_NEW; // may also be 1, but will be determined later
+		return ConfFileFormat::bin_format_base_old; // may also be 1, but will be determined later
 	}
-	return binary_format_version;
 }
 
 
-inline int getTxtConfigurationFileFormat(const std::string& filename_import_positions)
+inline ConfFileFormat getTxtConfigurationFileFormat(const std::string& filename_import_positions)
 {
+	checkInFile(filename_import_positions);
 	std::ifstream file_import;
 	file_import.open(filename_import_positions.c_str());
-	if (!file_import) {
-		std::ostringstream error_str;
-		error_str  << " Position file '" << filename_import_positions << "' not found." << std::endl;
-		throw std::runtime_error(error_str.str());
-	}
 
 	std::string header_imported_configulation[2];
 	getline(file_import, header_imported_configulation[0]);
@@ -196,31 +201,33 @@ inline int getTxtConfigurationFileFormat(const std::string& filename_import_posi
 
 	auto meta_data = getConfMetaData(header_imported_configulation[0], header_imported_configulation[1]);
 	if (meta_data.find("format") != meta_data.end()) {
-		return atoi(meta_data["format"].c_str());
+		return static_cast<ConfFileFormat>(atoi(meta_data["format"].c_str()));
 	} else if (meta_data.find("radius_in") != meta_data.end()) {
-		return TXT_FORMAT_CIRCULAR_COUETTE;
+		return ConfFileFormat::txt_format_circular_couette;
 	} else {
-		return TXT_FORMAT_BASE_OLD;
+		return ConfFileFormat::txt_format_base_old;
 	}
 }
 
-inline struct base_configuration readBinaryBaseConfiguration(std::istream &input)
+inline struct base_configuration readBinaryBaseConfiguration(const std::string& filename)
 {
+	checkInFile(filename);
+	auto format = getBinaryConfigurationFileFormat(filename);
+	if (format != ConfFileFormat::bin_format_base_old && format != ConfFileFormat::bin_format_base_new) {
+		throw std::runtime_error("readBaseConfiguration(): got incorrect binary format.");
+	}
+	std::ifstream input(filename.c_str(), std::ios::binary | std::ios::in);
 	struct base_configuration c;
 	c.lees_edwards_disp.reset();
 
-	int switch_, version_format_;
-	input.read((char*)&switch_, sizeof(int));
-	input.read((char*)&version_format_, sizeof(int));
-	if (switch_ == -1 && version_format_ != 2) {
-		throw std::runtime_error("readBaseConfiguration(): got incorrect binary format.");
+	int np, _switch;
+	typedef std::underlying_type<ConfFileFormat>::type format_type;
+	format_type fmt;
+	if (format != ConfFileFormat::bin_format_base_old){
+		input.read((char*)&_switch, sizeof(int));
+		input.read((char*)&fmt, sizeof(format_type));
 	}
-	int np;
-	if (switch_ != -1){
-		np = switch_;
-	} else {
-		input.read((char*)&np, sizeof(int));
-	}
+	input.read((char*)&np, sizeof(int));
 	input.read((char*)&c.volume_or_area_fraction, sizeof(double));
 	input.read((char*)&c.lx, sizeof(double));
 	input.read((char*)&c.ly, sizeof(double));
@@ -237,17 +244,18 @@ inline struct base_configuration readBinaryBaseConfiguration(std::istream &input
 	return c;
 }
 
-inline struct fixed_velo_configuration readBinaryFixedVeloConfiguration(std::istream &input)
+inline struct fixed_velo_configuration readBinaryFixedVeloConfiguration(const std::string& filename)
 {
+	checkInFile(filename);
+	auto format = getBinaryConfigurationFileFormat(filename);
+	if (format != ConfFileFormat::bin_format_fixed_vel) {
+		throw std::runtime_error("readBinaryFixedVeloConfiguration(): got incorrect binary format.");
+	}
+	std::ifstream input(filename.c_str(), std::ios::binary | std::ios::in);
+
 	struct fixed_velo_configuration c;
 
 	c.lees_edwards_disp.reset();
-	int switch_, version_format_;
-	input.read((char*)&switch_, sizeof(int));
-	input.read((char*)&version_format_, sizeof(int));
-	if(switch_ != -1 || version_format_ != 3) {
-		throw std::runtime_error("readBinaryFixedVeloConfiguration(): got incorrect binary format.");
-	}
 	int np, np_fixed;
 	input.read((char*)&np, sizeof(int));
 	input.read((char*)&np_fixed, sizeof(int));
@@ -302,7 +310,7 @@ inline void setMetadataBase(std::istream &input, T &conf)
 	conf.lees_edwards_disp.y = atof(getMetaParameter(meta_data, key, def).c_str());
 }
 
-inline struct base_configuration readTxtBaseConfiguration(std::istream &input)
+inline struct base_configuration readTxtBaseConfiguration(const std::string& filename)
 {
 	/**
 		\brief Import a text file base configuration.
@@ -313,6 +321,9 @@ inline struct base_configuration readTxtBaseConfiguration(std::istream &input)
 		x y z radius
 		...
 	 */
+	checkInFile(filename);
+	std::ifstream input(filename.c_str(), std::ios::in);
+
 	struct base_configuration c;
 	setMetadataBase(input, c);
 
@@ -327,7 +338,7 @@ inline struct base_configuration readTxtBaseConfiguration(std::istream &input)
 	return c;
 }
 
-inline struct fixed_velo_configuration readTxtFixedVeloConfiguration(std::istream &input)
+inline struct fixed_velo_configuration readTxtFixedVeloConfiguration(const std::string& filename)
 {
 	/**
 		\brief Import a text file configuration with imposed velocity particles.
@@ -341,6 +352,9 @@ inline struct fixed_velo_configuration readTxtFixedVeloConfiguration(std::istrea
 		...
 	 */
 	// http://stackoverflow.com/questions/743191/how-to-parse-lines-with-differing-number-of-fields-in-c
+
+	checkInFile(filename);
+	std::ifstream input(filename.c_str(), std::ios::in);
 
 	struct fixed_velo_configuration c;
 	setMetadataBase(input, c);
@@ -404,7 +418,7 @@ inline void setMetadataCircularCouette(std::istream &file_import, struct circula
 	conf.radius_out = atof(getMetaParameter(meta_data, key, def).c_str());
 }
 
-inline struct circular_couette_configuration readTxtCircularCouetteConfiguration(std::istream &input)
+inline struct circular_couette_configuration readTxtCircularCouetteConfiguration(const std::string& filename)
 {
 	/**
 		\brief Import a text file circular Couette configuration.
@@ -415,6 +429,10 @@ inline struct circular_couette_configuration readTxtCircularCouetteConfiguration
 		x y z radius
 		...
 	 */
+
+	checkInFile(filename);
+ 	std::ifstream input(filename.c_str(), std::ios::in);
+
 	struct circular_couette_configuration c;
 	setMetadataCircularCouette(input, c);
 

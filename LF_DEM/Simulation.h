@@ -51,6 +51,7 @@ private:
 	double target_stress_input;
 	double input_rate;
 	double dimensionless_rate;
+	bool restart_from_chkp;
 	time_t time_strain_0;
 	time_t time_strain_1;
 	time_t time_strain_end;
@@ -80,7 +81,7 @@ private:
 
 public:
 	/* For DEMsystem*/
-	Simulation();
+	Simulation(State::BasicCheckpoint chkp = State::zero_time_basicchkp);
 	~Simulation();
 	void simulationSteadyShear(std::string in_args,
 							   std::vector<std::string>& input_files,
@@ -108,6 +109,7 @@ public:
 						 std::string input_scale,
 						 std::string flow_type,
 						 std::string simu_identifier);
+	void setConfigToSystem(bool binary_conf, const std::string &filename);
 	TimeKeeper initTimeKeeper();
 	ParameterSet p;
 	bool keepRunning();
@@ -125,7 +127,7 @@ public:
 	void assertParameterCompatibility();
 	void setDefaultParameters(std::string input_scale);
 	void readParameterFile(const std::string& filename_parameters);
-	void openOutputFiles(std::string simu_name);
+	void openOutputFiles();
 	std::string prepareSimulationName(bool binary_conf,
 									  const std::string& filename_import_positions,
 									  const std::string& filename_parameters,
@@ -167,7 +169,6 @@ public:
 	 * For outputs
 	 */
 	void createDataHeader(std::stringstream& data_header);
-	void outputDataHeader(std::ofstream& fout);
 	void getSnapshotHeader(std::stringstream& snapshot_header);
 	void outputData();
 	void outputConfigurationData();
