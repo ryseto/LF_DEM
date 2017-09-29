@@ -59,6 +59,7 @@ extern volatile sig_atomic_t sig_caught;
 inline void sigint_handler(int signum) {
 	if (signum==SIGINT){
 		sig_caught = signum;
+		std::cerr << "Received a SIGINT" << std::endl;
 	}
 }
 
