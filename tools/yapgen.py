@@ -217,7 +217,7 @@ def snaps2yap(pos_fname,
 
 def conf2yap(conf_fname, yap_filename):
     print("Yap file : ", yap_filename)
-    positions, radii, meta = lf.read_conf_file(conf_fname)
+    positions, radii, meta = clff.read_conf_file(conf_fname)
     positions[:, 0] -= float(meta['lx'])/2
     positions[:, 1] -= float(meta['ly'])/2
     positions[:, 2] -= float(meta['lz'])/2

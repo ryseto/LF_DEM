@@ -8,6 +8,7 @@ from libcpp.string cimport string
 from libcpp cimport bool
 
 import numpy as np
+import struct as cstruct
 
 
 cdef extern from "lfdem_files.cpp":
@@ -141,3 +142,119 @@ cdef class snapshot_file(generic_file):
 def column_def(fname):
     f = generic_file(fname)
     return f.column_def()
+
+
+def read_conf_file(fname):
+    """
+    Purpose:
+        Read any LF_DEM conf file (usually D?N?VF?_*.dat files)
+
+    Parameters:
+        fname: the filename, or anything that can be taken as a first argument
+               to np.genfromtxt
+
+    Returning values:
+        positions, radii, metadata
+    """
+    openedfile = True
+    try:
+        in_file = open(fname, "r")
+    except TypeError:
+        in_file = fname
+        openedfile = False
+
+    line1 = in_file.readline()
+    line2 = in_file.readline()
+    meta_fields = line1.split()[1:]
+    meta_values = line2.split()[1:]
+    meta_data = dict(zip(meta_fields, meta_values))
+
+    dat = np.genfromtxt(fname, usecols=np.arange(4))
+    pos = dat[:, :3].astype(np.float)
+    rad = dat[:, 3].astype(np.float)
+    if openedfile:
+        in_file.close()
+    return pos, rad, meta_data
+
+
+def popValue(t, stream):
+    size = cstruct.calcsize(t)
+    buf = stream.read(size)
+    return cstruct.unpack(t, buf)
+
+
+def read_binary_conf_file(fname):
+
+    stream = open(fname, mode='rb')
+    meta_data = {}
+    config = {}
+
+    # determine the format
+    i = popValue("i", stream)[0]
+    if i == -1:
+        meta_data["format"], meta_data["np"] = popValue("2i", stream)
+        if meta_data["format"] > 3:
+            print(" unknown LF_DEM binary format : ", meta_data["format"])
+            exit(1)
+        if meta_data["format"] == 3:
+            meta_data["np_fixed"] = popValue("i", stream)[0]
+    else:
+        meta_data["np"] = i
+        meta_data["format"] = 2
+    meta_data["vf"] = popValue("d", stream)[0]
+    meta_data["lx"], meta_data["ly"], meta_data["lz"] = popValue("3d", stream)
+    meta_data["disp_x"], meta_data["disp_y"] = popValue("2d", stream)
+    config['metadata'] = meta_data
+    config['positions'] = np.empty((meta_data["np"], 4))
+    for i in range(meta_data["np"]):
+        config['positions'][i] = np.array(popValue("4d", stream))
+
+    if meta_data["format"] == 3:
+        config['fixed_velocities'] = np.empty((meta_data["np_fixed"], 3))
+        for i in range(meta_data["np_fixed"]):
+            config['fixed_velocities'][i] = np.array(popValue("3d", stream))
+
+    nc = popValue("I", stream)[0]
+    config['contacts'] = np.empty((nc, 8))
+    for i in range(nc):
+        config['contacts'][i] = np.array(popValue("2I6d", stream))
+
+    stream.close()
+    return config
+
+
+def pushValue(stream, fmt, *values):
+    stream.write(cstruct.pack(fmt, *values))
+
+
+def write_binary_conf_file(fname,
+                           config):
+    mandatory_fields = ['metadata', 'positions', 'contacts']
+    for field in mandatory_fields:
+        if field not in config:
+            raise RuntimeError("Config must contain a "+field+" field.")
+
+    with open(fname, "wb") as f:
+        meta_data = config["metadata"]
+        pushValue(f, "3i", -1, meta_data["format"], meta_data["np"])
+        if meta_data["format"] == 3:
+            pushValue(f, "i", meta_data["np_fixed"])
+        pushValue(f, "6d",
+                  meta_data["vf"],
+                  meta_data["lx"],
+                  meta_data["ly"],
+                  meta_data["lz"],
+                  meta_data["disp_x"],
+                  meta_data["disp_y"])
+
+        pos_size = str(config["positions"].size)
+        pushValue(f, pos_size+"d", *np.ravel(config["positions"]))
+
+        if meta_data["format"] == 3:
+            vel_size = str(config["fixed_velocities"].size)
+            pushValue(f, vel_size+"d", *np.ravel(config["fixed_velocities"]))
+
+        pushValue(f, "I", config['contacts'].shape[0])
+        for contact in config["contacts"]:
+            pushValue(f, "2I",*contact[:2].astype(np.int))
+            pushValue(f, "6d",*contact[2:])
