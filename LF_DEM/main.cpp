@@ -29,13 +29,10 @@ std::string prepareSimulationNameFromChkp(const std::string& filename_chkp)
 	/**
 	 \brief Determine simulation name when starting from checkpoint
 	 */
-	std::string name = filename_chkp;
-	auto prefix = name.find("chk_");
-	name.erase(prefix, prefix+4);
-	auto suffix = name.rfind(".dat");
-	name.erase(suffix, std::string::npos);
+	string::size_type chkp_name_start = filename_chkp.rfind("chk_") + 4;
+	string::size_type chkp_name_end = filename_chkp.rfind(".dat");
 
-	return name;
+	return filename_chkp.substr(chkp_name_start, chkp_name_end-chkp_name_start);
 }
 
 int main(int argc, char **argv)
