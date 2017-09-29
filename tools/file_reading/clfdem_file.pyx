@@ -127,7 +127,7 @@ cdef class snapshot_file(generic_file):
         frame = self.derivedthisptr.next_frame()
         if len(frame.meta_data):
             meta_dict = dict(frame.meta_data)
-            meta_dict = dict(zip([a.decode() for a in meta_dict], meta_dict.values()))
+            meta_dict = dict(zip([a for a in meta_dict], meta_dict.values()))
             return meta_dict, np.array(frame.data, dtype=np.float)
         else:
             raise StopIteration

@@ -372,6 +372,8 @@ inline bool lf_snapshot_file::read_frame_meta(struct Frame &frame) {
 inline bool lf_snapshot_file::parse_frame_header(struct Frame &frame) {
   frame.meta_data.clear();
   std::string line;
+  std::streampos pos;
+
   while(getline(file_stream, line)) {
     if (!line.empty()) {
       break;
@@ -388,7 +390,9 @@ inline bool lf_snapshot_file::parse_frame_header(struct Frame &frame) {
       auto key = key_value[0];
       key.erase(0, 2);
       lfdem_helper::to_double(key_value[1], frame.meta_data[key]);
+      pos = file_stream.tellg();
   } while(getline(file_stream, line));
+  file_stream.seekg(pos);
   return true;
 }
 
