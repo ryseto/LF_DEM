@@ -22,7 +22,7 @@ _col_nb(0),
 post_header_pos(0)
 {
   open_file(fname);
-  parse_header();
+  parse_file_header();
 }
 
 inline lf_file::lf_file(std::string fname,
@@ -33,7 +33,7 @@ post_header_pos(0)
 {
   std::sort(cols_to_read.begin(), cols_to_read.end());
   open_file(fname);
-  parse_header();
+  parse_file_header();
   filter_coldef_by_number();
 }
 
@@ -43,7 +43,7 @@ _col_nb(0),
 post_header_pos(0)
 {
   open_file(fname);
-  parse_header();
+  parse_file_header();
   check_fields(fields_to_read);
   auto slices = get_field_slices(fields_to_read);
   cols_to_read = lfdem_helper::slices_to_cols(slices);
@@ -179,20 +179,24 @@ inline void lf_file::parse_coldef_field(std::vector<std::string> &split_str)
 }
 
 
-inline void lf_file::parse_header()
+inline void lf_file::parse_file_header()
 {
+  /** A header is made of a few lines starting with "# " (hash and space)
+      containing the simulations metadata (number of particles, system size, etc)
+      followed by a few lines with "#[number]" defining the columns.
+      The end of the header is marked by a blank line */
   file_stream.seekg(file_stream.beg);
   for (std::string line; std::getline(file_stream, line); ) {
-    if (line.empty() || file_stream.eof()) {
+    if (line.empty() || file_stream.eof()) { // end of header
       break;
     }
     std::string sep = " ";
     auto split_str = lfdem_helper::split(line, sep);
     if (split_str.size() > 1) {
       if (split_str[0] == "#") {
-        parse_metadata_field(split_str);
+        parse_metadata_field(split_str); // it's a metadata line
       } else {
-        parse_coldef_field(split_str);
+        parse_coldef_field(split_str);  // it's a column definition
       }
     }
   }
@@ -292,12 +296,19 @@ inline void lf_data_file::read_data_cols() {
 
 /**** Public lf_snapshot_file methods ***************/
 inline lf_snapshot_file::lf_snapshot_file(std::string fname): lf_file(fname)
-{}
+{
+    getFileVersion();
+}
 
 inline struct Frame lf_snapshot_file::next_frame() {
   std::streampos pos = file_stream.tellg();
   struct Frame frame;
-  if (read_frame_meta(frame)) {
+  bool header_ok = true;
+  switch (version) {
+      case SnapshotFileVersion::keyword_hdr: header_ok = parse_frame_header(frame); break;
+      case SnapshotFileVersion::oneline_hdr: header_ok = read_frame_meta(frame); break;
+  }
+  if (header_ok) {
     read_frame_data(frame);
     if (frame_locations.empty() || pos > frame_locations[frame_locations.size()-1]) {
       frame_locations.push_back(pos);
@@ -321,6 +332,16 @@ inline struct Frame lf_snapshot_file::get_frame(std::size_t frame_nb) {
 
 
 /********** Private lf_snapshot_file methods *************/
+inline void lf_snapshot_file::getFileVersion() {
+    auto meta_data = get_meta_data();
+    if (meta_data.at("LF_DEM") >= "version v2.0-874-gbfbe6631") {
+        version = SnapshotFileVersion::keyword_hdr;
+    } else {
+        version = SnapshotFileVersion::oneline_hdr;
+    }
+}
+
+
 inline bool lf_snapshot_file::read_frame_meta(struct Frame &frame) {
   frame.meta_data.clear();
   std::string line;
@@ -345,6 +366,29 @@ inline bool lf_snapshot_file::read_frame_meta(struct Frame &frame) {
   if (frame_meta.size()>5) {
     lfdem_helper::to_double(frame_meta[5], frame.meta_data["time"]);
   }
+  return true;
+}
+
+inline bool lf_snapshot_file::parse_frame_header(struct Frame &frame) {
+  frame.meta_data.clear();
+  std::string line;
+  while(getline(file_stream, line)) {
+    if (!line.empty()) {
+      break;
+    }
+  };
+  if (line.empty()) {
+    return false;
+  }
+  do {
+      if (line.at(0) != '#') {
+          break;
+      }
+      auto key_value = lfdem_helper::split(line, " : ");
+      auto key = key_value[0];
+      key.erase(0, 2);
+      lfdem_helper::to_double(key_value[1], frame.meta_data[key]);
+  } while(getline(file_stream, line));
   return true;
 }
 

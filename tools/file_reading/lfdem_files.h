@@ -30,7 +30,7 @@ private:
   std::streampos post_header_pos;
 
   std::pair<int, int> str2cols(const std::string &str);
-  void parse_header();
+  void parse_file_header();
   void open_file(std::string fname);
   void parse_coldef_field(std::vector<std::string> &split_str);
   void parse_metadata_field(std::vector<std::string> &split_str);
@@ -58,21 +58,29 @@ private:
 };
 
 struct Frame {
-  std::map<std::string, double>  meta_data;
-  std::vector<std::vector<double>> data;
+    std::map<std::string, double>  meta_data;
+    std::vector<std::vector<double>> data;
+};
+
+enum class SnapshotFileVersion {
+    oneline_hdr,
+    keyword_hdr
 };
 
 class lf_snapshot_file: public lf_file {
 public:
-  lf_snapshot_file(std::string fname);
+    lf_snapshot_file(std::string fname);
 
-  struct Frame get_frame(std::size_t frame_nb);
-  struct Frame next_frame();
+    struct Frame get_frame(std::size_t frame_nb);
+    struct Frame next_frame();
 
 private:
-  std::vector <std::streampos> frame_locations;
-  bool read_frame_meta(struct Frame &frame);
-  void read_frame_data(struct Frame &frame);
+    SnapshotFileVersion version;
+    std::vector <std::streampos> frame_locations;
+    bool read_frame_meta(struct Frame &frame);
+    bool parse_frame_header(struct Frame &frame);
+    void read_frame_data(struct Frame &frame);
+    void getFileVersion();
 };
 
 #endif //__lfdem_file_reading_files__

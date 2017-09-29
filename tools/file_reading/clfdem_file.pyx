@@ -194,8 +194,7 @@ def read_binary_conf_file(fname):
     if i == -1:
         meta_data["format"], meta_data["np"] = popValue("2i", stream)
         if meta_data["format"] > 3:
-            print(" unknown LF_DEM binary format : ", meta_data["format"])
-            exit(1)
+            raise RuntimeError(" unknown LF_DEM binary format : ", meta_data["format"])
         if meta_data["format"] == 3:
             meta_data["np_fixed"] = popValue("i", stream)[0]
     else:
