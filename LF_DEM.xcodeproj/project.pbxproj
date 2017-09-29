@@ -24,6 +24,7 @@
 		D92EAA0F17E39D5100C903F5 /* Contact.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92EAA0B17E39D5100C903F5 /* Contact.cpp */; };
 		D92EAA1017E39D5100C903F5 /* Lubrication.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92EAA0D17E39D5100C903F5 /* Lubrication.cpp */; };
 		D932B8DC16C2E98000AD6E85 /* GenerateInitConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */; };
+		D941779A1F7E041F00BB44C0 /* States.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D94177991F7E041F00BB44C0 /* States.cpp */; };
 		D9506B9216D81A7C00A52CFF /* Stress.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9506B9116D81A7C00A52CFF /* Stress.cpp */; };
 		D9573FB216797A000081E903 /* Box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9573FAE16797A000081E903 /* Box.cpp */; };
 		D9573FB316797A000081E903 /* BoxSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9573FB016797A000081E903 /* BoxSet.cpp */; };
@@ -568,6 +569,8 @@
 		D94177951F7BAFE600BB44C0 /* wall_conf.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = wall_conf.py; path = tools/wall_conf.py; sourceTree = SOURCE_ROOT; };
 		D94177961F7BAFE600BB44C0 /* lfdem_utils.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = lfdem_utils.py; path = tools/lfdem_utils.py; sourceTree = SOURCE_ROOT; };
 		D94177971F7BAFE700BB44C0 /* lfdem_file.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = lfdem_file.py; path = tools/lfdem_file.py; sourceTree = SOURCE_ROOT; };
+		D94177981F7E041F00BB44C0 /* States.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = States.h; sourceTree = "<group>"; };
+		D94177991F7E041F00BB44C0 /* States.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = States.cpp; sourceTree = "<group>"; };
 		D94AEF021C0BCEAC0061C679 /* README.rst */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.rst; sourceTree = "<group>"; };
 		D9506B9116D81A7C00A52CFF /* Stress.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Stress.cpp; sourceTree = "<group>"; };
 		D9532ADF1B9412FC0014831F /* CalcOrderParameter */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CalcOrderParameter; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1301,6 +1304,8 @@
 				D9A80BF61B1C87D000F4BFD3 /* OutputData.h */,
 				D988E39B1654A18D0009949F /* System.h */,
 				D988E39A1654A18D0009949F /* System.cpp */,
+				D94177981F7E041F00BB44C0 /* States.h */,
+				D94177991F7E041F00BB44C0 /* States.cpp */,
 				D92244831BFBF08700F46233 /* SystemHelperFunctions.cpp */,
 				D9AD32F11D8CAD3D00819471 /* SystemHelperFunctions.h */,
 				D9506B9116D81A7C00A52CFF /* Stress.cpp */,
@@ -1604,6 +1609,7 @@
 			files = (
 				D932B8DC16C2E98000AD6E85 /* GenerateInitConfig.cpp in Sources */,
 				D9278EA81A93056E00ABCD87 /* RepulsiveForce.cpp in Sources */,
+				D941779A1F7E041F00BB44C0 /* States.cpp in Sources */,
 				D95FE80A1D4E2E40004D2C8A /* ContactDashpot.cpp in Sources */,
 				D988E38E165441750009949F /* main.cpp in Sources */,
 				D9CE1B421B066B3400E052D9 /* dSFMT.c in Sources */,

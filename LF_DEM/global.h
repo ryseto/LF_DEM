@@ -56,7 +56,8 @@
 
 extern volatile sig_atomic_t sig_caught;
 
-inline void sigint_handler(int signum) {
+inline void sigint_handler(int signum)
+{
 	if (signum==SIGINT){
 		sig_caught = signum;
 	}
@@ -130,7 +131,8 @@ inline void Str2KeyValue(const std::string& str_parameter,
 	return;
 }
 
-inline std::vector<std::string> splitString(const std::string& str){
+inline std::vector<std::string> splitString(const std::string& str)
+{
 	std::string stripped_str = str;
 	std::size_t brk = 0;
 
@@ -161,7 +163,8 @@ enum ControlVariable {
 	viscnb
 };
 
-inline void checkInFile(std::string filename) {
+inline void checkInFile(std::string filename)
+{
 	std::ifstream file_import(filename.c_str(), std::ios::in);
 	if (!file_import) {
 		std::ostringstream error_str;

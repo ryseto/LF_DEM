@@ -463,7 +463,8 @@ void System::setupBrownian()
 }
 
 template<typename T>
-void System::setupGenericConfiguration(T conf, ControlVariable control_){
+void System::setupGenericConfiguration(T conf, ControlVariable control_)
+{
 	string indent = "  System::\t";
 	cout << indent << "Setting up System... " << endl;
 	np = conf.position.size();
