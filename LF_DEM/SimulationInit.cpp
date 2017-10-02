@@ -1078,12 +1078,7 @@ string Simulation::prepareSimulationName(bool binary_conf,
 	ostringstream ss_simu_name;
 	string::size_type pos_name_end = filename_import_positions.find_last_of(".");
 	string::size_type param_name_end = filename_parameters.find_last_of(".");
-	string::size_type pos_name_start;
-	if (binary_conf) { // TO DO: improve name generation for binary input
-		pos_name_start = filename_import_positions.find_last_of("/");
-	} else {
-		pos_name_start = filename_import_positions.find_last_of("/");
-	}
+	string::size_type pos_name_start = filename_import_positions.find_last_of("/");
 	string::size_type param_name_start = filename_parameters.find_last_of("/");
 	if (pos_name_start == std::string::npos) {
 		pos_name_start = -1;

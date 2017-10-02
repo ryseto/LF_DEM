@@ -195,7 +195,8 @@ def snaps2yap(pos_fname,
         # display strain
         yap_out = pyp.add_layer_switch(yap_out, 5)
         yap_out = pyp.add_color_switch(yap_out, 1)
-        strain = frame_par[0]['curvilinear strain']
+        # *cu*rvilinear or *cu*mulated strain depending on LF_DEM version
+        strain = du.matching_uniq(frame_par[0], ["cu".encode('utf8'), "strain".encode('utf8')])
         yap_out = np.row_stack((yap_out,
                                 ['t', str(10.), str(0.), str(10.),
                                     'strain='+str(strain), '', '']))
@@ -217,7 +218,7 @@ def snaps2yap(pos_fname,
 
 def conf2yap(conf_fname, yap_filename):
     print("Yap file : ", yap_filename)
-    positions, radii, meta = lf.read_conf_file(conf_fname)
+    positions, radii, meta = clff.read_conf_file(conf_fname)
     positions[:, 0] -= float(meta['lx'])/2
     positions[:, 1] -= float(meta['ly'])/2
     positions[:, 2] -= float(meta['lz'])/2
