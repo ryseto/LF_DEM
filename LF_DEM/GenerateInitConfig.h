@@ -26,6 +26,7 @@
 #include "System.h"
 #include "ParameterSet.h"
 #include "Events.h"
+#include "MersenneTwister.h"
 
 class GenerateInitConfig{
 private:

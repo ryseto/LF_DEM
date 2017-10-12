@@ -70,7 +70,10 @@ enum class SnapshotFileVersion {
 class lf_snapshot_file: public lf_file {
 public:
     lf_snapshot_file(std::string fname);
-
+    lf_data_file(std::string fname,
+                 std::vector<int> columns_to_read);
+    lf_data_file(std::string fname,
+                 std::vector<std::string> fields_to_read);
     struct Frame get_frame(std::size_t frame_nb);
     struct Frame next_frame();
 

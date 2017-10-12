@@ -42,9 +42,8 @@
 #include "ForceComponent.h"
 #include "cholmod.h"
 
-#ifndef USE_DSFMT
-#include "MersenneTwister.h"
-#endif
+class MTRand;
+
 #ifdef USE_DSFMT
 #include "dSFMT-src-2.2.3/dSFMT.h"
 #endif

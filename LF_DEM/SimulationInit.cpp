@@ -997,6 +997,8 @@ void Simulation::setDefaultParameters(string input_scale)
 	autoSetParameters("out_binary_conf", "false");
 	autoSetParameters("out_data_vel_components", "false");
 	autoSetParameters("fixed_dt", "false");
+	autoSetParameters("dt_min", "-1");
+	autoSetParameters("dt_max", "-1");
 	autoSetParameters("theta_shear", "0");
 	autoSetParameters("event_handler", "");
 	autoSetParameters("simulation_mode", "0");

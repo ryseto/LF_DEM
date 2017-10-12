@@ -301,20 +301,25 @@ inline lf_snapshot_file::lf_snapshot_file(std::string fname): lf_file(fname)
 }
 
 inline struct Frame lf_snapshot_file::next_frame() {
-  std::streampos pos = file_stream.tellg();
-  struct Frame frame;
-  bool header_ok = true;
-  switch (version) {
-      case SnapshotFileVersion::keyword_hdr: header_ok = parse_frame_header(frame); break;
-      case SnapshotFileVersion::oneline_hdr: header_ok = read_frame_meta(frame); break;
-  }
-  if (header_ok) {
-    read_frame_data(frame);
-    if (frame_locations.empty() || pos > frame_locations[frame_locations.size()-1]) {
-      frame_locations.push_back(pos);
+    std::streampos pos = file_stream.tellg();
+    struct Frame frame;
+    bool header_ok = true;
+    switch (version) {
+        case SnapshotFileVersion::keyword_hdr: header_ok = parse_frame_header(frame); break;
+        case SnapshotFileVersion::oneline_hdr: header_ok = read_frame_meta(frame); break;
     }
-  }
-  return frame;
+    if (header_ok) {
+        if (cols_to_read.empty()) {
+            read_frame_data_full();
+        } else {
+            read_frame_data_cols();
+        }
+        read_frame_data(frame);
+        if (frame_locations.empty() || pos > frame_locations[frame_locations.size()-1]) {
+            frame_locations.push_back(pos);
+        }
+    }
+    return frame;
 }
 
 inline struct Frame lf_snapshot_file::get_frame(std::size_t frame_nb) {
@@ -369,6 +374,7 @@ inline bool lf_snapshot_file::read_frame_meta(struct Frame &frame) {
   return true;
 }
 
+
 inline bool lf_snapshot_file::parse_frame_header(struct Frame &frame) {
   frame.meta_data.clear();
   std::string line;
@@ -396,7 +402,7 @@ inline bool lf_snapshot_file::parse_frame_header(struct Frame &frame) {
   return true;
 }
 
-inline void lf_snapshot_file::read_frame_data(struct Frame &frame) {
+inline void lf_snapshot_file::read_frame_data_full(struct Frame &frame) {
   frame.data.clear();
   std::string line;
   std::vector<double> record (col_nb());
@@ -434,3 +440,27 @@ inline void lf_snapshot_file::read_frame_data(struct Frame &frame) {
   }
   file_stream.seekg(pos);
 }
+//
+// inline bool lf_snapshot_file::read_frame_data_cols(struct Frame &frame) {
+//     frame.meta_data.clear();
+//     std::string line;
+//     std::vector<double> record (cols_nb());
+//
+//     std::istream_iterator<double> iit (file_stream);
+//     std::vector<int> col_diff (col_nb());
+//     std::adjacent_difference(cols_to_read.begin(), cols_to_read.end(), col_diff.begin());
+//
+//     while (true) {
+//
+// for (unsigned i=0; i<col_diff.size(); i++){
+//         std::advance(iit, col_diff[i]);
+//         record[i] = *iit;
+//       }
+//   std::advance(iit, _col_nb - cols_to_read.back());
+//   if (!file_stream.eof()) {
+//       data.push_back(record);
+//   } else {
+//       is_read = true;
+//       return;
+//   }
+};

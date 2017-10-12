@@ -63,7 +63,7 @@ private:
 	void assignNeighborsTopBottom();
 	void assignNeighborsStaticExtFlow();
 	void assignNeighobrsDynamicExtFlow(Box& bx, const vec3d &pos);
-	Box** boxMap;
+	std::vector <Box*> boxMap;
 	std::vector<vec3d> top_probing_positions;
 	std::vector<vec3d> bottom_probing_positions;
 	unsigned int whichBoxLabel(const vec3d&);

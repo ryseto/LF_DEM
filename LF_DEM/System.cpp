@@ -14,6 +14,9 @@
 #include "SystemHelperFunctions.h"
 #include "global.h"
 #include "States.h"
+#ifndef USE_DSFMT
+#include "MersenneTwister.h"
+#endif
 
 extern volatile sig_atomic_t sig_caught;
 

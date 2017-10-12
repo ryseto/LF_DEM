@@ -102,6 +102,12 @@ cdef class data_file(generic_file):
         """Returns a numpy array of the data read from file"""
         return np.array(self.derivedthisptr.get_data(), dtype=np.float)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.__dealloc__()
+
 cdef class snapshot_file(generic_file):
     r"""
     LF_DEM snapshot file object, i.e. files with multiple lines per record (e.g. par_ or int_ files)
@@ -138,6 +144,12 @@ cdef class snapshot_file(generic_file):
             return frame.meta_data, np.array(frame.data, dtype=np.float)
         else:
             raise IndexError
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.__dealloc__()
 
 def column_def(fname):
     f = generic_file(fname)
@@ -177,13 +189,11 @@ def read_conf_file(fname):
     return pos, rad, meta_data
 
 
-def popValue(t, stream):
-    size = cstruct.calcsize(t)
-    buf = stream.read(size)
-    return cstruct.unpack(t, buf)
-
-
 def read_binary_conf_file(fname):
+    def popValue(t, stream):
+        size = cstruct.calcsize(t)
+        buf = stream.read(size)
+        return cstruct.unpack(t, buf)
 
     stream = open(fname, mode='rb')
     meta_data = {}
@@ -222,12 +232,11 @@ def read_binary_conf_file(fname):
     return config
 
 
-def pushValue(stream, fmt, *values):
-    stream.write(cstruct.pack(fmt, *values))
-
-
 def write_binary_conf_file(fname,
                            config):
+    def pushValue(stream, fmt, *values):
+       stream.write(cstruct.pack(fmt, *values))
+
     mandatory_fields = ['metadata', 'positions', 'contacts']
     for field in mandatory_fields:
         if field not in config:

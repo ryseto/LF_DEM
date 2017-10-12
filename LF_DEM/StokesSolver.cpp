@@ -16,52 +16,60 @@ using namespace std;
  ******************************************************/
 
 StokesSolver::StokesSolver():
-chol_L(NULL),
-chol_rhs(NULL),
-chol_res_matrix(NULL),
-chol_res_matrix_mf(NULL),
-chol_res_matrix_ff(NULL),
-chol_solution(NULL),
-chol_solveE_workspace(NULL),
-chol_solveY_workspace(NULL),
-chol_vel_mob(NULL),
-chol_vel_fix(NULL),
-chol_force_mob(NULL),
-chol_force_fix(NULL),
-chol_Psolution(NULL)
-{}
+chol_L(nullptr),
+chol_rhs(nullptr),
+chol_res_matrix(nullptr),
+chol_res_matrix_mf(nullptr),
+chol_res_matrix_ff(nullptr),
+chol_solution(nullptr),
+chol_solveE_workspace(nullptr),
+chol_solveY_workspace(nullptr),
+chol_vel_mob(nullptr),
+chol_vel_fix(nullptr),
+chol_force_mob(nullptr),
+chol_force_fix(nullptr),
+chol_Psolution(nullptr)
+{
+	CHOL_FUNC(start) (&chol_c);
+}
 
 StokesSolver::~StokesSolver()
 {
-	if (!chol_solution) {
+	if (chol_solution) {
 		CHOL_FUNC(free_dense) (&chol_solution, &chol_c);
 	}
-	if (!chol_solveE_workspace) {
+	if (chol_solveE_workspace) {
 		CHOL_FUNC(free_dense) (&chol_solveE_workspace, &chol_c);
 	}
-	if (!chol_solveY_workspace) {
+	if (chol_solveY_workspace) {
 		CHOL_FUNC(free_dense) (&chol_solveY_workspace, &chol_c);
 	}
-	if (!chol_rhs) {
+	if (chol_rhs) {
 		CHOL_FUNC(free_dense) (&chol_rhs, &chol_c);
 	}
-	if (!chol_vel_mob) {
+	if (chol_vel_mob) {
 		CHOL_FUNC(free_dense) (&chol_vel_mob, &chol_c);
 	}
-	if (!chol_vel_fix) {
+	if (chol_vel_fix) {
 		CHOL_FUNC(free_dense) (&chol_vel_fix, &chol_c);
 	}
-	if (!chol_force_mob) {
+	if (chol_force_mob) {
 		CHOL_FUNC(free_dense) (&chol_force_mob, &chol_c);
 	}
-	if (!chol_res_matrix) {
+	if (chol_force_fix) {
+		CHOL_FUNC(free_dense) (&chol_force_fix, &chol_c);
+	}
+	if (chol_res_matrix) {
 		CHOL_FUNC(free_sparse) (&chol_res_matrix, &chol_c);
 	}
-	if (!chol_res_matrix_mf) {
+	if (chol_res_matrix_mf) {
 		CHOL_FUNC(free_sparse) (&chol_res_matrix_mf, &chol_c);
 	}
-	if (!chol_res_matrix_ff) {
+	if (chol_res_matrix_ff) {
 		CHOL_FUNC(free_sparse) (&chol_res_matrix_ff, &chol_c);
+	}
+	if (chol_L) {
+		CHOL_FUNC(free_factor) (&chol_L, &chol_c);
 	}
 	CHOL_FUNC(finish) (&chol_c);
 }
@@ -497,7 +505,7 @@ void StokesSolver::resetResistanceMatrix(chol_int nb_of_interactions_mm,
 	}
 	current_column = 0;
 	to_be_factorized = matrix_pattern_changed;
-	if (to_be_factorized && chol_L != NULL) {
+	if (to_be_factorized && chol_L != nullptr) {
 		CHOL_FUNC(free_factor) (&chol_L, &chol_c);
 	}
 }
@@ -638,14 +646,14 @@ void StokesSolver::compute_LTRHS(vector<vec3d> &F, vector<vec3d> &T)
 	CHOL_FUNC(sdmult) (chol_L_sparse, transpose, alpha, beta, chol_rhs, chol_Psolution, &chol_c); // chol_Psolution = Lc*Y
 	// chol_solution = P^T*chol_Psolution
 	CHOL_FUNC(solve2) (CHOLMOD_Pt,                // solve chol_res_mat*chol_solution = chol_rhs
-								 chol_L,                   // Cholesky factor
-								 chol_Psolution,           // RHS
-								 NULL,                     // subpart of RHS, NULL means all
-								 &chol_solution,           // solution stored here
-								 NULL,                     // subpart of solution, NULL means all
-								 &chol_solveY_workspace,   // reusable workspace
-								 &chol_solveE_workspace,   // reusable workspace
-								 &chol_c);
+	                   chol_L,                   // Cholesky factor
+	                   chol_Psolution,           // RHS
+	                   NULL,                     // subpart of RHS, NULL means all
+	                   &chol_solution,           // solution stored here
+	                   NULL,                     // subpart of solution, NULL means all
+	                   &chol_solveY_workspace,   // reusable workspace
+	                   &chol_solveE_workspace,   // reusable workspace
+	                   &chol_c);
 	auto size = chol_solution->nrow/6;
 	for (decltype(size) i=0; i<size; i++) {
 		auto i6 = 6*i;
@@ -663,14 +671,14 @@ void StokesSolver::compute_LTRHS(vector<vec3d> &F, vector<vec3d> &T)
 void StokesSolver::solve(vector<vec3d> &velocity, vector<vec3d> &ang_velocity)
 {
 	CHOL_FUNC(solve2) (CHOLMOD_A,                // solve chol_res_mat*chol_solution = chol_rhs
-	               chol_L,                   // Cholesky factor
-	               chol_rhs,                 // RHS
-	               NULL,                     // subpart of RHS, NULL means all
-	               &chol_solution,           // solution stored here
-	               NULL,                     // subpart of solution, NULL means all
-	               &chol_solveY_workspace,   // reusable workspace
-	               &chol_solveE_workspace,   // reusable workspace
-								 &chol_c);
+	                   chol_L,                   // Cholesky factor
+	                   chol_rhs,                 // RHS
+	                   NULL,                     // subpart of RHS, NULL means all
+	                   &chol_solution,           // solution stored here
+	                   NULL,                     // subpart of solution, NULL means all
+	                   &chol_solveY_workspace,   // reusable workspace
+	                   &chol_solveE_workspace,   // reusable workspace
+	                   &chol_c);
 	auto size = chol_solution->nrow/6;
 	if (size>velocity.size() || size>ang_velocity.size()) {
 		// we don't try to resize things here, left to the caller
@@ -855,7 +863,6 @@ void StokesSolver::allocateRessources()
 	odbrows_table_mf.resize(mobile_particle_nb+1);
 	odbrows_table_ff.resize(fixed_particle_nb+1);
 	dblocks_ff.resize(fixed_particle_nb);
-	CHOL_FUNC(start) (&chol_c);
 #ifdef USE_GPU
 	if (cudaSetDevice(CUDA_DEVICE) == cudaSuccess) {
 		cout << " Using CUDA Device : " << CUDA_DEVICE << endl;
@@ -876,7 +883,7 @@ void StokesSolver::allocateRessources()
 	for (decltype(size_mm) i=0; i<size_mm; i++) {
 		((double*)chol_rhs->x)[i] = 0;
 	}
-	chol_L = NULL;
+	chol_L = nullptr;
 }
 
 void StokesSolver::allocateResistanceMatrix()
@@ -889,7 +896,7 @@ void StokesSolver::allocateResistanceMatrix()
 	auto size_mm = 6*dblocks.size();
 	auto nzmax = 18*dblocks.size(); // diagonal blocks
 	nzmax += 30*odblocks.size();   // off-diagonal
-	if (chol_res_matrix == NULL) {
+	if (!chol_res_matrix) {
 		chol_res_matrix = CHOL_FUNC(allocate_sparse) (size_mm, size_mm, nzmax, sorted, packed, stype, CHOLMOD_REAL, &chol_c);
 	}
 	if (size_mm != chol_res_matrix->nrow){
