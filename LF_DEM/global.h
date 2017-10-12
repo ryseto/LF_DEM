@@ -60,6 +60,7 @@ inline void sigint_handler(int signum)
 {
 	if (signum==SIGINT){
 		sig_caught = signum;
+		std::cerr << "Received a SIGINT" << std::endl;
 	}
 }
 

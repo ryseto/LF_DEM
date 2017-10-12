@@ -262,7 +262,8 @@ void Simulation::timeEvolutionUntilNextOutput(const TimeKeeper &tk)
 	}
 	if (sig_caught == SIGINT) {
 		checkpoint();
-		exit(1);
+		std::cerr << "exiting after SIGINT " << std::endl;
+		exit(99);
 	}
 	handleEvents();
 }

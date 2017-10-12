@@ -243,5 +243,6 @@ int main(int argc, char **argv)
 			//		  simulation.simulationUserDefinedSequence(seq_type, in_args.str(), input_files, binary_conf, rheology_control);
 		}
 	}
+	cerr << " Job done ok" << endl;
 	return 0;
 }
