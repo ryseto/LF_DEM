@@ -46,11 +46,12 @@ kt = 2000h;
 /*
  * Lubrication model
  * 0 no lubrication
- * 1 1/xi lubrication (only squeeze mode)
- * 2 log(1/xi) lubrication
+ * none: no lubrication
+ * normal: 1/xi lubrication (only squeeze mode)
+ * tangential: normal plus log(1/xi) terms (shear and pump modes)
  */
 
-lubrication_model = 2;
+lubrication_model = tangential;
 
 /*
  * lub_max: reduced large cutoff distance for lubrication
@@ -73,10 +74,10 @@ contact_relaxation_time = 1e-3h;
 contact_relaxation_time_tan = 0h;
 
 /* Repulsive force
- * Short range repulsion is assumed.
+ * Debye screering length for the repulsive force
  */
 
-repulsiveforce_length = 0.02;
+repulsive_length = 0.05;
 
 
 /*
