@@ -7,6 +7,7 @@
 #ifndef __LF_DEM__ParameterSet__
 #define __LF_DEM__ParameterSet__
 #include <string>
+#include "DimensionalQty.h"
 
 struct ParameterSet
 {
@@ -151,7 +152,44 @@ struct ParameterSet
 	double theta_shear;  ///< Shear direction, in degress, 0 is shear along x, 90 is shear along y [0]
 	double strain_reversal;  ///< for test_simulation = 21 (rtest1)
 	bool keep_input_strain;  ///< Use as initial strain value the strain from initial Lees-Edwards displacement [false]
-	double brownian_relaxation_time; ///< Averaging time scale in the stress controlled simulation for Brownian 
+	double brownian_relaxation_time; ///< Averaging time scale in the stress controlled simulation for Brownian
 };
 
+
+inline void setFromKeyValue(ParameterSet &p, const std::string &key, const Dimensional::DimensionalQty<double> &dim_value)
+{
+	double value = dim_value.value;
+	if (key == "contact_relaxation_time") {
+		p.contact_relaxation_time = value;
+	} else if (key == "contact_relaxation_time_tan") {
+		p.contact_relaxation_time_tan = value;
+	} else if (key == "time_end") {
+		p.time_end = value;
+	} else if (key == "time_interval_output_config") {
+		p.time_interval_output_config = value;
+	} else if (key == "time_interval_output_data") {
+		p.time_interval_output_data = value;
+	} else if (key == "initial_log_time") {
+		p.initial_log_time = value;
+	} else if (key == "min_kn") {
+		p.min_kn = value;
+	} else if (key == "max_kn") {
+		p.max_kn = value;
+	} else if (key == "min_kt") {
+		p.min_kt = value;
+	} else if (key == "max_kt") {
+		p.max_kt = value;
+	} else {
+		throw std::runtime_error("Unknown dimensional parameter "+key);
+	}
+}
+
+template <typename T>
+inline void setFromMap(ParameterSet &p,
+                       const std::map <std::string, T> &param_map)
+{
+	for (const auto & param: param_map) {
+		setFromKeyValue(p, param.first, param.second);
+	}
+}
 #endif/* defined(__LF_DEM__ParameterSet__) */

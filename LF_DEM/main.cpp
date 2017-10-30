@@ -63,7 +63,8 @@ int main(int argc, char **argv)
 	string stress_rate_filename = "not_given";
 	string chkp_filename = "";
 
-	ControlVariable rheology_control = rate;
+	Dimensional::DimensionalQty<double> control_value;
+	Parameters::ControlVariable rheology_control = Parameters::ControlVariable::rate;
 	string simu_identifier = "";
 	const struct option longopts[] = {
 		{"rate-controlled",   required_argument, 0, 'r'},
@@ -86,27 +87,16 @@ int main(int argc, char **argv)
 	while ((c = getopt_long(argc, argv, "hn8efldm:s:t:r:g::a:k:i:v:c:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
-				rheology_control = stress;
-				if (getSuffix(optarg, numeral, suffix)) {
-					dimensionless_number = atof(numeral.c_str());
-					// cout << "Stress control: " << dimensionless_number << endl;
-				} else {
-					errorNoSuffix("shear stress");
-				}
+				rheology_control = Parameters::ControlVariable::stress;
+				control_value = Dimensional::str2DimensionalQty(Dimensional::Stress, optarg, "shear stress");
 				break;
 			case 'r':
-				rheology_control = rate;
-				if (getSuffix(optarg, numeral, suffix)) {
-					dimensionless_number = atof(numeral.c_str());
-					cout << "Rate control: " << dimensionless_number << endl;
-				} else {
-					errorNoSuffix("shear rate");
-				}
+				rheology_control = Parameters::ControlVariable::rate;
+				control_value = Dimensional::str2DimensionalQty(Dimensional::Force, optarg, "shear rate");
 				break;
 			case '8':
-				rheology_control = rate;
-				dimensionless_number = 1;
-				suffix = "h";
+				rheology_control = Parameters::ControlVariable::rate;
+				control_value = {Dimensional::Force, 1, Dimensional::Unit::hydro};
 				cout << "Rate control, infinite shear rate (hydro + hard contacts only)" << endl;
 				break;
 			case 'e':
@@ -176,12 +166,11 @@ int main(int argc, char **argv)
 			cerr << usage << endl;
 			exit(1);
 		}
-		vector <string> input_files(5);
+		vector <string> input_files(5, "not_given");
 		input_files[0] = config_filename;
 		input_files[1] = param_filename;
 		input_files[2] = knkt_filename;
 		input_files[3] = stress_rate_filename;
-		input_files[4] = seq_filename;
 
 		State::BasicCheckpoint state = State::zero_time_basicchkp;
 		if (!chkp_filename.empty()) {
@@ -198,7 +187,7 @@ int main(int argc, char **argv)
 
 		try {
 			simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
-											 dimensionless_number, suffix, rheology_control,
+											 rheology_control, control_value,
 											 flow_type, simu_identifier);
 		} catch (runtime_error& e) {
 			cerr << e.what() << endl;
