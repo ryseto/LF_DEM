@@ -158,11 +158,13 @@ inline std::vector<std::string> splitString(const std::string& str)
 	return elements;
 }
 
-enum ControlVariable {
+namespace Parameters {
+enum class ControlVariable : unsigned {
 	rate,
 	stress,
-	viscnb
+	// viscnb
 };
+}
 
 inline void checkInFile(std::string filename)
 {

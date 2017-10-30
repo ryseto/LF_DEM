@@ -78,7 +78,7 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		c.radius_in = cg_radius_in;
 		c.radius_out = cg_radius_out;
 		cerr << "np " << np << endl;
-		sys.setupConfiguration(c, ControlVariable(rate));
+		sys.setupConfiguration(c, Parameters::ControlVariable::rate);
 	} else if (parallel_wall_config) {
 		/* Note:
 		 * Wall particles are placed at
@@ -98,7 +98,7 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		c.np_wall2 = np_wall2;
 		c.radius_in = cg_radius_in;
 		c.radius_out = cg_radius_out;
-		sys.setupConfiguration(c, ControlVariable(rate));
+		sys.setupConfiguration(c, Parameters::ControlVariable::rate);
 	} else if (winding_wall_config) {
 
 		np_wall1 = (cg_radius_out+cg_radius_in)*M_PI/2/1.5+1;
@@ -112,12 +112,12 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		c.np_wall2 = np_wall2;
 		c.radius_in = cg_radius_in;
 		c.radius_out = cg_radius_out;
-		sys.setupConfiguration(c, ControlVariable(rate));
+		sys.setupConfiguration(c, Parameters::ControlVariable::rate);
 	} else {
 		struct base_configuration c;
 		np_movable = np;
 		baseSetup(c, sys.twodimension, inflate_ratio);
-		sys.setupConfiguration(c, ControlVariable(rate));
+		sys.setupConfiguration(c, Parameters::ControlVariable::rate);
 	}
 
 

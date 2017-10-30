@@ -37,7 +37,7 @@ private:
 	ParameterSet p_initial;
 	std::map <std::string, Dimensional::DimensionalQty<double>> dimensional_input_params;
 	std::string header_imported_configulation[2];
-	ControlVariable::ControlVariable control_var;
+	Parameters::ControlVariable control_var;
 	double strain_end;
 	double time_end;
 	/*
@@ -83,18 +83,18 @@ public:
 	void simulationSteadyShear(std::string in_args,
 							   std::vector<std::string>& input_files,
 							   bool binary_conf,
-								 ControlVariable::ControlVariable control_variable,
+								 Parameters::ControlVariable control_variable,
 								 Dimensional::DimensionalQty<double> control_value,
 							   std::string flow_type,
 							   std::string simu_identifier);
 
 
-	void setupSimulation(string in_args,
-	                     vector<string>& input_files,
+	void setupSimulation(std::string in_args,
+	                     std::vector<std::string>& input_files,
 	                     bool binary_conf,
 	                     Dimensional::DimensionalQty<double> control_value,
-	                     string flow_type,
-	                     string simu_identifier);
+	                     std::string flow_type,
+	                     std::string simu_identifier);
 	void setConfigToSystem(bool binary_conf, const std::string &filename);
 	TimeKeeper initTimeKeeper();
 	ParameterSet p;
@@ -133,22 +133,8 @@ public:
 	std::string getMetaParameter(std::map<std::string,std::string> &, std::string &, const std::string &);
 	std::string getMetaParameter(std::map<std::string,std::string> &, std::string &);
 	void exportForceAmplitudes();
-	void changeUnit(DimensionalValue &x, std::string new_unit);
-	void buildFullSetOfForceRatios();
-
-	void resolveUnitSystem(std::string long_unit);
-	void setUnitScaleRateControlled();
-	void setupNonDimensionalization(double dimensionlessnumber,
-									std::string input_scale);
-	void setupNonDimensionalizationRateControlled(double dimensionlessnumber,
-												  std::string input_scale);
-	void setupNonDimensionalizationStressControlled(double dimensionlessnumber,
-													std::string input_scale);
-	void catchForcesInStressUnits(const std::string &stress_unit);
-	DimensionalValue str2DimensionalValue(std::string type,
-										  std::string keyword,
-										  std::string value_str,
-										  double* value_ptr);
+	Dimensional::Unit::Unit pickInternalUnitsRateControl();
+	void setupNonDimensionalization(Dimensional::DimensionalQty<double> control_value);
 	void stopShearing(TimeKeeper &tk); //simulation mode 22
 
 	/*

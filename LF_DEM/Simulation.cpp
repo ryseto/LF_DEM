@@ -265,7 +265,7 @@ void Simulation::printProgress()
 void Simulation::simulationSteadyShear(string in_args,
                                        vector<string>& input_files,
                                        bool binary_conf,
-                                       ControlVariable::ControlVariable control_variable,
+                                       Parameters::ControlVariable control_variable,
                                        Dimensional::DimensionalQty<double> control_value,
                                        string flow_type,
                                        string simu_identifier)
