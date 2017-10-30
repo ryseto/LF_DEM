@@ -25,7 +25,7 @@
 #include "global.h"
 #include "System.h"
 #include "ParameterSet.h"
-#include "DimensionalValue.h"
+#include "DimensionalQty.h"
 #include "OutputData.h"
 #include "Events.h"
 #include "Timer.h"
@@ -91,24 +91,14 @@ public:
 							   ControlVariable control_variable,
 							   std::string flow_type,
 							   std::string simu_identifier);
-	// void simulationfinedSequence(std::string seq_type, std::string in_args, std::vector<std::string> &input_files, bool binary_conf, std::string control_variable);
 
-	void simulationInverseYield(std::string in_args,
-								std::vector<std::string>& input_files,
-								bool binary_conf,
-								double dimensionless_number,
-								std::string input_scale,
-								ControlVariable control_variable,
-								std::string flow_type,
-								std::string simu_identifier);
 
-	void setupSimulation(std::string in_args,
-						 std::vector<std::string>& input_files,
-						 bool binary_conf,
-						 double dimensionlessnumber,
-						 std::string input_scale,
-						 std::string flow_type,
-						 std::string simu_identifier);
+	void setupSimulation(string in_args,
+	                     vector<string>& input_files,
+	                     bool binary_conf,
+	                     Dimensional::DimensionalQty<double> control_value,
+	                     string flow_type,
+	                     string simu_identifier);
 	void setConfigToSystem(bool binary_conf, const std::string &filename);
 	TimeKeeper initTimeKeeper();
 	ParameterSet p;
