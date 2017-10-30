@@ -35,19 +35,16 @@ class Simulation
 private:
 	System sys;
 	ParameterSet p_initial;
-	std::map <std::string, double> force_ratios; // pairs: (force_type_1/force_type_2, force_value_1/force_value_2)
-	std::map <std::string, std::string> unit_longname;
-	std::map <std::string, DimensionalValue> input_values;
-	std::map <std::string, double*> force_value_ptr;
+	std::map <std::string, Dimensional::DimensionalQty<double>> dimensional_input_params;
 	std::string header_imported_configulation[2];
-	ControlVariable control_var;
+	ControlVariable::ControlVariable control_var;
 	double strain_end;
 	double time_end;
 	/*
 	 * Resultant data
 	 */
-	std::string internal_unit_scales;
-	std::string output_unit_scales;
+	Dimensional::Unit::Unit internal_unit;
+	Dimensional::Unit::Unit output_unit;
 	double target_stress_input;
 	double input_rate;
 	double dimensionless_rate;
@@ -86,9 +83,8 @@ public:
 	void simulationSteadyShear(std::string in_args,
 							   std::vector<std::string>& input_files,
 							   bool binary_conf,
-							   double dimensionless_number,
-							   std::string input_scale,
-							   ControlVariable control_variable,
+								 ControlVariable::ControlVariable control_variable,
+								 Dimensional::DimensionalQty<double> control_value,
 							   std::string flow_type,
 							   std::string simu_identifier);
 

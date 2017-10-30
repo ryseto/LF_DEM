@@ -21,36 +21,15 @@ using namespace std;
 
 Simulation::Simulation(State::BasicCheckpoint chkp):
 sys(System(p, events, chkp)),
-internal_unit_scales("hydro"),
 target_stress_input(0),
 restart_from_chkp(false),
 timestep_1(0),
-diminish_output(false)
+diminish_output(false),
+internal_unit(Dimensional::Unit::none)
 {
-	unit_longname["h"] = "hydro";
-	unit_longname["r"] = "repulsion";
-	unit_longname["b"] = "brownian";
-	unit_longname["c"] = "cohesion";
-	unit_longname["cl"] = "critical_load";
-	unit_longname["ft"] = "ft_max";
-	unit_longname["kn"] = "kn";
-	unit_longname["kt"] = "kt";
-	unit_longname["kr"] = "kr";
-	unit_longname["s"] = "stress";
-	force_value_ptr["hydro"] = &dimensionless_rate; // the dimensionless hydrodynamic force is also the dimensionless shear rate
-	force_value_ptr["repulsion"] = &sys.p.repulsion;
-	force_value_ptr["critical_load"] = &sys.p.critical_load;
-	force_value_ptr["cohesion"] = &sys.p.cohesion;
-	force_value_ptr["ft_max"] = &sys.p.ft_max;
-	force_value_ptr["brownian"] = &sys.p.brownian;
-	force_value_ptr["kn"] = &sys.p.kn;
-	force_value_ptr["kt"] = &sys.p.kt;
-	force_value_ptr["kr"] = &sys.p.kr;
 	kill = false;
 	restart_from_chkp = !isZeroTimeChkp(chkp);
 };
-
-Simulation::~Simulation(){};
 
 string Simulation::gitVersion()
 {
@@ -284,13 +263,12 @@ void Simulation::printProgress()
  * Main simulation
  */
 void Simulation::simulationSteadyShear(string in_args,
-									   vector<string>& input_files,
-									   bool binary_conf,
-									   double dimensionless_number,
-									   string input_scale,
-									   ControlVariable control_variable,
-									   string flow_type,
-									   string simu_identifier)
+                                       vector<string>& input_files,
+                                       bool binary_conf,
+                                       ControlVariable::ControlVariable control_variable,
+                                       Dimensional::DimensionalQty<double> control_value,
+                                       string flow_type,
+                                       string simu_identifier)
 {
 	string indent = "  Simulation::\t";
 	if (flow_type == "extension") {
@@ -299,8 +277,8 @@ void Simulation::simulationSteadyShear(string in_args,
 		sys.ext_flow = false;
 	}
 	control_var = control_variable;
-	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale,
-					flow_type, simu_identifier);
+	setupSimulation(in_args, input_files, binary_conf, control_value,
+	                flow_type, simu_identifier);
 	time_t now;
 	time_strain_1 = 0;
 	now = time(NULL);
