@@ -113,7 +113,6 @@ public:
 	}
 
 	void assertParameterCompatibility();
-	void setDefaultParameters(Dimensional::DimensionalQty<double> control_value);
 	void readParameterFile(const std::string& filename_parameters);
 	void openOutputFiles();
 	std::string prepareSimulationName(bool binary_conf,

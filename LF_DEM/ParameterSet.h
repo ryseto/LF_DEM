@@ -11,9 +11,6 @@
 #include <vector>
 #include "DimensionalQty.h"
 
-#define PARAM_STRUCT(name, type, default_value) struct {std::string name = "name"; type value = default_value; std::string value_str;} name
-
-
 
 
 struct ParameterSet
@@ -76,7 +73,7 @@ struct ParameterSet
 	 * 1 Linear friction law Ft < mu Fn
 	 * 2 Threshold friction without repulsive force
 	 */
-	double friction_model;                   ///< Friction model. 0: No friction. 1: Coulomb. 2: Coulomb with threshold. [1]
+	int friction_model;                   ///< Friction model. 0: No friction. 1: Coulomb. 2: Coulomb with threshold. [1]
 	double mu_static;                        ///< friction coefficient (static) [1]
 	double mu_dynamic;                        ///< friction coefficient (dynamic). If -1, mu_dynamic = mu_static [-1]
 	double mu_rolling;                        ///< friction coefficient (rolling) [0]
@@ -89,8 +86,6 @@ struct ParameterSet
 	double kn;                               ///< Particle stiffness: normal spring constant [2000input_units]
 	double kt;                               ///< Particle stiffness: tangential spring constant [0.5kn]
 	double kr;                               ///< Particle stiffness: rolling spring constant [0.5kn]
-	// PARAM_STRUCT(test, bool, false);         ///< Particle stiffness: rolling spring constant [0.5kn]
-	bool test;
 		/*
 		 * contact_relaxation_factor:
 		 *
@@ -161,7 +156,7 @@ struct ParameterSet
 	double theta_shear;  ///< Shear direction, in degress, 0 is shear along x, 90 is shear along y [0]
 	double strain_reversal;  ///< for test_simulation = 21 (rtest1)
 	bool keep_input_strain;  ///< Use as initial strain value the strain from initial Lees-Edwards displacement [false]
-	double brownian_relaxation_time; ///< Averaging time scale in the stress controlled simulation for Brownian
+	double brownian_relaxation_time; ///< Averaging time scale in the stress controlled simulation for Brownian [1]
 };
 
 
@@ -212,12 +207,109 @@ struct InputParameter
 	T value;
 };
 
-#define PARAM_INIT(name, type, default_value) {"#name",  [](ParameterSet &p, InputParameter<type> in) {p.name = in.value;}, default_value}
+#define PARAM_INIT(name, default_value) {#name,  [](ParameterSet &p, InputParameter<decltype(ParameterSet::name)> in) {p.name = in.value;}, default_value}
+#define PARAM_INIT_DIMVAL(name, type, default_value) {#name,  [](ParameterSet &p, InputParameter<Dimensional::DimensionalValue<decltype(ParameterSet::name)>> in) {p.name = in.value.value;}, default_value}
 
 static std::vector<InputParameter<bool>> InputBoolParameterSet = \
 {
-	PARAM_INIT(test, bool, false),
-	{"fixed_dt", [](ParameterSet &p, InputParameter<bool> in) {p.fixed_dt = in.value;}, false}
+	PARAM_INIT(fixed_dt, false),
+	PARAM_INIT(keep_input_strain, false),
+	PARAM_INIT(monolayer, false),
+	PARAM_INIT(auto_determine_knkt, false),
+	PARAM_INIT(out_bond_order_parameter6, false),
+	PARAM_INIT(out_data_vel_components, false),
+	PARAM_INIT(out_binary_conf, false),
+	PARAM_INIT(out_data_interaction, true),
+	PARAM_INIT(out_data_particle, true),
+	PARAM_INIT(origin_zero_flow, true),
+	PARAM_INIT(log_time_interval, false),
 };
+
+static std::vector<InputParameter<double>> InputDoubleParameterSet = \
+{
+	PARAM_INIT(brownian_relaxation_time, 1),
+	PARAM_INIT(strain_reversal, 1),
+	PARAM_INIT(theta_shear, 0),
+	PARAM_INIT(rest_threshold, 1e-4),
+	PARAM_INIT(Pe_switch, 5),
+	PARAM_INIT(start_adjust, 0.2),
+	PARAM_INIT(max_dt_auto_det, 1e-3),
+	PARAM_INIT(min_dt_auto_det, 1e-7),
+	PARAM_INIT(memory_strain_avg, 0.01),
+	PARAM_INIT(memory_strain_k, 0.02),
+	PARAM_INIT(disp_tan_target, 0.05),
+	PARAM_INIT(overlap_target, 0.05),
+	PARAM_INIT(dt_min, -1),
+	PARAM_INIT(dt_max, -1),
+	PARAM_INIT(dt, 1e-4),
+	PARAM_INIT(disp_max, 2e-3),
+	PARAM_INIT(lub_max_gap, 0.5),
+	PARAM_INIT(lub_reduce_parameter, 1e-3),
+	PARAM_INIT(sd_coeff, 1),
+	PARAM_INIT(interaction_range, -1),
+	PARAM_INIT(repulsive_length, 0.05),
+	PARAM_INIT(repulsive_max_length, -1),
+	PARAM_INIT(magic_angle, 0),
+	PARAM_INIT(mu_static, 1),
+	PARAM_INIT(mu_dynamic, -1),
+	PARAM_INIT(mu_rolling, 0),
+};
+
+
+static std::vector<InputParameter<int>> InputIntParameterSet = \
+{
+	PARAM_INIT(nb_output_data_log_time, 100),
+	PARAM_INIT(nb_output_config_log_time, 100),
+	PARAM_INIT(integration_method, 1),
+	PARAM_INIT(friction_model, 1),
+	PARAM_INIT(np_fixed, 0),
+	PARAM_INIT(simulation_mode, 0)
+};
+
+static std::vector<InputParameter<str::string>> InputStrParameterSet = \
+{
+	PARAM_INIT(flow_type, ""),
+	PARAM_INIT(event_handler, ""),
+	PARAM_INIT(lubrication_model, "tangential"),
+};
+
+static std::vector<InputParameter<str::string>> InputDimValParameterSet = \
+{
+	PARAM_INIT(flow_type, ""),
+	PARAM_INIT(lubrication_model, "tangential"),
+};
+
+
+
+
+void Simulation::setDefaultParameters(Dimensional::DimensionalQty<double> control_value)
+{
+
+	/**
+	 \brief Set default values for ParameterSet parameters.
+	 */
+	auto input_scale = control_value.unit;
+	auto input_scale_str = Dimensional::unit2suffix(input_scale);
+
+	autoSetParameters("time_end", "10h");
+	autoSetParameters("contact_relaxation_time", "1e-3"+input_scale_str);
+	autoSetParameters("contact_relaxation_time_tan", "-1"+input_scale_str);
+	if (input_scale != Dimensional::Unit::kn) {
+		autoSetParameters("kn", "2000"+input_scale_str);
+		autoSetParameters("min_kn_auto_det", "1000"+input_scale_str);
+		autoSetParameters("max_kn_auto_det", "1000000"+input_scale_str);
+	}
+	if (input_scale != Dimensional::Unit::kt) {
+		autoSetParameters("kt", "0.5kn");
+		autoSetParameters("min_kt_auto_det", "1000"+input_scale_str);
+		autoSetParameters("max_kt_auto_det", "1000000"+input_scale_str);
+	}
+	if (input_scale != Dimensional::Unit::kr) {
+		autoSetParameters("kr", "0kn");
+	}
+	autoSetParameters("time_interval_output_data", "1e-2h");
+	autoSetParameters("time_interval_output_config", "1e-1h");
+}
+
 
 #endif/* defined(__LF_DEM__ParameterSet__) */

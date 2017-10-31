@@ -634,6 +634,11 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		error_str  << "keyword " << keyword << " is not associated with an parameter" << endl;
 		throw runtime_error(error_str.str());
 	}
+	for (auto &inp: InputBoolParameterSet) {
+		if (inp.name_str==keyword) {
+			inp.value = str2bool(value);
+		}
+	}
 }
 
 void Simulation::readParameterFile(const string& filename_parameters)
@@ -686,81 +691,6 @@ void Simulation::readParameterFile(const string& filename_parameters)
 	return;
 }
 
-void Simulation::setDefaultParameters(Dimensional::DimensionalQty<double> control_value)
-{
-
-	/**
-	 \brief Set default values for ParameterSet parameters.
-	 */
-	auto input_scale = control_value.unit;
-	auto input_scale_str = Dimensional::unit2suffix(input_scale);
-
-	autoSetParameters("Pe_switch", "5");
-	autoSetParameters("dt", "1e-4");
-	autoSetParameters("disp_max", "1e-3");
-	autoSetParameters("dt_max", "-1");
-	autoSetParameters("dt_max", "-1");
-	autoSetParameters("monolayer", "false");
-	autoSetParameters("rest_threshold", "1e-4");
-	autoSetParameters("integration_method", "1");
-	autoSetParameters("np_fixed", "0");
-	autoSetParameters("sd_coeff", "1");
-	autoSetParameters("lubrication_model", "tangential");
-	autoSetParameters("friction_model", "1");
-	autoSetParameters("time_end", "10h");
-	autoSetParameters("lub_max_gap", "0.5");
-	autoSetParameters("interaction_range", "-1");
-	autoSetParameters("lub_reduce_parameter", "1e-3");
-	autoSetParameters("contact_relaxation_time", "1e-3"+input_scale_str);
-	autoSetParameters("contact_relaxation_time_tan", "-1"+input_scale_str);
-	if (input_scale != Dimensional::Unit::kn) {
-		autoSetParameters("kn", "2000"+input_scale_str);
-		autoSetParameters("min_kn_auto_det", "1000"+input_scale_str);
-		autoSetParameters("max_kn_auto_det", "1000000"+input_scale_str);
-	}
-	if (input_scale != Dimensional::Unit::kt) {
-		autoSetParameters("kt", "0.5kn");
-		autoSetParameters("min_kt_auto_det", "1000"+input_scale_str);
-		autoSetParameters("max_kt_auto_det", "1000000"+input_scale_str);
-	}
-	autoSetParameters("min_dt_auto_det", "1e-7");
-	autoSetParameters("max_dt_auto_det", "1e-3");
-	if (input_scale != Dimensional::Unit::kr) {
-		autoSetParameters("kr", "0kn");
-	}
-	autoSetParameters("auto_determine_knkt", "false");
-	autoSetParameters("overlap_target", "0.05");
-	autoSetParameters("disp_tan_target", "0.05");
-	autoSetParameters("memory_strain_avg", "0.01");
-	autoSetParameters("memory_strain_k", "0.02");
-	autoSetParameters("start_adjust", "0.2");
-	autoSetParameters("repulsive_length", "0.05");
-	autoSetParameters("repulsive_max_length", "-1");
-	autoSetParameters("mu_static", "1");
-	autoSetParameters("mu_dynamic", "-1");
-	autoSetParameters("mu_rolling", "0");
-	autoSetParameters("time_interval_output_data", "1e-2h");
-	autoSetParameters("time_interval_output_config", "1e-1h");
-	autoSetParameters("log_time_interval", "false");
-	autoSetParameters("initial_log_time", "1e-4h");
-	autoSetParameters("nb_output_data_log_time", "100");
-	autoSetParameters("nb_output_config_log_time", "100");
-	autoSetParameters("origin_zero_flow", "true");
-	autoSetParameters("out_data_particle", "true");
-	autoSetParameters("out_data_interaction", "true");
-	autoSetParameters("out_particle_stress", "");
-	autoSetParameters("out_binary_conf", "false");
-	autoSetParameters("out_data_vel_components", "false");
-	autoSetParameters("fixed_dt", "false");
-	autoSetParameters("dt_min", "-1");
-	autoSetParameters("dt_max", "-1");
-	autoSetParameters("theta_shear", "0");
-	autoSetParameters("event_handler", "");
-	autoSetParameters("simulation_mode", "0");
-	autoSetParameters("keep_input_strain", "false");
-	autoSetParameters("brownian_relaxation_time", "1");
-	autoSetParameters("out_bond_order_parameter6", "false");
-}
 
 //inline string columnDefinition(int &cnb, const string &type, const string &name)
 //{
