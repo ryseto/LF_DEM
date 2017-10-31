@@ -13,6 +13,85 @@
 #include "Configuration.h"
 using namespace std;
 
+void Simulation::contactForceParameter(string filename)
+{
+	/**
+	 \brief Load a file containing spring constants and time steps as functions of the volume fraction.
+
+	 Input file must be formatted as:
+	 phi kn kt dt
+	 */
+	auto conf = sys.getConfiguration();
+	ifstream fin_knktdt;
+	fin_knktdt.open(filename.c_str());
+	if (!fin_knktdt) {
+		ostringstream error_str;
+		error_str  << " Contact parameter file '" << filename << "' not found." << endl;
+		throw runtime_error(error_str.str());
+	}
+	// temporal variables to keep imported values.
+	double phi_, kn_, kt_, dt_;
+	// To find parameters for considered volume fraction phi.
+	bool found = false;
+	while (fin_knktdt >> phi_ >> kn_ >> kt_ >> dt_) {
+		if (abs(phi_-conf.volume_or_area_fraction) < 1e-10) {
+			found = true;
+			break;
+		}
+	}
+	fin_knktdt.close();
+	if (found) {
+		// Set the parameter object
+		p.kn = kn_, p.kt = kt_, p.dt = dt_;
+		string indent = "  Simulation::\t";
+		cout << indent << "Input for kn, kt, dt = " << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_ << endl;
+	} else {
+		ostringstream error_str;
+		error_str  << " Error: file " << filename.c_str() << " contains no data for vf = " << conf.volume_or_area_fraction << endl;
+		throw runtime_error(error_str.str());
+	}
+}
+
+void Simulation::contactForceParameterBrownian(string filename)
+{
+	/**
+	 \brief Load a file containing spring constants and time steps as functions of the volume fraction and Peclet number.
+
+	 Input file must be formatted as:
+	 phi peclet kn kt dt
+	 */
+	auto conf = sys.getConfiguration();
+	ifstream fin_knktdt;
+	fin_knktdt.open(filename.c_str());
+	if (!fin_knktdt) {
+		ostringstream error_str;
+		error_str  << " Contact parameter file '" << filename << "' not found." << endl;
+		throw runtime_error(error_str.str());
+	}
+	// temporal variables to keep imported values.
+	double phi_, peclet_, kn_, kt_, dt_;
+	bool found = false;
+	auto forces = system_of_units.getForceTree();
+	auto peclet = 1./forces.at(Dimensional::Unit::brownian).value;
+	while (fin_knktdt >> phi_ >> peclet_ >> kn_ >> kt_ >> dt_) {
+		if (abs(phi_-conf.volume_or_area_fraction) < 1e-10 && peclet_ == peclet) {
+			found = true;
+			break;
+		}
+	}
+	fin_knktdt.close();
+
+	if (found) {
+		p.kn = kn_, p.kt = kt_, p.dt = dt_;
+		string indent = "  Simulation::\t";
+		cout << indent << "Input for vf = " << phi_ << " and Pe = " << peclet_ << " : kn = " << kn_ << ", kt = " << kt_ << " and dt = " << dt_ << endl;
+	} else {
+		ostringstream error_str;
+		error_str  << " Error: file " << filename.c_str() << " contains no data for vf = " << conf.volume_or_area_fraction << " and Pe = " << peclet << endl;
+		throw runtime_error(error_str.str());
+	}
+}
+
 
 void Simulation::importPreSimulationData(string filename)
 {
@@ -97,6 +176,7 @@ void Simulation::exportForceAmplitudes()
 		sys.p.brownian = forces.at(Dimensional::Unit::brownian).value;
 		cout << indent+"Brownian force (in \"" << Dimensional::unit2suffix(forces.at(Dimensional::Unit::brownian).unit) << "\" units): " << sys.p.brownian << endl;
 	}
+	
 	sys.p.kn = forces.at(Dimensional::Unit::kn).value;
 	cout << indent+"Normal contact stiffness (in \"" << Dimensional::unit2suffix(forces.at(Dimensional::Unit::kn).unit) << "\" units): " << sys.p.kn << endl;
 	sys.p.kt = forces.at(Dimensional::Unit::kt).value;

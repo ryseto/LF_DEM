@@ -12,9 +12,7 @@ namespace Dimensional {
 void UnitSystem::add(Unit unit, DimensionalQty<double> quantity)
 {
   assert(quantity.dimension == Dimension::Force || quantity.dimension == Dimension::Stress);
-  if (quantity.value == 0) {
-    return;
-  }
+  
   if (quantity.dimension==Dimension::Stress) {
     quantity.value /= 6*M_PI; // at some point we have to get rid of this weird unit choice
   }
@@ -73,6 +71,11 @@ void UnitSystem::flipDependency(Unit node_name)
     return;
   }
   flipDependency(parent_node_name);
+  if (node.value == 0) {
+      throw std::runtime_error(" UnitSystem:: could not flip the unit system: "
+                               +unit2suffix(node_name)+" has value 0, but value of "
+                               +unit2suffix(parent_node_name)+" depends on it.");
+  }
   parent_node.value = 1/node.value;
   parent_node.unit = node_name;
 }
