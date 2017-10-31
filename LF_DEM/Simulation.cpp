@@ -382,27 +382,6 @@ void Simulation::outputComputationTime()
 	fout_time << timestep_from_1 << endl;
 }
 
-DimensionalValue Simulation::str2DimensionalValue(string type,
-                                                  string name,
-                                                  string value_str,
-                                                  double *value_ptr)
-{
-	DimensionalValue inv;
-	inv.type = type;
-	inv.value = value_ptr;
-
-	string numeral, suffix;
-	bool caught_suffix = true;
-	caught_suffix = getSuffix(value_str, numeral, suffix);
-	if (!caught_suffix) {
-		errorNoSuffix(name);
-	}
-	suffix = unit_longname[suffix];
-	*(inv.value) = atof(numeral.c_str());
-	inv.unit = suffix;
-	return inv;
-}
-
 
 void Simulation::outputConfigurationBinary(string conf_filename)
 {

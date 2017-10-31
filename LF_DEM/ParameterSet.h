@@ -9,6 +9,8 @@
 #include <string>
 #include "DimensionalQty.h"
 
+#define PARAM_STRUCT(name, type, default_value) struct {std::string name = "name"; type value = default_value; std::string value_str;} name
+
 struct ParameterSet
 {
 	/*******************************************************
@@ -82,6 +84,8 @@ struct ParameterSet
 	double kn;                               ///< Particle stiffness: normal spring constant [2000input_units]
 	double kt;                               ///< Particle stiffness: tangential spring constant [0.5kn]
 	double kr;                               ///< Particle stiffness: rolling spring constant [0.5kn]
+	PARAM_STRUCT(test, bool, false);         ///< Particle stiffness: rolling spring constant [0.5kn]
+		
 		/*
 		 * contact_relaxation_factor:
 		 *
@@ -171,14 +175,14 @@ inline void setFromKeyValue(ParameterSet &p, const std::string &key, const Dimen
 		p.time_interval_output_data = value;
 	} else if (key == "initial_log_time") {
 		p.initial_log_time = value;
-	} else if (key == "min_kn") {
-		p.min_kn = value;
-	} else if (key == "max_kn") {
-		p.max_kn = value;
-	} else if (key == "min_kt") {
-		p.min_kt = value;
-	} else if (key == "max_kt") {
-		p.max_kt = value;
+	} else if (key == "min_kn_auto_det") {
+		p.min_kn_auto_det = value;
+	} else if (key == "max_kn_auto_det") {
+		p.max_kn_auto_det = value;
+	} else if (key == "min_kt_auto_det") {
+		p.min_kt_auto_det = value;
+	} else if (key == "max_kt_auto_det") {
+		p.max_kt_auto_det = value;
 	} else {
 		throw std::runtime_error("Unknown dimensional parameter "+key);
 	}
