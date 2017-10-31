@@ -6,6 +6,8 @@
 //
 #ifndef __LF_DEM__Dimensional__
 #define __LF_DEM__Dimensional__
+#define _USE_MATH_DEFINES
+#include <cmath> // for M_PI
 #include <stdexcept>
 #include <map>
 #include <assert.h>
@@ -13,7 +15,7 @@
 
 namespace Dimensional {
 
-enum Dimension {
+enum class Dimension {
   Force,
   Time,
   Viscosity,
@@ -25,8 +27,7 @@ enum Dimension {
   none
 };
 
-namespace Unit {
-enum Unit {
+enum class Unit {
   hydro,
   repulsion,
   brownian,
@@ -79,51 +80,50 @@ inline Unit suffix2unit(std::string s) {
 }
 
 inline std::string unit2suffix(Unit unit) {
-  if (unit==hydro) {
+  if (unit==Unit::hydro) {
     return "h";
   }
-  if (unit==repulsion) {
+  if (unit==Unit::repulsion) {
     return "r";
   }
-  if (unit==brownian) {
+  if (unit==Unit::brownian) {
     return "b";
   }
-  if (unit==cohesion) {
+  if (unit==Unit::cohesion) {
     return "c";
   }
-  if (unit==critical_load) {
+  if (unit==Unit::critical_load) {
     return "cl";
   }
-  if (unit==ft_max) {
+  if (unit==Unit::ft_max) {
     return "ft";
   }
-  if (unit==kn) {
+  if (unit==Unit::kn) {
     return "kn";
   }
-  if (unit==kt) {
+  if (unit==Unit::kt) {
     return "kt";
   }
-  if (unit==kr) {
+  if (unit==Unit::kr) {
     return "kr";
   }
-  if (unit==stress) {
+  if (unit==Unit::stress) {
     return "s";
   }
-  if (unit==sigma_zz) {
+  if (unit==Unit::sigma_zz) {
     return "sz";
   }
-  if (unit==none) {
+  if (unit==Unit::none) {
     return "";
   }
   return "";
 }
-} // namespace Unit
 
 template<typename T>
 struct DimensionalQty {
   Dimension dimension;
   T value;
-  Unit::Unit unit;
+  Unit unit;
 };
 
 
@@ -161,14 +161,14 @@ inline DimensionalQty<double> str2DimensionalQty(Dimension dimension,
 		errorNoSuffix(name);
 	}
 	inv.value = stod(numeral);
-	inv.unit = Unit::suffix2unit(suffix);
+	inv.unit = suffix2unit(suffix);
 
-  if (inv.dimension == TimeOrStrain) {
+  if (inv.dimension == Dimension::TimeOrStrain) {
     if (inv.unit == Unit::hydro) {
-      inv.dimension = Strain;
+      inv.dimension = Dimension::Strain;
       inv.unit = Unit::none;
     } else {
-      inv.dimension = Time;
+      inv.dimension = Dimension::Time;
     }
   }
 	return inv;
@@ -177,33 +177,33 @@ inline DimensionalQty<double> str2DimensionalQty(Dimension dimension,
 class UnitSystem {
 public:
   // void add(Param::Parameter param, DimensionalQty value);
-  void add(Unit::Unit unit, DimensionalQty<double> quantity);
-  void setInternalUnit(Unit::Unit unit);
+  void add(Unit unit, DimensionalQty<double> quantity);
+  void setInternalUnit(Unit unit);
   template<typename T> void convertToInternalUnit(DimensionalQty<T> &quantity) const;
-  template<typename T> void convertFromInternalUnit(DimensionalQty<T> &quantity, Unit::Unit unit) const;
-  const std::map<Unit::Unit, DimensionalQty<double>> getForceTree() const {return unit_nodes;};
-  Unit::Unit getLargestUnit() const;
+  template<typename T> void convertFromInternalUnit(DimensionalQty<T> &quantity, Unit unit) const;
+  const std::map<Unit, DimensionalQty<double>> getForceTree() const {return unit_nodes;};
+  Unit getLargestUnit() const;
 private:
-  std::map<Unit::Unit, DimensionalQty<double>> unit_nodes;
+  std::map<Unit, DimensionalQty<double>> unit_nodes;
   void convertToParentUnit(DimensionalQty<double> &node);
-  void flipDependency(Unit::Unit node_name);
-  void convertNodeUnit(DimensionalQty<double> &node, Unit::Unit unit);
+  void flipDependency(Unit node_name);
+  void convertNodeUnit(DimensionalQty<double> &node, Unit unit);
   template<typename T> void convertUnit(DimensionalQty<T> &quantity,
-                                        Unit::Unit new_unit) const; // for arbitrary Dimension
+                                        Unit new_unit) const; // for arbitrary Dimension
 };
 
 template<typename T>
-void UnitSystem::convertUnit(DimensionalQty<T> &quantity, Unit::Unit new_unit) const
+void UnitSystem::convertUnit(DimensionalQty<T> &quantity, Unit new_unit) const
 {
   /**
     \brief Convert quantity to new_unit.
     */
 
   // special cases
-  if (quantity.dimension == none || quantity.dimension == Strain) {
+  if (quantity.dimension == Dimension::none || quantity.dimension == Dimension::Strain) {
     return;
   }
-  if (quantity.dimension == TimeOrStrain) {
+  if (quantity.dimension == Dimension::TimeOrStrain) {
     throw std::runtime_error("UnitSystem::convertUnits : cannot convert units of a TimeOrStrain quantity.");
   }
 
@@ -217,25 +217,25 @@ void UnitSystem::convertUnit(DimensionalQty<T> &quantity, Unit::Unit new_unit) c
   // value of the old force unit in new_unit
   double force_unit_ratio = unit_nodes.at(quantity.unit).value/unit_nodes.at(new_unit).value;
   switch (quantity.dimension) {
-    case Force:
+    case Dimension::Force:
       quantity.value *= force_unit_ratio;
       break;
-    case Time:
+    case Dimension::Time:
       quantity.value /= force_unit_ratio;
       break;
-    case Rate:
+    case Dimension::Rate:
       quantity.value *= force_unit_ratio;
       break;
-    case Viscosity:
+    case Dimension::Viscosity:
       quantity.value *= 6*M_PI;  // viscosity in solvent viscosity units irrespective the unit system chosen
       break;
-    case Stress:
+    case Dimension::Stress:
       quantity.value *= 6*M_PI*force_unit_ratio;
       break;
-    case Velocity:
+    case Dimension::Velocity:
       quantity.value *= force_unit_ratio;
       break;
-    case none: case Strain: case TimeOrStrain:
+    case Dimension::none: case Dimension::Strain: case Dimension::TimeOrStrain:
       // Keep these cases here even if unreachable code (see above if statements)
       // in order to avoid gcc -Wswitch warnings.
       // While default: case would achieve a similar results,
@@ -253,7 +253,7 @@ void UnitSystem::convertToInternalUnit(DimensionalQty<T> &quantity) const
 }
 
 template<typename T>
-void UnitSystem::convertFromInternalUnit(DimensionalQty<T> &quantity, Unit::Unit unit) const
+void UnitSystem::convertFromInternalUnit(DimensionalQty<T> &quantity, Unit unit) const
 {
   auto internal_unit = unit_nodes.cbegin()->second.unit;
   assert(quantity.unit == internal_unit);

@@ -4,30 +4,29 @@
 //
 //  Copyright (c) 2017 Romain Mari. All rights reserved.
 //
-#define _USE_MATH_DEFINES
-#include <cmath> // for M_PI
+
 #include "DimensionalQty.h"
 
 namespace Dimensional {
 
-void UnitSystem::add(Unit::Unit unit, DimensionalQty<double> quantity)
+void UnitSystem::add(Unit unit, DimensionalQty<double> quantity)
 {
-  assert(quantity.dimension == Force || quantity.dimension == Stress);
+  assert(quantity.dimension == Dimension::Force || quantity.dimension == Dimension::Stress);
   if (quantity.value == 0) {
     return;
   }
-  if (quantity.dimension==Stress) {
+  if (quantity.dimension==Dimension::Stress) {
     quantity.value /= 6*M_PI; // at some point we have to get rid of this weird unit choice
   }
   unit_nodes[unit] = quantity;
   auto parent_node_name = quantity.unit;
   // no orphans!
   if (unit_nodes.count(parent_node_name) == 0) {
-    unit_nodes[parent_node_name] = {Force, 1, parent_node_name};
+    unit_nodes[parent_node_name] = {Dimension::Force, 1, parent_node_name};
   }
 }
 
-Unit::Unit UnitSystem::getLargestUnit() const
+Unit UnitSystem::getLargestUnit() const
 {
   auto largest_unit = unit_nodes.cbegin()->first;
   double largest_value = 1;
@@ -51,7 +50,7 @@ void UnitSystem::convertToParentUnit(DimensionalQty<double> &node)
   node.unit = parent_node.unit;
 }
 
-void UnitSystem::convertNodeUnit(DimensionalQty<double> &node, Unit::Unit unit)
+void UnitSystem::convertNodeUnit(DimensionalQty<double> &node, Unit unit)
 {
   if (node.unit != unit) {
     auto &parent_node = unit_nodes[node.unit];
@@ -60,12 +59,12 @@ void UnitSystem::convertNodeUnit(DimensionalQty<double> &node, Unit::Unit unit)
       convertToParentUnit(node);
     } else { // parent_node is a root, but is not unit: the unit system is not closed
       throw std::runtime_error(" UnitSystem:: cannot express "
-                               +Unit::unit2suffix(node.unit)+" in "+Unit::unit2suffix(unit)+" units ");
+                               +unit2suffix(node.unit)+" in "+unit2suffix(unit)+" units ");
     }
   }
 }
 
-void UnitSystem::flipDependency(Unit::Unit node_name)
+void UnitSystem::flipDependency(Unit node_name)
 {
   auto &node = unit_nodes[node_name];
   const auto &parent_node_name =  node.unit;
@@ -78,7 +77,7 @@ void UnitSystem::flipDependency(Unit::Unit node_name)
   parent_node.unit = node_name;
 }
 
-void UnitSystem::setInternalUnit(Unit::Unit unit)
+void UnitSystem::setInternalUnit(Unit unit)
 {
 	/**
 		\brief Check force units consistency, expresses all input forces in the unit "unit".
@@ -88,7 +87,7 @@ void UnitSystem::setInternalUnit(Unit::Unit unit)
   if (unit_nodes.at(unit).unit != unit) { // if the unit force is expressed in other units than itself
     flipDependency(unit);
   }
-  unit_nodes[unit] = {Force, 1, unit};
+  unit_nodes[unit] = {Dimension::Force, 1, unit};
 
   for (auto &node: unit_nodes) {
     convertNodeUnit(node.second, unit);

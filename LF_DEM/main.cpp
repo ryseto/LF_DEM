@@ -45,9 +45,6 @@ int main(int argc, char **argv)
 	Configuration_File Parameter_File \
 	\n\n OR \n\n(2) Generate initial configuration\n $ LF_DEM -g Random_Seed [-M]\n";
 
-	double dimensionless_number = 0;
-	string numeral, suffix;
-
 	int generate_init = 0;
 	string type_init_config = "normal";
 
@@ -88,15 +85,15 @@ int main(int argc, char **argv)
 		switch (c) {
 			case 's':
 				rheology_control = Parameters::ControlVariable::stress;
-				control_value = Dimensional::str2DimensionalQty(Dimensional::Stress, optarg, "shear stress");
+				control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Stress, optarg, "shear stress");
 				break;
 			case 'r':
 				rheology_control = Parameters::ControlVariable::rate;
-				control_value = Dimensional::str2DimensionalQty(Dimensional::Force, optarg, "shear rate");
+				control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, optarg, "shear rate");
 				break;
 			case '8':
 				rheology_control = Parameters::ControlVariable::rate;
-				control_value = {Dimensional::Force, 1, Dimensional::Unit::hydro};
+				control_value = {Dimensional::Dimension::Force, 1, Dimensional::Unit::hydro};
 				cout << "Rate control, infinite shear rate (hydro + hard contacts only)" << endl;
 				break;
 			case 'e':

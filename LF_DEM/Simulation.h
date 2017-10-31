@@ -43,8 +43,8 @@ private:
 	/*
 	 * Resultant data
 	 */
-	Dimensional::Unit::Unit internal_unit;
-	Dimensional::Unit::Unit output_unit;
+	Dimensional::Unit internal_unit;
+	Dimensional::Unit output_unit;
 	double target_stress_input;
 	double input_rate;
 	double dimensionless_rate;
@@ -83,8 +83,8 @@ public:
 	void simulationSteadyShear(std::string in_args,
 							   std::vector<std::string>& input_files,
 							   bool binary_conf,
-								 Parameters::ControlVariable control_variable,
-								 Dimensional::DimensionalQty<double> control_value,
+							   Parameters::ControlVariable control_variable,
+							   Dimensional::DimensionalQty<double> control_value,
 							   std::string flow_type,
 							   std::string simu_identifier);
 
@@ -133,7 +133,7 @@ public:
 	std::string getMetaParameter(std::map<std::string,std::string> &, std::string &, const std::string &);
 	std::string getMetaParameter(std::map<std::string,std::string> &, std::string &);
 	void exportForceAmplitudes();
-	Dimensional::Unit::Unit pickInternalUnitsRateControl();
+	Dimensional::Unit pickInternalUnitsRateControl();
 	void setupNonDimensionalization(Dimensional::DimensionalQty<double> control_value);
 	void stopShearing(TimeKeeper &tk); //simulation mode 22
 
