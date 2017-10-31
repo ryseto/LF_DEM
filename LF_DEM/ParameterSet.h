@@ -7,9 +7,14 @@
 #ifndef __LF_DEM__ParameterSet__
 #define __LF_DEM__ParameterSet__
 #include <string>
+#include <functional>
+#include <vector>
 #include "DimensionalQty.h"
 
 #define PARAM_STRUCT(name, type, default_value) struct {std::string name = "name"; type value = default_value; std::string value_str;} name
+
+
+
 
 struct ParameterSet
 {
@@ -84,8 +89,8 @@ struct ParameterSet
 	double kn;                               ///< Particle stiffness: normal spring constant [2000input_units]
 	double kt;                               ///< Particle stiffness: tangential spring constant [0.5kn]
 	double kr;                               ///< Particle stiffness: rolling spring constant [0.5kn]
-	PARAM_STRUCT(test, bool, false);         ///< Particle stiffness: rolling spring constant [0.5kn]
-		
+	// PARAM_STRUCT(test, bool, false);         ///< Particle stiffness: rolling spring constant [0.5kn]
+	bool test;
 		/*
 		 * contact_relaxation_factor:
 		 *
@@ -196,4 +201,23 @@ inline void setFromMap(ParameterSet &p,
 		setFromKeyValue(p, param.first, param.second);
 	}
 }
+
+
+
+template<typename T>
+struct InputParameter
+{
+	std::string name_str;
+	std::function<void(ParameterSet &, InputParameter<T>)> exportToParameterSet;
+	T value;
+};
+
+#define PARAM_INIT(name, type, default_value) {"#name",  [](ParameterSet &p, InputParameter<type> in) {p.name = in.value;}, default_value}
+
+static std::vector<InputParameter<bool>> InputBoolParameterSet = \
+{
+	PARAM_INIT(test, bool, false),
+	{"fixed_dt", [](ParameterSet &p, InputParameter<bool> in) {p.fixed_dt = in.value;}, false}
+};
+
 #endif/* defined(__LF_DEM__ParameterSet__) */

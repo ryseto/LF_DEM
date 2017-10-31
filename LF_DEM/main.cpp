@@ -51,7 +51,6 @@ int main(int argc, char **argv)
 	int random_seed = 1;
 	bool binary_conf = false;
 	bool force_to_run = false;
-	bool long_file_name = false;
 	bool diminish_output = false;
 	string flow_type = "shear";
 	string config_filename = "not_given";
@@ -72,7 +71,6 @@ int main(int argc, char **argv)
 		{"binary",            no_argument,       0, 'n'},
 		{"identifier",        required_argument, 0, 'v'},
 		{"force-to-run",      no_argument,       0, 'f'},
-		{"long-file-name",    no_argument,       0, 'l'},
 		{"diminish-output",   no_argument,       0, 'd'},
 		{"checkpoint-file",   no_argument,       0, 'c'},
 		{"help",              no_argument,       0, 'h'},
@@ -81,7 +79,7 @@ int main(int argc, char **argv)
 
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hn8efldm:s:t:r:g::a:k:i:v:c:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hn8efdm:s:t:r:g::a:k:i:v:c:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
 				rheology_control = Parameters::ControlVariable::stress;
@@ -132,9 +130,6 @@ int main(int argc, char **argv)
 			case 'f':
 				force_to_run = true;
 				break;
-			case 'l':
-				long_file_name = true;
-				break;
 			case 'd':
 				diminish_output = true;
 				break;
@@ -179,7 +174,6 @@ int main(int argc, char **argv)
 		}
 
 		simulation.force_to_run = force_to_run;
-		simulation.long_file_name = long_file_name;
 		simulation.diminish_output = diminish_output;
 
 		try {

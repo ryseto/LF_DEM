@@ -67,46 +67,45 @@ void Simulation::exportForceAmplitudes()
 	cout << indent+"Forces used:" << endl;
 	indent += "\t";
 
-	using namespace Dimensional::Unit;
 	auto forces = system_of_units.getForceTree();
-	sys.repulsiveforce = forces.count(repulsion) > 0;
+	sys.repulsiveforce = forces.count(Dimensional::Unit::repulsion) > 0;
 	if (sys.repulsiveforce) {
-		sys.p.repulsion = forces[repulsion].value;
-		cout << indent+"Repulsive force (in \"" << Dimensional::Unit::unit2suffix(forces[repulsion].unit) << "\" units): " << sys.p.repulsion << endl;
+		sys.p.repulsion = forces.at(Dimensional::Unit::repulsion).value;
+		cout << indent+"Repulsive force (in \"" << Dimensional::unit2suffix(forces.at(Dimensional::Unit::repulsion).unit) << "\" units): " << sys.p.repulsion << endl;
 	}
 
-	sys.critical_load = forces.count(critical_load) > 0;
+	sys.critical_load = forces.count(Dimensional::Unit::critical_load) > 0;
 	if (sys.critical_load) {
-		sys.p.critical_load = forces[critical_load].value;
-		cout << indent+"Critical Load (in \"" << Dimensional::Unit::unit2suffix(forces[critical_load].unit) << "\" units): " << sys.p.critical_load << endl;
+		sys.p.critical_load = forces.at(Dimensional::Unit::critical_load).value;
+		cout << indent+"Critical Load (in \"" << Dimensional::unit2suffix(forces.at(Dimensional::Unit::critical_load).unit) << "\" units): " << sys.p.critical_load << endl;
 	}
 
-	sys.cohesion = forces.count(cohesion) > 0;
+	sys.cohesion = forces.count(Dimensional::Unit::cohesion) > 0;
 	if (sys.cohesion) {
-		sys.p.cohesion = forces[cohesion].value;
-		cout << indent+"Cohesion (in \"" << Dimensional::Unit::unit2suffix(forces[cohesion].unit) << "\" units): " << sys.p.cohesion << endl;
+		sys.p.cohesion = forces.at(Dimensional::Unit::cohesion).value;
+		cout << indent+"Cohesion (in \"" << Dimensional::unit2suffix(forces.at(Dimensional::Unit::cohesion).unit) << "\" units): " << sys.p.cohesion << endl;
 	}
 
-	bool is_ft_max = forces.count(ft_max) > 0;
+	bool is_ft_max = forces.count(Dimensional::Unit::ft_max) > 0;
 	if (is_ft_max) {
-		sys.p.ft_max = forces[ft_max].value;
-		cout << indent+"Max Tangential Load (in \"" << Dimensional::Unit::unit2suffix(forces[ft_max].unit) << "\" units): " << sys.p.ft_max << endl;
+		sys.p.ft_max = forces.at(Dimensional::Unit::ft_max).value;
+		cout << indent+"Max Tangential Load (in \"" << Dimensional::unit2suffix(forces.at(Dimensional::Unit::ft_max).unit) << "\" units): " << sys.p.ft_max << endl;
 	}
 
-	sys.brownian = forces.count(brownian) > 0;
+	sys.brownian = forces.count(Dimensional::Unit::brownian) > 0;
 	if (sys.brownian) {
-		sys.p.brownian = forces[brownian].value;
-		cout << indent+"Brownian force (in \"" << Dimensional::Unit::unit2suffix(forces[brownian].unit) << "\" units): " << sys.p.brownian << endl;
+		sys.p.brownian = forces.at(Dimensional::Unit::brownian).value;
+		cout << indent+"Brownian force (in \"" << Dimensional::unit2suffix(forces.at(Dimensional::Unit::brownian).unit) << "\" units): " << sys.p.brownian << endl;
 	}
-	sys.p.kn = forces[kn].value;
-	cout << indent+"Normal contact stiffness (in \"" << Dimensional::Unit::unit2suffix(forces[kn].unit) << "\" units): " << sys.p.kn << endl;
-	sys.p.kt = forces[kt].value;
-	cout << indent+"Sliding contact stiffness (in \"" << Dimensional::Unit::unit2suffix(forces[kt].unit) << "\" units): " << sys.p.kt << endl;
-	sys.p.kr = forces[kr].value;
-	cout << indent+"Rolling contact stiffness (in \"" << Dimensional::Unit::unit2suffix(forces[kr].unit) << "\" units): " << sys.p.kr << endl;
+	sys.p.kn = forces.at(Dimensional::Unit::kn).value;
+	cout << indent+"Normal contact stiffness (in \"" << Dimensional::unit2suffix(forces.at(Dimensional::Unit::kn).unit) << "\" units): " << sys.p.kn << endl;
+	sys.p.kt = forces.at(Dimensional::Unit::kt).value;
+	cout << indent+"Sliding contact stiffness (in \"" << Dimensional::unit2suffix(forces.at(Dimensional::Unit::kt).unit) << "\" units): " << sys.p.kt << endl;
+	sys.p.kr = forces.at(Dimensional::Unit::kr).value;
+	cout << indent+"Rolling contact stiffness (in \"" << Dimensional::unit2suffix(forces.at(Dimensional::Unit::kr).unit) << "\" units): " << sys.p.kr << endl;
 
-	if (forces.count(hydro) > 0) { // == if rate controlled
-		sys.set_shear_rate(forces[hydro].value);
+	if (forces.count(Dimensional::Unit::hydro) > 0) { // == if rate controlled
+		sys.set_shear_rate(forces.at(Dimensional::Unit::hydro).value);
 	}
 }
 
@@ -117,10 +116,10 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 		This function determines the most appropriate unit scales to use in the System class depending on the input parameters (Brownian/non-Brownian, shear rate, stress/rate controlled), and converts all the input values in these units.
 	 */
 	string indent = "  Simulation::\t";
-	if (control_var == ControlVariable::rate) {
+	if (control_var == Parameters::ControlVariable::rate) {
 		input_rate = control_value.value; // @@@ Renaming is required?
 	}
-	if (control_var == ControlVariable::rate || control_var == ControlVariable::viscnb) {
+	if (control_var == Parameters::ControlVariable::rate) {// || control_var == Parameters::ControlVariable::viscnb) {
 		if (input_rate != 0) {
 			system_of_units.add(Dimensional::Unit::hydro, control_value);
 			if (internal_unit == Dimensional::Unit::none){
@@ -141,13 +140,13 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 				sys.zero_shear = true;
 			}
 		}
-	} else if (control_var == ControlVariable::stress) {
+	} else if (control_var == Parameters::ControlVariable::stress) {
 		system_of_units.add(Dimensional::Unit::stress, control_value);
 		internal_unit = control_value.unit;
 	}
 	output_unit = control_value.unit;
-	cout << indent << "internal units = " << Dimensional::Unit::unit2suffix(internal_unit) << endl;
-	cout << indent << "output units = " << Dimensional::Unit::unit2suffix(output_unit) << endl;
+	cout << indent << "internal units = " << Dimensional::unit2suffix(internal_unit) << endl;
+	cout << indent << "output units = " << Dimensional::unit2suffix(output_unit) << endl;
 	system_of_units.setInternalUnit(internal_unit);
 	exportForceAmplitudes();
 	for (auto &dimval: dimensional_input_params) {
@@ -168,7 +167,7 @@ void Simulation::assertParameterCompatibility()
 			throw runtime_error(error_str.str());
 		}
 	}
-	if (control_var == stress) {
+	if (control_var == Parameters::ControlVariable::stress) {
 		if (p.integration_method != 0) {
 			cerr << "Warning : use of the Predictor-Corrector method for the stress controlled simulation is experimental." << endl;
 		}
@@ -209,7 +208,7 @@ void Simulation::resolveTimeOrStrainParameters(const map<string, Dimensional::Di
 		We have to do this not only for time_end, but also for every time defined
 		in the parameters.
 	 */
-	if (dim_params.at("time_end").dimension == Dimensional::Strain) {
+	if (dim_params.at("time_end").dimension == Dimensional::Dimension::Strain) {
 		time_end = -1;
 		strain_end = dim_params.at("time_end").value;
 	} else {
@@ -217,7 +216,7 @@ void Simulation::resolveTimeOrStrainParameters(const map<string, Dimensional::Di
 	}
 	if (p.log_time_interval) {
 		if (dim_params.at("time_end").dimension != dim_params.at("initial_log_time").dimension &&
-			(dim_params.at("time_end").dimension == Dimensional::Strain || dim_params.at("initial_log_time").dimension == Dimensional::Strain)) {
+			(dim_params.at("time_end").dimension == Dimensional::Dimension::Strain || dim_params.at("initial_log_time").dimension == Dimensional::Dimension::Strain)) {
 			throw runtime_error(" If one of time_end or initial_log_time is a strain (\"h\" unit), than both must be.\n");
 		}
 	}
@@ -277,36 +276,16 @@ void Simulation::setConfigToSystem(bool binary_conf, const std::string &filename
 }
 
 
-void Simulation::setupSimulation(string in_args,
-                                 vector<string>& input_files,
-                                 bool binary_conf,
-                                 Dimensional::DimensionalQty<double> control_value,
-                                 string flow_type,
-                                 string simu_identifier)
+void Simulation::setupFlow(Dimensional::DimensionalQty<double> control_value)
 {
-	/**
-	 \brief Set up the simulation.
+	// @@@ This function is quite messy, should be fixed 
+	// when we rewrite shear and extensional in a consistent manner
 
-		This function is intended to be generically used to set up the simulation. It processes the input parameters, non-dimensionalizes the system and starts up a System class with the relevant parameters.
-	 */
-	string indent = "  Simulation::\t";
-	cout << indent << "Simulation setup starting... " << endl;
-	string filename_import_positions = input_files[0];
-	string filename_parameters = input_files[1];
-	sys.p.flow_type = flow_type; // shear or extension or mix (not implemented yet)
-	/*
-	 * @@@@ This way to prepare relaxed initial configuration should be changed.
-	 */
-	if (filename_parameters.find("init_relax", 0) != string::npos) {
-		cout << "init_relax" << endl;
-		sys.zero_shear = true;
-	} else {
-		sys.zero_shear = false;
-	}
+
 	/* dot_gamma = 1 --> dot_epsilon = 0;
 	 *
 	 */
-	if (dimensionlessnumber != 0) {
+	if (control_value.value != 0) {
 		double dimensionless_deformation_rate = 0.5;
 		if (!sys.ext_flow) {
 			/* simple shear flow
@@ -346,13 +325,43 @@ void Simulation::setupSimulation(string in_args,
 			stress_basis_3.setSymmetrize(mat_stress_basis_3);
 		}
 	} else {
-		cerr << " dimensionlessnumber = " << dimensionlessnumber << endl;
+		cerr << " dimensionlessnumber = " << control_value.value << endl;
 		Sym2Tensor Einf_common = {0, 0, 0, 0, 0, 0};
 		vec3d Omegainf(0, 0, 0);
 		sys.setImposedFlow(Einf_common, Omegainf);
 		sys.zero_shear = true;
 	}
-	setDefaultParameters(input_scale);
+}
+
+void Simulation::setupSimulation(string in_args,
+                                 vector<string>& input_files,
+                                 bool binary_conf,
+                                 Dimensional::DimensionalQty<double> control_value,
+                                 string flow_type,
+                                 string simu_identifier)
+{
+	/**
+	 \brief Set up the simulation.
+
+		This function is intended to be generically used to set up the simulation. It processes the input parameters, non-dimensionalizes the system and starts up a System class with the relevant parameters.
+	 */
+	string indent = "  Simulation::\t";
+	cout << indent << "Simulation setup starting... " << endl;
+	string filename_import_positions = input_files[0];
+	string filename_parameters = input_files[1];
+	sys.p.flow_type = flow_type; // shear or extension or mix (not implemented yet)
+	/*
+	 * @@@@ This way to prepare relaxed initial configuration should be changed.
+	 */
+	if (filename_parameters.find("init_relax", 0) != string::npos) {
+		cout << "init_relax" << endl;
+		sys.zero_shear = true;
+	} else {
+		sys.zero_shear = false;
+	}
+	
+	setupFlow(control_value);
+	setDefaultParameters(control_value);
 	readParameterFile(filename_parameters);
 	if (sys.ext_flow) {
 		p.origin_zero_flow = false;
@@ -391,7 +400,7 @@ void Simulation::setupSimulation(string in_args,
 	}
 	if (!restart_from_chkp) {
 		simu_name = prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
-		                                  simu_identifier, dimensionlessnumber, input_scale);
+		                                  simu_identifier, control_value);
 	}
 	openOutputFiles();
 	echoInputFiles(in_args, input_files);
@@ -411,13 +420,17 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "friction_model") {
 		p.friction_model = atoi(value.c_str());
 	} else if (keyword == "repulsion") {
-		input_values[keyword] = str2DimensionalValue("force", keyword, value, force_value_ptr[keyword]);
+		system_of_units.add(Dimensional::Unit::repulsion, 
+							Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, value, keyword));
 	} else if (keyword == "cohesion") {
-		input_values[keyword] = str2DimensionalValue("force", keyword, value, force_value_ptr[keyword]);
+		system_of_units.add(Dimensional::Unit::cohesion, 
+							Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, value, keyword));
 	} else if (keyword == "brownian") {
-		input_values[keyword] = str2DimensionalValue("force", keyword, value, force_value_ptr[keyword]);
+		system_of_units.add(Dimensional::Unit::brownian, 
+							Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, value, keyword));
 	} else if (keyword == "critical_load") {
-		input_values[keyword] = str2DimensionalValue("force", keyword, value, force_value_ptr[keyword]);
+		system_of_units.add(Dimensional::Unit::critical_load, 
+							Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, value, keyword));
 	} else if (keyword == "monolayer") {
 		p.monolayer = str2bool(value);
 	} else if (keyword == "repulsive_length") {
@@ -427,9 +440,9 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "lub_reduce_parameter") {
 		p.lub_reduce_parameter = atof(value.c_str());
 	} else if (keyword == "contact_relaxation_time") {
-		input_values[keyword] = str2DimensionalValue("time", keyword, value, &p.contact_relaxation_time);
+		dimensional_input_params[keyword] = Dimensional::str2DimensionalQty(Dimensional::Dimension::Time, value, keyword);
 	} else if (keyword == "contact_relaxation_time_tan"){
-		input_values[keyword] = str2DimensionalValue("time", keyword, value, &p.contact_relaxation_time_tan);
+		dimensional_input_params[keyword] = Dimensional::str2DimensionalQty(Dimensional::Dimension::Time, value, keyword);
 	} else if (keyword == "disp_max") {
 		p.disp_max = atof(value.c_str());
 	} else if (keyword == "dt_max") {
@@ -437,7 +450,7 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "dt_min") {
 		p.dt_min = atof(value.c_str());
 	} else if (keyword == "time_end") {
-		input_values[keyword] = str2DimensionalValue("time", keyword, value, &p.time_end);
+		dimensional_input_params[keyword] = Dimensional::str2DimensionalQty(Dimensional::Dimension::Time, value, keyword);
 	} else if (keyword == "integration_method") {
 		p.integration_method = atoi(value.c_str());
 	} else if (keyword == "lub_max_gap") {
@@ -447,11 +460,14 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "sd_coeff") {
 		p.sd_coeff = atof(value.c_str());
 	} else if (keyword == "kn") {
-		input_values[keyword] = str2DimensionalValue("force", keyword, value, force_value_ptr[keyword]);
+		system_of_units.add(Dimensional::Unit::kn, 
+							Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, value, keyword));
 	} else if (keyword == "kt") {
-		input_values[keyword] = str2DimensionalValue("force", keyword, value, force_value_ptr[keyword]);
+		system_of_units.add(Dimensional::Unit::kt, 
+							Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, value, keyword));
 	} else if (keyword == "kr") {
-		input_values[keyword] = str2DimensionalValue("force", keyword, value, force_value_ptr[keyword]);
+		system_of_units.add(Dimensional::Unit::kr,
+							Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, value, keyword));
 	} else if (keyword == "dt") {
 		p.dt = atof(value.c_str());
 	} else if (keyword == "Pe_switch") {
@@ -463,13 +479,13 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "mu_rolling") {
 		p.mu_rolling = atof(value.c_str());
 	} else if (keyword == "time_interval_output_config") {
-		input_values[keyword] = str2DimensionalValue("time", keyword, value, &p.time_interval_output_config);
+		dimensional_input_params[keyword] = Dimensional::str2DimensionalQty(Dimensional::Dimension::TimeOrStrain, value, keyword);
 	} else if (keyword == "time_interval_output_data") {
-		input_values[keyword] = str2DimensionalValue("time", keyword, value, &p.time_interval_output_data);
+		dimensional_input_params[keyword] = Dimensional::str2DimensionalQty(Dimensional::Dimension::TimeOrStrain, value, keyword);
 	} else if (keyword == "log_time_interval") {
 		p.log_time_interval = str2bool(value);
 	} else if (keyword == "initial_log_time") {
-		input_values[keyword] = str2DimensionalValue("time", keyword, value, &p.initial_log_time);
+		dimensional_input_params[keyword] = Dimensional::str2DimensionalQty(Dimensional::Dimension::TimeOrStrain, value, keyword);
 	} else if (keyword == "nb_output_data_log_time") {
 		p.nb_output_data_log_time = atoi(value.c_str());
 	} else if (keyword == "nb_output_config_log_time") {
@@ -495,13 +511,13 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "start_adjust") {
 		p.start_adjust = atof(value.c_str());
 	} else if (keyword == "min_kn_auto_det") {
-		input_values[keyword] = str2DimensionalValue("force", keyword, value, &p.min_kn_auto_det);
+		dimensional_input_params[keyword] = Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, value, keyword);
 	} else if (keyword == "max_kn_auto_det") {
-		input_values[keyword] = str2DimensionalValue("force", keyword, value, &p.max_kn_auto_det);
+		dimensional_input_params[keyword] = Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, value, keyword);
 	} else if (keyword == "min_kt_auto_det") {
-		input_values[keyword] = str2DimensionalValue("force", keyword, value, &p.min_kt_auto_det);
+		dimensional_input_params[keyword] = Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, value, keyword);
 	} else if (keyword == "max_kt_auto_det") {
-		input_values[keyword] = str2DimensionalValue("force", keyword, value, &p.max_kt_auto_det);
+		dimensional_input_params[keyword] = Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, value, keyword);
 	} else if (keyword == "min_dt_auto_det") {
 		p.min_dt_auto_det = atof(value.c_str());
 	} else if (keyword == "max_dt_auto_det") {
@@ -509,7 +525,7 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "rest_threshold") {
 		p.rest_threshold = atof(value.c_str());
 	} else if (keyword == "ft_max") {
-		input_values[keyword] = str2DimensionalValue("force", keyword, value, force_value_ptr[keyword]);
+		system_of_units.add(Dimensional::Unit::ft_max, Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, value, keyword));
 	} else if (keyword == "fixed_dt") {
 		p.fixed_dt = str2bool(value);
 	} else if (keyword == "theta_shear") {
@@ -590,12 +606,15 @@ void Simulation::readParameterFile(const string& filename_parameters)
 	return;
 }
 
-void Simulation::setDefaultParameters(string input_scale)
+void Simulation::setDefaultParameters(Dimensional::DimensionalQty<double> control_value)
 {
 
 	/**
 	 \brief Set default values for ParameterSet parameters.
 	 */
+	auto input_scale = control_value.unit;
+	auto input_scale_str = Dimensional::unit2suffix(input_scale);
+
 	autoSetParameters("Pe_switch", "5");
 	autoSetParameters("dt", "1e-4");
 	autoSetParameters("disp_max", "1e-3");
@@ -612,21 +631,21 @@ void Simulation::setDefaultParameters(string input_scale)
 	autoSetParameters("lub_max_gap", "0.5");
 	autoSetParameters("interaction_range", "-1");
 	autoSetParameters("lub_reduce_parameter", "1e-3");
-	autoSetParameters("contact_relaxation_time", "1e-3"+input_scale);
-	autoSetParameters("contact_relaxation_time_tan", "-1"+input_scale);
-	if (input_scale != "kn") {
-		autoSetParameters("kn", "2000"+input_scale);
-		autoSetParameters("min_kn_auto_det", "1000"+input_scale);
-		autoSetParameters("max_kn_auto_det", "1000000"+input_scale);
+	autoSetParameters("contact_relaxation_time", "1e-3"+input_scale_str);
+	autoSetParameters("contact_relaxation_time_tan", "-1"+input_scale_str);
+	if (input_scale != Dimensional::Unit::kn) {
+		autoSetParameters("kn", "2000"+input_scale_str);
+		autoSetParameters("min_kn_auto_det", "1000"+input_scale_str);
+		autoSetParameters("max_kn_auto_det", "1000000"+input_scale_str);
 	}
-	if (input_scale != "kt") {
+	if (input_scale != Dimensional::Unit::kt) {
 		autoSetParameters("kt", "0.5kn");
-		autoSetParameters("min_kt_auto_det", "1000"+input_scale);
-		autoSetParameters("max_kt_auto_det", "1000000"+input_scale);
+		autoSetParameters("min_kt_auto_det", "1000"+input_scale_str);
+		autoSetParameters("max_kt_auto_det", "1000000"+input_scale_str);
 	}
 	autoSetParameters("min_dt_auto_det", "1e-7");
 	autoSetParameters("max_dt_auto_det", "1e-3");
-	if (input_scale != "kr") {
+	if (input_scale != Dimensional::Unit::kr) {
 		autoSetParameters("kr", "0kn");
 	}
 	autoSetParameters("auto_determine_knkt", "false");
@@ -724,11 +743,10 @@ void Simulation::openOutputFiles()
 }
 
 string Simulation::prepareSimulationName(bool binary_conf,
-                                         const string& filename_import_positions,
-                                         const string& filename_parameters,
-                                         const string& simu_identifier,
-                                         double dimensionlessnumber,
-                                         const string& input_scale)
+			                             const std::string& filename_import_positions,
+			                             const std::string& filename_parameters,
+			                             const std::string& simu_identifier,
+			                             Dimensional::DimensionalQty<double> control_value)
 {
 	/**
 	 \brief Determine simulation name.
@@ -750,23 +768,16 @@ string Simulation::prepareSimulationName(bool binary_conf,
 	ss_simu_name << "_";
 	ss_simu_name << filename_parameters.substr(param_name_start, param_name_end-param_name_start);
 	ostringstream string_control_parameters;
-	if (long_file_name) {
-		for (const auto& f: input_values) {
-			if (f.first.find("stiffness") == std::string::npos) {
-				string_control_parameters << "_" << f.first << *(f.second.value) << f.second.unit;
-			}
-		}
-	}
-	if (control_var == rate) {
+	if (control_var == Parameters::ControlVariable::rate) {
 		string_control_parameters << "_" << "rate";
 	}
-	if (control_var == stress) {
+	if (control_var == Parameters::ControlVariable::stress) {
 		string_control_parameters << "_" << "stress";
 	}
-	if (control_var == viscnb) {
-		string_control_parameters << "_" << "viscnb";
-	}
-	string_control_parameters << dimensionlessnumber << input_scale;
+	// if (control_var == Parameters::ControlVariable::viscnb) {
+	// 	string_control_parameters << "_" << "viscnb";
+	// }
+	string_control_parameters << control_value.value << Dimensional::unit2suffix(control_value.unit);
 	ss_simu_name << string_control_parameters.str();
 	ss_simu_name << "_" << sys.p.flow_type;
 	if (simu_identifier != "") {
@@ -786,19 +797,19 @@ TimeKeeper Simulation::initTimeKeeper()
 		tk.addClock("data", LogClock(p.initial_log_time,
 									 p.time_end,
 									 p.nb_output_data_log_time,
-									 input_values["time_end"].unit == "strain"));
+									 dimensional_input_params["time_end"].dimension == Dimensional::Dimension::Strain));
 	} else {
 		tk.addClock("data", LinearClock(p.time_interval_output_data,
-										input_values["time_interval_output_data"].unit == "strain"));
+										dimensional_input_params["time_interval_output_data"].dimension == Dimensional::Dimension::Strain));
 	}
 	if (p.log_time_interval) {
 		tk.addClock("config", LogClock(p.initial_log_time,
 									   p.time_end,
 									   p.nb_output_config_log_time,
-									   input_values["time_end"].unit == "strain"));
+									   dimensional_input_params["time_end"].dimension == Dimensional::Dimension::Strain));
 	} else {
 		tk.addClock("config", LinearClock(p.time_interval_output_config,
-										  input_values["time_interval_output_config"].unit == "strain"));
+			 							  dimensional_input_params["time_interval_output_data"].dimension == Dimensional::Dimension::Strain));
 	}
 	return tk;
 }

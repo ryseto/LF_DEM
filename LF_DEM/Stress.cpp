@@ -47,7 +47,7 @@ void System::declareStressComponents()
 	}
 
 	/****************  xF stresses *****************/
-	if (control == rate) {
+	if (control == Parameters::ControlVariable::rate) {
 		stress_components["xF_contact"] = StressComponent(XF_STRESS, np, RATE_DEPENDENT, "contact"); // rate dependent through xFdashpot
 	} else { // stress controlled
 		stress_components["xF_contact_rateprop"] = StressComponent(XF_STRESS, np, RATE_PROPORTIONAL, "contact");
@@ -57,7 +57,7 @@ void System::declareStressComponents()
 		stress_components["xF_repulsion"] = StressComponent(XF_STRESS, np, RATE_INDEPENDENT, "repulsion");
 	}
 
-	if (control == stress) {
+	if (control == Parameters::ControlVariable::stress) {
 		for (const auto &sc: stress_components) {
 			if (sc.second.rate_dependence == RATE_DEPENDENT) {
 				ostringstream error_msg;
@@ -120,7 +120,7 @@ void System::gatherVelocitiesByRateDependencies(vector<vec3d> &rateprop_vel,
 			[Note] The rate proportional part is a total velocity, and as such must be dealt with proper Lees-Edwards BC.
 						 The rate independent part is always a non-affine velocity.
 	*/
-	assert(control == stress || control == viscnb);
+	assert(control == Parameters::ControlVariable::stress);// || control == viscnb);
 	for (unsigned int i=0; i<rateprop_vel.size(); i++) {
 		rateprop_vel[i].reset();
 		rateprop_ang_vel[i].reset();
@@ -245,7 +245,7 @@ void System::calcStressPerParticle()
 			addUpInteractionStressME(sc.second.particle_stress);
 		}
 	}
-	if (control == rate) {
+	if (control == Parameters::ControlVariable::rate) {
 		auto &cstress_XF = stress_components.at("xF_contact").particle_stress;
 		for (auto &inter: interaction) {
 			if (inter.contact.is_active()) {

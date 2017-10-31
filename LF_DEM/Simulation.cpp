@@ -639,7 +639,7 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 	snapshot_header << "# shear disp" << sep << sys.shear_disp.x << endl;
 	snapshot_header << "# shear rate" << sep << getRate() << endl;
 
-	if (control_var == stress) {
+	if (control_var == Parameters::ControlVariable::stress) {
 		snapshot_header << "# target stress" << sep << target_stress_input << endl;
 	}
 	if (sys.ext_flow) {

@@ -479,7 +479,8 @@ void GenerateInitConfig::setParameters(Simulation &simu)
 	 *  Read parameters from standard input
 	 *
 	 */
-	simu.setDefaultParameters("h");
+	Dimensional::DimensionalQty<double> control_var = {Dimensional::Dimension::Force, 0, Dimensional::Unit::hydro};
+	simu.setDefaultParameters(control_var);
 	auto &sys = simu.getSys();
  	sys.zero_shear = true;
  	simu.p.kn = 1;

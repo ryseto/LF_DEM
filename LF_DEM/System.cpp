@@ -78,7 +78,7 @@ cohesion(false),
 critical_load(false),
 brownian_dominated(false),
 twodimension(false),
-control(rate),
+control(Parameters::ControlVariable::rate),
 zero_shear(false),
 wall_rheology(false),
 mobile_fixed(false),
@@ -466,7 +466,7 @@ void System::setupBrownian()
 }
 
 template<typename T>
-void System::setupGenericConfiguration(T conf, ControlVariable control_)
+void System::setupGenericConfiguration(T conf, Parameters::ControlVariable control_)
 {
 	string indent = "  System::\t";
 	cout << indent << "Setting up System... " << endl;
@@ -520,19 +520,19 @@ void System::setupGenericConfiguration(T conf, ControlVariable control_)
 	setupSystemPostConfiguration();
 }
 
-void System::setupConfiguration(struct base_configuration conf, ControlVariable control_)
+void System::setupConfiguration(struct base_configuration conf, Parameters::ControlVariable control_)
 {
 	setupGenericConfiguration(conf, control_);
 }
 
-void System::setupConfiguration(struct fixed_velo_configuration conf, ControlVariable control_)
+void System::setupConfiguration(struct fixed_velo_configuration conf, Parameters::ControlVariable control_)
 {
 	p.np_fixed = conf.fixed_velocities.size();
 	setupGenericConfiguration(conf, control_);
 	setFixedVelocities(conf.fixed_velocities);
 }
 
-void System::setupConfiguration(struct circular_couette_configuration conf, ControlVariable control_)
+void System::setupConfiguration(struct circular_couette_configuration conf, Parameters::ControlVariable control_)
 {
 	p.np_fixed = conf.np_wall1 + conf.np_wall2;
 	np_wall1 = conf.np_wall1;
@@ -2274,14 +2274,14 @@ void System::computeVelocities(bool divided_velocities)
 	 simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
 	 */
 	stokes_solver.resetRHS();
-	if (divided_velocities || control == stress) {
-		if (control == stress) {
+	if (divided_velocities || control == Parameters::ControlVariable::stress) {
+		if (control == Parameters::ControlVariable::stress) {
 			set_shear_rate(1);
 		}
 		computeUInf();
 		setFixedParticleVelocities();
 		computeVelocityByComponents();
-		if (control == stress) {
+		if (control == Parameters::ControlVariable::stress) {
 			if (p.simulation_mode != 31) {
 				computeShearRate();
 			} else {
@@ -2362,7 +2362,7 @@ void System::computeUInf()
 
 void System::adjustVelocityPeriodicBoundary()
 {
-	if (control == stress) { // in rate control it is already done in computeVelocities()
+	if (control == Parameters::ControlVariable::stress) { // in rate control it is already done in computeVelocities()
 		computeUInf();
 	}
 	for (int i=0; i<np; i++) {

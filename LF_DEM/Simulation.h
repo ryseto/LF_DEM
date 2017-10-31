@@ -45,6 +45,8 @@ private:
 	 */
 	Dimensional::Unit internal_unit;
 	Dimensional::Unit output_unit;
+	Dimensional::UnitSystem system_of_units;
+
 	double target_stress_input;
 	double input_rate;
 	double dimensionless_rate;
@@ -79,7 +81,6 @@ private:
 public:
 	/* For DEMsystem*/
 	Simulation(State::BasicCheckpoint chkp = State::zero_time_basicchkp);
-	~Simulation();
 	void simulationSteadyShear(std::string in_args,
 							   std::vector<std::string>& input_files,
 							   bool binary_conf,
@@ -95,6 +96,7 @@ public:
 	                     Dimensional::DimensionalQty<double> control_value,
 	                     std::string flow_type,
 	                     std::string simu_identifier);
+	void setupFlow(Dimensional::DimensionalQty<double> control_value);
 	void setConfigToSystem(bool binary_conf, const std::string &filename);
 	TimeKeeper initTimeKeeper();
 	ParameterSet p;
@@ -111,15 +113,14 @@ public:
 	}
 
 	void assertParameterCompatibility();
-	void setDefaultParameters(std::string input_scale);
+	void setDefaultParameters(Dimensional::DimensionalQty<double> control_value);
 	void readParameterFile(const std::string& filename_parameters);
 	void openOutputFiles();
 	std::string prepareSimulationName(bool binary_conf,
-									  const std::string& filename_import_positions,
-									  const std::string& filename_parameters,
-									  const std::string& simu_identifier,
-									  double dimensionlessnumber,
-									  const std::string& input_scale);
+	                                  const std::string& filename_import_positions,
+	                                  const std::string& filename_parameters,
+	                                  const std::string& simu_identifier,
+	                                  Dimensional::DimensionalQty<double> control_value);
 	void echoInputFiles(std::string in_args,
 						std::vector<std::string>& input_files);
 	void autoSetParameters(const std::string& keyword,
@@ -128,7 +129,7 @@ public:
 	void contactForceParameterBrownian(std::string filename);
 	void importPreSimulationData(std::string filename);
 	void tagStrainParameters();
-	void resolveTimeOrStrainParameters();
+	void resolveTimeOrStrainParameters(const std::map <std::string, Dimensional::DimensionalQty<double>> &);
 	std::map<std::string,std::string> getConfMetaData(const std::string &, const std::string &);
 	std::string getMetaParameter(std::map<std::string,std::string> &, std::string &, const std::string &);
 	std::string getMetaParameter(std::map<std::string,std::string> &, std::string &);
@@ -156,7 +157,6 @@ public:
 	void outputComputationTime();
 	bool kill;
 	bool force_to_run;
-	bool long_file_name;
 	bool diminish_output;
 	/*********** Events  ************/
 	void handleEventsShearJamming();
