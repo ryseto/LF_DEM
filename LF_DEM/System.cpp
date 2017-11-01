@@ -74,6 +74,7 @@ brownian(false),
 friction(false),
 rolling_friction(false),
 repulsiveforce(false),
+delayed_adhesion(false),
 cohesion(false),
 critical_load(false),
 brownian_dominated(false),
@@ -195,11 +196,17 @@ void System::declareForceComponents()
 		// (apart from Stokes drag, which can be set arbitrarily small)
 		force_components["dashpot"] = ForceComponent(np, RATE_PROPORTIONAL, torque, &System::setDashpotForceToParticle);
 	}
+
 	if (repulsiveforce) {
 		force_components["repulsion"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setRepulsiveForceToParticle);
 	}
+
 	if (brownian) {
-		force_components["brownian"] = ForceComponent(np, RATE_INDEPENDENT, torque, &System::setBrownianForceToParticle);// declared rate dependent for now --> @@ Now time to try stress-controlled Brownian @@
+		force_components["brownian"] = ForceComponent(np, RATE_INDEPENDENT, torque, &System::setBrownianForceToParticle);
+	}
+
+	if (delayed_adhesion) {
+		force_components["delayed_adhesion"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setTActAdhesionForceToParticle);
 	}
 
 	/********** Force R_FU^{mf}*(U^f-U^f_inf)  *************/
@@ -744,6 +751,12 @@ void System::forceResultantInterpaticleForces()
 		auto &repulsive_force = force_components["repulsion"].force;
 		for (int i=0; i<np; i++) {
 			forceResultant[i] += repulsive_force[i];
+		}
+	}
+	if (delayed_adhesion) {
+		auto &adhesion_force = force_components["repulsion"].force;
+		for (int i=0; i<np; i++) {
+			forceResultant[i] += adhesion_force[i];
 		}
 	}
 }
@@ -1502,6 +1515,14 @@ void System::computeForcesOnWallParticles()
 			na_ang_velocity_mobile[i] += ang_vel_repulsive[i];
 		}
 	}
+	if (delayed_adhesion) {
+		const auto &vel_adhesion = na_velo_components["delayed_adhesion"].vel;
+		const auto &ang_vel_adhesion = na_velo_components["delayed_adhesion"].ang_vel;
+		for (int i=0; i<np_mobile; i++) {
+			na_velocity_mobile[i] += vel_adhesion[i];
+			na_ang_velocity_mobile[i] += ang_vel_adhesion[i];
+		}
+	}
 	// from this, we can compute the hydro force on the wall that does *not* depend on the wall velocity
 	stokes_solver.multiply_by_RFU_fm(na_velocity_mobile, na_ang_velocity_mobile, force, torque);
 
@@ -1509,6 +1530,8 @@ void System::computeForcesOnWallParticles()
 	const auto &contact_force = force_components["contact"].force;
 	const auto &contact_torque = force_components["contact"].torque;
 	const auto &repulsive_force = force_components["repulsion"].force;
+	const auto &adhesion_force = force_components["delayed_adhesion"].force;
+	throw std::runtime_error("computeForcesOnWallParticles : ongoing work.... sorry");
 	for (int i=0; i<p.np_fixed; i++) {
 		non_rate_proportional_wall_force[i] = -force[i];
 		non_rate_proportional_wall_torque[i] = -torque[i];
@@ -1818,6 +1841,22 @@ void System::setRepulsiveForceToParticle(vector<vec3d> &force,
 	}
 	for (const auto &inter: interaction) {
 		inter.repulsion.addUpForce(force);
+	}
+}
+
+void System::setTActAdhesionForceToParticle(vector<vec3d> &force,
+								            vector<vec3d> &torque)
+{
+	for (auto &f: force) {
+		f.reset();
+	}
+	for (auto &t: torque) {
+		t.reset();
+	}
+	unsigned int i, j;
+	for (const auto &inter: interaction) {
+		std::tie(i, j) = inter.get_par_num();
+		inter.delayed_adhesion->addUpForce(force[i], force[j]);
 	}
 }
 

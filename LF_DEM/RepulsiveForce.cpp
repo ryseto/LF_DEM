@@ -30,7 +30,6 @@ void RepulsiveForce::activate()
 	force_vector.reset();
 	force_norm = 0;
 	reduced_force_norm = 0;
-	stresslet_XF.reset();
 	cutoff_roundlength = 1e-3;
 }
 
@@ -91,7 +90,7 @@ void RepulsiveForce::addUpForce(std::vector<vec3d> &force) const
 	force[p1] -= force_vector;
 }
 
-void RepulsiveForce::calcStressXF()
+void RepulsiveForce::addUpStressXF(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1)
 {
 	/**
 	 \brief Compute the XF stress associated with the repulsive force.
@@ -103,16 +102,10 @@ void RepulsiveForce::calcStressXF()
 	/* force_vector is force acting on particle 0
 	 * rvec is from particle 0 to particle 1
 	 */
-	stresslet_XF = outer_sym(interaction->rvec, force_vector);
-}
-
-void RepulsiveForce::addUpStressXF(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1)
-{
-	calcStressXF();
+	auto sc = 0.5*outer_sym(interaction->rvec, force_vector);
 	/* NOTE:
 		As the repulsive force is not a contact force, there is an ambiguity defining the stress per particle. Here we make the choice of attributing 1/2 of the interaction stress to each particle.
 	*/
-	Sym2Tensor sc = 0.5*stresslet_XF;
 	stress_p0 += sc;
 	stress_p1 += sc;
 }

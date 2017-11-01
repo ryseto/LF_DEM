@@ -32,6 +32,10 @@ z_offset(0)
 	// tell it to particles i and j
 	sys->interaction_list[i].insert(this);
 	sys->interaction_list[j].insert(this);
+
+	if (sys->delayed_adhesion) {
+		delayed_adhesion = std::unique_ptr<TActAdhesion::TimeActivatedAdhesion>(new TActAdhesion::TimeActivatedAdhesion(sys->p.TA_adhesion, sys->radius[p0], sys->radius[p1]));
+	}
 	activateForceMembers();
 }
 
@@ -91,6 +95,7 @@ void Interaction::swap(Interaction& other)
 	std::swap(contact, other.contact);
 	std::swap(lubrication, other.lubrication);
 	std::swap(repulsion, other.repulsion);
+	delayed_adhesion.swap(other.delayed_adhesion);
 	std::swap(label, other.label);
 	sys->interaction_list[p0].insert(this);
 	sys->interaction_list[p1].insert(this);
@@ -140,18 +145,24 @@ void Interaction::activateForceMembers()
 		repulsion.activate();
 	}
 	calcNormalVectorDistanceGap();
+	
 	// deal with contact
 	contact.setInteractionData();
 	if (reduced_gap <= 0) {
 		contact.activate();
 	}
 	contact_state_changed_after_predictor = false;
+	
 	if (sys->lubrication) {
 		lubrication.setParticleData();
 		lubrication.updateActivationState();
 		if (lubrication.is_active()) {
 			lubrication.updateResistanceCoeff();
 		}
+	}
+
+	if (sys->delayed_adhesion) {
+		delayed_adhesion->update(sys->get_time(), reduced_gap, nvec);
 	}
 }
 
@@ -165,6 +176,9 @@ void Interaction::deactivate()
 		if (lubrication.is_active()) {
 			lubrication.deactivate();
 		}
+	}
+	if (sys->delayed_adhesion) {
+		delayed_adhesion->deactivate();
 	}
 }
 
@@ -194,6 +208,9 @@ void Interaction::updateState(bool& deactivated)
 	}
 	if (sys->repulsiveforce) {
 		repulsion.calcForce();
+	}
+	if (sys->delayed_adhesion) {
+		delayed_adhesion->update(sys->get_time(), reduced_gap, nvec);
 	}
 }
 

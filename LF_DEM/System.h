@@ -108,6 +108,7 @@ private:
 	void adaptTimeStep(double time_end, double strain_end);
 	void setContactForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setRepulsiveForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
+	void setTActAdhesionForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setFixedParticleForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setDashpotForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setHydroForceToParticle_squeeze(std::vector<vec3d> &force, std::vector<vec3d> &torque);
@@ -192,6 +193,7 @@ private:
 	bool friction;
 	bool rolling_friction;
 	bool repulsiveforce;
+	bool delayed_adhesion;
 	bool cohesion;
 	bool critical_load;
 	bool brownian_dominated;
