@@ -73,6 +73,9 @@ void UnitSystem::add(Unit unit, DimensionalQty<double> quantity)
 {
   assert(quantity.dimension == Dimension::Force || quantity.dimension == Dimension::Stress);
   
+  if (quantity.value == 0) {
+    return;
+  }
   if (quantity.dimension==Dimension::Stress) {
     quantity.value /= 6*M_PI; // at some point we have to get rid of this weird unit choice
   }

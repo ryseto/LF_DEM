@@ -19,9 +19,9 @@ class ParameterSetFactory {
 public:
 	ParameterSetFactory();
 	void setFromFile(const std::string& filename_parameters);
+	void setParameterFromKeyValue(const std::string &keyword, 
+								  const std::string &value);
 	ParameterSet getParameterSet() const;
-	// Dimensional::DimensionalQty<double> getDimensionalParameter(const std::string &name_str) const;
-
 	std::vector<Dimensional::ForceScale> getForceScales() const;
 	void setSystemOfUnits(const Dimensional::UnitSystem &unit_system);
 private:
@@ -33,8 +33,6 @@ private:
 	std::vector<InputParameter<Dimensional::DimensionalQty<double>>> DimValDblParams;
 	std::vector<InputParameter<Dimensional::DimensionalQty<double>>> TrueDimValDblParams;
 	void setDefaultValues();
-	void setParameterFromKeyValue(const std::string &keyword, 
-								  const std::string &value);
 };
 
 

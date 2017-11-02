@@ -275,14 +275,12 @@ void ParameterSetFactory::setParameterFromKeyValue(const std::string &keyword,
 	for (auto &inp: DimValDblParams) {
 		if (inp.name_str==keyword) {
 			inp.value = value;
-			if (inp.value.dimension == Dimensional::Dimension::TimeOrStrain) {
-				if (inp.value.unit == Dimensional::Unit::hydro) {
-					inp.value.dimension = Dimensional::Dimension::Strain;
-					inp.value.unit = Dimensional::Unit::none;
-				} else {
-					inp.value.dimension = Dimensional::Dimension::Time;
-				}
-			}
+			return;
+		}
+	}
+	for (auto &inp: TrueDimValDblParams) {
+		if (inp.name_str==keyword) {
+			inp.value = value;
 			return;
 		}
 	}
@@ -312,6 +310,25 @@ void ParameterSetFactory::setSystemOfUnits(const Dimensional::UnitSystem &unit_s
 		unit_system.convertToInternalUnit(force.value.dim_qty);
 	}
 	for (auto &param: DimValDblParams) {
+		if (param.value.dimension == Dimensional::Dimension::TimeOrStrain) {
+			if (param.value.unit == Dimensional::Unit::hydro) {
+				param.value.dimension = Dimensional::Dimension::Strain;
+				param.value.unit = Dimensional::Unit::none;
+			} else {
+				param.value.dimension = Dimensional::Dimension::Time;
+			}
+		}
+		unit_system.convertToInternalUnit(param.value);
+	}
+	for (auto &param: TrueDimValDblParams) {
+		if (param.value.dimension == Dimensional::Dimension::TimeOrStrain) {
+			if (param.value.unit == Dimensional::Unit::hydro) {
+				param.value.dimension = Dimensional::Dimension::Strain;
+				param.value.unit = Dimensional::Unit::none;
+			} else {
+				param.value.dimension = Dimensional::Dimension::Time;
+			}
+		}
 		unit_system.convertToInternalUnit(param.value);
 	}
 }
@@ -334,20 +351,13 @@ ParameterSet ParameterSetFactory::getParameterSet() const
 	for (auto &inp: DimValDblParams) {
 		inp.exportToParameterSet(p, inp);
 	}
+	for (auto &inp: TrueDimValDblParams) {
+		inp.exportToParameterSet(p, inp);
+	}
 	for (auto &inp: ForceScaleParams) {
 		inp.exportToParameterSet(p, inp);
 	}
 	return p;
 }
-
-// Dimensional::DimensionalQty<double> ParameterSetFactory::getDimensionalParameter(const std::string &name_str) const 
-// {
-// 	for (auto &inp: DimValDblParams) {
-// 		if (inp.name_str == name_str) {
-// 			return inp.value;
-// 		}
-// 	}
-// 	throw std::runtime_error("ParameterSetFactory:: Could not find requested \""+name_str+"\" parameter.");
-// }
 
 } // namespace Parameters

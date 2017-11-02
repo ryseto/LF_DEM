@@ -172,14 +172,14 @@ void UnitSystem::convertUnit(DimensionalQty<T> &quantity, Unit new_unit) const
     return;
   }
   if (quantity.dimension == Dimension::TimeOrStrain) {
-    throw std::runtime_error("UnitSystem::convertUnits : cannot convert units of a TimeOrStrain quantity.");
+    throw std::runtime_error("UnitSystem::convertUnit : cannot convert units of a TimeOrStrain quantity.");
   }
 
   if (!unit_nodes.count(quantity.unit)) {
-    throw std::runtime_error("UnitSystem::convertUnits : cannot convert from "+unit2suffix(quantity.unit)+" unit.");
+    throw std::runtime_error("UnitSystem::convertUnit : cannot convert from "+unit2suffix(quantity.unit)+" unit.");
   }
   if (!unit_nodes.count(new_unit)) {
-    throw std::runtime_error("UnitSystem::convertUnits : cannot convert to "+unit2suffix(new_unit)+" unit.");
+    throw std::runtime_error("UnitSystem::convertUnit : cannot convert to "+unit2suffix(new_unit)+" unit.");
   }
 
   // value of the old force unit in new_unit
