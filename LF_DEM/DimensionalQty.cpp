@@ -87,23 +87,6 @@ void UnitSystem::add(Unit unit, DimensionalQty<double> quantity)
   }
 }
 
-Unit UnitSystem::getLargestUnit() const
-{
-  auto largest_unit = unit_nodes.cbegin()->first;
-  double largest_value = 1;
-
-  UnitSystem this_copy(*this);
-  this_copy.setInternalUnit(largest_unit);
-
-  for (const auto &node: this_copy.getForceTree()) {
-    if (node.second.value > largest_value) {
-      largest_value = node.second.value;
-      largest_unit = node.first;
-    }
-  }
-  return largest_unit;
-}
-
 void UnitSystem::convertToParentUnit(DimensionalQty<double> &node)
 {
   auto &parent_node = unit_nodes[node.unit];
@@ -158,6 +141,7 @@ void UnitSystem::setInternalUnit(Unit unit)
   for (auto &node: unit_nodes) {
     convertNodeUnit(node.second, unit);
   }
+  has_internal_unit = true;
 }
 
 } // namespace Dimensional

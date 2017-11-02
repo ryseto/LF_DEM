@@ -122,7 +122,7 @@ void OutputData::setUnits(Dimensional::UnitSystem units_,
                           Dimensional::Unit output_unit)
 {
 	units = units_;
-	auto it = units.getForceTree().cbegin();
+	auto it = units.getForceScales().cbegin();
 	internal_unit = it->second.unit;
 
 	out_unit = output_unit;

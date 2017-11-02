@@ -144,12 +144,14 @@ struct ForceScale {
 
 class UnitSystem {
 public:
+  UnitSystem():has_internal_unit(false) {};
+  
   void add(Unit unit, DimensionalQty<double> quantity);
   void setInternalUnit(Unit unit);
   template<typename T> void convertToInternalUnit(DimensionalQty<T> &quantity) const;
   template<typename T> void convertFromInternalUnit(DimensionalQty<T> &quantity, Unit unit) const;
-  const std::map<Unit, DimensionalQty<double>> getForceTree() const {return unit_nodes;};
-  Unit getLargestUnit() const;
+  const std::map<Unit, DimensionalQty<double>> getForceScales() const {assert(has_internal_unit); return unit_nodes;};
+
 private:
   std::map<Unit, DimensionalQty<double>> unit_nodes;
   void convertToParentUnit(DimensionalQty<double> &node);
@@ -157,6 +159,7 @@ private:
   void convertNodeUnit(DimensionalQty<double> &node, Unit unit);
   template<typename T> void convertUnit(DimensionalQty<T> &quantity,
                                         Unit new_unit) const; // for arbitrary Dimension
+  bool has_internal_unit;
 };
 
 
@@ -216,6 +219,7 @@ void UnitSystem::convertUnit(DimensionalQty<T> &quantity, Unit new_unit) const
 template<typename T>
 void UnitSystem::convertToInternalUnit(DimensionalQty<T> &quantity) const
 {
+  assert(has_internal_unit);
   auto internal_unit = unit_nodes.cbegin()->second.unit;
   convertUnit(quantity, internal_unit);
 }
@@ -223,6 +227,7 @@ void UnitSystem::convertToInternalUnit(DimensionalQty<T> &quantity) const
 template<typename T>
 void UnitSystem::convertFromInternalUnit(DimensionalQty<T> &quantity, Unit unit) const
 {
+  assert(has_internal_unit);
   auto internal_unit = unit_nodes.cbegin()->second.unit;
   assert(quantity.unit == internal_unit);
 

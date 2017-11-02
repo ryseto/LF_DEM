@@ -131,7 +131,7 @@ void ParameterSetFactory::setDefaultValues() {
 	default_val = {Dimensional::Unit::kr, {Dimensional::Dimension::Force, 0, Dimensional::Unit::kn}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(kr, default_val));
 
-	default_val = {Dimensional::Unit::delayed_adhesion, {Dimensional::Dimension::Force, 1, Dimensional::Unit::hydro}};
+	default_val = {Dimensional::Unit::delayed_adhesion, {Dimensional::Dimension::Force, 0, Dimensional::Unit::hydro}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(TA_adhesion.adhesion_max_force, default_val));
 
 	default_val = {Dimensional::Unit::repulsion, {Dimensional::Dimension::Force, 0, Dimensional::Unit::hydro}};
@@ -306,8 +306,11 @@ std::vector<Dimensional::ForceScale> ParameterSetFactory::getForceScales() const
 
 void ParameterSetFactory::setSystemOfUnits(const Dimensional::UnitSystem &unit_system)
 {
+	auto force_scales = unit_system.getForceScales();
 	for (auto &force: ForceScaleParams) {
-		unit_system.convertToInternalUnit(force.value.dim_qty);
+		if (force_scales.count(force.value.type)) {
+			force.value.dim_qty = force_scales.at(force.value.type);
+		}
 	}
 	for (auto &param: DimValDblParams) {
 		if (param.value.dimension == Dimensional::Dimension::TimeOrStrain) {

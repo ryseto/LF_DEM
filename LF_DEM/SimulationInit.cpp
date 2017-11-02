@@ -73,7 +73,7 @@ void Simulation::contactForceParameterBrownian(string filename)
 	// temporal variables to keep imported values.
 	double phi_, peclet_, kn_, kt_, dt_;
 	bool found = false;
-	auto forces = system_of_units.getForceTree();
+	auto forces = system_of_units.getForceScales();
 	auto peclet = 1./forces.at(Dimensional::Unit::brownian).value;
 	while (fin_knktdt >> phi_ >> peclet_ >> kn_ >> kt_ >> dt_) {
 		if (abs(phi_-conf.volume_or_area_fraction) < 1e-10 && peclet_ == peclet) {
@@ -159,8 +159,17 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 	if (control_var == Parameters::ControlVariable::rate) {// || control_var == Parameters::ControlVariable::viscnb) {
 		if (input_rate != 0) {
 			system_of_units.add(Dimensional::Unit::hydro, control_value);
-			if (internal_unit == Dimensional::Unit::none){
-				internal_unit = system_of_units.getLargestUnit();
+			system_of_units.setInternalUnit(Dimensional::Unit::hydro);
+			internal_unit = Dimensional::Unit::hydro;
+			double largest_force_val = 1;
+			for (auto &fs: PFact.getForceScales()) {
+				if (fs.dim_qty.value > largest_force_val && 
+					fs.type != Dimensional::Unit::kn &&
+					fs.type != Dimensional::Unit::kt &&
+					fs.type != Dimensional::Unit::kr) {
+					largest_force_val = fs.dim_qty.value;
+					internal_unit = fs.type;
+				}
 			}
 			if (internal_unit == Dimensional::Unit::brownian) {
 				sys.brownian_dominated = true;
@@ -188,7 +197,7 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 	
 	PFact.setSystemOfUnits(system_of_units);
 	
-	auto forces = system_of_units.getForceTree();
+	auto forces = system_of_units.getForceScales();
 	if (forces.count(Dimensional::Unit::hydro) > 0) { // == if rate controlled
 		sys.set_shear_rate(forces.at(Dimensional::Unit::hydro).value);
 	}
@@ -356,6 +365,7 @@ void Simulation::setupSimulation(string in_args,
 	} else {
 		sys.zero_shear = false;
 	}
+	setupFlow(control_value);
 	
 	Parameters::ParameterSetFactory PFactory;
 	PFactory.setFromFile(filename_parameters);
@@ -363,7 +373,6 @@ void Simulation::setupSimulation(string in_args,
 	p = PFactory.getParameterSet();
 
 	p.flow_type = flow_type; // shear or extension or mix (not implemented yet)
-	setupFlow(control_value);
 
 	if (sys.ext_flow) {
 		p.output.origin_zero_flow = false;
