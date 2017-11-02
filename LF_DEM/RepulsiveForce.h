@@ -38,7 +38,6 @@ private:
 	vec3d force_vector; // normal contact force
 	double force_norm;
 	double reduced_force_norm;
-	Sym2Tensor stresslet_XF;
 	void calcReducedForceNorm();
 	void calcScaledForce();
 public:
@@ -67,12 +66,7 @@ public:
 	{
 		return force_vector;
 	}
-	void calcStressXF();
 	void addUpStressXF(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1);
-	Sym2Tensor getStressXF() const
-	{
-		return stresslet_XF;
-	}
 	double calcEnergy() const;
 
 };

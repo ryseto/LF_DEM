@@ -7,11 +7,63 @@
 #ifndef __LF_DEM__ParameterSet__
 #define __LF_DEM__ParameterSet__
 #include <string>
-#include <functional>
-#include <vector>
+#include "TAAParams.h"
 #include "DimensionalQty.h"
 
+/*===================================================
+=            Adding a parameter to LF_DEM           =
+=====================================================
 
+
+
+**** Dimensionless parameter *******
+
+Adding a parameter which is *not* a time nor a force is done in 2 steps:
+
+1. Add the parameter in the ParameterSet structure below, 
+documentation usually provides the parameter role and its default value within brackets.
+If you plan to add several related parameters for e.g. a new interaction, bundling them 
+in a dedicated struct will help organizing ParameterSet.
+
+2. Parameter assignement on LF_DEM start up is provided by the ParameterSetFactory class.
+In ParameterSetFactory.cpp, modify setDefaultValues() function to declare 
+the new parameter in one of the std::vectors BoolParams, IntParams, etc, 
+according to the parameter type. These vectors are storing the information necessary 
+to match a string in a parameter file to a member of ParameterSet. 
+If both string and member have the same name 
+(i.e. if you want ParameterSet.AParam to be set in the parameter file with "AParam = value;"), 
+you can use the macros PARAM_INIT* to save a few typos.
+
+If the 
+
+**** Dimensional parameter *******
+
+If the parameter is a force or a time, follow step 1 and 2 as for a dimensionless parameter. 
+Then:
+
+3. Add the new force scale name in the Dimensional::Unit enum (in DimensionalQty.h)
+
+
+=====  End of Adding a parameter  ======*/
+
+
+namespace Parameters {
+
+struct OutputParams {
+	Dimensional::DimensionalQty<double> time_interval_output_data;      ///< Output interval for outputing data_* file [0.01 time unit]
+	Dimensional::DimensionalQty<double> time_interval_output_config;    ///< Output interval for outputing int_* and par_* files [0.1 time unit]
+	bool log_time_interval;                								///< Output in logarithmic time [false]
+	Dimensional::DimensionalQty<double> initial_log_time;               ///< Initial output time in log time mode [1e-4]
+	int nb_output_data_log_time;          								///< Nb of data output in log time mode [100]
+	int nb_output_config_log_time;			           					///< Nb of config output in log time mode (must be <= nb_output_data_log_time) [100]
+	bool origin_zero_flow;                   ///< Output: the middle height of the simulation box is set to the flow zero level. [true]
+	bool out_data_particle;                  ///< Output par_* file [true]
+	bool out_data_interaction;               ///< Output int_* file [true]
+	bool out_binary_conf;					///< Output binary configurations conf_*.bin files [false]
+	std::string out_particle_stress;				///< Output stress per particle in pst_* file, indicating which component ("c" for contact, "r" for repulsion, "b" for Brownian, "t" for total, "l" for lubrication) by a string, e.g "tc" for total stress and contact stress [""]
+	bool out_data_vel_components;						///< Output velocity components in the par* file [false]
+	bool out_bond_order_parameter6;        ///< Output amplitudes and arguments of 6-fold bond orientation order parameters in the par* file [false]
+};
 
 struct ParameterSet
 {
@@ -32,6 +84,7 @@ struct ParameterSet
 	double repulsive_max_length;            ///< Maximum length until which the repulsive force can reach. If -1, no limit. (e.g. length of polymer brush) [-1]
 	double interaction_range;		///< maximum range (center-to-center) for interactions (repulsive force, etc.). If -1, lub_max_gap is used as cutoff [-1]
 	int np_fixed;
+	struct TAAParams TA_adhesion;
 	/*******************************************************
 	 HYDRODYNAMICS
 	********************************************************/
@@ -99,8 +152,7 @@ struct ParameterSet
 	/*******************************************************
 	 INTEGRATOR
 	********************************************************/
-	double time_end;                 ///< Time of the simulation. [10 time unit]
-
+	Dimensional::DimensionalQty<double> time_end;                 ///< Time of the simulation. [10 time unit]
 	int integration_method;                  ///< Integrator. 0: Euler's Method, 1: predictor-corrector. [1]
 	bool fixed_dt;							///< Use constant dt [false]
 	double dt;                           ///< When fixed_dt == false: initial time step value. When fixed_dt == true: time step value. [1e-4 time unit]
@@ -113,22 +165,8 @@ struct ParameterSet
 	/*******************************************************
 	 OUTPUT
 	********************************************************/
-
-	double time_interval_output_data;      ///< Output interval for outputing data_* file [0.01 time unit]
-	double time_interval_output_config;    ///< Output interval for outputing int_* and par_* files [0.1 time unit]
-	bool log_time_interval;                ///< Output in logarithmic time [false]
-	double initial_log_time;               ///< Initial output time in log time mode [1e-4]
-	int nb_output_data_log_time;           ///< Nb of data output in log time mode [100]
-	int nb_output_config_log_time;           ///< Nb of config output in log time mode (must be <= nb_output_data_log_time) [100]
-	bool origin_zero_flow;                   ///< Output: the middle height of the simulation box is set to the flow zero level. [true]
-
-	bool out_data_particle;                  ///< Output par_* file [true]
-	bool out_data_interaction;               ///< Output int_* file [true]
-	bool out_binary_conf;					///< Output binary configurations conf_*.bin files [false]
-	std::string out_particle_stress;				///< Output stress per particle in pst_* file, indicating which component ("c" for contact, "r" for repulsion, "b" for Brownian, "t" for total, "l" for lubrication) by a string, e.g "tc" for total stress and contact stress [""]
-	bool out_data_vel_components;						///< Output velocity components in the par* file [false]
-	bool out_bond_order_parameter6;        ///< Output amplitudes and arguments of 6-fold bond orientation order parameters in the par* file [false]
-
+	struct OutputParams output;
+	
 	/*******************************************************
 	 CONTACT PARAMETERS AUTO-DETERMINATION
 	********************************************************/
@@ -160,156 +198,10 @@ struct ParameterSet
 };
 
 
-inline void setFromKeyValue(ParameterSet &p, const std::string &key, const Dimensional::DimensionalQty<double> &dim_value)
-{
-	double value = dim_value.value;
-	if (key == "contact_relaxation_time") {
-		p.contact_relaxation_time = value;
-	} else if (key == "contact_relaxation_time_tan") {
-		p.contact_relaxation_time_tan = value;
-	} else if (key == "time_end") {
-		p.time_end = value;
-	} else if (key == "time_interval_output_config") {
-		p.time_interval_output_config = value;
-	} else if (key == "time_interval_output_data") {
-		p.time_interval_output_data = value;
-	} else if (key == "initial_log_time") {
-		p.initial_log_time = value;
-	} else if (key == "min_kn_auto_det") {
-		p.min_kn_auto_det = value;
-	} else if (key == "max_kn_auto_det") {
-		p.max_kn_auto_det = value;
-	} else if (key == "min_kt_auto_det") {
-		p.min_kt_auto_det = value;
-	} else if (key == "max_kt_auto_det") {
-		p.max_kt_auto_det = value;
-	} else {
-		throw std::runtime_error("Unknown dimensional parameter "+key);
-	}
-}
-
-template <typename T>
-inline void setFromMap(ParameterSet &p,
-                       const std::map <std::string, T> &param_map)
-{
-	for (const auto & param: param_map) {
-		setFromKeyValue(p, param.first, param.second);
-	}
-}
+} // namespace Parameters
 
 
 
-template<typename T>
-struct InputParameter
-{
-	std::string name_str;
-	std::function<void(ParameterSet &, InputParameter<T>)> exportToParameterSet;
-	T value;
-};
-
-#define PARAM_INIT(name, default_value) {#name,  [](ParameterSet &p, InputParameter<decltype(ParameterSet::name)> in) {p.name = in.value;}, default_value}
-#define PARAM_INIT_DIMVAL(name, type, default_value) {#name,  [](ParameterSet &p, InputParameter<Dimensional::DimensionalValue<decltype(ParameterSet::name)>> in) {p.name = in.value.value;}, default_value}
-
-static std::vector<InputParameter<bool>> InputBoolParameterSet = \
-{
-	PARAM_INIT(fixed_dt, false),
-	PARAM_INIT(keep_input_strain, false),
-	PARAM_INIT(monolayer, false),
-	PARAM_INIT(auto_determine_knkt, false),
-	PARAM_INIT(out_bond_order_parameter6, false),
-	PARAM_INIT(out_data_vel_components, false),
-	PARAM_INIT(out_binary_conf, false),
-	PARAM_INIT(out_data_interaction, true),
-	PARAM_INIT(out_data_particle, true),
-	PARAM_INIT(origin_zero_flow, true),
-	PARAM_INIT(log_time_interval, false),
-};
-
-static std::vector<InputParameter<double>> InputDoubleParameterSet = \
-{
-	PARAM_INIT(brownian_relaxation_time, 1),
-	PARAM_INIT(strain_reversal, 1),
-	PARAM_INIT(theta_shear, 0),
-	PARAM_INIT(rest_threshold, 1e-4),
-	PARAM_INIT(Pe_switch, 5),
-	PARAM_INIT(start_adjust, 0.2),
-	PARAM_INIT(max_dt_auto_det, 1e-3),
-	PARAM_INIT(min_dt_auto_det, 1e-7),
-	PARAM_INIT(memory_strain_avg, 0.01),
-	PARAM_INIT(memory_strain_k, 0.02),
-	PARAM_INIT(disp_tan_target, 0.05),
-	PARAM_INIT(overlap_target, 0.05),
-	PARAM_INIT(dt_min, -1),
-	PARAM_INIT(dt_max, -1),
-	PARAM_INIT(dt, 1e-4),
-	PARAM_INIT(disp_max, 2e-3),
-	PARAM_INIT(lub_max_gap, 0.5),
-	PARAM_INIT(lub_reduce_parameter, 1e-3),
-	PARAM_INIT(sd_coeff, 1),
-	PARAM_INIT(interaction_range, -1),
-	PARAM_INIT(repulsive_length, 0.05),
-	PARAM_INIT(repulsive_max_length, -1),
-	PARAM_INIT(magic_angle, 0),
-	PARAM_INIT(mu_static, 1),
-	PARAM_INIT(mu_dynamic, -1),
-	PARAM_INIT(mu_rolling, 0),
-};
-
-
-static std::vector<InputParameter<int>> InputIntParameterSet = \
-{
-	PARAM_INIT(nb_output_data_log_time, 100),
-	PARAM_INIT(nb_output_config_log_time, 100),
-	PARAM_INIT(integration_method, 1),
-	PARAM_INIT(friction_model, 1),
-	PARAM_INIT(np_fixed, 0),
-	PARAM_INIT(simulation_mode, 0)
-};
-
-static std::vector<InputParameter<str::string>> InputStrParameterSet = \
-{
-	PARAM_INIT(flow_type, ""),
-	PARAM_INIT(event_handler, ""),
-	PARAM_INIT(lubrication_model, "tangential"),
-};
-
-static std::vector<InputParameter<str::string>> InputDimValParameterSet = \
-{
-	PARAM_INIT(flow_type, ""),
-	PARAM_INIT(lubrication_model, "tangential"),
-};
-
-
-
-
-void Simulation::setDefaultParameters(Dimensional::DimensionalQty<double> control_value)
-{
-
-	/**
-	 \brief Set default values for ParameterSet parameters.
-	 */
-	auto input_scale = control_value.unit;
-	auto input_scale_str = Dimensional::unit2suffix(input_scale);
-
-	autoSetParameters("time_end", "10h");
-	autoSetParameters("contact_relaxation_time", "1e-3"+input_scale_str);
-	autoSetParameters("contact_relaxation_time_tan", "-1"+input_scale_str);
-	if (input_scale != Dimensional::Unit::kn) {
-		autoSetParameters("kn", "2000"+input_scale_str);
-		autoSetParameters("min_kn_auto_det", "1000"+input_scale_str);
-		autoSetParameters("max_kn_auto_det", "1000000"+input_scale_str);
-	}
-	if (input_scale != Dimensional::Unit::kt) {
-		autoSetParameters("kt", "0.5kn");
-		autoSetParameters("min_kt_auto_det", "1000"+input_scale_str);
-		autoSetParameters("max_kt_auto_det", "1000000"+input_scale_str);
-	}
-	if (input_scale != Dimensional::Unit::kr) {
-		autoSetParameters("kr", "0kn");
-	}
-	autoSetParameters("time_interval_output_data", "1e-2h");
-	autoSetParameters("time_interval_output_config", "1e-1h");
-}
 
 
 #endif/* defined(__LF_DEM__ParameterSet__) */

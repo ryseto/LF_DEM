@@ -23,6 +23,7 @@
 #include "Contact.h"
 #include "Lubrication.h"
 #include "RepulsiveForce.h"
+#include "TimeActivatedAdhesion.h"
 #include "Sym2Tensor.h"
 
 class System;
@@ -68,6 +69,8 @@ public:
 	Contact contact;
 	Lubrication lubrication;
 	RepulsiveForce repulsion;
+	std::unique_ptr<TActAdhesion::TimeActivatedAdhesion> delayed_adhesion;
+	 
 	vec3d rvec; // vector center to center
 	vec3d nvec; // normal vector
 	int z_offset;
