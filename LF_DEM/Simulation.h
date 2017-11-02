@@ -25,6 +25,7 @@
 #include "global.h"
 #include "System.h"
 #include "ParameterSet.h"
+#include "ParameterSetFactory.h"
 #include "DimensionalQty.h"
 #include "OutputData.h"
 #include "Events.h"
@@ -34,12 +35,9 @@ class Simulation
 {
 private:
 	System sys;
-	ParameterSet p_initial;
-	std::map <std::string, Dimensional::DimensionalQty<double>> dimensional_input_params;
+	Parameters::ParameterSet p_initial;
 	std::string header_imported_configulation[2];
 	Parameters::ControlVariable control_var;
-	double strain_end;
-	double time_end;
 	/*
 	 * Resultant data
 	 */
@@ -99,7 +97,7 @@ public:
 	void setupFlow(Dimensional::DimensionalQty<double> control_value);
 	void setConfigToSystem(bool binary_conf, const std::string &filename);
 	TimeKeeper initTimeKeeper();
-	ParameterSet p;
+	Parameters::ParameterSet p;
 	bool keepRunning();
 	// void timeEvolution(double& next_output_data);
 	void generateOutput(const std::set<std::string> &output_events, int& binconf_counter);
@@ -122,19 +120,17 @@ public:
 	                                  Dimensional::DimensionalQty<double> control_value);
 	void echoInputFiles(std::string in_args,
 						std::vector<std::string>& input_files);
-	void autoSetParameters(const std::string& keyword,
-						   const std::string& value);
 	void contactForceParameter(std::string filename);
 	void contactForceParameterBrownian(std::string filename);
 	void importPreSimulationData(std::string filename);
 	void tagStrainParameters();
-	void resolveTimeOrStrainParameters(const std::map <std::string, Dimensional::DimensionalQty<double>> &);
 	std::map<std::string,std::string> getConfMetaData(const std::string &, const std::string &);
 	std::string getMetaParameter(std::map<std::string,std::string> &, std::string &, const std::string &);
 	std::string getMetaParameter(std::map<std::string,std::string> &, std::string &);
 	void exportForceAmplitudes();
 	Dimensional::Unit pickInternalUnitsRateControl();
-	void setupNonDimensionalization(Dimensional::DimensionalQty<double> control_value);
+	void setupNonDimensionalization(Dimensional::DimensionalQty<double> control_value, 
+									Parameters::ParameterSetFactory &PFact);
 	void stopShearing(TimeKeeper &tk); //simulation mode 22
 
 	/*

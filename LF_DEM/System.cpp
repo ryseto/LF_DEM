@@ -61,7 +61,7 @@ wagnerhash(time_t t, clock_t c)
 #endif
 
 
-System::System(ParameterSet& ps,
+System::System(Parameters::ParameterSet& ps,
 	             list <Event>& ev,
 					     State::BasicCheckpoint chkp):
 pairwise_resistance_changed(true),
@@ -429,7 +429,7 @@ void System::setupParameters()
 
 	if (brownian) {
 		if (brownian_dominated) {
-			double stress_avg_relaxation_parameter = 10*p.time_interval_output_data; // 0 --> no average
+			double stress_avg_relaxation_parameter = 10*p.output.time_interval_output_data.value; // 0 --> no average
 			stress_avg.setRelaxationTime(stress_avg_relaxation_parameter);
 			rate_prop_shearstress_rate1_ave.setRelaxationTime(p.brownian_relaxation_time);
 			rate_indep_shearstress_ave.setRelaxationTime(p.brownian_relaxation_time);
@@ -881,7 +881,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		if (wall_rheology) {
 			calcStress();
 		}
-		if (!p.out_particle_stress.empty() || couette_stress) {
+		if (!p.output.out_particle_stress.empty() || couette_stress) {
 			calcTotalStressPerParticle();
 		}
 	}
@@ -985,7 +985,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 		if (wall_rheology || brownian_dominated) {
 			calcStress();
 		}
-		if (!p.out_particle_stress.empty() || couette_stress) {
+		if (!p.output.out_particle_stress.empty() || couette_stress) {
 			calcTotalStressPerParticle();
 		}
 	}

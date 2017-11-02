@@ -42,10 +42,10 @@ bool Simulation::keepRunning()
 
 		Returns true when ParameterSet::time_end is reached or if an event handler threw a kill signal.
 	 */
-	if (time_end == -1) {
-		return (sys.get_cumulated_strain() < strain_end-1e-8) && !kill;
+	if (p.time_end.dimension == Dimensional::Dimension::Strain) {
+		return (sys.get_cumulated_strain() < p.time_end.value-1e-8) && !kill;
 	} else {
-		return (sys.get_time() < time_end-1e-8) && !kill;
+		return (sys.get_time() < p.time_end.value-1e-8) && !kill;
 	}
 }
 
@@ -130,11 +130,11 @@ void Simulation::generateOutput(const set<string> &output_events, int& binconf_c
 		sys.calcStress();
 		outputData();
 	}
-	if (sys.p.out_bond_order_parameter6) {
+	if (p.output.out_bond_order_parameter6) {
 		sys.calcOrderParameter();
 	}
 	if (output_events.find("config") != output_events.end()) {
-		if (p.out_binary_conf) {
+		if (p.output.out_binary_conf) {
 			string binconf_filename = "conf_" + simu_name + "_" + to_string(++binconf_counter) + ".bin";
 			outputConfigurationBinary(binconf_filename);
 		} else {
@@ -249,13 +249,13 @@ void Simulation::timeEvolutionUntilNextOutput(const TimeKeeper &tk)
 
 void Simulation::printProgress()
 {
-	if (time_end != -1) {
+	if (p.time_end.dimension == Dimensional::Dimension::Time) {
 		cout << "time: " << sys.get_time_in_simulation_units() << " , "\
-		     << sys.get_time() << " / " << time_end\
+		     << sys.get_time() << " / " << p.time_end.value\
 		     << " , strain: " << sys.get_cumulated_strain() << endl;
 	} else {
 		cout << "time: " << sys.get_time_in_simulation_units()\
-		     << " , strain: " << sys.get_cumulated_strain() << " / " << strain_end << endl;
+		     << " , strain: " << sys.get_cumulated_strain() << " / " << p.time_end.value << endl;
 	}
 }
 
@@ -700,7 +700,7 @@ void Simulation::outputPstFileTxt()
 	group_shorts["d"] = "dashpot";
 	group_shorts["t"] = "total";
 	map<string, vector<Sym2Tensor>> particle_stress;
-	for (auto &type: p.out_particle_stress) {
+	for (auto &type: p.output.out_particle_stress) {
 		auto group_name = group_shorts[string(1, type)];
 		particle_stress[group_name] = getParticleStressGroup(group_name);
 	}
@@ -726,7 +726,7 @@ void Simulation::outputParFileTxt()
 	outdata_int.setDefaultPrecision(output_precision);
 	auto pos = sys.position;
 	auto vel = sys.velocity;
-	if (p.origin_zero_flow) {
+	if (p.output.origin_zero_flow) {
 		if (!sys.ext_flow) {
 			for (int i=0; i<np; i++) {
 				pos[i] = shiftUpCoordinate(sys.position[i].x-0.5*sys.get_lx(),
@@ -745,7 +745,7 @@ void Simulation::outputParFileTxt()
 	 * we need to change the velocities of particles as well.
 	 */
 	for (int i=0; i<np; i++) {
-		if (p.origin_zero_flow) {
+		if (p.output.origin_zero_flow) {
 			if (pos[i].z < 0) {
 				vel[i] -= sys.vel_difference;
 			}
@@ -776,7 +776,7 @@ void Simulation::outputParFileTxt()
 		//			outdata_par.entryData("stress_thetatheta", Dimensional::Dimension::Viscosity, 1, stress_thetatheta/sr);
 		//			outdata_par.entryData("stress_rtheta", Dimensional::Dimension::Viscosity, 1, stress_rtheta/sr);
 		//		}
-		if (p.out_data_vel_components) {
+		if (p.output.out_data_vel_components) {
 			for (const auto &vc: sys.na_velo_components) {
 				string entry_name_vel = "non-affine "+vc.first+" velocity (x, y, z)";
 				string entry_name_ang_vel = "non-affine angular "+vc.first+" velocity (x, y, z)";
@@ -784,7 +784,7 @@ void Simulation::outputParFileTxt()
 				outdata_par.entryData(entry_name_ang_vel, Dimensional::Dimension::Velocity, 3, vc.second.ang_vel[i]);
 			}
 		}
-		if (p.out_bond_order_parameter6) {
+		if (p.output.out_bond_order_parameter6) {
 			outdata_par.entryData("abs_phi6", Dimensional::Dimension::none, 1, abs(sys.phi6[i]));
 			outdata_par.entryData("arg_phi6", Dimensional::Dimension::none, 1, arg(sys.phi6[i]));
 		}
@@ -857,13 +857,13 @@ void Simulation::outputIntFileTxt()
 
 void Simulation::outputConfigurationData()
 {
-	if (p.out_data_particle) {
+	if (p.output.out_data_particle) {
 		outputParFileTxt();
 	}
-	if (p.out_data_interaction) {
+	if (p.output.out_data_interaction) {
 		outputIntFileTxt();
 	}
-	if (!p.out_particle_stress.empty()) {
+	if (!p.output.out_particle_stress.empty()) {
 		outputPstFileTxt();
 	}
 	//if (sys.ext_flow) {

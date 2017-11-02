@@ -30,7 +30,7 @@
 
 class GenerateInitConfig{
 private:
-	ParameterSet p;
+	Parameters::ParameterSet p;
 	std::list<Event> events;
 
 	char disperse_type;

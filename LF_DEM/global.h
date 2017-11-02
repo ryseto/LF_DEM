@@ -69,22 +69,6 @@ inline void removeBlank(std::string& str)
 	str.erase(remove_if(str.begin(), str.end(), (int(*)(int))isspace), str.end());
 }
 
-inline bool getSuffix(const std::string& str, std::string& value, std::string& suffix)
-{
-	size_t suffix_pos = str.find_first_of("abcdfghijklmnopqrstuvwxyz"); // omission of "e" is intended, to allow for scientific notation like "1e5h"
-	value = str.substr(0, suffix_pos);
-	if (suffix_pos != str.npos) {
-		suffix = str.substr(suffix_pos, str.length());
-		return true;
-	} else {
-		return false;
-	}
-}
-
-inline void errorNoSuffix(std::string quantity)
-{
-	std::cerr << "Error : no unit scale (suffix) provided for " << quantity << std::endl; exit(1);
-}
 
 inline bool str2bool(const std::string& value)
 {
@@ -122,15 +106,6 @@ inline vec3d str2vec3d(const std::string& value)
 	return vec3d(vx,vy,vz);
 }
 
-inline void Str2KeyValue(const std::string& str_parameter,
-						 std::string& keyword,
-						 std::string& value)
-{
-	std::string::size_type pos_equal = str_parameter.find("=");
-	keyword = str_parameter.substr(0, pos_equal);
-	value = str_parameter.substr(pos_equal+1);
-	return;
-}
 
 inline std::vector<std::string> splitString(const std::string& str)
 {

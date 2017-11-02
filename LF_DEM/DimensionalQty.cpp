@@ -9,6 +9,66 @@
 
 namespace Dimensional {
 
+bool getSuffix(const std::string& str,
+                      std::string& value,
+                      std::string& suffix)
+{
+  size_t suffix_pos = str.find_first_of("abcdfghijklmnopqrstuvwxyz"); // omission of "e" is intended, to allow for scientific notation like "1e5h"
+  value = str.substr(0, suffix_pos);
+  if (suffix_pos != str.npos) {
+    suffix = str.substr(suffix_pos, str.length());
+    return true;
+  } else {
+    return false;
+  }
+}
+
+void errorNoSuffix(std::string quantity)
+{
+  std::cerr << "Error : no unit scale (suffix) provided for " << quantity << std::endl; exit(1);
+}
+
+
+template<>
+DimensionalQty<double> & DimensionalQty<double>::operator=(std::string value_str)
+{
+  std::string numeral, suffix;
+  bool caught_suffix = true;
+  caught_suffix = getSuffix(value_str, numeral, suffix);
+  assert(caught_suffix);
+  value = std::stod(numeral);
+  unit = suffix2unit(suffix);
+  return *this;
+}
+
+DimensionalQty<double> str2DimensionalQty(Dimension dimension,
+                                          std::string value_str,
+                                          std::string name)
+{
+  DimensionalQty<double> inv;
+  inv.dimension = dimension;
+
+  std::string numeral, suffix;
+  bool caught_suffix = true;
+  caught_suffix = getSuffix(value_str, numeral, suffix);
+  if (!caught_suffix) {
+    errorNoSuffix(name);
+  }
+  inv.value = stod(numeral);
+  inv.unit = suffix2unit(suffix);
+
+  if (inv.dimension == Dimension::TimeOrStrain) {
+    if (inv.unit == Unit::hydro) {
+      inv.dimension = Dimension::Strain;
+      inv.unit = Unit::none;
+    } else {
+      inv.dimension = Dimension::Time;
+    }
+  }
+  return inv;
+}
+
+
 void UnitSystem::add(Unit unit, DimensionalQty<double> quantity)
 {
   assert(quantity.dimension == Dimension::Force || quantity.dimension == Dimension::Stress);

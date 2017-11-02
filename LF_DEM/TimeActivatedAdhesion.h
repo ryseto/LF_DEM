@@ -36,6 +36,7 @@ struct TAAState {
 	double contacting_time;
 };
 
+
 class TimeActivatedAdhesion{
 
 public:

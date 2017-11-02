@@ -39,45 +39,10 @@ enum class Unit {
   kr,
   stress,
   sigma_zz,
+  delayed_adhesion,
   none
 };
 
-inline Unit suffix2unit(std::string s) {
-  if (s=="h") {
-    return Unit::hydro;
-  }
-  if (s=="r" || s=="repulsion") {
-    return Unit::repulsion;
-  }
-  if (s=="b" || s=="brownian") {
-    return Unit::brownian;
-  }
-  if (s=="c" || s=="cohesion") {
-    return Unit::cohesion;
-  }
-  if (s=="cl" || s=="critical_load") {
-    return Unit::critical_load;
-  }
-  if (s=="ft" || s=="ft_max") {
-    return Unit::ft_max;
-  }
-  if (s=="kn") {
-    return Unit::kn;
-  }
-  if (s=="kt") {
-    return Unit::kt;
-  }
-  if (s=="kr") {
-    return Unit::kr;
-  }
-  if (s=="s") {
-    return Unit::stress;
-  }
-  if (s=="sz" || s=="sigma_zz") {
-    return Unit::sigma_zz;
-  }
-  return Unit::none;
-}
 
 inline std::string unit2suffix(Unit unit) {
   if (unit==Unit::hydro) {
@@ -119,64 +84,66 @@ inline std::string unit2suffix(Unit unit) {
   return "";
 }
 
+inline Unit suffix2unit(std::string s) {
+  if (s=="h") {
+    return Unit::hydro;
+  }
+  if (s=="r" || s=="repulsion") {
+    return Unit::repulsion;
+  }
+  if (s=="b" || s=="brownian") {
+    return Unit::brownian;
+  }
+  if (s=="c" || s=="cohesion") {
+    return Unit::cohesion;
+  }
+  if (s=="cl" || s=="critical_load") {
+    return Unit::critical_load;
+  }
+  if (s=="ft" || s=="ft_max") {
+    return Unit::ft_max;
+  }
+  if (s=="kn") {
+    return Unit::kn;
+  }
+  if (s=="kt") {
+    return Unit::kt;
+  }
+  if (s=="kr") {
+    return Unit::kr;
+  }
+  if (s=="s") {
+    return Unit::stress;
+  }
+  if (s=="sz" || s=="sigma_zz") {
+    return Unit::sigma_zz;
+  }
+  return Unit::none;
+}
+
+
+
+
 template<typename T>
 struct DimensionalQty {
   Dimension dimension;
   T value;
   Unit unit;
+  DimensionalQty<T> & operator=(std::string value_str);
+};
+
+DimensionalQty<double> str2DimensionalQty(Dimension dimension,
+                                                 std::string value_str,
+                                                 std::string name);
+
+struct ForceScale {
+  Unit type;
+  DimensionalQty<double> dim_qty;
 };
 
 
-inline bool getSuffix(const std::string& str,
-                      std::string& value,
-                      std::string& suffix)
-{
-	size_t suffix_pos = str.find_first_of("abcdfghijklmnopqrstuvwxyz"); // omission of "e" is intended, to allow for scientific notation like "1e5h"
-	value = str.substr(0, suffix_pos);
-	if (suffix_pos != str.npos) {
-		suffix = str.substr(suffix_pos, str.length());
-		return true;
-	} else {
-		return false;
-	}
-}
-
-inline void errorNoSuffix(std::string quantity)
-{
-	std::cerr << "Error : no unit scale (suffix) provided for " << quantity << std::endl; exit(1);
-}
-
-
-inline DimensionalQty<double> str2DimensionalQty(Dimension dimension,
-                                                 std::string value_str,
-                                                 std::string name)
-{
-	DimensionalQty<double> inv;
-	inv.dimension = dimension;
-
-	std::string numeral, suffix;
-	bool caught_suffix = true;
-	caught_suffix = getSuffix(value_str, numeral, suffix);
-	if (!caught_suffix) {
-		errorNoSuffix(name);
-	}
-	inv.value = stod(numeral);
-	inv.unit = suffix2unit(suffix);
-
-  if (inv.dimension == Dimension::TimeOrStrain) {
-    if (inv.unit == Unit::hydro) {
-      inv.dimension = Dimension::Strain;
-      inv.unit = Unit::none;
-    } else {
-      inv.dimension = Dimension::Time;
-    }
-  }
-	return inv;
-}
-
 class UnitSystem {
 public:
-  // void add(Param::Parameter param, DimensionalQty value);
   void add(Unit unit, DimensionalQty<double> quantity);
   void setInternalUnit(Unit unit);
   template<typename T> void convertToInternalUnit(DimensionalQty<T> &quantity) const;
@@ -191,6 +158,7 @@ private:
   template<typename T> void convertUnit(DimensionalQty<T> &quantity,
                                         Unit new_unit) const; // for arbitrary Dimension
 };
+
 
 template<typename T>
 void UnitSystem::convertUnit(DimensionalQty<T> &quantity, Unit new_unit) const

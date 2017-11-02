@@ -56,6 +56,7 @@ class BoxSet;
 
 class System{
 private:
+
 	int np; ///< number of particles
 	std::vector<unsigned int> nb_blocks_mm;
 	std::vector<unsigned int> nb_blocks_mf;
@@ -183,9 +184,11 @@ private:
 
  protected:
  public:
-	System(ParameterSet& ps, std::list <Event>& ev, struct State::BasicCheckpoint = State::zero_time_basicchkp);
+	System(Parameters::ParameterSet& ps, std::list <Event>& ev, struct State::BasicCheckpoint = State::zero_time_basicchkp);
 	~System();
-	ParameterSet& p;
+
+	Parameters::ParameterSet& p;
+	
 	int np_mobile; ///< number of mobile particles
 	bool ext_flow;
 	// Interaction types

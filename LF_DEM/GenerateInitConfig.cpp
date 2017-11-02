@@ -10,6 +10,8 @@
 #include "Simulation.h"
 #include "SystemHelperFunctions.h"
 #include "Configuration.h"
+#include "ParameterSetFactory.h"
+
 #ifndef USE_DSFMT
 #define RANDOM ( rand_gen.rand() ) // RNG uniform [0,1]
 #endif
@@ -479,8 +481,9 @@ void GenerateInitConfig::setParameters(Simulation &simu)
 	 *  Read parameters from standard input
 	 *
 	 */
-	Dimensional::DimensionalQty<double> control_var = {Dimensional::Dimension::Force, 0, Dimensional::Unit::hydro};
-	simu.setDefaultParameters(control_var);
+	Parameters::ParameterSetFactory PFactory;
+	simu.p = PFactory.getParameterSet();
+
 	auto &sys = simu.getSys();
  	sys.zero_shear = true;
  	simu.p.kn = 1;
