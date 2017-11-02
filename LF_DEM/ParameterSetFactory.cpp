@@ -9,9 +9,6 @@
 #define PARAM_INIT_DIMQTY(name, default_value) {#name,  [](ParameterSet &p, InputParameter<Dimensional::DimensionalQty<decltype(ParameterSet::name)>> in) {p.name = in.value.value;}, default_value}
 #define PARAM_INIT_FORCESCALE(name, default_value) {#name,  [](ParameterSet &p, InputParameter<Dimensional::ForceScale> in) {p.name = in.value.dim_qty.value;}, default_value}
 
-
-extern std::string Dimensional::unit2suffix(Dimensional::Unit unit);
-
 namespace Parameters {
 
 void Str2KeyValue(const std::string& str_parameter,

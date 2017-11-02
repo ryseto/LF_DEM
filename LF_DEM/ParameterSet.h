@@ -16,9 +16,9 @@
 
 
 
-**** Dimensionless parameter *******
+**** Non force-defining parameter *******
 
-Adding a parameter which is *not* a time nor a force is done in 2 steps:
+Adding a parameter which is *not* a force scale is done in 2 steps:
 
 1. Add the parameter in the ParameterSet structure below, 
 documentation usually provides the parameter role and its default value within brackets.
@@ -36,9 +36,9 @@ you can use the macros PARAM_INIT* to save a few typos.
 
 If the 
 
-**** Dimensional parameter *******
+**** Force-defining parameter *******
 
-If the parameter is a force or a time, follow step 1 and 2 as for a dimensionless parameter. 
+If the parameter is a defining a new force scale, follow step 1 and 2 as above. 
 Then:
 
 3. Add the new force scale name in the Dimensional::Unit enum (in DimensionalQty.h)
