@@ -4,25 +4,43 @@
 #include <iostream>
 #include <sstream>
 #include <type_traits>
+#include <set>
 #include "global.h"
 #include "Contact.h"
 #include "vec3d.h"
+#include "TimeActivatedAdhesion.h"
 
 #ifndef __LF_DEM__Configuration__
 #define __LF_DEM__Configuration__
 
 
 enum struct ConfFileFormat : int { // assign values as it is for output and otherwise may be compiler dependent.
-	bin_format_base_old = 1,
-	bin_format_base_new = 2,
-	bin_format_fixed_vel = 3,
+	// Deprecated formats are not output anymore by LF_DEM, but should still be readable
+	bin_format_base_old = 1,    		// deprecated
+	bin_format_base_new = 2,			// deprecated
+	bin_format_fixed_vel = 3,			// deprecated
 	txt_format_base_old = 4,
 	txt_format_base_new = 5,
 	txt_format_fixed_vel = 6,
-	txt_format_circular_couette = 7
+	txt_format_circular_couette = 7,
+	bin_format_base_shear = 8,
+	bin_format_fixed_vel_shear = 9,
+	bin_format_delayed_adhesion = 10,
 };
 
+
 struct base_configuration {
+	double lx, ly, lz;
+	double volume_or_area_fraction;
+
+	std::vector <vec3d> position;
+	std::vector <double> radius;
+	std::vector <double> angle;
+
+	std::vector <struct contact_state> contact_states;
+};
+
+struct base_shear_configuration {
 	double lx, ly, lz;
 	double volume_or_area_fraction;
 	vec3d lees_edwards_disp;
@@ -33,6 +51,7 @@ struct base_configuration {
 
 	std::vector <struct contact_state> contact_states;
 };
+
 
 struct fixed_velo_configuration {
 	double lx, ly, lz;
@@ -46,6 +65,13 @@ struct fixed_velo_configuration {
 
 	std::vector <struct contact_state> contact_states;
 };
+
+struct delayed_adhesion_configuration {
+	struct base_configuration base;
+	vec3d lees_edwards_disp;
+	std::vector <struct TActAdhesion::TAAState> adhesion_states;
+};
+
 
 struct circular_couette_configuration {
 	int np_wall1;
@@ -209,15 +235,15 @@ inline ConfFileFormat getTxtConfigurationFileFormat(const std::string& filename_
 	}
 }
 
-inline struct base_configuration readBinaryBaseConfiguration(const std::string& filename)
+inline struct base_shear_configuration readBinaryBaseShearConfiguration(const std::string& filename)
 {
 	checkInFile(filename);
 	auto format = getBinaryConfigurationFileFormat(filename);
 	if (format != ConfFileFormat::bin_format_base_old && format != ConfFileFormat::bin_format_base_new) {
-		throw std::runtime_error("readBaseConfiguration(): got incorrect binary format.");
+		throw std::runtime_error("readBinaryBaseShearConfiguration(): got incorrect binary format.");
 	}
 	std::ifstream input(filename.c_str(), std::ios::binary | std::ios::in);
-	struct base_configuration c;
+	struct base_shear_configuration c;
 	c.lees_edwards_disp.reset();
 
 	int np, _switch;
@@ -241,6 +267,57 @@ inline struct base_configuration readBinaryBaseConfiguration(const std::string& 
 	}
 
 	c.contact_states = readContactStatesBStream(input, np);
+	return c;
+}
+
+inline struct base_configuration readBinaryBaseConfiguration(std::ifstream &input)
+{
+	struct base_configuration c;
+	int np;
+	input.read((char*)&np, sizeof(int));
+	input.read((char*)&c.volume_or_area_fraction, sizeof(double));
+	input.read((char*)&c.lx, sizeof(double));
+	input.read((char*)&c.ly, sizeof(double));
+	input.read((char*)&c.lz, sizeof(double));
+
+	std::tie(c.position, c.radius) = readPositionsBStream(input, np);
+	if (c.ly == 0) { //2d
+		c.angle.resize(c.position.size(), 0);
+	}
+
+	c.contact_states = readContactStatesBStream(input, np);
+	return c;
+}
+
+
+inline struct delayed_adhesion_configuration readBinaryDelayedAdhesionConfiguration(std::string filename)
+{
+	checkInFile(filename);
+	auto format = getBinaryConfigurationFileFormat(filename);
+	std::set<ConfFileFormat> allowed_formats = \
+	{
+		ConfFileFormat::bin_format_delayed_adhesion,
+	};
+	if (!allowed_formats.count(format)) {
+		throw std::runtime_error("readBinaryDelayedAdhesionConfiguration(): got incorrect binary format.");
+	}
+	std::ifstream input(filename.c_str(), std::ios::binary | std::ios::in);
+	struct delayed_adhesion_configuration c;
+
+
+	int _switch;
+	typedef std::underlying_type<ConfFileFormat>::type format_type;
+	format_type fmt;
+	input.read((char*)&_switch, sizeof(int));
+	input.read((char*)&fmt, sizeof(format_type));
+
+	c.base = readBinaryBaseConfiguration(input);
+
+	c.lees_edwards_disp.reset();
+	input.read((char*)&c.lees_edwards_disp.x, sizeof(double));
+	input.read((char*)&c.lees_edwards_disp.y, sizeof(double));
+
+	c.adhesion_states = TActAdhesion::readStatesBStream(input);
 	return c;
 }
 
@@ -310,7 +387,7 @@ inline void setMetadataBase(std::istream &input, T &conf)
 	conf.lees_edwards_disp.y = atof(getMetaParameter(meta_data, key, def).c_str());
 }
 
-inline struct base_configuration readTxtBaseConfiguration(const std::string& filename)
+inline struct base_shear_configuration readTxtBaseConfiguration(const std::string& filename)
 {
 	/**
 		\brief Import a text file base configuration.
@@ -324,7 +401,7 @@ inline struct base_configuration readTxtBaseConfiguration(const std::string& fil
 	checkInFile(filename);
 	std::ifstream input(filename.c_str(), std::ios::in);
 
-	struct base_configuration c;
+	struct base_shear_configuration c;
 	setMetadataBase(input, c);
 
 	double x_, y_, z_, a_;

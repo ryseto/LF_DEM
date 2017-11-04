@@ -383,6 +383,21 @@ void Simulation::outputComputationTime()
 }
 
 
+ConfFileFormat Simulation::writeBinaryHeader(ofstream &conf_export)
+{
+	int conf_switch = -1; // older formats did not have labels, -1 signs for a labeled binary
+	ConfFileFormat binary_conf_format = ConfFileFormat::bin_format_base_new; // v2 as default. v1 deprecated.
+	if (p.simulation_mode == 31) {
+		binary_conf_format = ConfFileFormat::bin_format_fixed_vel;
+	}
+	if (sys.delayed_adhesion) {
+		binary_conf_format = ConfFileFormat::bin_format_delayed_adhesion;
+	}
+	conf_export.write((char*)&conf_switch, sizeof(int));
+	conf_export.write((char*)&binary_conf_format, sizeof(int));
+	return binary_conf_format;
+}
+
 void Simulation::outputConfigurationBinary(string conf_filename)
 {
 	/**
@@ -408,7 +423,7 @@ void Simulation::outputConfigurationBinary(string conf_filename)
  	      particle data : [x, y, z, radius]*np, [vx, vy, vz]*np_fixed
  				contact data : as v2
 	 */
-	auto conf = sys.getConfiguration();
+	auto conf = sys.getBaseShearConfiguration();
 	int np = conf.position.size();
 	vector< vector<double> > pos(np);
 	int dims = 4;
@@ -421,30 +436,18 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 	}
 	ofstream conf_export;
 	conf_export.open(conf_filename.c_str(), ios::binary | ios::out);
-
-	int conf_switch = -1; // older formats did not have labels, -1 signs for a labeled binary
-	int binary_conf_format = 2; // v2 as default. v1 deprecated.
-	if (sys.p.simulation_mode == 31) {
-		binary_conf_format = 3;
-	}
-	conf_export.write((char*)&conf_switch, sizeof(int));
-	conf_export.write((char*)&binary_conf_format, sizeof(int));
+	
+	auto binary_conf_format = writeBinaryHeader(conf_export);
 
 	conf_export.write((char*)&np, sizeof(int));
-	if (binary_conf_format == 3) {
-		int np_fixed = sys.fixed_velocities.size();
-		conf_export.write((char*)&np_fixed, sizeof(int));
-	}
 	conf_export.write((char*)&conf.volume_or_area_fraction, sizeof(double));
 	conf_export.write((char*)&conf.lx, sizeof(double));
 	conf_export.write((char*)&conf.ly, sizeof(double));
 	conf_export.write((char*)&conf.lz, sizeof(double));
-	conf_export.write((char*)&(conf.lees_edwards_disp.x), sizeof(double));
-	conf_export.write((char*)&(conf.lees_edwards_disp.y), sizeof(double));
 	for (int i=0; i<np; i++) {
 		conf_export.write((char*)&pos[i][0], dims*sizeof(double));
 	}
-	if (binary_conf_format == 3) {
+	if (binary_conf_format == ConfFileFormat::bin_format_fixed_vel) {
 		int np_fixed = sys.fixed_velocities.size();
 		vector< vector<double> > vel(np_fixed);
 		for (int i=0; i<np_fixed; i++) {
@@ -456,6 +459,10 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 		for (int i=0; i<np_fixed; i++) {
 			conf_export.write((char*)&vel[i][0], 3*sizeof(double));
 		}
+	}
+	if (binary_conf_format == ConfFileFormat::bin_format_fixed_vel) {
+		int np_fixed = sys.fixed_velocities.size();
+		conf_export.write((char*)&np_fixed, sizeof(int));
 	}
 	const auto &cs = conf.contact_states;
 	int ncont = cs.size();
@@ -470,7 +477,15 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 		conf_export.write((char*)&(cs[i].disp_rolling.y), sizeof(double));
 		conf_export.write((char*)&(cs[i].disp_rolling.z), sizeof(double));
 	}
+	if (sys.delayed_adhesion) {
+		// conf_export
+	}
+
+	conf_export.write((char*)&(conf.lees_edwards_disp.x), sizeof(double));
+	conf_export.write((char*)&(conf.lees_edwards_disp.y), sizeof(double));
+
 	conf_export.close();
+
 }
 
 
@@ -677,7 +692,7 @@ vec3d Simulation::shiftUpCoordinate(double x, double y, double z)
 void Simulation::createDataHeader(stringstream& data_header)
 {
 	if (!restart_from_chkp) {
-		auto conf = sys.getConfiguration();
+		auto conf = sys.getBaseShearConfiguration();
 		data_header << "# LF_DEM version " << GIT_VERSION << endl;
 		data_header << "# np " << conf.position.size() << endl;
 		data_header << "# VF " << conf.volume_or_area_fraction << endl;

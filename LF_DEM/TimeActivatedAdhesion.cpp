@@ -2,7 +2,6 @@
 
 namespace TActAdhesion {
 
-
 void TimeActivatedAdhesion::update(double time_now, double gap, vec3d &nvec)
 {
 	if (gap > params.adhesion_range) {
@@ -14,10 +13,11 @@ void TimeActivatedAdhesion::update(double time_now, double gap, vec3d &nvec)
 		switch (state.activity) {
 			case TAAActivity::inactive:
 				state.activity = TAAActivity::dormant;
-				state.contacting_time = time_now;
+				initial_time = time_now;
 				// no break, as we want to allow for immediate activation
 			case TAAActivity::dormant:
-				if ((time_now - state.contacting_time) >= params.activation_time) {
+				state.uptime = time_now - initial_time;
+				if (state.uptime >= params.activation_time) {
 					state.activity = TAAActivity::active;
 				}
 			default:
@@ -56,5 +56,13 @@ void TimeActivatedAdhesion::addUpStressXF(Sym2Tensor &stress_p0, Sym2Tensor &str
 	stress_p0 += stress_split_p0*sc;
 	stress_p1 += (1-stress_split_p0)*sc;
 }
+
+void TimeActivatedAdhesion::setState(struct TAAState st, double time_now)
+{
+	state = st;
+	initial_time = time_now - state.uptime;
+}
+
+
 
 } // namespace TActAdhesion

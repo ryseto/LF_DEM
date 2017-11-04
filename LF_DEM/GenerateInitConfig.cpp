@@ -116,7 +116,7 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		c.radius_out = cg_radius_out;
 		sys.setupConfiguration(c, Parameters::ControlVariable::rate);
 	} else {
-		struct base_configuration c;
+		struct base_shear_configuration c;
 		np_movable = np;
 		baseSetup(c, sys.twodimension, inflate_ratio);
 		sys.setupConfiguration(c, Parameters::ControlVariable::rate);

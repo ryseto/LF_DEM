@@ -22,20 +22,16 @@ rvec(0),
 nvec(0),
 z_offset(0)
 {
-	init();
 	if (j > i) {
 		p0 = i, p1 = j;
 	} else {
 		p0 = j, p1 = i;
 	}
 	ro = sys->radius[p0]+sys->radius[p1]; // ro=a0+a1
+	init();
 	// tell it to particles i and j
 	sys->interaction_list[i].insert(this);
 	sys->interaction_list[j].insert(this);
-
-	if (sys->delayed_adhesion) {
-		delayed_adhesion = std::unique_ptr<TActAdhesion::TimeActivatedAdhesion>(new TActAdhesion::TimeActivatedAdhesion(sys->p.TA_adhesion, sys->radius[p0], sys->radius[p1]));
-	}
 	activateForceMembers();
 }
 
@@ -118,6 +114,9 @@ void Interaction::init()
 	} else if (sys->p.lubrication_model == "tangential") {
 	 	RFU_DBlocks_lub = &Lubrication::RFU_DBlocks_squeeze_tangential;
 		RFU_ODBlock_lub = &Lubrication::RFU_ODBlock_squeeze_tangential;
+	}
+	if (sys->delayed_adhesion) {
+		delayed_adhesion = std::unique_ptr<TActAdhesion::TimeActivatedAdhesion>(new TActAdhesion::TimeActivatedAdhesion(sys->p.TA_adhesion, sys->radius[p0], sys->radius[p1]));
 	}
 }
 

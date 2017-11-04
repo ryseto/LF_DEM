@@ -33,22 +33,44 @@ enum class TAAActivity : unsigned {
 
 struct TAAState {
 	TAAActivity activity;
-	double contacting_time;
+	double uptime;
 };
+
+inline std::vector <struct TAAState> readStatesBStream(std::istream &input)
+{
+	unsigned ncont;
+	TAAActivity activity;
+	TAAState state;	
+	std::vector <struct TAAState> state_vec;
+
+	input.read((char*)&ncont, sizeof(unsigned));
+	for (unsigned i=0; i<ncont; i++) {
+		unsigned p0, p1;
+		input.read((char*)&p0, sizeof(unsigned));
+		input.read((char*)&p1, sizeof(unsigned));
+		input.read((char*)&activity, sizeof(unsigned));
+		input.read((char*)&state.uptime, sizeof(double));
+
+		state.activity = activity;
+		state_vec.push_back(state);
+	}
+	return state_vec;
+}
+
 
 
 class TimeActivatedAdhesion{
 
 public:
 	TimeActivatedAdhesion(struct TAAParams &p, double r0, double r1) 
-	: params(p), 
+	: params(p),
 	state({TAAActivity::inactive, 0}),
 	force_amplitude(0),
 	force_on_p0(0),
 	stress_split_p0(r0/(r0+r1)) {};
 	void update(double time_now, double gap, vec3d &nvec);
 	void deactivate();
-
+	void setState(struct TAAState st, double time_now);
 	void addUpForce(vec3d &force_p0, vec3d &force_p1) const;
 	void addUpStressXF(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1, const vec3d &rvec) const;
 
@@ -58,7 +80,7 @@ private:
 	double force_amplitude;
 	vec3d force_on_p0;
 	double stress_split_p0;
-
+	double initial_time;
 };
 
 } // namespace TActAdhesion

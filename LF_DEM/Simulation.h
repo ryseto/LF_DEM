@@ -75,6 +75,8 @@ private:
 
 	void setupOptionalSimulation(std::string indent);
 	std::vector<Sym2Tensor> getParticleStressGroup(std::string group);
+	ConfFileFormat writeBinaryHeader(std::ofstream &conf_export);
+
 
 public:
 	/* For DEMsystem*/

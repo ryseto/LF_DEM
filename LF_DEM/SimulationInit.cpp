@@ -23,7 +23,7 @@ void Simulation::contactForceParameter(string filename)
 	 Input file must be formatted as:
 	 phi kn kt dt
 	 */
-	auto conf = sys.getConfiguration();
+	auto conf = sys.getBaseShearConfiguration();
 	ifstream fin_knktdt;
 	fin_knktdt.open(filename.c_str());
 	if (!fin_knktdt) {
@@ -62,7 +62,7 @@ void Simulation::contactForceParameterBrownian(string filename)
 	 Input file must be formatted as:
 	 phi peclet kn kt dt
 	 */
-	auto conf = sys.getConfiguration();
+	auto conf = sys.getBaseShearConfiguration();
 	ifstream fin_knktdt;
 	fin_knktdt.open(filename.c_str());
 	if (!fin_knktdt) {
@@ -235,7 +235,7 @@ void Simulation::setConfigToSystem(bool binary_conf, const std::string &filename
 		switch(format) {
 			case ConfFileFormat::bin_format_base_new:
 				{
-					auto conf = readBinaryBaseConfiguration(filename);
+					auto conf = readBinaryBaseShearConfiguration(filename);
 					sys.setupConfiguration(conf, control_var);
 					break;
 				}

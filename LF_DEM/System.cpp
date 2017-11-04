@@ -418,7 +418,7 @@ void System::setupParameters()
 		repulsiveforce = false;
 		p.repulsive_length = 0;
 	}
-		setShearDirection(p.theta_shear);
+	setShearDirection(p.theta_shear);
 
 	if (p.auto_determine_knkt) {
 		kn_avg.setRelaxationTime(p.memory_strain_avg);
@@ -444,6 +444,13 @@ void System::setupParameters()
 	if (p.simulation_mode == 31) {
 		p.sd_coeff = 1e-6;
 	}
+	if (p.cohesion > 0) {
+		cohesion = true;
+	}
+	if (p.TA_adhesion.adhesion_max_force > 0) {
+		delayed_adhesion = true;
+	}
+
 }
 
 void System::setupBrownian()
@@ -527,7 +534,7 @@ void System::setupGenericConfiguration(T conf, Parameters::ControlVariable contr
 	setupSystemPostConfiguration();
 }
 
-void System::setupConfiguration(struct base_configuration conf, Parameters::ControlVariable control_)
+void System::setupConfiguration(struct base_shear_configuration conf, Parameters::ControlVariable control_)
 {
 	setupGenericConfiguration(conf, control_);
 }
@@ -658,22 +665,21 @@ void System::initializeBoxing()
 	}
 }
 
-struct base_configuration System::getConfiguration()
+base_shear_configuration System::getBaseShearConfiguration()
 {
-	struct base_configuration c;
-	c.lx = lx;
-	c.ly = ly;
-	c.lz = lz;
-	c.volume_or_area_fraction = particle_volume/system_volume;
+	base_shear_configuration conf;
+	conf.lx = lx;
+	conf.ly = ly;
+	conf.lz = lz;
+	conf.volume_or_area_fraction = particle_volume/system_volume;
 
-	c.position = position;
-	c.radius = radius;
+	conf.position = position;
+	conf.radius = radius;
 	if (twodimension) {
-		c.angle = angle;
+		conf.angle = angle;
 	}
-	c.lees_edwards_disp = shear_disp;
-	c.contact_states = getContacts();
-	return c;
+	conf.lees_edwards_disp = shear_disp;
+	conf.contact_states = getContacts();
 }
 
 void System::timeStepBoxing()

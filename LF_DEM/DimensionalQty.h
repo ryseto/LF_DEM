@@ -78,6 +78,10 @@ inline std::string unit2suffix(Unit unit) {
   if (unit==Unit::sigma_zz) {
     return "sz";
   }
+  if (unit==Unit::delayed_adhesion) {
+    return "da";
+  }
+
   if (unit==Unit::none) {
     return "";
   }
@@ -117,6 +121,9 @@ inline Unit suffix2unit(std::string s) {
   }
   if (s=="sz" || s=="sigma_zz") {
     return Unit::sigma_zz;
+  }
+  if (s=="da") {
+    return Unit::delayed_adhesion;
   }
   return Unit::none;
 }

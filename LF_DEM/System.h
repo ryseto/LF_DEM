@@ -181,7 +181,8 @@ private:
 	void setupParametersLubrication();
 	void setupParametersIntegrator();
 	void setupSystemPostConfiguration();
-
+	void setConfiguration(const std::vector <vec3d>& initial_positions,
+	                      const std::vector <double>& radii);
  protected:
  public:
 	System(Parameters::ParameterSet& ps, std::list <Event>& ev, struct State::BasicCheckpoint = State::zero_time_basicchkp);
@@ -355,14 +356,13 @@ private:
 	/****************************************/
 	void setVelocityDifference(); // Lees-Edwards boundary condition
 	void setSystemVolume();
-	void setConfiguration(const std::vector <vec3d>& initial_positions,
-	                      const std::vector <double>& radii);
 	void setFixedVelocities(const std::vector <vec3d>& vel);
 	void setContacts(const std::vector <struct contact_state>& cs);
 	std::vector <struct contact_state> getContacts();
-	struct base_configuration getConfiguration();
+	base_shear_configuration getBaseShearConfiguration();
+
 	void setInteractions_GenerateInitConfig();
-	void setupConfiguration(struct base_configuration c, Parameters::ControlVariable control_);
+	void setupConfiguration(struct base_shear_configuration c, Parameters::ControlVariable control_);
 	void setupConfiguration(struct fixed_velo_configuration c, Parameters::ControlVariable control_);
 	void setupConfiguration(struct circular_couette_configuration c, Parameters::ControlVariable control_);
 	void resetContactModelParameer();
