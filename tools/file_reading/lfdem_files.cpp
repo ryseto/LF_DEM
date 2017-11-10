@@ -310,11 +310,11 @@ inline struct Frame lf_snapshot_file::next_frame() {
     }
     if (header_ok) {
         if (cols_to_read.empty()) {
-            read_frame_data_full();
+            read_frame_data_full(frame);
         } else {
-            read_frame_data_cols();
+            throw std::runtime_error("not implemented yet");
+            // read_frame_data_cols();
         }
-        read_frame_data(frame);
         if (frame_locations.empty() || pos > frame_locations[frame_locations.size()-1]) {
             frame_locations.push_back(pos);
         }
@@ -463,4 +463,4 @@ inline void lf_snapshot_file::read_frame_data_full(struct Frame &frame) {
 //       is_read = true;
 //       return;
 //   }
-};
+

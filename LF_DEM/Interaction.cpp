@@ -116,7 +116,11 @@ void Interaction::init()
 		RFU_ODBlock_lub = &Lubrication::RFU_ODBlock_squeeze_tangential;
 	}
 	if (sys->delayed_adhesion) {
-		delayed_adhesion = std::unique_ptr<TActAdhesion::TimeActivatedAdhesion>(new TActAdhesion::TimeActivatedAdhesion(sys->p.TA_adhesion, sys->radius[p0], sys->radius[p1]));
+		delayed_adhesion = \
+			std::unique_ptr<TActAdhesion::TimeActivatedAdhesion>(new TActAdhesion::TimeActivatedAdhesion(sys->p.TA_adhesion, 
+																										 sys->radius[p0], 
+																										 sys->radius[p1],
+																										 p0, p1));
 	}
 }
 

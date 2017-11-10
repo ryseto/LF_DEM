@@ -665,7 +665,7 @@ void System::initializeBoxing()
 	}
 }
 
-base_shear_configuration System::getBaseShearConfiguration()
+struct base_shear_configuration System::getBaseShearConfiguration()
 {
 	base_shear_configuration conf;
 	conf.lx = lx;
@@ -680,6 +680,7 @@ base_shear_configuration System::getBaseShearConfiguration()
 	}
 	conf.lees_edwards_disp = shear_disp;
 	conf.contact_states = getContacts();
+	return conf;
 }
 
 void System::timeStepBoxing()

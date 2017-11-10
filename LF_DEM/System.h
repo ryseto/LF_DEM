@@ -359,7 +359,7 @@ private:
 	void setFixedVelocities(const std::vector <vec3d>& vel);
 	void setContacts(const std::vector <struct contact_state>& cs);
 	std::vector <struct contact_state> getContacts();
-	base_shear_configuration getBaseShearConfiguration();
+	struct base_shear_configuration getBaseShearConfiguration();
 
 	void setInteractions_GenerateInitConfig();
 	void setupConfiguration(struct base_shear_configuration c, Parameters::ControlVariable control_);

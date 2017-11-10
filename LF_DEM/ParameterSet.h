@@ -7,7 +7,7 @@
 #ifndef __LF_DEM__ParameterSet__
 #define __LF_DEM__ParameterSet__
 #include <string>
-#include "TAAParams.h"
+#include "TimeActivatedAdhesion_Params.h"
 #include "DimensionalQty.h"
 
 /*===================================================
@@ -83,7 +83,7 @@ struct ParameterSet
 	double repulsive_max_length;            ///< Maximum length until which the repulsive force can reach. If -1, no limit. (e.g. length of polymer brush) [-1]
 	double interaction_range;		///< maximum range (center-to-center) for interactions (repulsive force, etc.). If -1, lub_max_gap is used as cutoff [-1]
 	int np_fixed;
-	struct TAAParams TA_adhesion;
+	struct TActAdhesion::Parameters TA_adhesion;
 	/*******************************************************
 	 HYDRODYNAMICS
 	********************************************************/

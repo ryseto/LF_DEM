@@ -8,6 +8,7 @@
 #include "global.h"
 #include "Contact.h"
 #include "vec3d.h"
+#include "TimeActivatedAdhesion_io.h"
 #include "TimeActivatedAdhesion.h"
 
 #ifndef __LF_DEM__Configuration__
@@ -69,7 +70,7 @@ struct fixed_velo_configuration {
 struct delayed_adhesion_configuration {
 	struct base_configuration base;
 	vec3d lees_edwards_disp;
-	std::vector <struct TActAdhesion::TAAState> adhesion_states;
+	std::vector <struct TActAdhesion::State> adhesion_states;
 };
 
 

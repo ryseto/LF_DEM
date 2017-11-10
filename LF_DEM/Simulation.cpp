@@ -386,9 +386,9 @@ void Simulation::outputComputationTime()
 ConfFileFormat Simulation::writeBinaryHeader(ofstream &conf_export)
 {
 	int conf_switch = -1; // older formats did not have labels, -1 signs for a labeled binary
-	ConfFileFormat binary_conf_format = ConfFileFormat::bin_format_base_new; // v2 as default. v1 deprecated.
+	ConfFileFormat binary_conf_format = ConfFileFormat::bin_format_base_shear; // v2 as default. v1 deprecated.
 	if (p.simulation_mode == 31) {
-		binary_conf_format = ConfFileFormat::bin_format_fixed_vel;
+		binary_conf_format = ConfFileFormat::bin_format_fixed_vel_shear;
 	}
 	if (sys.delayed_adhesion) {
 		binary_conf_format = ConfFileFormat::bin_format_delayed_adhesion;
@@ -403,25 +403,6 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 	/**
 		\brief Saves the current configuration of the system in a binary file.
 
-		Depending on the type of simulation, we store the data differently, defined by
- 	 binary format version numbers:
- 	 v1 : no version number field
- 	      metadata : np, vf, lx, ly, lz, disp_x, disp_y
- 	      particle data : [x, y, z, radius]*np
- 	      contact data : nb_interactions,
- 	      [p0, p1, dtx, dty, dtz, drx, dry, drz]*nb_interactions
- 				(with p0, p1 unsigned short)
-
- 	 v2 : no version number field
- 	      metadata : same as v1
- 	      particle data : as v1
- 	      contact data : as v1, except that p0 and p1 are unsigned int
-
- 	 v3 : (fixed wall particle case)
- 	      version nb: -1, 3  (-1 to distinguish from v1:np or v2:np)
- 	      metadata : np, np_fixed, vf, lx, ly, lz, disp_x, disp_y
- 	      particle data : [x, y, z, radius]*np, [vx, vy, vz]*np_fixed
- 				contact data : as v2
 	 */
 	auto conf = sys.getBaseShearConfiguration();
 	int np = conf.position.size();

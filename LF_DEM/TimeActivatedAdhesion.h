@@ -9,7 +9,6 @@
 /**
  \class TimeActivatedAdhesion
  \brief Adhesive force activated only after a given contact time.
- \author Ryohei Seto
  \author Romain Mari
  */
 
@@ -19,64 +18,46 @@
 
 #include "vec3d.h"
 #include "Sym2Tensor.h"
-#include "TAAParams.h"
-
+#include "TimeActivatedAdhesion_Params.h"
 
 namespace TActAdhesion {
 
+
 // explicit numbering as it is used in output file
-enum class TAAActivity : unsigned {
+enum class Activity : unsigned {
 	inactive = 0,
 	dormant = 1,
 	active = 2
 };
 
-struct TAAState {
-	TAAActivity activity;
+struct State {
+	Activity activity;
 	double uptime;
+	unsigned p0;
+	unsigned p1;
 };
-
-inline std::vector <struct TAAState> readStatesBStream(std::istream &input)
-{
-	unsigned ncont;
-	TAAActivity activity;
-	TAAState state;	
-	std::vector <struct TAAState> state_vec;
-
-	input.read((char*)&ncont, sizeof(unsigned));
-	for (unsigned i=0; i<ncont; i++) {
-		unsigned p0, p1;
-		input.read((char*)&p0, sizeof(unsigned));
-		input.read((char*)&p1, sizeof(unsigned));
-		input.read((char*)&activity, sizeof(unsigned));
-		input.read((char*)&state.uptime, sizeof(double));
-
-		state.activity = activity;
-		state_vec.push_back(state);
-	}
-	return state_vec;
-}
-
-
 
 class TimeActivatedAdhesion{
 
 public:
-	TimeActivatedAdhesion(struct TAAParams &p, double r0, double r1) 
+	TimeActivatedAdhesion(struct Parameters &p, 
+						  unsigned p0, unsigned p1, 
+						  double r0, double r1) 
 	: params(p),
-	state({TAAActivity::inactive, 0}),
+	state({Activity::inactive, 0, p0, p1}),
 	force_amplitude(0),
 	force_on_p0(0),
 	stress_split_p0(r0/(r0+r1)) {};
 	void update(double time_now, double gap, vec3d &nvec);
 	void deactivate();
-	void setState(struct TAAState st, double time_now);
+	void setState(struct State st, double time_now);
+	struct State getState() const {return state;};
 	void addUpForce(vec3d &force_p0, vec3d &force_p1) const;
 	void addUpStressXF(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1, const vec3d &rvec) const;
 
 private:
-	struct TAAParams params;
-	TAAState state;
+	struct Parameters params;
+	struct State state;
 	double force_amplitude;
 	vec3d force_on_p0;
 	double stress_split_p0;
