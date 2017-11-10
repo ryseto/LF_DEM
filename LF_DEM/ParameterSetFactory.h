@@ -5,6 +5,7 @@
 
 #ifndef __LF_DEM__ParameterSetFactory__
 #define __LF_DEM__ParameterSetFactory__
+
 namespace Parameters {
 template<typename T>
 struct InputParameter
@@ -33,6 +34,8 @@ private:
 	std::vector<InputParameter<Dimensional::DimensionalQty<double>>> DimValDblParams;
 	std::vector<InputParameter<Dimensional::DimensionalQty<double>>> TrueDimValDblParams;
 	void setDefaultValues();
+	void convertParameterUnit(const Dimensional::UnitSystem &unit_system, 
+							  InputParameter<Dimensional::DimensionalQty<double>> &param);
 };
 
 

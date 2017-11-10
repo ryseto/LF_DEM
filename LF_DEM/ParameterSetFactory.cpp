@@ -301,6 +301,24 @@ std::vector<Dimensional::ForceScale> ParameterSetFactory::getForceScales() const
 	return fs;
 };
 
+void ParameterSetFactory::convertParameterUnit(const Dimensional::UnitSystem &unit_system, 
+											   InputParameter<Dimensional::DimensionalQty<double>> &param)
+{
+	if (param.value.dimension == Dimensional::Dimension::TimeOrStrain) {
+		if (param.value.unit == Dimensional::Unit::hydro) {
+			param.value.dimension = Dimensional::Dimension::Strain;
+			param.value.unit = Dimensional::Unit::none;
+		} else {
+			param.value.dimension = Dimensional::Dimension::Time;
+		}
+	}
+	if (param.value.value == 0) {
+	    param.value.unit = unit_system.getInternalUnit();
+	} else {
+		unit_system.convertToInternalUnit(param.value);
+	}
+}
+
 void ParameterSetFactory::setSystemOfUnits(const Dimensional::UnitSystem &unit_system)
 {
 	auto force_scales = unit_system.getForceScales();
@@ -310,26 +328,10 @@ void ParameterSetFactory::setSystemOfUnits(const Dimensional::UnitSystem &unit_s
 		}
 	}
 	for (auto &param: DimValDblParams) {
-		if (param.value.dimension == Dimensional::Dimension::TimeOrStrain) {
-			if (param.value.unit == Dimensional::Unit::hydro) {
-				param.value.dimension = Dimensional::Dimension::Strain;
-				param.value.unit = Dimensional::Unit::none;
-			} else {
-				param.value.dimension = Dimensional::Dimension::Time;
-			}
-		}
-		unit_system.convertToInternalUnit(param.value);
+		convertParameterUnit(unit_system, param);
 	}
 	for (auto &param: TrueDimValDblParams) {
-		if (param.value.dimension == Dimensional::Dimension::TimeOrStrain) {
-			if (param.value.unit == Dimensional::Unit::hydro) {
-				param.value.dimension = Dimensional::Dimension::Strain;
-				param.value.unit = Dimensional::Unit::none;
-			} else {
-				param.value.dimension = Dimensional::Dimension::Time;
-			}
-		}
-		unit_system.convertToInternalUnit(param.value);
+		convertParameterUnit(unit_system, param);
 	}
 }
 

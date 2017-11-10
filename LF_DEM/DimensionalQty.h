@@ -155,6 +155,7 @@ public:
   
   void add(Unit unit, DimensionalQty<double> quantity);
   void setInternalUnit(Unit unit);
+  Unit getInternalUnit() const {assert(has_internal_unit); return (*(unit_nodes.cbegin())).second.unit;};
   template<typename T> void convertToInternalUnit(DimensionalQty<T> &quantity) const;
   template<typename T> void convertFromInternalUnit(DimensionalQty<T> &quantity, Unit unit) const;
   const std::map<Unit, DimensionalQty<double>> getForceScales() const {assert(has_internal_unit); return unit_nodes;};

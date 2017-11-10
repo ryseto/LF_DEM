@@ -3,8 +3,6 @@
  *
  */
 
-dt = 0.5e-4;
-Pe_switch = 5;
 disp_max = 2e-3;
 
 /*
@@ -40,8 +38,8 @@ mu_static = 1;
  * kt: tangential spring constant
  */
 
-kn = 5000h;
-kt = 2000h;
+kn = 5000r;
+kt = 2000r;
 
 /*
  * Lubrication model
@@ -70,8 +68,8 @@ lub_reduce_parameter = 1e-2;
  * This need to be larger than dt.
  */
 
-contact_relaxation_time = 1e-3h;
-contact_relaxation_time_tan = 0h;
+contact_relaxation_time = 1e-3r;
+contact_relaxation_time_tan = 0r;
 
 /* Repulsive force
  * Debye screering length for the repulsive force
@@ -88,22 +86,22 @@ repulsive_length = 0.05;
  * Output interval
  */
 
-time_interval_output_config = 1e-1h;
+output.time_interval_output_config = 1e-1h;
 
 /*
  *  Data output
  */
-time_interval_output_data = 1e-2h;
+output.time_interval_output_data = 1e-2h;
 
 /*
  * position and interaction data
  */
 
-out_data_particle = true;
-out_data_interaction = true;
+output.out_data_particle = true;
+output.out_data_interaction = true;
 
 /*
  * The middle height of the simulation box is set to the flow zero level.
  */
 
-origin_zero_flow = true;
+output.origin_zero_flow = true;
