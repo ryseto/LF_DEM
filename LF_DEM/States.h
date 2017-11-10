@@ -9,12 +9,11 @@ namespace State {
 	
 enum class StateFileFormat : int 
 {
-	basic = 1
+	basic = 1,
 };
 
 struct Clock {
 	double time_; ///< time elapsed since beginning of the time evolution.
-	double time_in_simulation_units; ///< time elapsed since beginning of the time evolution. \b note: this is measured in Simulation (output) units, not in internal System units.
 	double cumulated_strain;
 };
 
@@ -24,7 +23,7 @@ struct BasicCheckpoint {
 
 void outputStateBinary(std::string state_filename, const System &sys);
 struct BasicCheckpoint readBasicCheckpoint(const std::string &filename);
-static BasicCheckpoint zero_time_basicchkp = {{0, 0, 0}};
+static BasicCheckpoint zero_time_basicchkp = {{0, 0}};
 bool isZeroTimeChkp(BasicCheckpoint chkp);
 }
 #endif // #ifndef __LF_DEM__States__

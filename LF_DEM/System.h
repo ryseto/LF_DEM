@@ -325,8 +325,6 @@ private:
 	double normalstress_wall2;
 	vec3d force_upwall;
 	vec3d force_downwall;
-	double *ratio_unit_time; // to convert System time in Simulation time
-
 
 
 	/****************************************************************************************************
@@ -443,11 +441,6 @@ private:
 	double get_lz_ext_flow() const
 	{
 		return lz_ext_flow;
-	}
-
-	double get_time_in_simulation_units() const
-	{
-		return clk.time_in_simulation_units;
 	}
 
 	double get_time() const

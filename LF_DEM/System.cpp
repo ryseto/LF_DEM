@@ -92,7 +92,6 @@ init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
 vel_difference(0),
 z_top(-1),
-ratio_unit_time(NULL),
 eventLookUp(NULL)
 {
 	max_sliding_velocity = 0;
@@ -1109,11 +1108,6 @@ void System::timeStepMove(double time_end, double strain_end)
 		adaptTimeStep(time_end, strain_end);
 	}
 	clk.time_ += dt;
-	if (ratio_unit_time != NULL) {
-		clk.time_in_simulation_units += dt*(*ratio_unit_time);
-	} else {
-		clk.time_in_simulation_units += dt;
-	}
 	total_num_timesteps ++;
 	/* evolve PBC */
 	timeStepBoxing();
@@ -1146,11 +1140,6 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
  		}
  	}
 	clk.time_ += dt;
-	if (ratio_unit_time != NULL) {
-		clk.time_in_simulation_units += dt*(*ratio_unit_time);
-	} else {
-		clk.time_in_simulation_units += dt;
-	}
 	total_num_timesteps ++;
 	/* evolve PBC
 	 * The periodic boundary condition is updated in predictor.

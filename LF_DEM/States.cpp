@@ -18,14 +18,12 @@ void outputStateBinary(std::string state_filename, const System &sys)
 	state_export.open(state_filename.c_str(), std::ios::binary | std::ios::out);
 	
 	typedef std::underlying_type<StateFileFormat>::type format_type;
-	format_type binary_format = 1;
+	format_type binary_format = static_cast<format_type>(StateFileFormat::basic);
 	state_export.write((char*)&binary_format, sizeof(format_type));
 	double strain = sys.get_cumulated_strain();
 	state_export.write((char*)&strain, sizeof(double));
 	double _time = sys.get_time();
 	state_export.write((char*)&_time, sizeof(double));
-	double _time_simu = sys.get_time_in_simulation_units();
-	state_export.write((char*)&_time_simu, sizeof(double));
 	state_export.close();
 }
 
@@ -61,13 +59,11 @@ struct BasicCheckpoint readBasicCheckpoint(const std::string &filename)
 	input.read((char*)&fmt, sizeof(format_type));
 	input.read((char*)&chkp.clock.cumulated_strain, sizeof(decltype(chkp.clock.cumulated_strain)));
 	input.read((char*)&chkp.clock.time_, sizeof(double));
-	input.read((char*)&chkp.clock.time_in_simulation_units, sizeof(double));
 	return chkp;
 }
 
 bool isZeroTimeChkp(BasicCheckpoint chkp){
 	return chkp.clock.time_ == 0 \
-	&& chkp.clock.time_in_simulation_units == 0 \
 	&& chkp.clock.cumulated_strain == 0;
 }
 	
