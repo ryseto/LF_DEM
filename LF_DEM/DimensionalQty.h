@@ -27,6 +27,7 @@ enum class Dimension {
   none
 };
 
+// only force units are declared here
 enum class Unit {
   hydro,
   repulsion,
@@ -45,47 +46,36 @@ enum class Unit {
 
 
 inline std::string unit2suffix(Unit unit) {
-  if (unit==Unit::hydro) {
-    return "h";
-  }
-  if (unit==Unit::repulsion) {
-    return "r";
-  }
-  if (unit==Unit::brownian) {
-    return "b";
-  }
-  if (unit==Unit::cohesion) {
-    return "c";
-  }
-  if (unit==Unit::critical_load) {
-    return "cl";
-  }
-  if (unit==Unit::ft_max) {
-    return "ft";
-  }
-  if (unit==Unit::kn) {
-    return "kn";
-  }
-  if (unit==Unit::kt) {
-    return "kt";
-  }
-  if (unit==Unit::kr) {
-    return "kr";
-  }
-  if (unit==Unit::stress) {
-    return "s";
-  }
-  if (unit==Unit::sigma_zz) {
-    return "sz";
-  }
-  if (unit==Unit::delayed_adhesion) {
-    return "da";
-  }
-
-  if (unit==Unit::none) {
-    return "";
-  }
-  return "";
+  switch (unit) {
+    case Unit::hydro:
+      return "h";
+    case Unit::repulsion:
+      return "r";
+    case Unit::brownian:
+      return "b";
+    case Unit::cohesion:
+      return "c";
+    case Unit::critical_load:
+      return "cl";
+    case Unit::ft_max:
+      return "ft";
+    case Unit::kn:
+      return "kn";
+    case Unit::kt:
+      return "kt";
+    case Unit::kr:
+      return "kr";
+    case Unit::stress:
+      return "s";
+    case Unit::sigma_zz:
+      return "sz";
+    case Unit::delayed_adhesion:
+      return "da";
+    case Unit::none:
+      return "";
+    default:
+      throw std::runtime_error("Unknown suffix to unit");
+  };
 }
 
 inline Unit suffix2unit(std::string s) {
@@ -125,7 +115,10 @@ inline Unit suffix2unit(std::string s) {
   if (s=="da") {
     return Unit::delayed_adhesion;
   }
-  return Unit::none;
+  if (s=="") {
+    return Unit::none;
+  }
+  throw std::runtime_error("  Unknown unit \""+s+"\"");
 }
 
 
