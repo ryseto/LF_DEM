@@ -152,12 +152,9 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 	for (auto &fs: PFact.getForceScales()) {
 		system_of_units.add(fs.type, fs.dim_qty);
 	}
-
-	if (control_var == Parameters::ControlVariable::rate) {
-		input_rate = control_value.value; // @@@ Renaming is required?
-	}
+	Dimensional::Unit internal_unit;
 	if (control_var == Parameters::ControlVariable::rate) {// || control_var == Parameters::ControlVariable::viscnb) {
-		if (input_rate != 0) {
+		if (control_value.value != 0) {
 			system_of_units.add(Dimensional::Unit::hydro, control_value);
 			system_of_units.setInternalUnit(Dimensional::Unit::hydro);
 			internal_unit = Dimensional::Unit::hydro;

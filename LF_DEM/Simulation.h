@@ -41,7 +41,6 @@ private:
 	/*
 	 * Resultant data
 	 */
-	Dimensional::Unit internal_unit;
 	Dimensional::Unit output_unit;
 	Dimensional::UnitSystem system_of_units;
 
@@ -113,7 +112,6 @@ public:
 	}
 
 	void assertParameterCompatibility();
-	void readParameterFile(const std::string& filename_parameters);
 	void openOutputFiles();
 	std::string prepareSimulationName(bool binary_conf,
 	                                  const std::string& filename_import_positions,
@@ -125,12 +123,9 @@ public:
 	void contactForceParameter(std::string filename);
 	void contactForceParameterBrownian(std::string filename);
 	void importPreSimulationData(std::string filename);
-	void tagStrainParameters();
 	std::map<std::string,std::string> getConfMetaData(const std::string &, const std::string &);
 	std::string getMetaParameter(std::map<std::string,std::string> &, std::string &, const std::string &);
 	std::string getMetaParameter(std::map<std::string,std::string> &, std::string &);
-	void exportForceAmplitudes();
-	Dimensional::Unit pickInternalUnitsRateControl();
 	void setupNonDimensionalization(Dimensional::DimensionalQty<double> control_value, 
 									Parameters::ParameterSetFactory &PFact);
 	void stopShearing(TimeKeeper &tk); //simulation mode 22
@@ -149,7 +144,6 @@ public:
 	void outputConfigurationBinary(std::string);
 	void outputStateBinary(std::string);
 	void checkpoint();
-	double getRate();
 	vec3d shiftUpCoordinate(double x, double y, double z);
 	void outputComputationTime();
 	bool kill;

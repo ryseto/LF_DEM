@@ -24,8 +24,7 @@ sys(System(p, events, chkp)),
 target_stress_input(0),
 restart_from_chkp(false),
 timestep_1(0),
-diminish_output(false),
-internal_unit(Dimensional::Unit::none)
+diminish_output(false)
 {
 	kill = false;
 	restart_from_chkp = !isZeroTimeChkp(chkp);
@@ -481,20 +480,6 @@ void Simulation::checkpoint()
 	State::outputStateBinary(state_filename, sys);
 }
 
-double Simulation::getRate()
-{
-	/**
-	 \brief The shear rate in the input units
-	 */
-	if (control_var == Parameters::ControlVariable::rate) {
-		return input_rate;
-	} else if (control_var == Parameters::ControlVariable::stress) {
-		return sys.get_shear_rate();
-	} else {
-		return 1;
-	}
-}
-
 vector<Sym2Tensor> Simulation::getParticleStressGroup(string group)
 {
 	vector<Sym2Tensor> S (sys.get_np(), 0);
@@ -634,7 +619,9 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 	string sep = " : ";
 	snapshot_header << "# cumulated strain" << sep << sys.get_cumulated_strain() << endl;
 	snapshot_header << "# shear disp" << sep << sys.shear_disp.x << endl;
-	snapshot_header << "# shear rate" << sep << getRate() << endl;
+	Dimensional::DimensionalQty<double> rate = {Dimensional::Dimension::Rate, sys.get_shear_rate(), system_of_units.getInternalUnit()};
+	system_of_units.convertFromInternalUnit(rate, output_unit);
+	snapshot_header << "# shear rate" << sep << rate.value << endl;
 
 	if (control_var == Parameters::ControlVariable::stress) {
 		snapshot_header << "# target stress" << sep << target_stress_input << endl;

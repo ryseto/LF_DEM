@@ -30,7 +30,7 @@ void TimeActivatedAdhesion::update(double time_now, double gap, vec3d &nvec)
 			} else {
 				force_amplitude = 0;
 			}
-			force_on_p0 = -force_amplitude*nvec;
+			force_on_p0 = force_amplitude*nvec;
 		}
 	}
 }

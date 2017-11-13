@@ -118,9 +118,9 @@ void Interaction::init()
 	if (sys->delayed_adhesion) {
 		delayed_adhesion = \
 			std::unique_ptr<TActAdhesion::TimeActivatedAdhesion>(new TActAdhesion::TimeActivatedAdhesion(sys->p.TA_adhesion, 
+																										 p0, p1, 
 																										 sys->radius[p0], 
-																										 sys->radius[p1],
-																										 p0, p1));
+																										 sys->radius[p1]));
 	}
 }
 
