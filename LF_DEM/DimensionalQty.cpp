@@ -6,6 +6,7 @@
 //
 
 #include "DimensionalQty.h"
+#include <set>
 
 namespace Dimensional {
 
@@ -131,7 +132,7 @@ void UnitSystem::setInternalUnit(Unit unit)
 	/**
 		\brief Check force units consistency, expresses all input forces in the unit "unit".
 	 */
-
+  checkCycles();
 	// the unit has a value of 1*unit (says captain obvious)
   if (unit_nodes.at(unit).unit != unit) { // if the unit force is expressed in other units than itself
     flipDependency(unit);
@@ -142,6 +143,31 @@ void UnitSystem::setInternalUnit(Unit unit)
     convertNodeUnit(node.second, unit);
   }
   has_internal_unit = true;
+}
+
+
+void UnitSystem::checkCycles()
+{
+  /**
+    \brief Checks if there is no circular dependency in the input forces.
+   */
+
+  // We are looking for loops in a unidirectional graph defined by unit_nodes
+  std::set<Unit> visited;
+  for (auto node: unit_nodes) {
+    auto force = node.first;
+    auto value = node.second;
+    do {
+      visited.insert(force);
+      force = value.unit;
+      value = unit_nodes[force];
+    } while (visited.count(force) == 0);
+    // now we are either at a leaf or we came back at some already visited node
+    if (unit_nodes[force].unit !=  force) {
+      throw std::runtime_error("UnitSystem::checkCycles:: Circular dependency in the forces.");
+    }
+    visited.clear();
+  }
 }
 
 } // namespace Dimensional

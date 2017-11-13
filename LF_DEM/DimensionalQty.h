@@ -164,6 +164,7 @@ private:
   std::map<Unit, DimensionalQty<double>> unit_nodes;
   void convertToParentUnit(DimensionalQty<double> &node);
   void flipDependency(Unit node_name);
+  void checkCycles();
   void convertNodeUnit(DimensionalQty<double> &node, Unit unit);
   template<typename T> void convertUnit(DimensionalQty<T> &quantity,
                                         Unit new_unit) const; // for arbitrary Dimension
