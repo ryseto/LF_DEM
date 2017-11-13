@@ -38,8 +38,8 @@ mu_static = 1;
  * kt: tangential spring constant
  */
 
-kn = 5000r;
-kt = 2000r;
+kn = 500h;
+kt = 0.5kn;
 
 /*
  * Lubrication model
@@ -68,7 +68,7 @@ lub_reduce_parameter = 1e-2;
  * This need to be larger than dt.
  */
 
-contact_relaxation_time = 1e-3r;
+contact_relaxation_time = 1e-3h;
 contact_relaxation_time_tan = 0r;
 
 /* Repulsive force
@@ -104,4 +104,4 @@ output.out_data_interaction = true;
  * The middle height of the simulation box is set to the flow zero level.
  */
 
-output.origin_zero_flow = true;
+output.origin_zero_flow = false;
