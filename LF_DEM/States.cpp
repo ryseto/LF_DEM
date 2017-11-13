@@ -27,16 +27,22 @@ void outputStateBinary(std::string state_filename, const System &sys)
 	state_export.close();
 }
 
-StateFileFormat getFileFormat(const std::string &filename)
+StateFileFormat getFileFormat(std::ifstream &input)
 {
-	checkInFile(filename);
-	std::ifstream input(filename.c_str(), std::ios::binary | std::ios::in);
-	
 	typedef std::underlying_type<StateFileFormat>::type format_type;
 	format_type format_raw;
 	input.read((char*)&format_raw, sizeof(format_type));
 	return static_cast<StateFileFormat>(format_raw);
 }
+
+StateFileFormat getFileFormat(const std::string &filename)
+{
+	checkInFile(filename);
+	std::ifstream input(filename.c_str(), std::ios::binary | std::ios::in);
+	
+	return getFileFormat(input);
+}
+
 
 struct BasicCheckpoint readBasicCheckpoint(const std::string &filename)
 {
@@ -49,14 +55,11 @@ struct BasicCheckpoint readBasicCheckpoint(const std::string &filename)
 	checkInFile(filename);
 	std::ifstream input(filename.c_str(), std::ios::binary | std::ios::in);
 	
-	auto format = getFileFormat(filename);
+	auto format = getFileFormat(input);
 	if (format != StateFileFormat::basic) {
 		throw std::runtime_error("readBasicCheckpoint(): got incorrect binary format.");
 	}
 	BasicCheckpoint chkp;
-	typedef std::underlying_type<StateFileFormat>::type format_type;
-	format_type fmt;
-	input.read((char*)&fmt, sizeof(format_type));
 	input.read((char*)&chkp.clock.cumulated_strain, sizeof(decltype(chkp.clock.cumulated_strain)));
 	input.read((char*)&chkp.clock.time_, sizeof(double));
 	return chkp;

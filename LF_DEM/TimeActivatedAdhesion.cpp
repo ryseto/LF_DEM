@@ -52,9 +52,11 @@ void TimeActivatedAdhesion::addUpForce(vec3d &force_p0, vec3d &force_p1) const
 
 void TimeActivatedAdhesion::addUpStressXF(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1, const vec3d &rvec) const
 {
-	auto sc = outer_sym(rvec, force_on_p0);
-	stress_p0 += stress_split_p0*sc;
-	stress_p1 += (1-stress_split_p0)*sc;
+	if (state.activity == Activity::active) {
+		auto sc = outer_sym(rvec, force_on_p0);
+		stress_p0 += stress_split_p0*sc;
+		stress_p1 += (1-stress_split_p0)*sc;
+	}
 }
 
 void TimeActivatedAdhesion::setState(struct State st, double time_now)
@@ -62,7 +64,5 @@ void TimeActivatedAdhesion::setState(struct State st, double time_now)
 	state = st;
 	initial_time = time_now - state.uptime;
 }
-
-
 
 } // namespace TActAdhesion

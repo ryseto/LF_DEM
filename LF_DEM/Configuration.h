@@ -26,7 +26,7 @@ enum struct ConfFileFormat : int { // assign values as it is for output and othe
 	txt_format_circular_couette = 7,
 	bin_format_base_shear = 8,
 	bin_format_fixed_vel_shear = 9,
-	bin_format_delayed_adhesion = 10,
+	bin_delayed_adhesion = 10,
 };
 
 
@@ -297,7 +297,7 @@ inline struct delayed_adhesion_configuration readBinaryDelayedAdhesionConfigurat
 	auto format = getBinaryConfigurationFileFormat(filename);
 	std::set<ConfFileFormat> allowed_formats = \
 	{
-		ConfFileFormat::bin_format_delayed_adhesion,
+		ConfFileFormat::bin_delayed_adhesion,
 	};
 	if (!allowed_formats.count(format)) {
 		throw std::runtime_error("readBinaryDelayedAdhesionConfiguration(): got incorrect binary format.");

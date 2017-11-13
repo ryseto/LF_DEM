@@ -15,6 +15,8 @@
 
 #ifndef __LF_DEM__TimeActivatedAdhesion_IO__
 #define __LF_DEM__TimeActivatedAdhesion_IO__
+
+#include <assert.h>
 #include "Interaction.h"
 #include "TimeActivatedAdhesion.h"
 
@@ -57,6 +59,29 @@ inline void writeStatesBStream(std::ostream &output,
 		output.write((char*)&state.p1, sizeof(unsigned));
 		output.write((char*)&state.activity, sizeof(unsigned));
 		output.write((char*)&state.uptime, sizeof(double));
+	}
+}
+
+inline void setupInteractions(std::vector<Interaction> &interactions, 
+					          const std::vector <struct State> &adhesion_states, 
+					          double time_now)
+{
+	/**
+		\brief Set a list of adhesions with their state variables.
+
+		Used to restart the simulation from a given state.
+	 */
+	for (const auto& state : adhesion_states) {
+		bool existing_interaction = false;
+		for (auto &inter: interactions) {
+			unsigned int p0, p1;
+			std::tie(p0, p1) = inter.get_par_num();
+			if (p0 == state.p0 && p1 == state.p1) {
+				inter.delayed_adhesion->setState(state, time_now);
+				existing_interaction = true;
+			}
+		}
+		assert(existing_interaction); // otherwise you probably messed up the initialisation
 	}
 }
 

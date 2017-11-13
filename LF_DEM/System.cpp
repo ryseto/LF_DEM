@@ -533,6 +533,7 @@ void System::setupGenericConfiguration(T conf, Parameters::ControlVariable contr
 	setupSystemPostConfiguration();
 }
 
+
 void System::setupConfiguration(struct base_shear_configuration conf, Parameters::ControlVariable control_)
 {
 	setupGenericConfiguration(conf, control_);
@@ -554,6 +555,31 @@ void System::setupConfiguration(struct circular_couette_configuration conf, Para
 	radius_out = conf.radius_out;
 
 	setupGenericConfiguration(conf, control_);
+}
+
+struct base_shear_configuration confConvertBase2Shear(const struct base_configuration &conf,
+													  vec3d lees_edwards_disp)
+{
+	struct base_shear_configuration base_shear;
+	base_shear.lx = conf.lx;
+	base_shear.ly = conf.ly;
+	base_shear.lz = conf.lz;
+	base_shear.volume_or_area_fraction = conf.volume_or_area_fraction;
+	base_shear.position = conf.position;
+	base_shear.radius = conf.radius;
+	base_shear.angle = conf.angle;
+	base_shear.contact_states = conf.contact_states;
+
+	base_shear.lees_edwards_disp = lees_edwards_disp;
+	return base_shear;
+}
+
+
+void System::setupConfiguration(const struct delayed_adhesion_configuration &conf, 
+								Parameters::ControlVariable control_)
+{
+	setupGenericConfiguration(confConvertBase2Shear(conf.base, conf.lees_edwards_disp), control_);
+	TActAdhesion::setupInteractions(interaction, conf.adhesion_states, get_time());
 }
 
 void System::setupSystemPostConfiguration()

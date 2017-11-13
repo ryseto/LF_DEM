@@ -242,6 +242,12 @@ void Simulation::setConfigToSystem(bool binary_conf, const std::string &filename
 					sys.setupConfiguration(conf, control_var);
 					break;
 				}
+			case ConfFileFormat::bin_delayed_adhesion:
+				{
+					auto conf = readBinaryDelayedAdhesionConfiguration(filename);
+					sys.setupConfiguration(conf, control_var);
+					break;
+				}
 			default:
 				throw std::runtime_error("Unable to read config binary format "+to_string(static_cast<int>(format)));
 		}

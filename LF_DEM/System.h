@@ -363,6 +363,7 @@ private:
 	void setupConfiguration(struct base_shear_configuration c, Parameters::ControlVariable control_);
 	void setupConfiguration(struct fixed_velo_configuration c, Parameters::ControlVariable control_);
 	void setupConfiguration(struct circular_couette_configuration c, Parameters::ControlVariable control_);
+	void setupConfiguration(const struct delayed_adhesion_configuration &conf, Parameters::ControlVariable control_);
 	void resetContactModelParameer();
 	void allocateRessources();
 	void timeEvolution(double time_end, double strain_end);

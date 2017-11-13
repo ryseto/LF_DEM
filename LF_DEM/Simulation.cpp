@@ -391,7 +391,7 @@ ConfFileFormat Simulation::writeBinaryHeader(ofstream &conf_export)
 		binary_conf_format = ConfFileFormat::bin_format_fixed_vel_shear;
 	}
 	if (sys.delayed_adhesion) {
-		binary_conf_format = ConfFileFormat::bin_format_delayed_adhesion;
+		binary_conf_format = ConfFileFormat::bin_delayed_adhesion;
 	}
 	conf_export.write((char*)&conf_switch, sizeof(int));
 	conf_export.write((char*)&binary_conf_format, sizeof(int));
