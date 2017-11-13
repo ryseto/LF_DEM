@@ -89,7 +89,7 @@ def interactions_bonds_yaparray(int_snapshot,
     # with a thickness proportional to the normal force
     normal_forces = get_normal_force(f, icols)
     #  convert the force to a thickness. case-by-case.
-    if f_factor is None:
+    if f_factor is None and len(normal_forces)>0:
         f_factor = 0.5/np.max(np.abs(normal_forces))
     normal_forces = f_factor*np.abs(normal_forces)
     avg_force = np.mean(np.abs(normal_forces))
