@@ -19,6 +19,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <memory>
 #include "vec3d.h"
 #include "Contact.h"
 #include "Lubrication.h"
