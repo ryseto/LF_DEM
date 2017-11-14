@@ -149,10 +149,13 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 	 */
 	string indent = "  Simulation::\t";
 
+	// feed in the force scales to the UnitSystem solver
 	for (auto &fs: PFact.getForceScales()) {
 		system_of_units.add(fs.type, fs.dim_qty);
 	}
-	Dimensional::Unit internal_unit;
+
+	// determine the internal unit to be used
+	Dimensional::Unit internal_unit = Dimensional::Unit::hydro;
 	if (control_var == Parameters::ControlVariable::rate) {// || control_var == Parameters::ControlVariable::viscnb) {
 		if (control_value.value != 0) {
 			system_of_units.add(Dimensional::Unit::hydro, control_value);
@@ -187,13 +190,17 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 		system_of_units.add(Dimensional::Unit::stress, control_value);
 		internal_unit = control_value.unit;
 	}
-	output_unit = control_value.unit;
-	cout << indent << "internal units = " << Dimensional::unit2suffix(internal_unit) << endl;
-	cout << indent << "output units = " << Dimensional::unit2suffix(output_unit) << endl;
+
+	// set the internal unit to actually determine force and parameter non-dimensionalized values 
 	system_of_units.setInternalUnit(internal_unit);
-	
 	PFact.setSystemOfUnits(system_of_units);
+	cout << indent << "internal units = " << Dimensional::unit2suffix(internal_unit) << endl;
+
+	// set the output unit
+	output_unit = control_value.unit;
+	cout << indent << "output units = " << Dimensional::unit2suffix(output_unit) << endl;
 	
+	// when there is a hydro force, its value is the non-dimensionalized shear rate.
 	auto forces = system_of_units.getForceScales();
 	if (forces.count(Dimensional::Unit::hydro) > 0) { // == if rate controlled
 		sys.set_shear_rate(forces.at(Dimensional::Unit::hydro).value);

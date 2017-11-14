@@ -829,11 +829,19 @@ void Simulation::outputIntFileTxt()
 							  inter.contact.getNormalForce().norm());
 		outdata_int.entryData("tangential part of the contact force", Dimensional::Dimension::Force, 3, \
 							  inter.contact.getTangentialForce());
-		outdata_int.entryData("norm of the normal repulsive force", Dimensional::Dimension::Force, 1, \
-							  inter.repulsion.getForceNorm());
 		if (diminish_output == false) {
 			outdata_int.entryData("Viscosity contribution of contact xF", Dimensional::Dimension::Stress, 1, \
 								  doubledot(stress_contact, sys.getEinfty()/sr)/sr);
+		}
+		if (sys.repulsiveforce) {
+			outdata_int.entryData("norm of the normal repulsive force", Dimensional::Dimension::Force, 1, \
+							  inter.repulsion.getForceNorm());
+		}
+		if (sys.delayed_adhesion) {
+			outdata_int.entryData("norm of the normal adhesion force", Dimensional::Dimension::Force, 1, \
+							      inter.delayed_adhesion->getForceNorm());
+			outdata_int.entryData("adhesion ratio uptime to activation time", Dimensional::Dimension::none, 1, \
+							      inter.delayed_adhesion->ratioUptimeToActivation());
 		}
 	}
 	outdata_int.writeToFile(snapshot_header.str());

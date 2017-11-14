@@ -54,6 +54,8 @@ public:
 	struct State getState() const {return state;};
 	void addUpForce(vec3d &force_p0, vec3d &force_p1) const;
 	void addUpStressXF(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1, const vec3d &rvec) const;
+	double ratioUptimeToActivation() const;
+	double getForceNorm() const;
 
 private:
 	struct Parameters params;

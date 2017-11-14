@@ -20,6 +20,11 @@ void TimeActivatedAdhesion::update(double time_now, double gap, vec3d &nvec)
 				if (state.uptime >= params.activation_time) {
 					state.activity = Activity::active;
 				}
+				break;
+			case Activity::active:
+			 // not strictly necessary (uptime unused once active), but good for outputing an unsurprising value 
+				state.uptime = time_now - initial_time;
+				break;
 			default:
 				break;
 
@@ -40,6 +45,7 @@ void TimeActivatedAdhesion::deactivate()
 	state.activity = Activity::inactive;
 	force_on_p0 = 0;
 	force_amplitude = 0;
+	state.uptime = 0;
 }
 
 void TimeActivatedAdhesion::addUpForce(vec3d &force_p0, vec3d &force_p1) const 
@@ -63,6 +69,16 @@ void TimeActivatedAdhesion::setState(struct State st, double time_now)
 {
 	state = st;
 	initial_time = time_now - state.uptime;
+}
+
+double TimeActivatedAdhesion::ratioUptimeToActivation() const
+{
+	return state.uptime/params.activation_time;
+}
+
+double TimeActivatedAdhesion::getForceNorm() const
+{
+	return force_amplitude;
 }
 
 } // namespace TActAdhesion
