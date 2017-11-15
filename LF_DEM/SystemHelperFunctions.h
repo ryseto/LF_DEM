@@ -114,6 +114,27 @@ inline std::pair<unsigned int, unsigned int> countNumberOfContact(const System &
 	return std::make_pair(contact_nb, fric_contact_nb);
 }
 
+inline std::pair<unsigned, double> getTAAdhesionActivityStatistics(const System &sys)
+{
+	assert(sys.delayed_adhesion);
+	unsigned active_nb = 0;
+	unsigned active_dormant_nb = 0;
+	for (const auto &inter: sys.interaction) {
+		auto state = inter.delayed_adhesion->getState();
+		if (state.activity != TActAdhesion::Activity::inactive) {
+			active_dormant_nb++;
+			if (state.activity == TActAdhesion::Activity::active) {
+				active_nb++;
+			}
+		}
+	}
+	double active_ratio = 0;
+	if (active_dormant_nb>0) {
+		active_ratio = (double)(active_nb)/active_dormant_nb;
+	}
+	return std::make_pair(active_nb, active_ratio);
+}
+
 inline double getPotentialEnergy(const System &sys)
 {
 	double total_energy = 0;
