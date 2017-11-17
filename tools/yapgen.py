@@ -56,15 +56,16 @@ def particles_yaparray(pos, rad, angles=None):
         return yap_out
     else:
         # add crosses in 2d
-        u1 = -np.ones(pos.shape)   # so that they appear in front
-        u2 = -np.ones(pos.shape)
+        u1 = np.zeros(pos.shape)
+        u2 = np.zeros(pos.shape)
         u1[:, 0] = np.cos(angles)
         u1[:, 2] = -np.sin(angles)
         u1[:, [0, 2]] *= rad[:, np.newaxis]
         u2[:, 0] = -u1[:, 2]
         u2[:, 2] = u1[:, 0]
-        crosses = pyp.cmd('l', np.row_stack((np.hstack((pos+u1, pos-u1)),
-                                             np.hstack((pos+u2, pos-u2)))))
+        depth_shift = np.array([0, -0.1, 0]
+        crosses = pyp.cmd('l', np.row_stack((np.hstack((pos + u1 + depth_shift), pos - u1 + depth_shift)),
+                                             np.hstack((pos + u2 + depth_shift, pos - u2 + depth_shift)))))
         return yap_out, crosses
 
 
@@ -176,7 +177,7 @@ def snaps2yap(pos_fname,
             angle = frame_par[1][:, pcols['angle']].astype(np.float)
             particles, crosses = particles_yaparray(pos, rad, angles=angle)
             yap_out = np.row_stack((yap_out, particles))
-            yap_out = pyp.add_color_switch(yap_out, 1)
+            yap_out = pyp.add_color_switch(yap_out, 0)
             yap_out = np.row_stack((yap_out, crosses))
         else:
             yap_out = np.row_stack((yap_out, particles_yaparray(pos, rad)))
