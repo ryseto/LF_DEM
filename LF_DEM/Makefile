@@ -14,7 +14,7 @@ endif
 # Compilation Flags
 CXXFLAGS_optimized = -O3
 CXXFLAGS_debug = -g -DDEV="1"
-CXXFLAGS_dev = -O3 -DDEV="1"
+CXXFLAGS_dev = -g -O3 -DDEV="1"
 
 GPP_Warnings = -Wall
 ifeq ($(CXX),$(filter $(CXX),g++ clang++ gcc))

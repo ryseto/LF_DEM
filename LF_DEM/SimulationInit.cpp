@@ -416,7 +416,7 @@ void Simulation::setupSimulation(string in_args,
 		// extensional flow
 		sys.vel_difference.reset();
 	}
-	if (!restart_from_chkp) {
+	if (simu_name.empty()) {
 		simu_name = prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
 		                                  simu_identifier, control_value);
 	}
