@@ -160,7 +160,7 @@ def snaps2yap(pos_fname,
                                         f_chain_thresh=f_chain_thresh,
                                         layer_contacts=1,
                                         layer_noncontacts=2,
-                                        color_contacts=4,
+                                        color_contacts=9,
                                         color_noncontacts=5)
 
         # display a circle for every particle
