@@ -119,10 +119,10 @@ void ParameterSetFactory::setDefaultValues() {
 	====================================*/
 	Dimensional::ForceScale default_val;
 
-	default_val = {Dimensional::Unit::kn, {Dimensional::Dimension::Force, 2e3, Dimensional::Unit::hydro}};
+	default_val = {Dimensional::Unit::kn, {Dimensional::Dimension::Force, 0, Dimensional::Unit::hydro}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(kn, default_val));
 
-	default_val = {Dimensional::Unit::kt, {Dimensional::Dimension::Force, 0.5, Dimensional::Unit::kn}};
+	default_val = {Dimensional::Unit::kt, {Dimensional::Dimension::Force, 0, Dimensional::Unit::kn}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(kt, default_val));
 
 	default_val = {Dimensional::Unit::kr, {Dimensional::Dimension::Force, 0, Dimensional::Unit::kn}};

@@ -56,16 +56,15 @@ def particles_yaparray(pos, rad, angles=None):
         return yap_out
     else:
         # add crosses in 2d
-        u1 = np.zeros(pos.shape)
-        u2 = np.zeros(pos.shape)
+        u1 = -np.ones(pos.shape)   # so that they appear in front
+        u2 = -np.ones(pos.shape)
         u1[:, 0] = np.cos(angles)
         u1[:, 2] = -np.sin(angles)
         u1[:, [0, 2]] *= rad[:, np.newaxis]
         u2[:, 0] = -u1[:, 2]
         u2[:, 2] = u1[:, 0]
-        depth_shift = np.array([0, -0.1, 0])
-        crosses = pyp.cmd('l', np.row_stack((np.hstack((pos + u1 + depth_shift, pos - u1 + depth_shift)),
-                                             np.hstack((pos + u2 + depth_shift, pos - u2 + depth_shift)))))
+        crosses = pyp.cmd('l', np.row_stack((np.hstack((pos+u1, pos-u1)),
+                                             np.hstack((pos+u2, pos-u2)))))
         return yap_out, crosses
 
 
@@ -90,7 +89,7 @@ def interactions_bonds_yaparray(int_snapshot,
     # with a thickness proportional to the normal force
     normal_forces = get_normal_force(f, icols)
     #  convert the force to a thickness. case-by-case.
-    if f_factor is None and len(normal_forces)>0:
+    if f_factor is None:
         f_factor = 0.5/np.max(np.abs(normal_forces))
     normal_forces = f_factor*np.abs(normal_forces)
     avg_force = np.mean(np.abs(normal_forces))
@@ -160,7 +159,7 @@ def snaps2yap(pos_fname,
                                         f_chain_thresh=f_chain_thresh,
                                         layer_contacts=1,
                                         layer_noncontacts=2,
-                                        color_contacts=9,
+                                        color_contacts=4,
                                         color_noncontacts=5)
 
         # display a circle for every particle
@@ -177,7 +176,7 @@ def snaps2yap(pos_fname,
             angle = frame_par[1][:, pcols['angle']].astype(np.float)
             particles, crosses = particles_yaparray(pos, rad, angles=angle)
             yap_out = np.row_stack((yap_out, particles))
-            yap_out = pyp.add_color_switch(yap_out, 0)
+            yap_out = pyp.add_color_switch(yap_out, 1)
             yap_out = np.row_stack((yap_out, crosses))
         else:
             yap_out = np.row_stack((yap_out, particles_yaparray(pos, rad)))
@@ -199,8 +198,8 @@ def snaps2yap(pos_fname,
         # *cu*rvilinear or *cu*mulated strain depending on LF_DEM version
         strain = du.matching_uniq(frame_par[0], ["cu".encode('utf8'), "strain".encode('utf8')])
         yap_out = np.row_stack((yap_out,
-                                ['t', str(10.), str(0.), str(10.),
-                                    'strain='+str(strain), '', '']))
+                                ['t', 1.1*lx2, str(0.), 1.1*lz2,
+                                    'strain='+str(strain[1]), '', '']))
 
         # output
         np.savetxt(yap_file, yap_out, fmt="%s "*7)

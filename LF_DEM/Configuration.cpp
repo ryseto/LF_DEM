@@ -268,7 +268,7 @@ struct delayed_adhesion_configuration readBinaryDelayedAdhesionConfiguration(std
 	input.read((char*)&fmt, sizeof(format_type));
 
 	c.base = readBinaryBaseConfiguration(input);
-
+	c.adhesion_states = TActAdhesion::readStatesBStream(input);
 	c.lees_edwards_disp.reset();
 	input.read((char*)&c.lees_edwards_disp.x, sizeof(double));
 	input.read((char*)&c.lees_edwards_disp.y, sizeof(double));

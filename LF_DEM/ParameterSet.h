@@ -120,9 +120,9 @@ struct ParameterSet
 	 * kn: normal spring constant
 	 * kt: tangential spring constant
 	 */
-	double kn;                               ///< Particle stiffness: normal spring constant [2000input_units]
-	double kt;                               ///< Particle stiffness: tangential spring constant [0.5kn]
-	double kr;                               ///< Particle stiffness: rolling spring constant [0.5kn]
+	double kn;                               ///< Particle stiffness: normal spring constant [0h]
+	double kt;                               ///< Particle stiffness: tangential spring constant [0kn]
+	double kr;                               ///< Particle stiffness: rolling spring constant [0kn]
 		/*
 		 * contact_relaxation_factor:
 		 *
