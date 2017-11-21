@@ -9,60 +9,6 @@
 #include "Configuration.h"
 
 
-
-std::vector <struct contact_state> readContactStatesBStream(std::istream &input, unsigned int np)
-{
-	int ncont;
-	double dt_x, dt_y, dt_z, dr_x, dr_y, dr_z;
-	std::vector <struct contact_state> cont_states;
-	input.read((char*)&ncont, sizeof(unsigned int));
-	std::iostream::pos_type file_pos = input.tellg();
-	bool ushort_format = false;
-	for (int i=0; i<ncont; i++) {
-		unsigned int p0, p1;
-		input.read((char*)&p0, sizeof(unsigned int));
-		// hacky thing to guess if this is an old format with particle numbers as unsigned short
-		if(p0>np){
-			ushort_format = true;
-			input.seekg(file_pos);
-			break;
-		}
-		input.read((char*)&p1, sizeof(unsigned int));
-		input.read((char*)&dt_x, sizeof(double));
-		input.read((char*)&dt_y, sizeof(double));
-		input.read((char*)&dt_z, sizeof(double));
-		input.read((char*)&dr_x, sizeof(double));
-		input.read((char*)&dr_y, sizeof(double));
-		input.read((char*)&dr_z, sizeof(double));
-		struct contact_state cs;
-		cs.p0 = p0;
-		cs.p1 = p1;
-		cs.disp_tan = vec3d(dt_x, dt_y, dt_z);
-		cs.disp_rolling = vec3d(dr_x, dr_y, dr_z);
-		cont_states.push_back(cs);
-	}
-	if (ushort_format) {
-		for (int i=0; i<ncont; i++) {
-			unsigned short p0, p1;
-			input.read((char*)&p0, sizeof(unsigned short));
-			input.read((char*)&p1, sizeof(unsigned short));
-			input.read((char*)&dt_x, sizeof(double));
-			input.read((char*)&dt_y, sizeof(double));
-			input.read((char*)&dt_z, sizeof(double));
-			input.read((char*)&dr_x, sizeof(double));
-			input.read((char*)&dr_y, sizeof(double));
-			input.read((char*)&dr_z, sizeof(double));
-			struct contact_state cs;
-			cs.p0 = (int)p0;
-			cs.p1 = (int)p1;
-			cs.disp_tan = vec3d(dt_x, dt_y, dt_z);
-			cs.disp_rolling = vec3d(dr_x, dr_y, dr_z);
-			cont_states.push_back(cs);
-		}
-	}
-	return cont_states;
-}
-
 std::pair<std::vector <vec3d>, std::vector <double>> readPositionsBStream(std::istream &input, unsigned int np)
 {
 	double x_, y_, z_, r_;
@@ -213,27 +159,90 @@ struct base_shear_configuration readBinaryBaseShearConfiguration(const std::stri
 		c.angle.resize(c.position.size(), 0);
 	}
 
-	c.contact_states = readContactStatesBStream(input, np);
+	c.contact_states = Contact_ios::readStatesBStream(input, np);
 	return c;
 }
 
 struct base_configuration readBinaryBaseConfiguration(std::ifstream &input)
 {
 	struct base_configuration c;
-	int np;
-	input.read((char*)&np, sizeof(int));
+	unsigned np;
+	input.read((char*)&np, sizeof(unsigned));
 	input.read((char*)&c.volume_or_area_fraction, sizeof(double));
 	input.read((char*)&c.lx, sizeof(double));
 	input.read((char*)&c.ly, sizeof(double));
 	input.read((char*)&c.lz, sizeof(double));
 
-	std::tie(c.position, c.radius) = readPositionsBStream(input, np);
-	if (c.ly == 0) { //2d
-		c.angle.resize(c.position.size(), 0);
+	double x_, y_, z_, r_, a_;
+	for (unsigned i=0; i<np; i++) {
+		input.read((char*)&x_, sizeof(double));
+		input.read((char*)&y_, sizeof(double));
+		input.read((char*)&z_, sizeof(double));
+		input.read((char*)&r_, sizeof(double));
+		input.read((char*)&a_, sizeof(double));
+		c.position.push_back(vec3d(x_,y_,z_));
+		c.radius.push_back(r_);
+		c.angle.push_back(a_);
+	}
+	c.contact_states = Contact_ios::readStatesBStream(input, np);
+	return c;
+}
+
+void writeBinaryBaseConfiguration(std::ofstream &conf_export, const struct base_configuration &conf) 
+{
+	std::vector<std::vector<double> > pos(conf.position.size());
+	unsigned dims = 5;
+	for (unsigned i=0; i<conf.position.size(); i++) {
+		pos[i].resize(dims);
+		pos[i][0] = conf.position[i].x;
+		pos[i][1] = conf.position[i].y;
+		pos[i][2] = conf.position[i].z;
+		pos[i][3] = conf.radius[i];
+		pos[i][4] = conf.angle[i];
+	}
+	unsigned np = conf.position.size();
+	conf_export.write((char*)&np, sizeof(unsigned));
+	conf_export.write((char*)&conf.volume_or_area_fraction, sizeof(double));
+	conf_export.write((char*)&conf.lx, sizeof(double));
+	conf_export.write((char*)&conf.ly, sizeof(double));
+	conf_export.write((char*)&conf.lz, sizeof(double));
+	for (unsigned i=0; i<conf.position.size(); i++) {
+		conf_export.write((char*)&pos[i][0], dims*sizeof(double));
+	}
+	Contact_ios::writeStatesBStream(conf_export, conf.contact_states);
+}
+
+std::vector<vec3d> readBinaryFixedVelocities(std::ifstream &input)
+{
+	std::vector<vec3d> fixed_velocities;
+	unsigned np_fixed;
+	input.read((char*)&np_fixed, sizeof(unsigned));
+	double vx_, vy_, vz_;
+	for (unsigned i=0; i<np_fixed; i++) {
+		input.read((char*)&vx_, sizeof(double));
+		input.read((char*)&vy_, sizeof(double));
+		input.read((char*)&vz_, sizeof(double));
+		fixed_velocities.push_back(vec3d(vx_, vy_, vz_));
 	}
 
-	c.contact_states = readContactStatesBStream(input, np);
-	return c;
+	return fixed_velocities;
+}
+
+
+void writeBinaryFixedVelocities(std::ofstream &conf_export, const std::vector<vec3d> &fixed_velocities)
+{
+	unsigned np_fixed = fixed_velocities.size();
+	conf_export.write((char*)&np_fixed, sizeof(unsigned));
+	std::vector<std::vector<double> > vel(np_fixed);
+	for (unsigned i=0; i<np_fixed; i++) {
+		vel[i].resize(3);
+		vel[i][0] = fixed_velocities[i].x;
+		vel[i][1] = fixed_velocities[i].y;
+		vel[i][2] = fixed_velocities[i].z;
+	}
+	for (unsigned i=0; i<np_fixed; i++) {
+		conf_export.write((char*)&vel[i][0], 3*sizeof(double));
+	}
 }
 
 
@@ -263,12 +272,23 @@ struct delayed_adhesion_configuration readBinaryDelayedAdhesionConfiguration(std
 	c.lees_edwards_disp.reset();
 	input.read((char*)&c.lees_edwards_disp.x, sizeof(double));
 	input.read((char*)&c.lees_edwards_disp.y, sizeof(double));
-
-	c.adhesion_states = TActAdhesion::readStatesBStream(input);
+	
 	return c;
 }
 
-struct fixed_velo_configuration readBinaryFixedVeloConfiguration(const std::string& filename)
+void fillBaseConfiguration(struct fixed_velo_configuration &vel_conf,  const struct base_configuration &base) 
+{
+	vel_conf.lx = base.lx;
+	vel_conf.ly = base.ly;
+	vel_conf.lz = base.lz;
+	vel_conf.volume_or_area_fraction = base.volume_or_area_fraction;
+	vel_conf.position = base.position;
+	vel_conf.radius = base.radius;
+	vel_conf.angle = base.angle;
+	vel_conf.contact_states = base.contact_states;
+}
+
+struct fixed_velo_configuration readBinaryFixedVeloConfigurationOld(const std::string& filename)
 {
 	checkInFile(filename);
 	auto format = getBinaryConfigurationFileFormat(filename);
@@ -303,9 +323,89 @@ struct fixed_velo_configuration readBinaryFixedVeloConfiguration(const std::stri
 		c.fixed_velocities.push_back(vec3d(vx_, vy_, vz_));
 	}
 
-	c.contact_states = readContactStatesBStream(input, np);
+	c.contact_states = Contact_ios::readStatesBStream(input, np);
 	return c;
 }
+
+struct fixed_velo_configuration readBinaryFixedVeloConfiguration(const std::string& filename)
+{
+	checkInFile(filename);
+	auto format = getBinaryConfigurationFileFormat(filename);
+	if (format == ConfFileFormat::bin_format_fixed_vel) {
+		return readBinaryFixedVeloConfigurationOld(filename);
+	}
+
+	if (format != ConfFileFormat::bin_format_fixed_vel_shear) {
+		throw std::runtime_error("readBinaryFixedVeloConfiguration(): got incorrect binary format.");
+	}
+	std::ifstream input(filename.c_str(), std::ios::binary | std::ios::in);
+
+	struct fixed_velo_configuration c;
+
+	int _switch;
+	typedef std::underlying_type<ConfFileFormat>::type format_type;
+	format_type fmt;
+	input.read((char*)&_switch, sizeof(int));
+	input.read((char*)&fmt, sizeof(format_type));
+
+	auto base = readBinaryBaseConfiguration(input);
+	fillBaseConfiguration(c, base);
+	c.fixed_velocities = readBinaryFixedVelocities(input);
+
+	c.lees_edwards_disp.reset();
+	input.read((char*)&c.lees_edwards_disp.x, sizeof(double));
+	input.read((char*)&c.lees_edwards_disp.y, sizeof(double));
+
+	return c;
+}
+
+void writeBinaryHeader(std::ofstream &conf_export, ConfFileFormat format)
+{
+	int conf_switch = -1; // older formats did not have labels, -1 signs for a labeled binary
+	typedef std::underlying_type<ConfFileFormat>::type format_type;
+	conf_export.write((char*)&conf_switch, sizeof(int));
+	conf_export.write((char*)&format, sizeof(format_type));
+}
+
+
+void outputBinaryConfiguration(const System &sys, 
+							   std::string conf_filename, 
+							   ConfFileFormat format)
+{
+	/**
+		\brief Saves the current configuration of the system in a binary file.
+
+	 */
+	std::set<ConfFileFormat> allowed_formats = \
+	{
+		ConfFileFormat::bin_delayed_adhesion,
+		ConfFileFormat::bin_format_fixed_vel_shear,
+		ConfFileFormat::bin_format_base_shear,
+	};
+	if (!allowed_formats.count(format)) {
+		throw std::runtime_error("outputBinaryConfiguration(): got incorrect binary format.");
+	}
+
+	std::ofstream conf_export;
+	conf_export.open(conf_filename.c_str(), std::ios::binary | std::ios::out);
+	writeBinaryHeader(conf_export, format);
+
+	writeBinaryBaseConfiguration(conf_export, sys.getBaseConfiguration());
+	if (format == ConfFileFormat::bin_format_fixed_vel_shear) {
+		writeBinaryFixedVelocities(conf_export, sys.fixed_velocities);
+	}
+	
+	if (format == ConfFileFormat::bin_delayed_adhesion) {
+		TActAdhesion::writeStatesBStream(conf_export,
+			    				         sys.interaction);
+	}
+
+	conf_export.write((char*)&(sys.shear_disp.x), sizeof(double));
+	conf_export.write((char*)&(sys.shear_disp.y), sizeof(double));
+
+	conf_export.close();
+}
+
 
 struct base_shear_configuration readTxtBaseConfiguration(const std::string& filename)
 {

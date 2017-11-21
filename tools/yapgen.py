@@ -63,8 +63,8 @@ def particles_yaparray(pos, rad, angles=None):
         u1[:, [0, 2]] *= rad[:, np.newaxis]
         u2[:, 0] = -u1[:, 2]
         u2[:, 2] = u1[:, 0]
-        depth_shift = np.array([0, -0.1, 0]
-        crosses = pyp.cmd('l', np.row_stack((np.hstack((pos + u1 + depth_shift), pos - u1 + depth_shift)),
+        depth_shift = np.array([0, -0.1, 0])
+        crosses = pyp.cmd('l', np.row_stack((np.hstack((pos + u1 + depth_shift, pos - u1 + depth_shift)),
                                              np.hstack((pos + u2 + depth_shift, pos - u2 + depth_shift)))))
         return yap_out, crosses
 

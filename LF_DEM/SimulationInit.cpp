@@ -23,7 +23,7 @@ void Simulation::contactForceParameter(string filename)
 	 Input file must be formatted as:
 	 phi kn kt dt
 	 */
-	auto conf = sys.getBaseShearConfiguration();
+	auto conf = sys.getBaseConfiguration();
 	ifstream fin_knktdt;
 	fin_knktdt.open(filename.c_str());
 	if (!fin_knktdt) {
@@ -62,7 +62,7 @@ void Simulation::contactForceParameterBrownian(string filename)
 	 Input file must be formatted as:
 	 phi peclet kn kt dt
 	 */
-	auto conf = sys.getBaseShearConfiguration();
+	auto conf = sys.getBaseConfiguration();
 	ifstream fin_knktdt;
 	fin_knktdt.open(filename.c_str());
 	if (!fin_knktdt) {

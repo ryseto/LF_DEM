@@ -5,6 +5,7 @@
 #include <type_traits>
 #include "vec3d.h"
 #include "Contact.h"
+#include "System.h"
 #include "TimeActivatedAdhesion_io.h"
 #include "TimeActivatedAdhesion.h"
 
@@ -106,4 +107,7 @@ struct fixed_velo_configuration readTxtFixedVeloConfiguration(const std::string&
 
 struct circular_couette_configuration readTxtCircularCouetteConfiguration(const std::string& filename);
 
+void outputBinaryConfiguration(const System &sys, 
+							   std::string conf_filename, 
+							   ConfFileFormat format);
 #endif /* defined(__LF_DEM__Configuration__) */

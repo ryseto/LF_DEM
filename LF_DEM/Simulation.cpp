@@ -383,9 +383,13 @@ void Simulation::outputComputationTime()
 }
 
 
-ConfFileFormat Simulation::writeBinaryHeader(ofstream &conf_export)
+void Simulation::outputConfigurationBinary(string conf_filename)
 {
-	int conf_switch = -1; // older formats did not have labels, -1 signs for a labeled binary
+	/**
+		\brief Saves the current configuration of the system in a binary file.
+
+	 */
+
 	ConfFileFormat binary_conf_format = ConfFileFormat::bin_format_base_shear; // v2 as default. v1 deprecated.
 	if (p.simulation_mode == 31) {
 		binary_conf_format = ConfFileFormat::bin_format_fixed_vel_shear;
@@ -393,80 +397,7 @@ ConfFileFormat Simulation::writeBinaryHeader(ofstream &conf_export)
 	if (sys.delayed_adhesion) {
 		binary_conf_format = ConfFileFormat::bin_delayed_adhesion;
 	}
-	conf_export.write((char*)&conf_switch, sizeof(int));
-	conf_export.write((char*)&binary_conf_format, sizeof(int));
-	return binary_conf_format;
-}
-
-void Simulation::outputConfigurationBinary(string conf_filename)
-{
-	/**
-		\brief Saves the current configuration of the system in a binary file.
-
-	 */
-	auto conf = sys.getBaseShearConfiguration();
-	int np = conf.position.size();
-	vector< vector<double> > pos(np);
-	int dims = 4;
-	for (int i=0; i<np; i++) {
-		pos[i].resize(dims);
-		pos[i][0] = conf.position[i].x;
-		pos[i][1] = conf.position[i].y;
-		pos[i][2] = conf.position[i].z;
-		pos[i][3] = conf.radius[i];
-	}
-	ofstream conf_export;
-	conf_export.open(conf_filename.c_str(), ios::binary | ios::out);
-	
-	auto binary_conf_format = writeBinaryHeader(conf_export);
-
-	conf_export.write((char*)&np, sizeof(int));
-	conf_export.write((char*)&conf.volume_or_area_fraction, sizeof(double));
-	conf_export.write((char*)&conf.lx, sizeof(double));
-	conf_export.write((char*)&conf.ly, sizeof(double));
-	conf_export.write((char*)&conf.lz, sizeof(double));
-	for (int i=0; i<np; i++) {
-		conf_export.write((char*)&pos[i][0], dims*sizeof(double));
-	}
-	if (binary_conf_format == ConfFileFormat::bin_format_fixed_vel) {
-		int np_fixed = sys.fixed_velocities.size();
-		vector< vector<double> > vel(np_fixed);
-		for (int i=0; i<np_fixed; i++) {
-			vel[i].resize(3);
-			vel[i][0] = sys.fixed_velocities[i].x;
-			vel[i][1] = sys.fixed_velocities[i].y;
-			vel[i][2] = sys.fixed_velocities[i].z;
-		}
-		for (int i=0; i<np_fixed; i++) {
-			conf_export.write((char*)&vel[i][0], 3*sizeof(double));
-		}
-	}
-	if (binary_conf_format == ConfFileFormat::bin_format_fixed_vel) {
-		int np_fixed = sys.fixed_velocities.size();
-		conf_export.write((char*)&np_fixed, sizeof(int));
-	}
-	const auto &cs = conf.contact_states;
-	int ncont = cs.size();
-	conf_export.write((char*)&ncont, sizeof(unsigned int));
-	for (int i=0; i<ncont; i++) {
-		conf_export.write((char*)&(cs[i].p0), sizeof(unsigned int));
-		conf_export.write((char*)&(cs[i].p1), sizeof(unsigned int));
-		conf_export.write((char*)&(cs[i].disp_tan.x), sizeof(double));
-		conf_export.write((char*)&(cs[i].disp_tan.y), sizeof(double));
-		conf_export.write((char*)&(cs[i].disp_tan.z), sizeof(double));
-		conf_export.write((char*)&(cs[i].disp_rolling.x), sizeof(double));
-		conf_export.write((char*)&(cs[i].disp_rolling.y), sizeof(double));
-		conf_export.write((char*)&(cs[i].disp_rolling.z), sizeof(double));
-	}
-	if (sys.delayed_adhesion) {
-		// conf_export
-	}
-
-	conf_export.write((char*)&(conf.lees_edwards_disp.x), sizeof(double));
-	conf_export.write((char*)&(conf.lees_edwards_disp.y), sizeof(double));
-
-	conf_export.close();
-
+	outputBinaryConfiguration(sys, conf_filename, binary_conf_format);
 }
 
 
@@ -668,14 +599,14 @@ vec3d Simulation::shiftUpCoordinate(double x, double y, double z)
 void Simulation::createDataHeader(stringstream& data_header)
 {
 	if (!restart_from_chkp) {
-		auto conf = sys.getBaseShearConfiguration();
+		auto conf = sys.getBaseConfiguration();
 		data_header << "# LF_DEM version " << GIT_VERSION << endl;
 		data_header << "# np " << conf.position.size() << endl;
 		data_header << "# VF " << conf.volume_or_area_fraction << endl;
 		data_header << "# Lx " << conf.lx << endl;
 		data_header << "# Ly " << conf.ly << endl;
 		data_header << "# Lz " << conf.lz << endl;
-		data_header << "# flow_type " << sys.p.flow_type << endl;
+		data_header << "# flow_type " << p.flow_type << endl;
 	}
 }
 

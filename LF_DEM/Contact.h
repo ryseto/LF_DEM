@@ -33,6 +33,11 @@ struct contact_state {
 	vec3d disp_rolling;
 };
 
+namespace Contact_ios {
+	std::vector <struct contact_state> readStatesBStream(std::istream &input, unsigned int np);
+	void writeStatesBStream(std::ostream &conf_export, const std::vector <struct contact_state> &cs);
+}
+
 class Contact {
 private:
 	/*********************************

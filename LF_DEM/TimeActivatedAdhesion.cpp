@@ -1,3 +1,11 @@
+//
+//  TimeActivatedAdhesion.cpp
+//  LF_DEM
+//
+//  Created by Romain Mari on 01/11/17.
+//  Copyright (c) 2017 Ryohei Seto and Romain Mari. All rights reserved.
+//
+
 #include "TimeActivatedAdhesion.h"
 
 namespace TActAdhesion {

@@ -309,7 +309,7 @@ void System::setContacts(const vector <struct contact_state>& cs)
 	}
 }
 
-vector <struct contact_state> System::getContacts()
+vector <struct contact_state> System::getContacts() const
 {
 	/**
 		\brief Get the list of contacts with their state variables.
@@ -690,9 +690,9 @@ void System::initializeBoxing()
 	}
 }
 
-struct base_shear_configuration System::getBaseShearConfiguration()
+struct base_configuration System::getBaseConfiguration() const
 {
-	base_shear_configuration conf;
+	base_configuration conf;
 	conf.lx = lx;
 	conf.ly = ly;
 	conf.lz = lz;
@@ -703,7 +703,6 @@ struct base_shear_configuration System::getBaseShearConfiguration()
 	if (twodimension) {
 		conf.angle = angle;
 	}
-	conf.lees_edwards_disp = shear_disp;
 	conf.contact_states = getContacts();
 	return conf;
 }
