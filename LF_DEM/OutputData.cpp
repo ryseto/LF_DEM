@@ -18,6 +18,9 @@ void OutputData::setFile(const std::string& fname,
 	if (append) {
 		checkInFile(fname);
 		fout.open(fname.c_str(), std::ofstream::out | std::ofstream::app);
+		if(fout.good()) {
+ 			std::cerr << "Successfully opening file '" << fname << "'"<< std::endl;
+		}
 		restart_from_chkp = true;
 	} else {
 		fout.open(fname.c_str(), std::ofstream::out);
