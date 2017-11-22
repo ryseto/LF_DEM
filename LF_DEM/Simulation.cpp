@@ -681,7 +681,12 @@ void Simulation::outputParFileTxt()
 	for (int i=0; i<sys.get_np(); i++) {
 		outdata_par.entryData("particle index", Dimensional::Dimension::none, 1, i);
 		outdata_par.entryData("radius", Dimensional::Dimension::none, 1, sys.radius[i]);
-		outdata_par.entryData("position (x, y, z)", Dimensional::Dimension::none, 3, pos[i], 6);
+		if (!sys.twodimension) {
+			outdata_par.entryData("position (x, y, z)", Dimensional::Dimension::none, 3, pos[i], 6);
+		} else {
+			outdata_par.entryData("position x", Dimensional::Dimension::none, 1, pos[i].x, 6);
+			outdata_par.entryData("position z", Dimensional::Dimension::none, 1, pos[i].z, 6);
+		}
 		if (diminish_output == false) {
 		  outdata_par.entryData("velocity (x, y, z)", Dimensional::Dimension::Velocity, 3, vel[i]);
 		  outdata_par.entryData("angular velocity (x, y, z)", Dimensional::Dimension::none, 3, sys.ang_velocity[i]);
@@ -700,6 +705,14 @@ void Simulation::outputParFileTxt()
 		//			outdata_par.entryData("stress_thetatheta", Dimensional::Dimension::Viscosity, 1, stress_thetatheta/sr);
 		//			outdata_par.entryData("stress_rtheta", Dimensional::Dimension::Viscosity, 1, stress_rtheta/sr);
 		//		}
+		if (p.output.out_na_vel) {
+			if (sys.twodimension) {
+				outdata_par.entryData("non-affine velocity x", Dimensional::Dimension::Velocity, 1, sys.na_velocity[i].x);
+				outdata_par.entryData("non-affine velocity z", Dimensional::Dimension::Velocity, 1, sys.na_velocity[i].z);
+			} else {
+				outdata_par.entryData("non-affine velocity (x, y, z)", Dimensional::Dimension::Velocity, 3, sys.na_velocity[i]);
+			}
+		}
 		if (p.output.out_data_vel_components) {
 			for (const auto &vc: sys.na_velo_components) {
 				string entry_name_vel = "non-affine "+vc.first+" velocity (x, y, z)";
@@ -731,12 +744,12 @@ void Simulation::outputIntFileTxt()
 		outdata_int.entryData("particle 1 label", Dimensional::Dimension::none, 1, i);
 		outdata_int.entryData("particle 2 label", Dimensional::Dimension::none, 1, j);
 		if (diminish_output == false) {
-		        outdata_int.entryData("contact state "
-				      "(0 = no contact, "
-				      "1 = frictionless contact, "
-				      "2 = non-sliding frictional, "
-				      "3 = sliding frictional)",
-							  Dimensional::Dimension::none, 1, inter.contact.getFrictionState());
+	        outdata_int.entryData("contact state "
+							      "(0 = no contact, "
+							      "1 = frictionless contact, "
+							      "2 = non-sliding frictional, "
+							      "3 = sliding frictional)",
+								  Dimensional::Dimension::none, 1, inter.contact.getFrictionState());
 			outdata_int.entryData("normal vector, oriented from particle 1 to particle 2", \
 								  Dimensional::Dimension::none, 3, inter.nvec);
 			outdata_int.entryData("dimensionless gap = s-2, s = 2r/(a1+a2)", \
@@ -751,18 +764,18 @@ void Simulation::outputIntFileTxt()
 		 * the lubrication forces.
 		 */
 		if (diminish_output == false) {
-		if (sys.lubrication) {
-			if (inter.get_reduced_gap() > 0) {
-				double normal_part = -dot(inter.lubrication.getTotalForce(), inter.nvec);
-				outdata_int.entryData("normal part of the lubrication force (positive for compression)", Dimensional::Dimension::Force, 1, \
-									  normal_part);
-				outdata_int.entryData("tangential part of the lubrication force", Dimensional::Dimension::Force, 3, \
-									  inter.lubrication.getTangentialForce());
-			} else {
-				outdata_int.entryData("normal part of the lubrication force (positive for compression)", Dimensional::Dimension::Force, 1, 0);
-				outdata_int.entryData("tangential part of the lubrication force", Dimensional::Dimension::Force, 3, vec3d(0,0,0));
+			if (sys.lubrication) {
+				if (inter.get_reduced_gap() > 0) {
+					double normal_part = -dot(inter.lubrication.getTotalForce(), inter.nvec);
+					outdata_int.entryData("normal part of the lubrication force (positive for compression)", Dimensional::Dimension::Force, 1, \
+										  normal_part);
+					outdata_int.entryData("tangential part of the lubrication force", Dimensional::Dimension::Force, 3, \
+										  inter.lubrication.getTangentialForce());
+				} else {
+					outdata_int.entryData("normal part of the lubrication force (positive for compression)", Dimensional::Dimension::Force, 1, 0);
+					outdata_int.entryData("tangential part of the lubrication force", Dimensional::Dimension::Force, 3, vec3d(0,0,0));
+				}
 			}
-		}
 		}
 		/*
 		 * Contact forces include only spring forces.
@@ -770,8 +783,10 @@ void Simulation::outputIntFileTxt()
 		outdata_int.entryData("norm of the normal part of the contact force", Dimensional::Dimension::Force, 1, \
 							  inter.contact.getNormalForce().norm());
 		
-		//outdata_int.entryData("tangential part of the contact force", Dimensional::Dimension::Force, 3, \
-							  inter.contact.getTangentialForce());
+		if (diminish_output == false) {
+			outdata_int.entryData("tangential part of the contact force", Dimensional::Dimension::Force, 3, \
+								  inter.contact.getTangentialForce());
+		}
 		if (diminish_output == false) {
 		  	outdata_int.entryData("Viscosity contribution of contact xF", Dimensional::Dimension::Stress, 1, \
 		                                   doubledot(stress_contact, sys.getEinfty()/sr)/sr);
