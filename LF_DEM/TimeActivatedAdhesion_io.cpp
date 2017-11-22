@@ -17,19 +17,19 @@ namespace TActAdhesion {
 std::vector <struct State> readStatesBStream(std::istream &input)
 {
 	unsigned ncont;
-	Activity activity;
+	typedef std::underlying_type<Activity>::type activity_type;
+	activity_type activity;
 	State state;	
 	std::vector <struct State> state_vec;
 
 	input.read((char*)&ncont, sizeof(unsigned));
 	for (unsigned i=0; i<ncont; i++) {
-		unsigned p0, p1;
-		input.read((char*)&p0, sizeof(unsigned));
-		input.read((char*)&p1, sizeof(unsigned));
-		input.read((char*)&activity, sizeof(unsigned));
+		input.read((char*)&state.p0, sizeof(unsigned));
+		input.read((char*)&state.p1, sizeof(unsigned));
+		input.read((char*)&activity, sizeof(activity_type));
 		input.read((char*)&state.uptime, sizeof(double));
 
-		state.activity = activity;
+		state.activity = static_cast<Activity>(activity);
 		state_vec.push_back(state);
 	}
 	return state_vec;
@@ -45,10 +45,13 @@ void writeStatesBStream(std::ostream &output,
 
 	unsigned ncont = adhesion_states.size();
 	output.write((char*)&ncont, sizeof(unsigned));
+	typedef std::underlying_type<Activity>::type activity_type;
+
 	for (auto &state: adhesion_states) {
+		activity_type activity = static_cast<activity_type>(state.activity);
 		output.write((char*)&state.p0, sizeof(unsigned));
 		output.write((char*)&state.p1, sizeof(unsigned));
-		output.write((char*)&state.activity, sizeof(unsigned));
+		output.write((char*)&activity, sizeof(activity_type));
 		output.write((char*)&state.uptime, sizeof(double));
 	}
 }
