@@ -1266,6 +1266,9 @@ void System::timeEvolution(double time_end, double strain_end)
 	if (p.fixed_dt == true) {
 		loop_time_adjust = dt;
 	}
+	for (auto &elm: na_disp) {
+		elm.reset();
+	}
 	while (keepRunning(time_end - loop_time_adjust, strain_end - loop_time_adjust)) {
 		retrim_ext_flow = false; // used in ext_flow simulation
 		if (!brownian && !p.fixed_dt) { // adaptative time-step for non-Brownian cases

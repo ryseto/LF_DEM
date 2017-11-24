@@ -37,7 +37,7 @@ struct State {
 	unsigned p1;
 };
 
-class TimeActivatedAdhesion{
+class TimeActivatedAdhesion {
 
 public:
 	TimeActivatedAdhesion(struct Parameters &p, 

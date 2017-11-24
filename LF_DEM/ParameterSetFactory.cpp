@@ -52,6 +52,7 @@ void ParameterSetFactory::setDefaultValues() {
 		PARAM_INIT(output.origin_zero_flow, true),
 		PARAM_INIT(output.log_time_interval, false),
 		PARAM_INIT(output.out_na_vel, false),
+		PARAM_INIT(output.out_na_disp, false),
 	};
 
 	/*===========================================

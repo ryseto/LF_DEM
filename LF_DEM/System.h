@@ -529,6 +529,5 @@ private:
 	{
 		return na_disp;
 	}
-
 };
 #endif /* defined(__LF_DEM__System__) */

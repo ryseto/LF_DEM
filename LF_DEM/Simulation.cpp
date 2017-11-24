@@ -676,7 +676,6 @@ void Simulation::outputParFileTxt()
 
 	cout << "   out config: " << sys.get_cumulated_strain() << endl;
 	outdata_par.setUnits(system_of_units, output_unit);
-	auto na_disp = sys.getNonAffineDisp();
 
 	for (int i=0; i<sys.get_np(); i++) {
 		outdata_par.entryData("particle index", Dimensional::Dimension::none, 1, i);
@@ -690,9 +689,6 @@ void Simulation::outputParFileTxt()
 		if (diminish_output == false) {
 		  outdata_par.entryData("velocity (x, y, z)", Dimensional::Dimension::Velocity, 3, vel[i]);
 		  outdata_par.entryData("angular velocity (x, y, z)", Dimensional::Dimension::none, 3, sys.ang_velocity[i]);
-		  if (!sys.ext_flow) {
-			outdata_par.entryData("non affine displacement (x, y, z)", Dimensional::Dimension::none, 3, na_disp[i]);
-		  }
 		  if (sys.twodimension) {
 			outdata_par.entryData("angle", Dimensional::Dimension::none, 1, sys.angle[i]);
 		  }
@@ -713,6 +709,9 @@ void Simulation::outputParFileTxt()
 				outdata_par.entryData("non-affine velocity (x, y, z)", Dimensional::Dimension::Velocity, 3, sys.na_velocity[i]);
 			}
 		}
+		if (!p.output.out_na_disp) {
+			outdata_par.entryData("non affine displacement (x, y, z)", Dimensional::Dimension::none, 3, sys.getNonAffineDisp()[i]);
+	  	}	
 		if (p.output.out_data_vel_components) {
 			for (const auto &vc: sys.na_velo_components) {
 				string entry_name_vel = "non-affine "+vc.first+" velocity (x, y, z)";
