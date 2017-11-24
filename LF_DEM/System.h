@@ -529,5 +529,12 @@ private:
 	{
 		return na_disp;
 	}
+	
+	void resetNonAffineDispData()
+	{
+		for (auto &elm: na_disp) {
+			elm.reset();
+		}
+	}
 };
 #endif /* defined(__LF_DEM__System__) */

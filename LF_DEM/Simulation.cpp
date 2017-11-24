@@ -725,6 +725,7 @@ void Simulation::outputParFileTxt()
 			outdata_par.entryData("arg_phi6", Dimensional::Dimension::none, 1, arg(sys.phi6[i]));
 		}
 	}
+	sys.resetNonAffineDispData();
 	stringstream snapshot_header;
 	getSnapshotHeader(snapshot_header);
 	outdata_par.writeToFile(snapshot_header.str());
