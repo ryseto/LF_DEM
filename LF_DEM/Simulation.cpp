@@ -709,7 +709,7 @@ void Simulation::outputParFileTxt()
 				outdata_par.entryData("non-affine velocity (x, y, z)", Dimensional::Dimension::Velocity, 3, sys.na_velocity[i]);
 			}
 		}
-		if (!p.output.out_na_disp) {
+		if (p.output.out_na_disp) {
 			outdata_par.entryData("non affine displacement (x, y, z)", Dimensional::Dimension::none, 3, sys.getNonAffineDisp()[i]);
 	  	}	
 		if (p.output.out_data_vel_components) {
