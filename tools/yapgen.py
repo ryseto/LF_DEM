@@ -41,6 +41,7 @@ def get_normal_force(interactions, coldef_dict):
     return total_force
 
 
+
 def particles_yaparray(pos, rad, angles=None):
     """
         Get yaplot commands (as an aray of strings) to display circles
@@ -48,7 +49,12 @@ def particles_yaparray(pos, rad, angles=None):
         pos and rad must contain positions and radii of particles.
     """
 
-    particle_circle_positions = pyp.cmd('c', pos)
+    if pos.shape[-1]==3:
+        npos = np.asarray(pos)
+    else:
+        npos = np.column_stack((np.zeros(len(pos)), pos))[:, [1, 0, 2]]
+    
+    particle_circle_positions = pyp.cmd('c', npos)
     particle_circle_radius = pyp.cmd('r', rad)
     yap_out = pyp.pair_cmd_and_switch(particle_circle_positions,
                                       particle_circle_radius)
@@ -56,15 +62,16 @@ def particles_yaparray(pos, rad, angles=None):
         return yap_out
     else:
         # add crosses in 2d
-        u1 = -np.ones(pos.shape)   # so that they appear in front
-        u2 = -np.ones(pos.shape)
+        u1 = np.zeros(npos.shape)
+        u2 = np.zeros(npos.shape)
         u1[:, 0] = np.cos(angles)
         u1[:, 2] = -np.sin(angles)
         u1[:, [0, 2]] *= rad[:, np.newaxis]
         u2[:, 0] = -u1[:, 2]
         u2[:, 2] = u1[:, 0]
-        crosses = pyp.cmd('l', np.row_stack((np.hstack((pos+u1, pos-u1)),
-                                             np.hstack((pos+u2, pos-u2)))))
+        depth_shift = np.array([0, -0.1, 0])
+        crosses = pyp.cmd('l', np.row_stack((np.hstack((npos + u1 + depth_shift, npos - u1 + depth_shift)),
+                                             np.hstack((npos + u2 + depth_shift, npos - u2 + depth_shift)))))
         return yap_out, crosses
 
 
@@ -83,33 +90,41 @@ def interactions_bonds_yaparray(int_snapshot,
 
     r1r2 = lfu.get_interaction_end_points(int_snapshot, par_snapshot,
                                           icols, pcols)
+    if r1r2.shape[-1]==4:
+        zeros = np.zeros(len(r1r2))
+        r1r2 = np.column_stack((r1r2[:,0], zeros, r1r2[:,[1,2]], zeros, r1r2[:,3]))
     f, r1r2 = filter_interactions_crossing_PBC(int_snapshot, r1r2)
 
     # display a line joining the center of interacting particles
     # with a thickness proportional to the normal force
     normal_forces = get_normal_force(f, icols)
     #  convert the force to a thickness. case-by-case.
-    if f_factor is None:
+    if f_factor is None and len(normal_forces)>0:
         f_factor = 0.5/np.max(np.abs(normal_forces))
     normal_forces = f_factor*np.abs(normal_forces)
     avg_force = np.mean(np.abs(normal_forces))
     large_forces = normal_forces > f_chain_thresh * avg_force
 
-    contact_state = f[:, du.matching_uniq(icols, 'contact state')[1]]
-
-    # contacts
-    keep = np.logical_and(contact_state > 0, large_forces)
-    yap_out = pyp.layer_switch(layer_contacts)
-    yap_out = pyp.add_color_switch(yap_out, color_contacts)
-    contact_bonds = pyp.sticks_yaparray(r1r2[keep], normal_forces[keep])
-    yap_out = np.row_stack((yap_out, contact_bonds))
-
-    # non contacts
-    keep = np.logical_and(contact_state == 0, large_forces)
-    yap_out = pyp.add_layer_switch(yap_out, layer_noncontacts)
-    yap_out = pyp.add_color_switch(yap_out, color_noncontacts)
-    non_contact_bonds = pyp.sticks_yaparray(r1r2[keep], normal_forces[keep])
-    yap_out = np.row_stack((yap_out, non_contact_bonds))
+    try:
+        # contacts
+        contact_state = f[:, du.matching_uniq(icols, 'contact state')[1]]
+        keep = np.logical_and(contact_state > 0, large_forces)
+        yap_out = pyp.layer_switch(layer_contacts)
+        yap_out = pyp.add_color_switch(yap_out, color_contacts)
+        contact_bonds = pyp.sticks_yaparray(r1r2[keep], normal_forces[keep])
+        yap_out = np.row_stack((yap_out, contact_bonds))
+        # non contacts
+        keep = np.logical_and(contact_state == 0, large_forces)
+        yap_out = pyp.add_layer_switch(yap_out, layer_noncontacts)
+        yap_out = pyp.add_color_switch(yap_out, color_noncontacts)
+        non_contact_bonds = pyp.sticks_yaparray(r1r2[keep], normal_forces[keep])
+        yap_out = np.row_stack((yap_out, non_contact_bonds))
+    except KeyError:
+        keep = np.ones(len(f), dtype=np.bool)
+        yap_out = pyp.layer_switch(layer_contacts)
+        yap_out = pyp.add_color_switch(yap_out, color_contacts)
+        bonds = pyp.sticks_yaparray(r1r2[keep], normal_forces[keep])
+        yap_out = np.row_stack((yap_out, bonds))
 
     return yap_out, f_factor
 
@@ -173,11 +188,12 @@ def snaps2yap(pos_fname,
         pos = frame_par[1][:, pos_slice].astype(np.float)
         rad = frame_par[1][:, pcols['radius']].astype(np.float)
         if is2d:
-            angle = frame_par[1][:, pcols['angle']].astype(np.float)
-            particles, crosses = particles_yaparray(pos, rad, angles=angle)
-            yap_out = np.row_stack((yap_out, particles))
-            yap_out = pyp.add_color_switch(yap_out, 1)
-            yap_out = np.row_stack((yap_out, crosses))
+            try:
+                angle = frame_par[1][:, pcols['angle']].astype(np.float)
+                particles, crosses = particles_yaparray(pos, rad, angles=angle)
+                yap_out = np.row_stack((yap_out, particles))
+            except KeyError:
+                yap_out = np.row_stack((yap_out, particles_yaparray(pos, rad)))
         else:
             yap_out = np.row_stack((yap_out, particles_yaparray(pos, rad)))
 
