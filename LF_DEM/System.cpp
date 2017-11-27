@@ -417,6 +417,7 @@ void System::setupParameters()
 		repulsiveforce = false;
 		p.repulsive_length = 0;
 	}
+	p.theta_shear *= M_PI/180.;
 	setShearDirection(p.theta_shear);
 
 	if (p.auto_determine_knkt) {

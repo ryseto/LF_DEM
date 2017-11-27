@@ -237,6 +237,7 @@ void Simulation::setConfigToSystem(bool binary_conf, const std::string &filename
 	if (binary_conf) {
 		auto format = getBinaryConfigurationFileFormat(filename);
 		switch(format) {
+			case ConfFileFormat::bin_format_base_shear:
 			case ConfFileFormat::bin_format_base_new:
 				{
 					auto conf = readBinaryBaseShearConfiguration(filename);

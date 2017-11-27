@@ -128,7 +128,21 @@ ConfFileFormat getTxtConfigurationFileFormat(const std::string& filename_import_
 	}
 }
 
-struct base_shear_configuration readBinaryBaseShearConfiguration(const std::string& filename)
+template<typename T>
+void fillBaseConfiguration(T &vel_conf,  const struct base_configuration &base) 
+{
+	vel_conf.lx = base.lx;
+	vel_conf.ly = base.ly;
+	vel_conf.lz = base.lz;
+	vel_conf.volume_or_area_fraction = base.volume_or_area_fraction;
+	vel_conf.position = base.position;
+	vel_conf.radius = base.radius;
+	vel_conf.angle = base.angle;
+	vel_conf.contact_states = base.contact_states;
+}
+
+
+struct base_shear_configuration readBinaryBaseShearConfiguration_old(const std::string& filename)
 {
 	checkInFile(filename);
 	auto format = getBinaryConfigurationFileFormat(filename);
@@ -162,6 +176,41 @@ struct base_shear_configuration readBinaryBaseShearConfiguration(const std::stri
 	c.contact_states = Contact_ios::readStatesBStream(input, np);
 	return c;
 }
+
+struct base_shear_configuration readBinaryBaseShearConfiguration(const std::string &filename)
+{
+	checkInFile(filename);
+	auto format = getBinaryConfigurationFileFormat(filename);
+	if (format == ConfFileFormat::bin_format_base_old && format != ConfFileFormat::bin_format_base_new) {
+		return readBinaryBaseShearConfiguration_old(filename);
+	}
+	std::set<ConfFileFormat> allowed_formats = \
+	{
+		ConfFileFormat::bin_format_base_shear,
+	};
+	if (!allowed_formats.count(format)) {
+		throw std::runtime_error("readBinaryBaseShearConfiguration(): got incorrect binary format.");
+	}
+	std::ifstream input(filename.c_str(), std::ios::binary | std::ios::in);
+	struct base_shear_configuration c;
+
+
+	int _switch;
+	typedef std::underlying_type<ConfFileFormat>::type format_type;
+	format_type fmt;
+	input.read((char*)&_switch, sizeof(int));
+	input.read((char*)&fmt, sizeof(format_type));
+
+	auto base = readBinaryBaseConfiguration(input);
+	fillBaseConfiguration<struct base_shear_configuration>(c, base);
+
+	c.lees_edwards_disp.reset();
+	input.read((char*)&c.lees_edwards_disp.x, sizeof(double));
+	input.read((char*)&c.lees_edwards_disp.y, sizeof(double));
+
+	return c;
+}
+
 
 struct base_configuration readBinaryBaseConfiguration(std::ifstream &input)
 {
@@ -276,17 +325,8 @@ struct delayed_adhesion_configuration readBinaryDelayedAdhesionConfiguration(std
 	return c;
 }
 
-void fillBaseConfiguration(struct fixed_velo_configuration &vel_conf,  const struct base_configuration &base) 
-{
-	vel_conf.lx = base.lx;
-	vel_conf.ly = base.ly;
-	vel_conf.lz = base.lz;
-	vel_conf.volume_or_area_fraction = base.volume_or_area_fraction;
-	vel_conf.position = base.position;
-	vel_conf.radius = base.radius;
-	vel_conf.angle = base.angle;
-	vel_conf.contact_states = base.contact_states;
-}
+
+
 
 struct fixed_velo_configuration readBinaryFixedVeloConfigurationOld(const std::string& filename)
 {
@@ -349,7 +389,7 @@ struct fixed_velo_configuration readBinaryFixedVeloConfiguration(const std::stri
 	input.read((char*)&fmt, sizeof(format_type));
 
 	auto base = readBinaryBaseConfiguration(input);
-	fillBaseConfiguration(c, base);
+	fillBaseConfiguration<struct fixed_velo_configuration>(c, base);
 	c.fixed_velocities = readBinaryFixedVelocities(input);
 
 	c.lees_edwards_disp.reset();
