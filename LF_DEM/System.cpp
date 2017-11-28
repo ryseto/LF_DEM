@@ -2054,8 +2054,8 @@ void System::setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty)
 			omegahat_inf.z = 0;
 		}
 	}
-	//	omega_inf = omegahat_inf*shear_rate;
-	//E_infinity = Ehat_infinity*shear_rate;
+	omega_inf = omegahat_inf*shear_rate;
+	E_infinity = Ehat_infinity*shear_rate;
 }
 
 void System::setShearDirection(double theta_shear) // will probably be deprecated soon
