@@ -76,7 +76,7 @@ void ContactDashpot::setDashpotResistanceCoeffs(double kn, double kt,
 			// 1/(h+c) --> 1/c
 			normal_coeff = 1/sys->p.lub_reduce_parameter;
 		} else {
-			throw std::runtime_error(" ContactDashpot:: Error: normal relaxation time set negative, but no lubrication.");
+			throw std::runtime_error(" ContactDashpot:: Error: normal relaxation time set <=0, but no lubrication.");
 		}
 	}
 
@@ -97,7 +97,7 @@ void ContactDashpot::setDashpotResistanceCoeffs(double kn, double kt,
 					tangential_coeff = 0;
 				}
 			} else {
-				throw std::runtime_error(" ContactDashpot:: Error: tangential relaxation time set negative, but no lubrication.");
+				throw std::runtime_error(" ContactDashpot:: Error: tangential relaxation time set <=0, but no lubrication.");
 			}
 		}
 	}
