@@ -761,25 +761,6 @@ bool BoxSet::is_boxed()
 	return _is_boxed;
 }
 
-Box* BoxSet::whichBox(const vec3d &pos)
-{
-	unsigned int ix = (unsigned int)(pos.x/box_xsize);
-	unsigned int iy;
-	if (sys->twodimension) {
-		iy = 0;
-	} else {
-		iy = (unsigned int)(pos.y/box_ysize);
-	}
-	unsigned int iz = (unsigned int)(pos.z/box_zsize);
-	unsigned int label = ix*yz_box_nb+iy*z_box_nb+iz;
-	if (label >= box_labels.size()) {
-		ostringstream error_str;
-		error_str  << " BoxSet: trying to box position out of boundaries \"" << pos	<< "\"" << endl;
-		throw runtime_error(error_str.str());
-	}
-	return box_labels[label];
-}
-
 Box* BoxSet::whichBox(unsigned int box_label)
 {
 	if (box_label >= box_labels.size()) {
@@ -801,12 +782,30 @@ unsigned int BoxSet::whichBoxLabel(const vec3d &pos)
 	unsigned int iz = (unsigned int)(pos.z/box_zsize);
 	unsigned int label = ix*yz_box_nb+iy*z_box_nb+iz;
 	if (label >= box_labels.size()) {
-		ostringstream error_str;
-		error_str << " BoxSet: trying to box position out of boundaries \"" << pos	<< "\"" << endl;
-		error_str << pos - origin_ext_flow << endl;
-		throw runtime_error(error_str.str());
+		// We first make sure it's not a rounding issue
+		if (std::nextafter(ix*box_xsize, (ix+1u)*box_xsize) > pos.x) {
+			ix -= 1;
+		}
+		if (std::nextafter(iy*box_ysize, (iy+1u)*box_ysize) > pos.y) {
+			iy -= 1;
+		}
+		if (std::nextafter(iz*box_zsize, (iz+1u)*box_zsize) > pos.z) {
+			iz -= 1;
+		}
+		label = ix*yz_box_nb+iy*z_box_nb+iz;
+		if (label >= box_labels.size()) {
+			ostringstream error_str;
+			error_str << " BoxSet: trying to box position out of boundaries \"" << pos	<< "\"" << endl;
+			error_str << pos - origin_ext_flow << endl;
+			throw runtime_error(error_str.str());
+		}
 	}
 	return label;
+}
+
+Box* BoxSet::whichBox(const vec3d &pos)
+{
+	return box_labels[whichBoxLabel(pos)];
 }
 
 void BoxSet::box(int i)
