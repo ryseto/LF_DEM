@@ -40,6 +40,13 @@
 		D9953517180713FB00FC99C9 /* cluster_life.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D9953516180713FB00FC99C9 /* cluster_life.1 */; };
 		D9953520180716B100FC99C9 /* Cluster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D995351E180716B100FC99C9 /* Cluster.cpp */; };
 		D99535231807276D00FC99C9 /* StrainSnapShot.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D99535211807276D00FC99C9 /* StrainSnapShot.cpp */; };
+		D9B18D51200054930009113B /* TimeActivatedAdhesion_io.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9B18D4C200054920009113B /* TimeActivatedAdhesion_io.cpp */; };
+		D9B18D52200054930009113B /* TimeActivatedAdhesion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9B18D4F200054920009113B /* TimeActivatedAdhesion.cpp */; };
+		D9B18D55200054D30009113B /* ParameterSetFactory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9B18D53200054D30009113B /* ParameterSetFactory.cpp */; };
+		D9B18D58200055870009113B /* DimensionalQty.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9B18D56200055870009113B /* DimensionalQty.cpp */; };
+		D9B18D5A200055AB0009113B /* Contact_io.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9B18D59200055AB0009113B /* Contact_io.cpp */; };
+		D9B18D5C200057510009113B /* OutputData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9B18D5B200057510009113B /* OutputData.cpp */; };
+		D9B18D5E20005B470009113B /* Configuration.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9B18D5D20005B470009113B /* Configuration.cpp */; };
 		D9BE3B66178C838100937C5C /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B65178C838100937C5C /* main.cpp */; };
 		D9BE3B68178C838100937C5C /* cluster_detector.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D9BE3B67178C838100937C5C /* cluster_detector.1 */; };
 		D9BE3B6E178C83C900937C5C /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B6C178C83C900937C5C /* System.cpp */; };
@@ -628,6 +635,18 @@
 		D9A906701BF331EF00BE8640 /* trajectory.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = trajectory.pl; path = tools/trajectory.pl; sourceTree = SOURCE_ROOT; };
 		D9AD32F11D8CAD3D00819471 /* SystemHelperFunctions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SystemHelperFunctions.h; sourceTree = "<group>"; };
 		D9B0FF381D1A810C00FFCBFD /* Timer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Timer.h; sourceTree = "<group>"; };
+		D9B18D4C200054920009113B /* TimeActivatedAdhesion_io.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TimeActivatedAdhesion_io.cpp; sourceTree = "<group>"; };
+		D9B18D4D200054920009113B /* TimeActivatedAdhesion_Params.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TimeActivatedAdhesion_Params.h; sourceTree = "<group>"; };
+		D9B18D4E200054920009113B /* TimeActivatedAdhesion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TimeActivatedAdhesion.h; sourceTree = "<group>"; };
+		D9B18D4F200054920009113B /* TimeActivatedAdhesion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TimeActivatedAdhesion.cpp; sourceTree = "<group>"; };
+		D9B18D50200054930009113B /* TimeActivatedAdhesion_io.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TimeActivatedAdhesion_io.h; sourceTree = "<group>"; };
+		D9B18D53200054D30009113B /* ParameterSetFactory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ParameterSetFactory.cpp; sourceTree = "<group>"; };
+		D9B18D54200054D30009113B /* ParameterSetFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ParameterSetFactory.h; sourceTree = "<group>"; };
+		D9B18D56200055870009113B /* DimensionalQty.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DimensionalQty.cpp; sourceTree = "<group>"; };
+		D9B18D57200055870009113B /* DimensionalQty.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DimensionalQty.h; sourceTree = "<group>"; };
+		D9B18D59200055AB0009113B /* Contact_io.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Contact_io.cpp; sourceTree = "<group>"; };
+		D9B18D5B200057510009113B /* OutputData.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OutputData.cpp; sourceTree = "<group>"; };
+		D9B18D5D20005B470009113B /* Configuration.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Configuration.cpp; sourceTree = "<group>"; };
 		D9B4104A1E53E52F00A2C9D5 /* Matrix.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Matrix.h; sourceTree = "<group>"; };
 		D9B4104B1E5BE26600A2C9D5 /* Sym2Tensor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sym2Tensor.h; sourceTree = "<group>"; };
 		D9B4104C1E5BF15900A2C9D5 /* Configuration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Configuration.h; sourceTree = "<group>"; };
@@ -1292,16 +1311,18 @@
 				D9CE1B451B066B5E00E052D9 /* dSFMT-params.h */,
 				D9CE1B461B066B5E00E052D9 /* dSFMT-params19937.h */,
 				D988E38D165441750009949F /* main.cpp */,
-				D9752C881B18285100DDE5E4 /* global.h */,
 				D9032D731B79D1A00062A6F3 /* Events.h */,
+				D9752C881B18285100DDE5E4 /* global.h */,
 				D91EB7AA1D7B027C000868CE /* ForceComponent.h */,
 				D972B3AB1DC785C400024381 /* StressComponent.h */,
 				D972B3AC1DC785C400024381 /* VelocityComponent.h */,
 				D9B4104C1E5BF15900A2C9D5 /* Configuration.h */,
+				D9B18D5D20005B470009113B /* Configuration.cpp */,
 				D9878876165545680047A87E /* Simulation.h */,
 				D9878875165545680047A87E /* Simulation.cpp */,
 				D9032D741B79DFE60062A6F3 /* SimulationInit.cpp */,
 				D9A80BF61B1C87D000F4BFD3 /* OutputData.h */,
+				D9B18D5B200057510009113B /* OutputData.cpp */,
 				D988E39B1654A18D0009949F /* System.h */,
 				D988E39A1654A18D0009949F /* System.cpp */,
 				D94177981F7E041F00BB44C0 /* States.h */,
@@ -1310,12 +1331,17 @@
 				D9AD32F11D8CAD3D00819471 /* SystemHelperFunctions.h */,
 				D9506B9116D81A7C00A52CFF /* Stress.cpp */,
 				D90B4F681A70942500C51ACD /* ParameterSet.h */,
+				D9B18D53200054D30009113B /* ParameterSetFactory.cpp */,
+				D9B18D54200054D30009113B /* ParameterSetFactory.h */,
+				D9B18D56200055870009113B /* DimensionalQty.cpp */,
+				D9B18D57200055870009113B /* DimensionalQty.h */,
 				D932B8DF16C2EDCB00AD6E85 /* StokesSolver.h */,
 				CDE4695916BC4CB800923139 /* StokesSolver.cpp */,
 				D97C3B08167690DC009A6BF0 /* Interaction.h */,
 				D9FAAA2F1960685B00E601A9 /* Interaction.cpp */,
 				D92EAA0C17E39D5100C903F5 /* Contact.h */,
 				D92EAA0B17E39D5100C903F5 /* Contact.cpp */,
+				D9B18D59200055AB0009113B /* Contact_io.cpp */,
 				D95FE8081D4E2E40004D2C8A /* ContactDashpot.cpp */,
 				D95FE8091D4E2E40004D2C8A /* ContactDashpot.h */,
 				D9278EA51A9304F300ABCD87 /* RepulsiveForce.h */,
@@ -1332,6 +1358,11 @@
 				D9B4104A1E53E52F00A2C9D5 /* Matrix.h */,
 				D9278EA61A93050700ABCD87 /* Averager.h */,
 				D9B0FF381D1A810C00FFCBFD /* Timer.h */,
+				D9B18D4C200054920009113B /* TimeActivatedAdhesion_io.cpp */,
+				D9B18D50200054930009113B /* TimeActivatedAdhesion_io.h */,
+				D9B18D4D200054920009113B /* TimeActivatedAdhesion_Params.h */,
+				D9B18D4F200054920009113B /* TimeActivatedAdhesion.cpp */,
+				D9B18D4E200054920009113B /* TimeActivatedAdhesion.h */,
 				D988E399165443C10009949F /* vec3d.h */,
 				D9B4104B1E5BE26600A2C9D5 /* Sym2Tensor.h */,
 				D92F19C21676450800411650 /* MersenneTwister.h */,
@@ -1539,7 +1570,7 @@
 		D988E380165441750009949F /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0700;
+				LastUpgradeCheck = 0920;
 				ORGANIZATIONNAME = "Ryohei Seto";
 				TargetAttributes = {
 					D9532ADE1B9412FC0014831F = {
@@ -1608,12 +1639,18 @@
 			buildActionMask = 2147483647;
 			files = (
 				D932B8DC16C2E98000AD6E85 /* GenerateInitConfig.cpp in Sources */,
+				D9B18D55200054D30009113B /* ParameterSetFactory.cpp in Sources */,
 				D9278EA81A93056E00ABCD87 /* RepulsiveForce.cpp in Sources */,
 				D941779A1F7E041F00BB44C0 /* States.cpp in Sources */,
 				D95FE80A1D4E2E40004D2C8A /* ContactDashpot.cpp in Sources */,
+				D9B18D52200054930009113B /* TimeActivatedAdhesion.cpp in Sources */,
+				D9B18D58200055870009113B /* DimensionalQty.cpp in Sources */,
 				D988E38E165441750009949F /* main.cpp in Sources */,
 				D9CE1B421B066B3400E052D9 /* dSFMT.c in Sources */,
+				D9B18D5C200057510009113B /* OutputData.cpp in Sources */,
+				D9B18D5E20005B470009113B /* Configuration.cpp in Sources */,
 				D988E39C1654A18D0009949F /* System.cpp in Sources */,
+				D9B18D51200054930009113B /* TimeActivatedAdhesion_io.cpp in Sources */,
 				D9878877165545680047A87E /* Simulation.cpp in Sources */,
 				D9573FB216797A000081E903 /* Box.cpp in Sources */,
 				D92244841BFBF08700F46233 /* SystemHelperFunctions.cpp in Sources */,
@@ -1621,6 +1658,7 @@
 				CDE4695A16BC4CB800923139 /* StokesSolver.cpp in Sources */,
 				D9032D751B79DFE60062A6F3 /* SimulationInit.cpp in Sources */,
 				D9506B9216D81A7C00A52CFF /* Stress.cpp in Sources */,
+				D9B18D5A200055AB0009113B /* Contact_io.cpp in Sources */,
 				D9FAAA301960685B00E601A9 /* Interaction.cpp in Sources */,
 				D92EAA0F17E39D5100C903F5 /* Contact.cpp in Sources */,
 				D92EAA1017E39D5100C903F5 /* Lubrication.cpp in Sources */,
@@ -1773,20 +1811,37 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
 				CLANG_CXX_LIBRARY = "compiler-default";
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = NO;
 				GCC_WARN_SHADOW = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_PROFILING_CODE = NO;
 				HEADER_SEARCH_PATHS = /usr/local/include;
@@ -1813,17 +1868,34 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
 				CLANG_CXX_LIBRARY = "compiler-default";
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = NO;
 				GCC_WARN_SHADOW = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_PROFILING_CODE = NO;
 				HEADER_SEARCH_PATHS = /usr/local/include;
