@@ -784,13 +784,13 @@ unsigned int BoxSet::whichBoxLabel(const vec3d &pos)
 	if (label >= box_labels.size()) {
 		// We first make sure it's not a rounding issue
 		if (std::nextafter(ix*box_xsize, (ix+1u)*box_xsize) > pos.x) {
-			ix -= 1;
+			ix--;
 		}
 		if (std::nextafter(iy*box_ysize, (iy+1u)*box_ysize) > pos.y) {
-			iy -= 1;
+			iy--;
 		}
 		if (std::nextafter(iz*box_zsize, (iz+1u)*box_zsize) > pos.z) {
-			iz -= 1;
+			iz--;
 		}
 		label = ix*yz_box_nb+iy*z_box_nb+iz;
 		if (label >= box_labels.size()) {
