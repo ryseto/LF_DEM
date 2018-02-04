@@ -440,8 +440,6 @@ void Simulation::outputData()
 	outdata.setUnits(system_of_units, output_unit);
 	double sr = sys.get_shear_rate();
 	double viscosity, inviscid_material_function0, inviscid_material_function3;
-	cerr << sys.getEinfty().selfdoubledot() << endl;
-	exit(1);
 	if (sr != 0) {
 		// generalized viscosity kappa (= 2*eta)
 		viscosity = 0.5*doubledot(sys.total_stress, sys.getEinfty())/ sys.getEinfty().selfdoubledot();
