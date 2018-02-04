@@ -660,17 +660,17 @@ void Simulation::outputData()
 	outdata.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 	outdata.setUnit(output_unit_scales);
 	double sr = sys.get_shear_rate();
-	double viscous_material_function, inviscid_material_function0, inviscid_material_function3;
+	double viscosity, inviscid_material_function0, inviscid_material_function3;
 	if (sr != 0) {
 		// generalized viscosity kappa (= 2*eta)
-		viscous_material_function   = doubledot(sys.total_stress, sys.getEinfty())/ sys.getEinfty().selfdoubledot();
+		viscosity = 0.5*doubledot(sys.total_stress, sys.getEinfty())/ sys.getEinfty().selfdoubledot();
 		inviscid_material_function0 = doubledot(sys.total_stress, stress_basis_0) / stress_basis_0.selfdoubledot();
 		inviscid_material_function3 = doubledot(sys.total_stress, stress_basis_3) / stress_basis_3.selfdoubledot();
 	} else {
 		// @@@ tentative ouptut for Pe = 0 simulation
 		// output xz component of stress tensor
 		//viscous_material_function = sys.total_stress.elm[2];
-		viscous_material_function = doubledot(sys.total_stress, Einf_base)/ Einf_base.selfdoubledot();
+		viscosity = 0.5*doubledot(sys.total_stress, Einf_base)/ Einf_base.selfdoubledot();
 		inviscid_material_function0 = 0;
 		inviscid_material_function3 = 0;
 	}
@@ -689,7 +689,7 @@ void Simulation::outputData()
 		outdata.entryData("rotation angle", "none", 1, sys.get_angle_wheel());
 		outdata.entryData("omega wheel", "rate", 1, sys.get_omega_wheel());
 	}
-	outdata.entryData("viscosity", "viscosity", 1, 0.5*viscous_material_function);
+	outdata.entryData("viscosity", "viscosity", 1, viscosity);
 	for (const auto &stress_comp: sys.total_stress_groups) {
 		string entry_name = "Viscosity("+stress_comp.first+")";
 		double viscous_mf_component = doubledot(stress_comp.second, sys.getEinfty())/sys.getEinfty().selfdoubledot();
