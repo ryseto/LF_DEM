@@ -22,7 +22,9 @@
 
 using namespace std;
 
+#ifdef SIGINT_CATCH
 volatile sig_atomic_t sig_caught = 0;
+#endif
 
 std::string prepareSimulationNameFromChkp(const std::string& filename_chkp)
 {
@@ -155,7 +157,9 @@ int main(int argc, char **argv)
 		GenerateInitConfig generate_init_config;
 		generate_init_config.generate(random_seed, generate_init);
 	} else {
+#ifdef SIGINT_CATCH
 		std::signal(SIGINT, sigint_handler);	
+#endif
 		if (optind == argc-2) {
 			config_filename = argv[optind++];
 			param_filename = argv[optind++];

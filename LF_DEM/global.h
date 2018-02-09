@@ -54,6 +54,7 @@
 #include <limits.h>
 #endif
 
+#ifdef SIGINT_CATCH
 extern volatile sig_atomic_t sig_caught;
 
 inline void sigint_handler(int signum)
@@ -63,6 +64,7 @@ inline void sigint_handler(int signum)
 		std::cerr << "Received a SIGINT" << std::endl;
 	}
 }
+#endif
 
 inline void removeBlank(std::string& str)
 {

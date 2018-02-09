@@ -238,11 +238,13 @@ void Simulation::timeEvolutionUntilNextOutput(const TimeKeeper &tk)
 	} else { // either next time or next strain
 		sys.timeEvolution(t.first, s.first);
 	}
+#ifdef SIGINT_CATCH
 	if (sig_caught == SIGINT) {
 		checkpoint();
 		std::cerr << "exiting after SIGINT " << std::endl;
 		exit(99);
 	}
+#endif
 	handleEvents();
 }
 

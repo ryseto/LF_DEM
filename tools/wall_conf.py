@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import numpy as np
 import sys
-import lfdem_file as lf
+import clfdem_file as lf
 
 if len(sys.argv) != 3:
     print(" Usage: ", sys.argv[0], " conf wall_thickness\n")

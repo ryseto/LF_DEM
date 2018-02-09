@@ -18,7 +18,9 @@
 #include "MersenneTwister.h"
 #endif
 
+#ifdef SIGINT_CATCH
 extern volatile sig_atomic_t sig_caught;
+#endif
 
 #ifndef USE_DSFMT
 #define GRANDOM ( r_gen->randNorm(0., 1.) ) // RNG gaussian with mean 0. and variance 1.
@@ -1288,9 +1290,11 @@ void System::timeEvolution(double time_end, double strain_end)
 		if (dt_bak != -1){
 			dt = dt_bak;
 		}
+#ifdef SIGINT_CATCH
 		if (sig_caught == SIGINT) { // return to Simulation immediatly for checkpointing
 			return;
 		}
+#endif
 	};
 	if (avg_dt_nb > 0) {
 		avg_dt /= avg_dt_nb;
