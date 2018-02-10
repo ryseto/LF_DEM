@@ -213,10 +213,10 @@ void System::declareForceComponents()
 	/********** Force R_FU^{mf}*(U^f-U^f_inf)  *************/
 	if (mobile_fixed) {
 		// rate proportional with walls, but this can change
-		if (p.lubrication_model != "normal") {
+		if (p.lubrication_model == "normal") {
 			force_components["from_fixed"] = ForceComponent(np, RATE_PROPORTIONAL, !torque, &System::setFixedParticleForceToParticle);
 		}
-		if (p.lubrication_model != "tangential") {
+		if (p.lubrication_model == "tangential") {
 			force_components["from_fixed"] = ForceComponent(np, RATE_PROPORTIONAL, torque, &System::setFixedParticleForceToParticle);
 		}
 	}

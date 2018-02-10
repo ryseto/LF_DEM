@@ -244,7 +244,7 @@ void Simulation::setConfigToSystem(bool binary_conf, const std::string &filename
 					sys.setupConfiguration(conf, control_var);
 					break;
 				}
-			case ConfFileFormat::bin_format_fixed_vel:
+			case ConfFileFormat::bin_format_fixed_vel_shear:
 				{
 					auto conf = readBinaryFixedVeloConfiguration(filename);
 					sys.setupConfiguration(conf, control_var);
