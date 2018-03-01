@@ -12,7 +12,7 @@ use Getopt::Long;
 
 my $particle_data = $ARGV[0];
 my $yap_radius = 1;
-my $force_factor = 0.001;
+my $force_factor = 0.01;
 my $output_interval = 1;
 my $xz_shift = 0;
 my $axis = 0;
@@ -126,7 +126,7 @@ sub readHeader {
 		$line = <IN_particle>;
 		printf "$line";
 	}
-	if ($Ly==0) {
+	if ($Ly == 0) {
 		$number_of_header_int = 20;
 	} else {
 		$number_of_header_int = 20;
@@ -186,14 +186,12 @@ sub InParticles {
 	$line = <IN_particle>;
 	printf "$line\n" ;
 	if (defined $line) {
-		
-		# 1 sys.get_shear_strain()
-		# 2 sys.shear_disp
-		# 3 getRate()
-		# 4 target_stress_input
-		# 5 sys.get_time()
-		# 6 sys.angle_external_magnetic_field
-		($buf, $shear_strain, $shear_disp, $shear_rate, $shear_stress) = split(/\s+/, $line);
+		($buf, $shear_strain) = split(" : ", $line);
+		$line = <IN_particle>;
+		($buf, $shear_disp) = split(" : ", $line);
+		$line = <IN_particle>;
+		($buf, $shear_rate) = split(" : ", $line);
+
 		printf "$shear_strain\n";
 		for ($i = 0; $i < $np; $i ++){
 			$line = <IN_particle>;
@@ -244,16 +242,13 @@ sub InInteractions{
 	#$line = <IN_interaction>;
 	#($buf, $shear_strain_i, $num_interaction) = split(/\s+/, $line);
 	#printf "int $buf $shear_strain_i $num_interaction\n";
-	
-	if ($first_int == 1) {
-		$first_int = 0;
-		$line = <IN_interaction>;
-		($buf, $buf1, $buf2, $buf3, $buf4) = split(/\s+/, $line);
-		printf "int: $line\n";
-	}
-	#	if ($buf neq '#') {
-	#		exit(1);
-	#	}
+
+	$line = <IN_interaction>;
+	($buf, $shear_strain) = split(" : ", $line);
+	$line = <IN_interaction>;
+	($buf, $shear_disp) = split(" : ", $line);
+	$line = <IN_interaction>;
+	($buf, $shear_rate) = split(" : ", $line);
 	
 	# 1, 2: numbers of the interacting particles
 	# 3: 1=contact, 0=apart
@@ -267,6 +262,7 @@ sub InInteractions{
 	# 13: N1 contribution of contact xF
 	# 14: N2 contribution of contact xF
 	$k = 0;
+	
 	while (true) {
 		$line = <IN_interaction>;
 		($i, $j, $contact, $nx, $ny, $nz, #1---6
@@ -456,8 +452,6 @@ sub OutBoundaryBox {
 	if ($axis) {
 		printf OUT "l -$lx2 0 0 $lx2 0 0\n";
 		printf OUT "l 0 0 -$lz2 0 0 $lz2\n";
-		
-		
 	}
 	
 }
