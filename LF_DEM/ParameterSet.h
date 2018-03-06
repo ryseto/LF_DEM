@@ -26,6 +26,8 @@ struct ParameterSet
 	double repulsive_length;				///< "Debye" screering length for the repulsive force [0.05]
 	double repulsive_max_length;            ///< Maximum length until which the repulsive force can reach. If -1, no limit. (e.g. length of polymer brush) [-1]
 	double interaction_range;		///< maximum range (center-to-center) for interactions (repulsive force, etc.). If -1, lub_max_gap is used as cutoff [-1]
+	double vdW_coeffient; ///< [-1]
+	double vdW_singularity_cutoff; ///< [0.1]
 	int np_fixed;
 	/*******************************************************
 	 HYDRODYNAMICS

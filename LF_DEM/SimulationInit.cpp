@@ -768,6 +768,10 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.repulsive_length = atof(value.c_str());
 	} else if (keyword == "repulsive_max_length") {
 		p.repulsive_max_length = atof(value.c_str());
+	} else if (keyword == "vdW_coeffient") {
+		p.vdW_coeffient = atof(value.c_str());
+	} else if (keyword == "vdW_singularity_cutoff") {
+		p.vdW_singularity_cutoff = atof(value.c_str());
 	} else if (keyword == "lub_reduce_parameter") {
 		p.lub_reduce_parameter = atof(value.c_str());
 	} else if (keyword == "contact_relaxation_time") {
@@ -981,6 +985,8 @@ void Simulation::setDefaultParameters(string input_scale)
 	autoSetParameters("start_adjust", "0.2");
 	autoSetParameters("repulsive_length", "0.05");
 	autoSetParameters("repulsive_max_length", "-1");
+	autoSetParameters("vdW_coeffient", "-1");
+	autoSetParameters("vdW_singularity_cutoff", "0.1");
 	autoSetParameters("mu_static", "1");
 	autoSetParameters("mu_dynamic", "-1");
 	autoSetParameters("mu_rolling", "0");
