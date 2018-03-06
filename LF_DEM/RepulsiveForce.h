@@ -30,6 +30,7 @@ private:
 	Interaction* interaction;
 	unsigned int p0;
 	unsigned int p1;
+	bool vdW;
 	//===== forces and stresses ==================== //
 	double geometric_factor;
 	double screening_length;

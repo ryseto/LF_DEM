@@ -134,6 +134,9 @@ sub readHeader {
 	for ($i = 0; $i<$number_of_header_int; $i++) {
 		$line = <IN_interaction>;
 	}
+	$xo = $Lx/2;
+	$yo = $Ly/2;
+	$zo = $Lz/2;
 }
 
 sub yaplotColor {
@@ -223,9 +226,9 @@ sub InParticles {
 						$z -= $Lz;
 					}
 				}
-				$posx[$i] = $x;
-				$posy[$i] = $y;
-				$posz[$i] = $z;
+				$posx[$i] = $x-$xo;
+				$posy[$i] = $y-$yo;
+				$posz[$i] = $z-$zo;
 				$velx[$i] = $vx;
 				$vely[$i] = $vy;
 				$velz[$i] = $vz;
@@ -409,8 +412,6 @@ sub OutYaplotData{
 			}
 		}
 	}
-	
-	
 	#	&OutBoundaryBox;
 }
 

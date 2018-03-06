@@ -13,6 +13,11 @@ void RepulsiveForce::init(System* sys_, Interaction* interaction_)
 	sys = sys_;
 	interaction = interaction_;
 	force_norm = 0;
+	if (sys->p.vdW_coeffient > 0) {
+		vdW = true;
+	} else {
+		vdW = false;
+	}
 }
 
 void RepulsiveForce::activate()
@@ -48,10 +53,18 @@ void RepulsiveForce::calcReducedForceNorm()
 	if (gap > 0) {
 		/* separating */
 		if (max_length == -1) {
-			reduced_force_norm = geometric_factor*exp(-gap/screening_length);
+			reduced_force_norm = exp(-gap/screening_length);
 		} else {
-			reduced_force_norm = geometric_factor*exp(-gap/screening_length)*0.5*(1+tanh(-(gap-max_length)/cutoff_roundlength));
+			reduced_force_norm = exp(-gap/screening_length)*0.5*(1+tanh(-(gap-max_length)/cutoff_roundlength));
 		}
+		if (vdW) {
+			/* van del Waals attraction */
+			double hh = gap+sys->p.vdW_singularity_cutoff;
+			reduced_force_norm += -sys->p.vdW_coeffient/hh/hh;
+			double f_tmp = 1-sys->p.vdW_coeffient/sys->p.vdW_singularity_cutoff/sys->p.vdW_singularity_cutoff;
+			reduced_force_norm /= f_tmp;
+		}
+		reduced_force_norm *= geometric_factor;
 	} else {
 		/* contacting */
 		reduced_force_norm = geometric_factor;
