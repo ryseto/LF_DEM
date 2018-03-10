@@ -568,7 +568,6 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 	if (control_var == Parameters::ControlVariable::stress) {
 		snapshot_header << "# target stress" << sep << target_stress_input << endl;
 	}
-	cerr << "target_stress_input " << target_stress_input << endl;
 	if (sys.ext_flow) {
 		/* The following snapshot data is required to
 		 * construct visualization file for extensional flow simulation in the script
