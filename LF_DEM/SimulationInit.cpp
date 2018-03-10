@@ -189,6 +189,8 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 	} else if (control_var == Parameters::ControlVariable::stress) {
 		system_of_units.add(Dimensional::Unit::stress, control_value);
 		internal_unit = control_value.unit;
+		target_stress_input = control_value.value; //@@@ Where should we set the target stress???
+		sys.target_stress = target_stress_input; //@@@ Where should we set the target stress???
 	}
 
 	// set the internal unit to actually determine force and parameter non-dimensionalized values 

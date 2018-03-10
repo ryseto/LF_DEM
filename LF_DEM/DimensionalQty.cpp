@@ -9,7 +9,7 @@
 #include <set>
 
 namespace Dimensional {
-
+	
 bool getSuffix(const std::string& str,
                       std::string& value,
                       std::string& suffix)
@@ -97,8 +97,8 @@ void UnitSystem::convertToParentUnit(DimensionalQty<double> &node)
 
 void UnitSystem::convertNodeUnit(DimensionalQty<double> &node, Unit unit)
 {
-  if (node.unit != unit) {
-    auto &parent_node = unit_nodes[node.unit];
+	if (node.unit != unit) {
+		auto &parent_node = unit_nodes[node.unit];
     if (parent_node.unit != node.unit) {
       convertNodeUnit(parent_node, unit);
       convertToParentUnit(node);

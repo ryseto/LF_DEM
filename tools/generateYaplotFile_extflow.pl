@@ -12,7 +12,7 @@ use Getopt::Long;
 
 my $particle_data = $ARGV[0];
 my $yap_radius = 1;
-my $force_factor = 0.001;
+my $force_factor = 0.0001;
 my $output_interval = 1;
 my $xz_shift = 0;
 my $axis = 0;
@@ -137,6 +137,8 @@ sub readHeader {
 	$line = <IN_particle>; ($buf, $buf, $Ly) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $Lz) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $flow_type) = split(/\s+/, $line);
+	$line = <IN_particle>; ($buf, $buf, $dataunit) = split(/\s+/, $line);
+
 	if ($Ly == 0) {
 		$number_of_header = 8;
 	} else {
@@ -157,7 +159,25 @@ sub InParticles {
 	$radius_max = 0;
 	$line = <IN_particle>;
 	if (defined $line) {
-		($buf, $shear_strain, $shear_disp, $epsilondot, $shear_stress, $timeper) = split(/\s+/, $line);
+		# cumulated strain
+		($buf, $shear_strain) = split(" : ", $line);
+		# shear disp
+		$line = <IN_particle>;
+		($buf, $shear_disp) = split(" : ", $line);
+		# shear rate
+		$line = <IN_particle>;
+		($buf, $epsilondot) = split(" : ", $line);
+		#
+		$line = <IN_particle>;
+		($buf, $timeper) = split(" : ", $line);
+		#
+		$line = <IN_particle>;
+		($buf, $retrim) = split(" : ", $line);
+			printf "---  $buf -- $retrim\n";
+		#
+		# cumulated strain - strain_retrim : 0
+		# retrim ext flow  : 0
+		#		 $epsilondot, $shear_stress, $timeper
 		if ($buf ne '#') {
 			printf "InParticles  $buf\n";
 			printf "line = $line";
@@ -179,13 +199,8 @@ sub InParticles {
 				# (15: angle for 2D simulation)
 				#				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
 				#	$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
-				if ($phi6_data == 0) {
-					($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz, $angle) = split(/\s+/, $line);
-				} else {
-					($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz, $angle, $phi6abs_, $phi6arg_) = split(/\s+/, $line);
-					$phi6abs[$i] = $phi6abs_;
-					$phi6arg[$i] = $phi6arg_;
-				}
+				
+				($ip, $a, $x, $z, $vx, $vy, $vz, $ox, $oy, $oz, $angle) = split(/\s+/, $line);
 				#
 				$ang[$i] = $angle;
 				$radius[$i] = $a;
@@ -208,7 +223,6 @@ sub InParticles {
 				$omegax[$i] = $ox;
 				$omegay[$i] = $oy;
 				$omegaz[$i] = $oz;
-				$omegay[$i] = $oy;
 				
 				if ($radius_max < $a) {
 					$radius_max = $a;
@@ -222,24 +236,33 @@ sub InInteractions{
 	#	$line = <IN_interaction>;
 	#    ($buf, $shear_strain_i, $num_interaction) = split(/\s+/, $line);
 	# printf "int $buf $shear_strain_i $num_interaction\n";
-	#if ($first_int == 1) {
-	#	$first_int = 0;
-	#$line = <IN_interaction>;
-	#printf "$line\n";
-	#}
-	#	$line = <IN_interaction>;
-	# 1, 2: numbers of the interacting particles
-	# 3: 1=contact, 0=apart
-	# 4, 5, 6: normal vector
-	# 7: dimensionless gap = s - 2, s = 2r/(a1+a2)
-	# 8: lubrication force
-	# 9: Normal part of contact force
-	# 10: Tangential part of contact force
-	# 11: Colloidal force
-	# 12: Viscosity contribution of contact xF
-	# 13: N1 contribution of contact xF
-	# 14: N2 contribution of contact xF
+
+	if ($first_int == 1) {
+		$line = <IN_interaction>;
+		($buf, $shear_strain) = split(" : ", $line);
+		$first_int = 0;
+	}
+	
+	# cumulated strain
+	($buf, $shear_strain) = split(" : ", $line);
+	# shear disp
+	$line = <IN_particle>;
+	($buf, $shear_disp) = split(" : ", $line);
+	# shear rate
+	$line = <IN_particle>;
+	($buf, $epsilondot) = split(" : ", $line);
+	#
+	$line = <IN_particle>;
+	($buf, $timeper) = split(" : ", $line);
+	#
+	$line = <IN_particle>;
+	($buf, $retrim) = split(" : ", $line);
+	printf "---  $buf -- $retrim\n";
+	
+	
+
 	$k = 0;
+	
 	while (true) {
 		$line = <IN_interaction>;
 		($i, $j, $contact, $nx, $ny, $nz, #1---6
@@ -265,10 +288,26 @@ sub InInteractions{
 		#16: norm of the normal repulsive force
 		#17: Viscosity contribution of contact xF
 
+		if ($i eq '#' || $i eq NU) {
+			($buf, $shear_strain) = split(" : ", $line);
+			last;
+		}
+		if (! defined $i) {
+			last;
+		}
 		if ($output == 1) {
 			$int0[$k] = $i;
 			$int1[$k] = $j;
 			$contactstate[$k] = $contact;
+			
+			if ($contact > 0) {
+				#$force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
+				$force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
+				#$force[$k] = $fc_norm;
+			} else {
+				$force[$k] = $f_lub_norm + $fr_norm;
+				#$force[$k] = 0;
+			}
 			
 			$F_lub[$k] = $f_lub_norm;
 			$F_lub_tan = sqrt($f_lub_tan_x**2 + $f_lub_tan_y**2 + $f_lub_tan_z**2);
@@ -280,17 +319,6 @@ sub InInteractions{
 			$nrvec_y[$k] = $ny;
 			$nrvec_z[$k] = $nz;
 			$Gap[$k] = $gap;
-			
-			if ($gap < 0) {
-				#$force[$k] = -10*$gap;
-				$force[$k] = $fc_norm;
-				#$force[$k] = 0;
-			} else {
-				$force[$k] = $f_lub_norm ;
-				#$force[$k] = 0;
-			}
-			
-			
 			$k++;
 		}
 	}
