@@ -159,7 +159,7 @@ void Contact::incrementTangentialDisplacement()
 	disp_tan = prev_disp_tan+relative_surface_velocity*sys->dt; // always disp(t+1) = disp(t) + v*dt, no predictor-corrector headache :)
 }
 
-void Contact::calcRollingVelocities()
+void Contact::incrementRollingDisplacement()
 {
 	/**
 	 Calculate rolling velocity
@@ -169,10 +169,6 @@ void Contact::calcRollingVelocities()
 	 equation 3.6.13 ??
 	 */
 	rolling_velocity = 2*a_reduced*cross(sys->ang_velocity[p1]-sys->ang_velocity[p0], interaction->nvec);
-}
-
-void Contact::incrementRollingDisplacement()
-{
 	if (sys->in_predictor) {
 		prev_disp_rolling = disp_rolling;
 	}
@@ -191,7 +187,6 @@ void Contact::incrementDisplacements()
 	if (sys->friction) {
 		incrementTangentialDisplacement();
 		if (sys->rolling_friction) {
-			calcRollingVelocities();
 			incrementRollingDisplacement();
 		}
 	}

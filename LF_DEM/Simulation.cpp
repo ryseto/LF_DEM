@@ -475,8 +475,8 @@ void Simulation::outputData()
 	outdata.entryData("viscosity", Dimensional::Dimension::Viscosity, 1, viscosity);
 	for (const auto &stress_comp: sys.total_stress_groups) {
 		string entry_name = "Viscosity("+stress_comp.first+")";
-		double viscous_mf_component = doubledot(stress_comp.second, sys.getEinfty())/sys.getEinfty().selfdoubledot();
-		outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, viscosity);
+		double viscosity_component = doubledot(stress_comp.second, sys.getEinfty())/sys.getEinfty().selfdoubledot();
+		outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, viscosity_component);
 	}
 	/*
 	 * Stress

@@ -12,7 +12,7 @@ use Getopt::Long;
 
 my $particle_data = $ARGV[0];
 my $yap_radius = 1;
-my $force_factor = 0.0001;
+my $force_factor = 0.01;
 my $output_interval = 1;
 my $xz_shift = 0;
 my $axis = 0;
@@ -196,7 +196,7 @@ sub InParticles {
 		($buf, $val) = split(" : ", $line);
 		($buf1) = split(/\s+/, $buf);
 		printf "val $buf1 \n";
-		if ($buf1 eq '0') {
+		if ($buf1 ne '#') {
 			last;
 		} else {
 			$ssHeader[$j++] = $val;
@@ -269,7 +269,7 @@ sub InInteractions{
 		($buf, $val) = split(" : ", $line);
 		($buf1) = split(/\s+/, $buf);
 		printf "int $buf1 \n";
-		if ($buf1 eq '0') {
+		if ($buf1 ne '#') {
 			last;
 		} else {
 			$ssHeader[$j++] = $val;
@@ -372,14 +372,14 @@ sub OutYaplotData{
 	}
 	
 	## visualize contact network
-	printf OUT "y 2\n";
-	printf OUT "r 0.2\n";
-	printf OUT "@ 2\n"; # static
-	for ($k = 0; $k < $num_interaction; $k ++) {
-		if ($contactstate[$k] >= 2) {
-			&OutString2($int0[$k], $int1[$k]);
-		}
-	}
+#	printf OUT "y 2\n";
+#	printf OUT "r 0.2\n";
+#	printf OUT "@ 2\n"; # static
+#	for ($k = 0; $k < $num_interaction; $k ++) {
+#		if ($contactstate[$k] >= 2) {
+#			&OutString2($int0[$k], $int1[$k]);
+#		}
+#	}
 	## visualize force chain network
 	printf OUT "y 4\n";
 	printf OUT "@ 7\n";
