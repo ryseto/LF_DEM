@@ -12,7 +12,7 @@ use Getopt::Long;
 
 my $particle_data = $ARGV[0];
 my $yap_radius = 1;
-my $force_factor = 0.01;
+my $force_factor = 0.001;
 my $output_interval = 1;
 my $xz_shift = 0;
 my $axis = 0;
@@ -195,7 +195,6 @@ sub InParticles {
 		$line = <IN_particle>;
 		($buf, $val) = split(" : ", $line);
 		($buf1) = split(/\s+/, $buf);
-		printf "val $buf1 \n";
 		if ($buf1 ne '#') {
 			last;
 		} else {
@@ -204,10 +203,10 @@ sub InParticles {
 		last unless defined $line;
 	}
 	$shear_strain = $ssHeader[0];
+	printf "$shear_strain";
 	$shear_disp = $ssHeader[1];
 	$shear_rate = $ssHeader[2];
 	$target_stress = $ssHeader[3];
-	printf "=== $shear_strain $shear_disp  $shear_rate $target_stress \n";
 	for ($i = 0; $i < $np; $i ++){
 		if ($i > 0) {
 			$line = <IN_particle>;
@@ -268,7 +267,6 @@ sub InInteractions{
 		$line = <IN_interaction>;
 		($buf, $val) = split(" : ", $line);
 		($buf1) = split(/\s+/, $buf);
-		printf "int $buf1 \n";
 		if ($buf1 ne '#') {
 			last;
 		} else {
@@ -345,7 +343,6 @@ sub InInteractions{
 			$k++;
 		}
 	}
-	printf "---- $k\n";
 	$num_interaction = $k;
 }
 
@@ -372,37 +369,44 @@ sub OutYaplotData{
 	}
 	
 	## visualize contact network
-#	printf OUT "y 2\n";
-#	printf OUT "r 0.2\n";
-#	printf OUT "@ 2\n"; # static
-#	for ($k = 0; $k < $num_interaction; $k ++) {
-#		if ($contactstate[$k] >= 2) {
-#			&OutString2($int0[$k], $int1[$k]);
-#		}
-#	}
+	printf OUT "y 2\n";
+	printf OUT "r 0.2\n";
+	printf OUT "@ 6\n"; # static
+	for ($k = 0; $k < $num_interaction; $k ++) {
+		if ($contactstate[$k] >= 2) {
+			&OutString2($int0[$k], $int1[$k]);
+		}
+	}
+	printf OUT "y 2\n";
+	printf OUT "r 0.2\n";
+	printf OUT "@ 2\n"; # static
+	for ($k = 0; $k < $num_interaction; $k ++) {
+		if ($contactstate[$k] == 1) {
+			&OutString2($int0[$k], $int1[$k]);
+		}
+	}
 	## visualize force chain network
 	printf OUT "y 4\n";
 	printf OUT "@ 7\n";
-	printf "num $num_interaction \n";
 	for ($k = 0; $k < $num_interaction; $k ++) {
 		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
 		#if (1 || $force[$k] >= 0) {
 		#	&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
 		#}
-		if ($force[$k] > 0) {
+		if ($force[$k] > 0 && $contactstate[$k] >= 2) {
 			&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
 		} else {
 			#	&OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k], 0.01);
 		}
 	}
 	#	printf OUT "y 3\n";
-	#	printf OUT "@ 5\n";
-	#	for ($k = 0; $k < $num_interaction; $k ++) {
-	#		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-	#		if ($force[$k] < 0) {
+	#		printf OUT "@ 5\n";
+	#		for ($k = 0; $k < $num_interaction; $k ++) {
+	#			#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+	#			if ($force[$k] < 0) {
 	#			&OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k], 0.02);
+	#			}
 	#		}
-	#	}
 	
 	## visualize rotation in 2D
 	if ($Ly == 0) {
