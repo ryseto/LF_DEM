@@ -666,18 +666,21 @@ void Simulation::outputParFileTxt()
 										   sys.position[i].z);
 			}
 		}
-	}
-	/* If the origin is shifted,
-	 * we need to change the velocities of particles as well.
-	 */
-	for (int i=0; i<np; i++) {
-		if (p.output.origin_zero_flow) {
+		/* If the origin is shifted,
+		 * we need to change the velocities of particles as well.
+		 */
+		for (int i=0; i<np; i++) {
 			if (pos[i].z < 0) {
 				vel[i] -= sys.vel_difference;
 			}
 		}
+	} else {
+		for (int i=0; i<np; i++) {
+			pos[i].x = sys.position[i].x-0.5*sys.get_lx();
+			pos[i].y = sys.position[i].y-0.5*sys.get_ly();
+			pos[i].z = sys.position[i].z-0.5*sys.get_lz();
+		}
 	}
-
 	cout << "   out config: " << sys.get_cumulated_strain() << endl;
 	outdata_par.setUnits(system_of_units, output_unit);
 

@@ -12,7 +12,7 @@ use Getopt::Long;
 
 my $particle_data = $ARGV[0];
 my $yap_radius = 1;
-my $force_factor = 0.001;
+my $force_factor = 0.0001;
 my $output_interval = 1;
 my $xz_shift = 0;
 my $axis = 0;
@@ -234,6 +234,7 @@ sub InParticles {
 			$ang[$i] = $angle;
 			$radius[$i] = $a;
 			if ($xz_shift) {
+				exit;
 				$x += $xz_shift;
 				$z += $xz_shift;
 				if ($x > $Lx/2) {
@@ -369,22 +370,22 @@ sub OutYaplotData{
 	}
 	
 	## visualize contact network
-	printf OUT "y 2\n";
-	printf OUT "r 0.2\n";
-	printf OUT "@ 6\n"; # static
-	for ($k = 0; $k < $num_interaction; $k ++) {
-		if ($contactstate[$k] >= 2) {
-			&OutString2($int0[$k], $int1[$k]);
-		}
-	}
-	printf OUT "y 2\n";
-	printf OUT "r 0.2\n";
-	printf OUT "@ 2\n"; # static
-	for ($k = 0; $k < $num_interaction; $k ++) {
-		if ($contactstate[$k] == 1) {
-			&OutString2($int0[$k], $int1[$k]);
-		}
-	}
+#	printf OUT "y 2\n";
+#	printf OUT "r 0.2\n";
+#	printf OUT "@ 6\n"; # static
+#	for ($k = 0; $k < $num_interaction; $k ++) {
+#		if ($contactstate[$k] >= 2) {
+#			&OutString2($int0[$k], $int1[$k]);
+#		}
+#	}
+#	printf OUT "y 2\n";
+#	printf OUT "r 0.2\n";
+#	printf OUT "@ 2\n"; # static
+#	for ($k = 0; $k < $num_interaction; $k ++) {
+#		if ($contactstate[$k] == 1) {
+#			&OutString2($int0[$k], $int1[$k]);
+#		}
+#	}
 	## visualize force chain network
 	printf OUT "y 4\n";
 	printf OUT "@ 7\n";
