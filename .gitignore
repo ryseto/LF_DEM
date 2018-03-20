@@ -1,6 +1,5 @@
 .DS_Store
 *~
-SuiteSparse_?PUcompilation.txt
 
 wiki/
 
@@ -13,14 +12,8 @@ xcuserdata
 !**/*.xcodeproj/default.*
 *.xcworkspace/*
 !*.xcworkspace/contents.xcworkspacedata
-brownian.log
-brownian_lowPe.log
-knkt_det.log
-repulsive_rate.log
-repulsive_stress.log
-pyLF_DEM
-pyLF_DEM_toolbox
-build
+
+
 Makefile_config.mk
 __pycache__
-SuiteSparse_config_Romain_MathUCam.mk
+build/
