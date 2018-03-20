@@ -75,7 +75,6 @@ private:
 	vec3d rolling_velocity;
 	int state;
 
-	void calcRollingVelocities();
 	void incrementTangentialDisplacement();
 	void incrementRollingDisplacement();
 

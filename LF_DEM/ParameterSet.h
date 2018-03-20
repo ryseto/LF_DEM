@@ -48,6 +48,24 @@ Then:
 
 namespace Parameters {
 
+struct outputParams 
+{
+		Dimensional::DimensionalQty<double> time_interval_output_data;      ///< Output interval for outputing data_* file [0.01 time unit]
+		Dimensional::DimensionalQty<double> time_interval_output_config;    ///< Output interval for outputing int_* and par_* files [0.1 time unit]
+		bool log_time_interval;                								///< Output in logarithmic time [false]
+		Dimensional::DimensionalQty<double> initial_log_time;               ///< Initial output time in log time mode [1e-4]
+		int nb_output_data_log_time;          								///< Nb of data output in log time mode [100]
+		int nb_output_config_log_time;			           					///< Nb of config output in log time mode (must be <= nb_output_data_log_time) [100]
+		bool origin_zero_flow;                   ///< Output: the middle height of the simulation box is set to the flow zero level. [true]
+		bool out_data_particle;                  ///< Output par_* file [true]
+		bool out_data_interaction;               ///< Output int_* file [true]
+		bool out_binary_conf;					///< Output binary configurations conf_*.bin files [false]
+		std::string out_particle_stress;				///< Output stress per particle in pst_* file, indicating which component ("c" for contact, "r" for repulsion, "b" for Brownian, "t" for total, "l" for lubrication) by a string, e.g "tc" for total stress and contact stress [""]
+		bool out_data_vel_components;						///< Output velocity components in the par* file [false]
+		bool out_bond_order_parameter6;        ///< Output amplitudes and arguments of 6-fold bond orientation order parameters in the par* file [false]
+		bool out_na_vel;        ///< Output non-affine velocity components in the par* file [false]
+		bool out_na_disp;        ///< Output non-affine displacements since last time step in the par* file [false]
+};
 
 struct ParameterSet
 {
@@ -67,6 +85,8 @@ struct ParameterSet
 	double repulsive_length;				///< "Debye" screering length for the repulsive force [0.05]
 	double repulsive_max_length;            ///< Maximum length until which the repulsive force can reach. If -1, no limit. (e.g. length of polymer brush) [-1]
 	double interaction_range;		///< maximum range (center-to-center) for interactions (repulsive force, etc.). If -1, lub_max_gap is used as cutoff [-1]
+	double vdW_coeffient; ///< [-1]
+	double vdW_singularity_cutoff; ///< [0.1]
 	int np_fixed;
 	struct TActAdhesion::Parameters TA_adhesion; ///< Time delayed adhesion params (.adhesion_range [1e-2], .adhesion_max_force [0h], .activation_time [0h])
 	/*******************************************************
@@ -149,23 +169,7 @@ struct ParameterSet
 	/*******************************************************
 	 OUTPUT
 	********************************************************/
-	struct {
-		Dimensional::DimensionalQty<double> time_interval_output_data;      ///< Output interval for outputing data_* file [0.01 time unit]
-		Dimensional::DimensionalQty<double> time_interval_output_config;    ///< Output interval for outputing int_* and par_* files [0.1 time unit]
-		bool log_time_interval;                								///< Output in logarithmic time [false]
-		Dimensional::DimensionalQty<double> initial_log_time;               ///< Initial output time in log time mode [1e-4]
-		int nb_output_data_log_time;          								///< Nb of data output in log time mode [100]
-		int nb_output_config_log_time;			           					///< Nb of config output in log time mode (must be <= nb_output_data_log_time) [100]
-		bool origin_zero_flow;                   ///< Output: the middle height of the simulation box is set to the flow zero level. [true]
-		bool out_data_particle;                  ///< Output par_* file [true]
-		bool out_data_interaction;               ///< Output int_* file [true]
-		bool out_binary_conf;					///< Output binary configurations conf_*.bin files [false]
-		std::string out_particle_stress;				///< Output stress per particle in pst_* file, indicating which component ("c" for contact, "r" for repulsion, "b" for Brownian, "t" for total, "l" for lubrication) by a string, e.g "tc" for total stress and contact stress [""]
-		bool out_data_vel_components;						///< Output velocity components in the par* file [false]
-		bool out_bond_order_parameter6;        ///< Output amplitudes and arguments of 6-fold bond orientation order parameters in the par* file [false]
-		bool out_na_vel;        ///< Output non-affine velocity components in the par* file [false]
-		bool out_na_disp;        ///< Output non-affine displacements since last time step in the par* file [false]
-	} output;
+	outputParams output;
 	
 	/*******************************************************
 	 CONTACT PARAMETERS AUTO-DETERMINATION

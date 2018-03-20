@@ -79,16 +79,16 @@ public:
 class TimeKeeper
 {
 private:
-	std::map <std::string, std::unique_ptr<Clock>> clocks;
+	std::map <std::string, Clock*> clocks;
 public:
 	void addClock(std::string label, LinearClock c)
 	{
-		clocks[label] = std::unique_ptr<Clock>(new LinearClock(c));
+		clocks[label] = new LinearClock(c);
 	}
 
 	void addClock(std::string label, LogClock c)
 	{
-		clocks[label] = std::unique_ptr<Clock>(new LogClock(c));
+		clocks[label] = new LogClock(c);
 	}
 
 	void removeClock()

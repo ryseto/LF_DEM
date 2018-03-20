@@ -249,7 +249,7 @@ void Simulation::setConfigToSystem(bool binary_conf, const std::string &filename
 					sys.setupConfiguration(conf, control_var);
 					break;
 				}
-			case ConfFileFormat::bin_format_fixed_vel:
+			case ConfFileFormat::bin_format_fixed_vel_shear:
 				{
 					auto conf = readBinaryFixedVeloConfiguration(filename);
 					sys.setupConfiguration(conf, control_var);
@@ -386,6 +386,12 @@ void Simulation::setupSimulation(string in_args,
 	Parameters::ParameterSetFactory PFactory;
 	PFactory.setFromFile(filename_parameters);
 	setupNonDimensionalization(control_value, PFactory);
+	
+	if (control_var == Parameters::ControlVariable::stress) {
+		target_stress_input = control_value.value; //@@@ Where should we set the target stress???
+		sys.target_stress = target_stress_input/6/M_PI; //@@@
+	}
+		
 	p = PFactory.getParameterSet();
 
 	p.flow_type = flow_type; // shear or extension or mix (not implemented yet)

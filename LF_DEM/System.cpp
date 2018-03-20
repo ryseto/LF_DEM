@@ -18,7 +18,9 @@
 #include "MersenneTwister.h"
 #endif
 
+#ifdef SIGINT_CATCH
 extern volatile sig_atomic_t sig_caught;
+#endif
 
 #ifndef USE_DSFMT
 #define GRANDOM ( r_gen->randNorm(0., 1.) ) // RNG gaussian with mean 0. and variance 1.
@@ -211,10 +213,10 @@ void System::declareForceComponents()
 	/********** Force R_FU^{mf}*(U^f-U^f_inf)  *************/
 	if (mobile_fixed) {
 		// rate proportional with walls, but this can change
-		if (p.lubrication_model != "normal") {
+		if (p.lubrication_model == "normal") {
 			force_components["from_fixed"] = ForceComponent(np, RATE_PROPORTIONAL, !torque, &System::setFixedParticleForceToParticle);
 		}
-		if (p.lubrication_model != "tangential") {
+		if (p.lubrication_model == "tangential") {
 			force_components["from_fixed"] = ForceComponent(np, RATE_PROPORTIONAL, torque, &System::setFixedParticleForceToParticle);
 		}
 	}
@@ -412,11 +414,18 @@ void System::setupParameters()
 	} else {
 		calcInteractionRange = &System::calcInteractionRangeDefault;
 	}
-
+	
+	// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	// @@@@ This part need to be checked.
+	// @@@@ p.brownian or other booleans also also not set in the current version. 
 	if (p.repulsive_length <= 0) {
 		repulsiveforce = false;
 		p.repulsive_length = 0;
+	} else {
+		repulsiveforce = true;
 	}
+	// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	
 	p.theta_shear *= M_PI/180.;
 	setShearDirection(p.theta_shear);
 
@@ -1288,9 +1297,11 @@ void System::timeEvolution(double time_end, double strain_end)
 		if (dt_bak != -1){
 			dt = dt_bak;
 		}
+#ifdef SIGINT_CATCH
 		if (sig_caught == SIGINT) { // return to Simulation immediatly for checkpointing
 			return;
 		}
+#endif
 	};
 	if (avg_dt_nb > 0) {
 		avg_dt /= avg_dt_nb;
@@ -1899,7 +1910,7 @@ void System::setFixedParticleForceToParticle(vector<vec3d> &force,
 		minus_fixed_velocities[i6+5] = -na_ang_velocity[i_fixed].z;
 	}
 	stokes_solver.multiply_by_RFU_mf(minus_fixed_velocities, force_torque_from_fixed); // -R_FU^mf*fixed_velocities
-	for (unsigned int i=0; i<force.size(); i++) {
+	for (unsigned int i=0; i<np_mobile; i++) {
 		auto i6 = 6*i;
 		force[i].x = force_torque_from_fixed[i6  ];
 		force[i].y = force_torque_from_fixed[i6+1];

@@ -122,9 +122,6 @@ public:
 	void contactForceParameter(std::string filename);
 	void contactForceParameterBrownian(std::string filename);
 	void importPreSimulationData(std::string filename);
-	std::map<std::string,std::string> getConfMetaData(const std::string &, const std::string &);
-	std::string getMetaParameter(std::map<std::string,std::string> &, std::string &, const std::string &);
-	std::string getMetaParameter(std::map<std::string,std::string> &, std::string &);
 	void setupNonDimensionalization(Dimensional::DimensionalQty<double> control_value, 
 									Parameters::ParameterSetFactory &PFact);
 	void stopShearing(TimeKeeper &tk); //simulation mode 22
@@ -141,7 +138,6 @@ public:
 	void outputParFileTxt();
 	void outputPstFileTxt();
 	void outputConfigurationBinary(std::string);
-	void outputStateBinary(std::string);
 	void checkpoint();
 	vec3d shiftUpCoordinate(double x, double y, double z);
 	void outputComputationTime();
