@@ -1,0 +1,5 @@
+setup_in.py
+Makefile.in
+*.so
+pyLFDEM.py
+pyLFDEM_wrap.cxx
