@@ -440,20 +440,22 @@ void Simulation::outputData()
 	 and made more consistent in the future.
 	 */
 	outdata.setUnits(system_of_units, output_unit);
-	double sr = sys.get_shear_rate();
-	double viscosity, inviscid_material_function0, inviscid_material_function3;
+	double sr = sqrt(2*sys.getEinfty().selfdoubledot()); // shear rate for simple shear.
+	double viscosity;
+	double material_func_inplane_pressure; // lambda_0
+	double material_func_reorientation; // lambda_3
 	if (sr != 0) {
 		// generalized viscosity kappa (= 2*eta)
-		viscosity = 0.5*doubledot(sys.total_stress, sys.getEinfty())/ sys.getEinfty().selfdoubledot();
-		inviscid_material_function0 = doubledot(sys.total_stress, stress_basis_0) / stress_basis_0.selfdoubledot();
-		inviscid_material_function3 = doubledot(sys.total_stress, stress_basis_3) / stress_basis_3.selfdoubledot();
+		viscosity = 0.5*doubledot(sys.total_stress, sys.getEinfty())/sys.getEinfty().selfdoubledot();
+		material_func_inplane_pressure = 0.5*doubledot(sys.total_stress, stress_basis_0)/                                                                                                                                                                                                                                                                                                                                                                                                            stress_basis_0.selfdoubledot();
+		material_func_reorientation = 0.5*doubledot(sys.total_stress, stress_basis_3)/stress_basis_3.selfdoubledot();
 	} else {
 		// @@@ tentative ouptut for Pe = 0 simulation
 		// output xz component of stress tensor
 		//viscous_material_function = sys.total_stress.elm[2];
 		viscosity = 0.5*doubledot(sys.total_stress, Einf_base)/ Einf_base.selfdoubledot();
-		inviscid_material_function0 = 0;
-		inviscid_material_function3 = 0;
+		material_func_inplane_pressure = 0;
+		material_func_reorientation = 0;
 	}
 	outdata.entryData("time", Dimensional::Dimension::Time, 1, sys.get_time());
 	if (sys.get_omega_wheel() == 0 || sys.wall_rheology == false) {
@@ -473,16 +475,16 @@ void Simulation::outputData()
 	outdata.entryData("viscosity", Dimensional::Dimension::Viscosity, 1, viscosity);
 	for (const auto &stress_comp: sys.total_stress_groups) {
 		string entry_name = "Viscosity("+stress_comp.first+")";
-		double viscous_mf_component = doubledot(stress_comp.second, sys.getEinfty())/sys.getEinfty().selfdoubledot();
-		outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, viscosity);
+		double viscosity_component = doubledot(stress_comp.second, sys.getEinfty())/sys.getEinfty().selfdoubledot();
+		outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, viscosity_component);
 	}
 	/*
 	 * Stress
 	 */
 	//outdata.entryData("shear stress", Dimensional::Dimension::Stress, 1, shear_stress);
 	auto stress_diag = sys.total_stress.diag();
-	outdata.entryData("inviscid function 0th", Dimensional::Dimension::Viscosity, 1, inviscid_material_function0);
-	outdata.entryData("inviscid function 3rd", Dimensional::Dimension::Viscosity, 1, inviscid_material_function3);
+	outdata.entryData("inviscid function 0th", Dimensional::Dimension::Viscosity, 1, material_func_inplane_pressure);
+	outdata.entryData("inviscid function 3rd", Dimensional::Dimension::Viscosity, 1, material_func_reorientation);
 	outdata.entryData("N1 viscosity", Dimensional::Dimension::Viscosity, 1, (stress_diag.x-stress_diag.z)/sr);
 	outdata.entryData("N2 viscosity", Dimensional::Dimension::Viscosity, 1, (stress_diag.z-stress_diag.y)/sr);
 	outdata.entryData("particle pressure", Dimensional::Dimension::Stress, 1, -sys.total_stress.trace()/3);
@@ -664,18 +666,21 @@ void Simulation::outputParFileTxt()
 										   sys.position[i].z);
 			}
 		}
-	}
-	/* If the origin is shifted,
-	 * we need to change the velocities of particles as well.
-	 */
-	for (int i=0; i<np; i++) {
-		if (p.output.origin_zero_flow) {
+		/* If the origin is shifted,
+		 * we need to change the velocities of particles as well.
+		 */
+		for (int i=0; i<np; i++) {
 			if (pos[i].z < 0) {
 				vel[i] -= sys.vel_difference;
 			}
 		}
+	} else {
+		for (int i=0; i<np; i++) {
+			pos[i].x = sys.position[i].x-0.5*sys.get_lx();
+			pos[i].y = sys.position[i].y-0.5*sys.get_ly();
+			pos[i].z = sys.position[i].z-0.5*sys.get_lz();
+		}
 	}
-
 	cout << "   out config: " << sys.get_cumulated_strain() << endl;
 	outdata_par.setUnits(system_of_units, output_unit);
 
@@ -789,13 +794,13 @@ void Simulation::outputIntFileTxt()
 			outdata_int.entryData("tangential part of the contact force", Dimensional::Dimension::Force, 3, \
 								  inter.contact.getTangentialForce());
 		}
+		if (sys.repulsiveforce) {
+			outdata_int.entryData("norm of the normal repulsive force", Dimensional::Dimension::Force, 1, \
+								  inter.repulsion.getForceNorm());
+		}
 		if (diminish_output == false) {
 		  	outdata_int.entryData("Viscosity contribution of contact xF", Dimensional::Dimension::Stress, 1, \
 		                                   doubledot(stress_contact, sys.getEinfty()/sr)/sr);
-		}
-		if (sys.repulsiveforce) {
-			outdata_int.entryData("norm of the normal repulsive force", Dimensional::Dimension::Force, 1, \
-							  inter.repulsion.getForceNorm());
 		}
 		if (sys.delayed_adhesion) {
 			outdata_int.entryData("norm of the normal adhesion force", Dimensional::Dimension::Force, 1, \

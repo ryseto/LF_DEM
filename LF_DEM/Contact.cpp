@@ -159,7 +159,7 @@ void Contact::incrementTangentialDisplacement()
 	disp_tan = prev_disp_tan+relative_surface_velocity*sys->dt; // always disp(t+1) = disp(t) + v*dt, no predictor-corrector headache :)
 }
 
-void Contact::calcRollingVelocities()
+void Contact::incrementRollingDisplacement()
 {
 	/**
 	 Calculate rolling velocity
@@ -169,10 +169,6 @@ void Contact::calcRollingVelocities()
 	 equation 3.6.13 ??
 	 */
 	rolling_velocity = 2*a_reduced*cross(sys->ang_velocity[p1]-sys->ang_velocity[p0], interaction->nvec);
-}
-
-void Contact::incrementRollingDisplacement()
-{
 	if (sys->in_predictor) {
 		prev_disp_rolling = disp_rolling;
 	}
@@ -191,7 +187,6 @@ void Contact::incrementDisplacements()
 	if (sys->friction) {
 		incrementTangentialDisplacement();
 		if (sys->rolling_friction) {
-			calcRollingVelocities();
 			incrementRollingDisplacement();
 		}
 	}
@@ -313,19 +308,26 @@ void Contact::frictionlaw_criticalload()
 	 * supportable_tanforce = mu*(F_normal - critical_force)
 	 *
 	 */
-	double supportable_tanforce = f_spring_normal_norm-sys->p.critical_load; // critical load model.
-	if (supportable_tanforce < 0) {
+	double normal_load = f_spring_normal_norm-sys->p.critical_load; // critical load model.
+	if (normal_load < 0) {
 		state = 1; // frictionless contact
 		disp_tan.reset();
 		f_spring_tan.reset();
 	} else {
-		supportable_tanforce *= mu_static;
+		double supportable_tanforce = mu_static*normal_load;
 		double sq_f_tan = f_spring_tan.sq_norm();
 		if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
 			state = 3; // sliding
 			setTangentialForceNorm(sqrt(sq_f_tan), supportable_tanforce);
 		} else {
 			state = 2; // static friction
+		}
+		if (sys->rolling_friction) {
+			double supportable_rollingforce = mu_rolling*normal_load;
+			double sq_f_rolling = f_rolling.sq_norm();
+			if (sq_f_rolling > supportable_rollingforce*supportable_rollingforce) {
+				setRollingForceNorm(sqrt(sq_f_rolling), supportable_rollingforce);
+			}
 		}
 	}
 	return;

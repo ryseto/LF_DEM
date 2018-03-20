@@ -12,7 +12,7 @@ use Getopt::Long;
 
 my $particle_data = $ARGV[0];
 my $yap_radius = 1;
-my $force_factor = 0.001;
+my $force_factor = 0.0001;
 my $output_interval = 1;
 my $xz_shift = 0;
 my $axis = 0;
@@ -116,7 +116,7 @@ sub readHeader {
 	$line = <IN_particle>; ($buf, $buf, $Lz) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $flwtyp) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $dataunit) = split(/\s+/, $line);
-
+	
 	if ($Ly==0) {
 		$number_of_header = 8;
 	} else {
@@ -126,7 +126,7 @@ sub readHeader {
 		$line = <IN_particle>;
 		printf "$line";
 	}
-	if ($Ly==0) {
+	if ($Ly == 0) {
 		$number_of_header_int = 20;
 	} else {
 		$number_of_header_int = 20;
@@ -134,6 +134,12 @@ sub readHeader {
 	for ($i = 0; $i<$number_of_header_int; $i++) {
 		$line = <IN_interaction>;
 	}
+	#	$xo = $Lx/2;
+	#	$yo = $Ly/2;
+	#	$zo = $Lz/2;
+	$xo = 0;
+	$yo = 0;
+	$zo = 0;
 }
 
 sub yaplotColor {
@@ -183,58 +189,72 @@ sub yaplotColor {
 
 sub InParticles {
 	$radius_max = 0;
-	$line = <IN_particle>;
-	printf "$line\n" ;
-	if (defined $line) {
-		
-		# 1 sys.get_shear_strain()
-		# 2 sys.shear_disp
-		# 3 getRate()
-		# 4 target_stress_input
-		# 5 sys.get_time()
-		# 6 sys.angle_external_magnetic_field
-		($buf, $shear_strain, $shear_disp, $shear_rate, $shear_stress) = split(/\s+/, $line);
-		printf "$shear_strain\n";
-		for ($i = 0; $i < $np; $i ++){
+	##  Snapshot Header
+	$j = 0;
+	while (1) {
+		$line = <IN_particle>;
+		($buf, $val) = split(" : ", $line);
+		($buf1) = split(/\s+/, $buf);
+		if ($buf1 ne '#') {
+			last;
+		} else {
+			$ssHeader[$j++] = $val;
+		}
+		last unless defined $line;
+	}
+	$shear_strain = $ssHeader[0];
+	printf "$shear_strain";
+	$shear_disp = $ssHeader[1];
+	$shear_rate = $ssHeader[2];
+	$target_stress = $ssHeader[3];
+	for ($i = 0; $i < $np; $i ++){
+		if ($i > 0) {
 			$line = <IN_particle>;
-			if ($output == 1) {
-				# 1: number of the particle
-				# 2: radius
-				# 3, 4, 5: position
-				# 6, 7, 8: velocity
-				# 9, 10, 11: angular velocity
-				# 12: viscosity contribution of lubrication
-				# 13: viscosity contributon of contact GU xz
-				# 14: viscosity contributon of brownian xz
-				# (15: angle for 2D simulation)
-				#				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
-				#	$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
-				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz, $nax, $nay, $naz, $angle) = split(/\s+/, $line);
-				#
-				$ang[$i] = $angle;
-				$radius[$i] = $a;
-				if ($xz_shift) {
-					$x += $xz_shift;
-					$z += $xz_shift;
-					if ($x > $Lx/2) {
-						$x -= $Lx;
-					}
-					if ($z > $Lz/2) {
-						$z -= $Lz;
-					}
+		}
+		if ($output == 1) {
+			# LF_DEM version v3.0-53-g9f8a2585-dirty
+			# np 500
+			# VF 0.78
+			# Lx 51.6458
+			# Ly 0
+			# Lz 51.6458
+			# flow_type shear
+			# data in r units.
+			#1: particle index
+			#2: radius
+			#3: position x
+			#4: position z
+			#5-7: velocity (x, y, z)
+			#8-10: angular velocity (x, y, z)
+			#11: angle
+			#				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
+			#	$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
+			($ip, $a, $x, $z, $vx, $vz, $vy, $ox, $oz, $oy, $angle) = split(/\s+/, $line);
+			#
+			$ang[$i] = $angle;
+			$radius[$i] = $a;
+			if ($xz_shift) {
+				exit;
+				$x += $xz_shift;
+				$z += $xz_shift;
+				if ($x > $Lx/2) {
+					$x -= $Lx;
 				}
-				$posx[$i] = $x;
-				$posy[$i] = $y;
-				$posz[$i] = $z;
-				$velx[$i] = $vx;
-				$vely[$i] = $vy;
-				$velz[$i] = $vz;
-				$omegax[$i] = $ox;
-				$omegay[$i] = $oy;
-				$omegaz[$i] = $oz;
-				if ($radius_max < $a) {
-					$radius_max = $a;
+				if ($z > $Lz/2) {
+					$z -= $Lz;
 				}
+			}
+			$posx[$i] = $x-$xo;
+			$posy[$i] = $y-$yo;
+			$posz[$i] = $z-$zo;
+			$velx[$i] = $vx;
+			$vely[$i] = $vy;
+			$velz[$i] = $vz;
+			$omegax[$i] = $ox;
+			$omegay[$i] = $oy;
+			$omegaz[$i] = $oz;
+			if ($radius_max < $a) {
+				$radius_max = $a;
 			}
 		}
 	}
@@ -244,17 +264,18 @@ sub InInteractions{
 	#$line = <IN_interaction>;
 	#($buf, $shear_strain_i, $num_interaction) = split(/\s+/, $line);
 	#printf "int $buf $shear_strain_i $num_interaction\n";
-	
-	if ($first_int == 1) {
-		$first_int = 0;
+	while (1) {
 		$line = <IN_interaction>;
-		($buf, $buf1, $buf2, $buf3, $buf4) = split(/\s+/, $line);
-		printf "int: $line\n";
+		($buf, $val) = split(" : ", $line);
+		($buf1) = split(/\s+/, $buf);
+		if ($buf1 ne '#') {
+			last;
+		} else {
+			$ssHeader[$j++] = $val;
+		}
+		last unless defined $line;
 	}
-	#	if ($buf neq '#') {
-	#		exit(1);
-	#	}
-	
+
 	# 1, 2: numbers of the interacting particles
 	# 3: 1=contact, 0=apart
 	# 4, 5, 6: normal vector
@@ -268,43 +289,43 @@ sub InInteractions{
 	# 14: N2 contribution of contact xF
 	$k = 0;
 	while (true) {
-		$line = <IN_interaction>;
-		($i, $j, $contact, $nx, $ny, $nz, #1---6
+		if ($k > 0) {
+			$line = <IN_interaction>;
+		}
+		#1: particle 1 label
+		#2: particle 2 label
+		#3: contact state (0 = no contact, 1 = frictionless contact, 2 = non-sliding frictional, 3 = sliding frictional)
+		#4-6: normal vector, oriented from particle 1 to particle 2
+		#7: dimensionless gap = s-2, s = 2r/(a1+a2)
+		#8: normal part of the lubrication force (positive for compression)
+		#9-11: tangential part of the lubrication force
+		#12: norm of the normal part of the contact force
+		#13-15: tangential part of the contact force
+		#16: norm of the normal repulsive force
+		#17: Viscosity contribution of contact xF
+		
+		($i, $j, $contact, $nx, $nz, $ny, #1---6
 		$gap, $f_lub_norm, # 7, 8
-		$f_lub_tan_x, $f_lub_tan_y, $f_lub_tan_z, # 9, 10, 11
+		$f_lub_tan_x, $f_lub_tan_z, $f_lub_tan_y, # 9, 10, 11
 		$fc_norm, # 12
-		$fc_tan_x, $fc_tan_y, $fc_tan_z, # 13, 14, 15
-		$fr_norm, $s_xF) = split(/\s+/, $line);
+		$fc_tan_x, $fc_tan_z, $fc_tan_y, # 13, 14, 15
+		$fr_norm, $s_xF) = split(/\s+/, $line); # 16, 17
+	
 		if ($i eq '#' || $i eq NU) {
+			($buf, $shear_strain) = split(" : ", $line);
 			last;
 		}
 		if (! defined $i) {
 			last;
 		}
-		#		"#1: particle 1 label\n"
-		#		"#2: particle 2 label\n"
-		#		"#3: contact state (0 = no contact, 1 = frictionless contact, 1 = non-sliding frictional, 2 = sliding frictional)\n"
-		#		"#4: normal vector, oriented from particle 1 to particle 2 x\n"
-		#		"#5: normal vector, oriented from particle 1 to particle 2 y\n"
-		#		"#6: normal vector, oriented from particle 1 to particle 2 z\n"
-		#		"#7: dimensionless gap = s-2, s = 2r/(a1+a2)\n"
-		#		"#8: norm of the normal part of the lubrication force\n"
-		#		"#9: tangential part of the lubrication force x\n"
-		#		"#10: tangential part of the lubrication force y\n"
-		#		"#11: tangential part of the lubrication force z\n"
-		#		"#12: norm of the normal part of the contact force\n"
-		#		"#13: tangential part of the contact force, x\n"
-		#		"#14: tangential part of the contact force, y\n"
-		#		"#15: tangential part of the contact force, z\n"
-		#		"#16: norm of the normal repulsive force\n"
-		#		"#17: Viscosity contribution of contact xF\n";
+		
 		if ($output == 1) {
 			$int0[$k] = $i;
 			$int1[$k] = $j;
 			$contactstate[$k] = $contact;
 			if ($contact > 0) {
 				#$force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
-				$force[$k] = $fc_norm + $fr_norm;
+				$force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
 				#$force[$k] = $fc_norm;
 			} else {
 				$force[$k] = $f_lub_norm + $fr_norm;
@@ -313,7 +334,9 @@ sub InInteractions{
 			$F_lub[$k] = $f_lub_norm;
 			$Fc_n[$k] = $fc_norm;
 			$Fc_t[$k] = sqrt($fc_tan_x**2+$fc_tan_y**2+$fc_tan_z**2);
+			$F_lub_t[$k] = sqrt($f_lub_tan_x**2+ $f_lub_tan_z**2 + $f_lub_tan_y**2);
 			$S_bf[$k] =  $s_xF;
+			$force[$k] += $Fc_t[$k] + $F_lub_t[$k];
 			$nrvec_x[$k] = $nx;
 			$nrvec_y[$k] = $ny;
 			$nrvec_z[$k] = $nz;
@@ -322,8 +345,6 @@ sub InInteractions{
 		}
 	}
 	$num_interaction = $k;
-	
-	
 }
 
 sub OutYaplotData{
@@ -338,49 +359,55 @@ sub OutYaplotData{
 	if ($monodisperse) {
 		printf OUT "r $radius[0]\n";
 		for ($i = 0; $i < $np; $i++) {
-			printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
+			printf OUT "c $posx[$i] $posy[$i] $posz[$i]  \n";
 		}
 	} else {
 		for ($i = 0; $i < $np; $i++) {
 			$rr = $yap_radius*$radius[$i];
 			printf OUT "r $rr\n";
-			printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
+			printf OUT "c $posx[$i] $posy[$i] $posz[$i]  \n";
 		}
 	}
 	
 	## visualize contact network
-	#	printf OUT "y 2\n";
-	#	printf OUT "r 0.2\n";
-	#	printf OUT "@ 2\n"; # static
-	#	for ($k = 0; $k < $num_interaction; $k ++) {
-	#		if ($contactstate[$k] == 2) {
-	#			&OutString2($int0[$k], $int1[$k]);
-	#		}
-	#	}
+#	printf OUT "y 2\n";
+#	printf OUT "r 0.2\n";
+#	printf OUT "@ 6\n"; # static
+#	for ($k = 0; $k < $num_interaction; $k ++) {
+#		if ($contactstate[$k] >= 2) {
+#			&OutString2($int0[$k], $int1[$k]);
+#		}
+#	}
+#	printf OUT "y 2\n";
+#	printf OUT "r 0.2\n";
+#	printf OUT "@ 2\n"; # static
+#	for ($k = 0; $k < $num_interaction; $k ++) {
+#		if ($contactstate[$k] == 1) {
+#			&OutString2($int0[$k], $int1[$k]);
+#		}
+#	}
 	## visualize force chain network
 	printf OUT "y 4\n";
 	printf OUT "@ 7\n";
-	printf "num $num_interaction \n";
 	for ($k = 0; $k < $num_interaction; $k ++) {
 		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
 		#if (1 || $force[$k] >= 0) {
 		#	&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
 		#}
-		if ($force[$k] > 0 ) {
+		if ($force[$k] > 0 && $contactstate[$k] >= 2) {
 			&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
 		} else {
-			&OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k], 0.01);
+			#	&OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k], 0.01);
 		}
 	}
-
 	#	printf OUT "y 3\n";
-	#	printf OUT "@ 5\n";
-	#	for ($k = 0; $k < $num_interaction; $k ++) {
-	#		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-	#		if ($force[$k] < 0) {
+	#		printf OUT "@ 5\n";
+	#		for ($k = 0; $k < $num_interaction; $k ++) {
+	#			#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+	#			if ($force[$k] < 0) {
 	#			&OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k], 0.02);
+	#			}
 	#		}
-	#	}
 	
 	## visualize rotation in 2D
 	if ($Ly == 0) {
@@ -409,8 +436,6 @@ sub OutYaplotData{
 			}
 		}
 	}
-	
-	
 	#	&OutBoundaryBox;
 }
 
@@ -456,8 +481,6 @@ sub OutBoundaryBox {
 	if ($axis) {
 		printf OUT "l -$lx2 0 0 $lx2 0 0\n";
 		printf OUT "l 0 0 -$lz2 0 0 $lz2\n";
-		
-		
 	}
 	
 }
@@ -473,7 +496,7 @@ sub OutString_width {
 	$sq_dist = ($xi-$xj)**2 + ($yi-$yj)**2 + ($zi-$zj)**2 ;
 	if (sqrt($sq_dist) < $radius[$i] + $radius[$j]+1) {
 		printf OUT "r $w\n";
-		printf OUT "s $xi $yi $zi $xj $yj $zj\n";
+		printf OUT "s $xi $yi $zi $xj $yj $zj \n";
 	}
 }
 

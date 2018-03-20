@@ -414,11 +414,18 @@ void System::setupParameters()
 	} else {
 		calcInteractionRange = &System::calcInteractionRangeDefault;
 	}
-
+	
+	// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	// @@@@ This part need to be checked.
+	// @@@@ p.brownian or other booleans also also not set in the current version. 
 	if (p.repulsive_length <= 0) {
 		repulsiveforce = false;
 		p.repulsive_length = 0;
+	} else {
+		repulsiveforce = true;
 	}
+	// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	
 	p.theta_shear *= M_PI/180.;
 	setShearDirection(p.theta_shear);
 
@@ -1903,7 +1910,7 @@ void System::setFixedParticleForceToParticle(vector<vec3d> &force,
 		minus_fixed_velocities[i6+5] = -na_ang_velocity[i_fixed].z;
 	}
 	stokes_solver.multiply_by_RFU_mf(minus_fixed_velocities, force_torque_from_fixed); // -R_FU^mf*fixed_velocities
-	for (unsigned int i=0; i<force.size(); i++) {
+	for (unsigned int i=0; i<np_mobile; i++) {
 		auto i6 = 6*i;
 		force[i].x = force_torque_from_fixed[i6  ];
 		force[i].y = force_torque_from_fixed[i6+1];

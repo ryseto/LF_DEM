@@ -82,13 +82,14 @@ void ParameterSetFactory::setDefaultValues() {
 		PARAM_INIT(interaction_range, -1),
 		PARAM_INIT(repulsive_length, 0.05),
 		PARAM_INIT(repulsive_max_length, -1),
+		PARAM_INIT(vdW_coeffient, -1),
+		PARAM_INIT(vdW_singularity_cutoff, 0.1),
 		PARAM_INIT(magic_angle, 0),
 		PARAM_INIT(mu_static, 1),
 		PARAM_INIT(mu_dynamic, -1),
 		PARAM_INIT(mu_rolling, 0),
 		PARAM_INIT(TA_adhesion.adhesion_range, 1e-2),
 	};
-
 
 	/*================================
 	=            INTEGERS            =
@@ -103,7 +104,6 @@ void ParameterSetFactory::setDefaultValues() {
 		PARAM_INIT(simulation_mode, 0)
 	};
 
-
 	/*===============================
 	=            STRINGS            =
 	===============================*/
@@ -114,7 +114,6 @@ void ParameterSetFactory::setDefaultValues() {
 		PARAM_INIT(output.out_particle_stress, ""),
 		PARAM_INIT(lubrication_model, "tangential"),
 	};
-
 
 	/*====================================
 	=            FORCE SCALES            =
