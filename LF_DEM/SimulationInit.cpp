@@ -376,7 +376,6 @@ void Simulation::setupSimulation(string in_args,
 	} else {
 		sys.zero_shear = false;
 	}
-	setupFlow(control_value);
 	
 	Parameters::ParameterSetFactory PFactory;
 	PFactory.setFromFile(filename_parameters);
@@ -389,6 +388,8 @@ void Simulation::setupSimulation(string in_args,
 		
 	p = PFactory.getParameterSet();
 
+    setupFlow(control_value); // Including parameter p setting.
+    
 	p.flow_type = flow_type; // shear or extension or mix (not implemented yet)
 
 	if (sys.ext_flow) {

@@ -207,12 +207,12 @@ sub InParticles {
 	$shear_disp = $ssHeader[1];
 	$shear_rate = $ssHeader[2];
 	$target_stress = $ssHeader[3];
-	for ($i = 0; $i < $np; $i ++){
-		if ($i > 0) {
-			$line = <IN_particle>;
-		}
+    for ($i = 0; $i < $np; $i ++){
+        if ($i > 0) {
+            $line = <IN_particle>;
+        }
 		if ($output == 1) {
-			# LF_DEM version v3.0-53-g9f8a2585-dirty
+            # LF_DEM version v3.0-53-g9f8a2585-dirty
 			# np 500
 			# VF 0.78
 			# Lx 51.6458
@@ -234,9 +234,8 @@ sub InParticles {
 			$ang[$i] = $angle;
 			$radius[$i] = $a;
 			if ($xz_shift) {
-				exit;
-				$x += $xz_shift;
-				$z += $xz_shift;
+				$x += $Lx/2;
+				$z += $Lz/2;
 				if ($x > $Lx/2) {
 					$x -= $Lx;
 				}
