@@ -28,6 +28,11 @@ my $flow_type = "shear";
 my $draw_trajectory = 0;
 my $phi6_data = 1;
 
+my $ii_min = -1;
+my $ii_max = 1;
+my $jj_min = -2;
+my $jj_max = 1;
+
 GetOptions(
 'forcefactor=f' => \$force_factor,
 'interval=i' => \$output_interval,
@@ -233,7 +238,6 @@ sub InInteractions{
 	# printf "int $buf $shear_strain_i $num_interaction\n";
     while (1) {
         $line = <IN_interaction>;
-        printf "$line";
         ($buf, $val) = split(" : ", $line);
         ($buf1) = split(/\s+/, $buf);
         if ($buf1 ne '#') {
@@ -243,7 +247,6 @@ sub InInteractions{
         }
         last unless defined $line;
     }
-        printf "======\n";
 	$k = 0;
 	while (true) {
         if ($k > 0) {
@@ -320,8 +323,6 @@ sub OutYaplotData{
 	$az = exp(-$epsilondot*($timeper))*$cos_ma*$sin_ma-exp( $epsilondot*($timeper))*$sin_ma*$cos_ma;
 	$bx = exp(-$epsilondot*($timeper))*$cos_ma*$sin_ma-exp( $epsilondot*($timeper))*$sin_ma*$cos_ma;
 	$bz = exp(-$epsilondot*($timeper))*$cos_ma*$cos_ma+exp( $epsilondot*($timeper))*$sin_ma*$sin_ma;
-	printf "$ax \t $az\n";
-	printf "$Lx \t $Lz \n";
 	#        if ($cnt2 == 10) {
 	#            exit;
 	#        }
@@ -329,16 +330,14 @@ sub OutYaplotData{
 	$lx2 = $Lx/2;
 	$ly2 = $Ly/2;
 	$lz2 = $Lz/2;
-	printf "flow_type $flow_type\n";
 	if ($flow_type == "extension") {
 		&OutParticleExtension;
 	} else {
 		&OutParticleShear;
 	}
 	if ($draw_trajectory) {
-		
-		for ($ii = -3; $ii <= 3; $ii++) {
-			for ($jj = -3; $jj <= 3; $jj++) {
+		for ($ii = $ii_min; $ii <= $ii_max; $ii++) {
+			for ($jj = $jj_min; $jj <= $jj_max; $jj++) {
 				$pd_xshift = $Lx*$ax*($ii)+$Lz*$bx*($jj);
 				$pd_zshift = $Lx*$az*($ii)+$Lz*$bz*($jj);
 				$xx = $posx[$i_trac] + $pd_xshift;
@@ -388,14 +387,13 @@ sub OutYaplotData{
 	if (1) {
 		printf OUT "y 4\n";
 		printf OUT "@ 7\n";
-		printf "int = $num_interaction\n";
 		for ($k = 0; $k < $num_interaction; $k ++) {
 			$forcetmp = $force[$k];
 			#$forcetmp = $F_lub[$k];
 			if ($forcetmp > 0) {
 				$w = $force_factor*$forcetmp;
-				for ($ii = -2; $ii <= 2; $ii++) {
-					for ($jj = -3; $jj <= 2; $jj++) {
+				for ($ii = $ii_min; $ii <= $ii_max; $ii++) {
+					for ($jj = $jj_min; $jj <= $jj_max; $jj++) {
 						$pd_xshift = $Lx*$ax*($ii)+$Lz*$bx*($jj);
 						$pd_zshift = $Lx*$az*($ii)+$Lz*$bz*($jj);
 						$bulk = 1;
@@ -481,8 +479,8 @@ sub OutParticleShear {
 		#			if ($i == $np-1) {
 		#				printf OUT "@ 4\n";
 		#			}
-	LOOP: for ($ii = -3; $ii <= 3; $ii++) {
-		for ($jj = -3; $jj <= 3; $jj++) {
+	LOOP: for ($ii = -1; $ii <= 1; $ii++) {
+		for ($jj = -1; $jj <= 1; $jj++) {
 			$pd_xshift = $Lx*$ax*($ii)+$Lz*$bx*($jj);
 			$pd_zshift = $Lx*$az*($ii)+$Lz*$bz*($jj);
 			$xx =  $posx[i] + $pd_xshift;
@@ -501,8 +499,8 @@ sub OutParticleExtension {
 	$particlecolor = 8;
 	printf OUT "@ 8\n";
 	$j = 0;
-	for ($ii = -3; $ii <= 3; $ii++) {
-		for ($jj = -3; $jj <= 3; $jj++) {
+	for ($ii = $ii_min; $ii <= $ii_max; $ii++) {
+		for ($jj = $jj_min; $jj <= $jj_max; $jj++) {
 			if ($pd_color) {
 				if ($particlecolor == 10){
 					$particlecolor = 8;
@@ -526,6 +524,9 @@ sub OutParticleExtension {
 				}
 				#if ($xx2> 0 && $xx2 < $Lx &&  $zz2 > 0 && $zz2 < $Lz){
 				if (abs($xx2)<$scale*$Lx && abs($zz2) < $scale*$Lz) {
+                    #                    if (abs($ii) >= 2 || abs($jj) >= 2) {
+                    #   printf "i,j = $ii, $jj\n"
+                    #}
 					if ($phi6_data == 1) {
 						$op = 119*(1-$phi6abs[$i])+4;
 						$color = int $op;
