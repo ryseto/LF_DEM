@@ -464,7 +464,6 @@ void System::setupParameters()
 
 void System::setupBrownian()
 {
-
 #ifdef DEV
 	/* In developing and debugging phases,
 	 * we give a seed to generate the same series of random number.
@@ -1146,7 +1145,7 @@ void System::timeStepMove(double time_end, double strain_end)
 	total_num_timesteps ++;
 	/* evolve PBC */
 	timeStepBoxing();
-
+	
 	/* move particles */
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);

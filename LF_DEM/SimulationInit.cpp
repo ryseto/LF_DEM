@@ -172,12 +172,14 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 				}
 			}
 			if (internal_unit == Dimensional::Unit::brownian) {
+				sys.brownian = true; // @@@@ to be checked
 				sys.brownian_dominated = true;
 			}
 		} else {
 			if (control_value.unit == Dimensional::Unit::brownian) {
 				cout << indent << "Brownian at Pe = 0 " << endl;
 				internal_unit = Dimensional::Unit::brownian;
+				sys.brownian = true; // @@@@ to be checked
 				sys.brownian_dominated = true;
 				sys.zero_shear = true;
 			} else if (control_value.unit == Dimensional::Unit::repulsion) {
@@ -206,7 +208,6 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 		sys.set_shear_rate(forces.at(Dimensional::Unit::hydro).value);
 	}
 }
-
 
 void Simulation::assertParameterCompatibility()
 {
@@ -297,8 +298,6 @@ void Simulation::setupFlow(Dimensional::DimensionalQty<double> control_value)
 {
 	// @@@ This function is quite messy, should be fixed 
 	// when we rewrite shear and extensional in a consistent manner
-
-
 	/* dot_gamma = 1 --> dot_epsilon = 0;
 	 *
 	 */
@@ -308,9 +307,9 @@ void Simulation::setupFlow(Dimensional::DimensionalQty<double> control_value)
 			/* simple shear flow
 			 * shear_rate = 2*dot_epsilon
 			 */
-			Einf_base.set(0, 0, dimensionless_deformation_rate, 0, 0, 0);
-			Omegainf_base.set(0, dimensionless_deformation_rate, 0);
-			sys.setImposedFlow(Einf_base, Omegainf_base);
+			Einf_base.set(0, 0, 1, 0, 0, 0);
+			Omegainf_base.set(0, 1, 0);
+			sys.setImposedFlow(dimensionless_deformation_rate*Einf_base, dimensionless_deformation_rate*Omegainf_base);
 			stress_basis_0 = {-dimensionless_deformation_rate/2, 0, 0, 0,
 				dimensionless_deformation_rate, -dimensionless_deformation_rate/2};
 			stress_basis_3 = {-dimensionless_deformation_rate, 0, 0, 0, 0, dimensionless_deformation_rate};
@@ -343,13 +342,14 @@ void Simulation::setupFlow(Dimensional::DimensionalQty<double> control_value)
 		}
 	} else {
 		cerr << " dimensionlessnumber = " << control_value.value << endl;
-		Sym2Tensor Einf_common = {0, 0, 0, 0, 0, 0};
-		vec3d Omegainf(0, 0, 0);
-		sys.setImposedFlow(Einf_common, Omegainf);
+		Einf_base.set(0, 0, 1, 0, 0, 0);
+		Omegainf_base.set(0, 1, 0);
+		Sym2Tensor Einf_zero = {0, 0, 0, 0, 0, 0};
+		vec3d Omegainf_zero(0, 0, 0);
+		sys.setImposedFlow(Einf_zero, Omegainf_zero);
 		sys.zero_shear = true;
 	}
 }
-
 
 void Simulation::setupSimulation(string in_args,
                                  vector<string>& input_files,
@@ -432,7 +432,6 @@ void Simulation::setupSimulation(string in_args,
 	echoInputFiles(in_args, input_files);
 	cout << indent << "Simulation setup [ok]" << endl;
 }
-
 
 void Simulation::openOutputFiles()
 {

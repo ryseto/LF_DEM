@@ -370,7 +370,6 @@ void Simulation::stopShearing(TimeKeeper &tk)
 	}
 }
 
-
 void Simulation::outputComputationTime()
 {
 	time_t time_from_1 = time_strain_end-time_strain_1;
@@ -383,7 +382,6 @@ void Simulation::outputComputationTime()
 	fout_time << timestep_end << ' ';
 	fout_time << timestep_from_1 << endl;
 }
-
 
 void Simulation::outputConfigurationBinary(string conf_filename)
 {
@@ -401,7 +399,6 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 	}
 	outputBinaryConfiguration(sys, conf_filename, binary_conf_format);
 }
-
 
 void Simulation::checkpoint()
 {
