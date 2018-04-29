@@ -655,7 +655,7 @@ void System::setupSystemPostConfiguration()
 	}
 	dt = p.dt;
 	if (p.fixed_dt) {
-		avg_dt = dt;
+        avg_dt = dt;
 	}
 }
 
@@ -1226,10 +1226,10 @@ void System::timeStepMoveCorrector()
 
 bool System::keepRunning(double time_end, double strain_end)
 {
-	if (clk.cumulated_strain > strain_end-1e-8 && strain_end >= 0) {
+    if (clk.cumulated_strain > strain_end-1e-8 && strain_end >= 0) {
 		return false;
 	}
-	if (get_time() > time_end-1e-8 && time_end>=0) {
+	if (get_time() > time_end-1e-8 && time_end >= 0) {
 		return false;
 	}
 	if (!events.empty()) {
@@ -1273,10 +1273,11 @@ void System::timeEvolution(double time_end, double strain_end)
 	avg_dt_nb = 0;
 	double dt_bak = -1;
 	double loop_time_adjust = 0;
-	if (p.fixed_dt == true) {
-		loop_time_adjust = dt;
-	}
-	while (keepRunning(time_end - loop_time_adjust, strain_end - loop_time_adjust)) {
+    // @@@ When fixed_dt is true, keepRunning does not work.
+    //    if (p.fixed_dt == true) {
+    //        loop_time_adjust = dt;
+    //    }
+    while (keepRunning(time_end - loop_time_adjust, strain_end - loop_time_adjust)) {
 		retrim_ext_flow = false; // used in ext_flow simulation
 		if (!brownian && !p.fixed_dt) { // adaptative time-step for non-Brownian cases
 			adaptTimeStep(time_end, strain_end);
