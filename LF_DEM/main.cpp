@@ -180,6 +180,7 @@ int main(int argc, char **argv)
 		input_files[3] = stress_rate_filename;
 
 		State::BasicCheckpoint state = State::zero_time_basicchkp;
+
 		if (!chkp_filename.empty()) {
 			state = State::readBasicCheckpoint(chkp_filename);
 		}

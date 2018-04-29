@@ -200,8 +200,11 @@ sub InParticles {
             # (15: angle for 2D simulation)
             #                ($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
             #    $h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
-            
-            ($ip, $a, $x, $z, $vx, $vy, $vz, $ox, $oy, $oz, $angle) = split(/\s+/, $line);
+
+			# 3D
+			# ($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz) = split(/\s+/, $line);
+			# 2D
+			($ip, $a, $x, $z, $vx, $vy, $vz, $ox, $oy, $oz, $angle) = split(/\s+/, $line);
             #
             $ang[$i] = $angle;
             $radius[$i] = $a;

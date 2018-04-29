@@ -229,7 +229,8 @@ sub InParticles {
 			#11: angle
 			#				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
 			#	$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
-			($ip, $a, $x, $z, $vx, $vz, $vy, $ox, $oz, $oy, $angle) = split(/\s+/, $line);
+			($ip, $a, $x, $y, $z, $vx, $vz, $vy, $ox, $oz, $oy) = split(/\s+/, $line);
+			#($ip, $a, $x, $z, $vx, $vz, $vy, $ox, $oz, $oy, $angle) = split(/\s+/, $line);
 			#
 			$ang[$i] = $angle;
 			$radius[$i] = $a;
