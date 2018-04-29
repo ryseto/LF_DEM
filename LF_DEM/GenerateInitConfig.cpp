@@ -36,7 +36,7 @@ void GenerateInitConfig::baseSetup(T &conf, bool is2d, double inflate_ratio) {
 	conf.volume_or_area_fraction = volume_fraction;
 }
 
-int GenerateInitConfig::generate(int rand_seed_, int config_type)
+int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int config_type)
 {
 	if (config_type == 2) {
 		cerr << "generate circular wide gap " <<endl;
@@ -50,7 +50,7 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 	}
 
 	Simulation simu;
-	setParameters(simu);
+	setParameters(simu, volume_frac_gen_);
 	rand_seed = rand_seed_;
 
 	auto &sys = simu.getSys();
@@ -121,9 +121,6 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		baseSetup(c, sys.twodimension, inflate_ratio);
 		sys.setupConfiguration(c, Parameters::ControlVariable::rate);
 	}
-
-
-
 
 	sys.checkNewInteraction();
 	sys.updateInteractions();
@@ -475,7 +472,7 @@ template<typename T> T readStdinDefault(T default_value, string message)
 	return value;
 }
 
-void GenerateInitConfig::setParameters(Simulation &simu)
+void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init)
 {
 	/*
 	 *  Read parameters from standard input
@@ -503,10 +500,16 @@ void GenerateInitConfig::setParameters(Simulation &simu)
 			sys.twodimension = false;
 		}
 	}
-	if (sys.twodimension) {
-		volume_fraction = readStdinDefault(0.78, "volume_fraction");
+
+	if (volume_frac_init == 0) {
+		if (sys.twodimension) {
+			volume_fraction = readStdinDefault(0.78, "volume_fraction");
+		} else {
+			volume_fraction = readStdinDefault(0.5, "volume_fraction");
+		}
 	} else {
-		volume_fraction = readStdinDefault(0.5, "volume_fraction");
+		cerr << "volume_fraction is set to " << volume_frac_init << endl;
+		volume_fraction = volume_frac_init;
 	}
 	if (circulargap_config || parallel_wall_config) {
 		lx_lz = 1.0;
