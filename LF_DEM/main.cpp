@@ -85,9 +85,7 @@ int main(int argc, char **argv)
 
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hn8efds:t:r:g:p:a:k:i:v:c:N:", longopts, &index)) != -1) {
-		cerr << "c = " << c << ' ' << "optarg = " << optarg << endl;
-		cerr << (int)'a' << ' ' << (int)'p' << endl;
+	while ((c = getopt_long(argc, argv, "hn8efds:t:r:g::p:a:k:i:v:c:N:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
 				rheology_control = Parameters::ControlVariable::stress;
