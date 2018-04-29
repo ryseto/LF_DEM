@@ -52,6 +52,7 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 	Simulation simu;
 	setParameters(simu, volume_frac_gen_);
 	rand_seed = rand_seed_;
+	cerr << "rand_seed = " << rand_seed_ << endl;
 
 	auto &sys = simu.getSys();
 	double contact_ratio = 0.05;
