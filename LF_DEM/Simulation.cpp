@@ -998,8 +998,8 @@ void Simulation::outputIntFileTxt()
 			outdata_int.entryData("Viscosity contribution of contact xF", "stress", 1, \
 								  doubledot(stress_contact, sys.getEinfty()/sr)/sr);
 		}
+		outdata_int.writeToFile(snapshot_header.str());
 	}
-	outdata_int.writeToFile(snapshot_header.str());
 }
 
 void Simulation::outputConfigurationData()
