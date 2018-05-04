@@ -807,8 +807,11 @@ void Simulation::outputIntFileTxt()
 							      inter.delayed_adhesion->ratioUptimeToActivation());
 			}
 		}
+	}
+	if (sys.interaction.size() > 0) {
 		outdata_int.writeToFile(snapshot_header.str());
 	}
+
 }
 
 void Simulation::outputConfigurationData()
