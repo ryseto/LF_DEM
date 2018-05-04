@@ -14,7 +14,7 @@ my $particle_data = $ARGV[0];
 my $yap_radius = 1;
 my $force_factor = 0.0001;
 my $output_interval = 1;
-my $xz_shift = 0;
+my $xz_shift = 1;
 my $axis = 0;
 my $reversibility_test = 0;
 my $monodisperse = 0;
@@ -22,11 +22,16 @@ my $epsilondot=0;
 my $timeper=0;
 my $scale=0.5;
 my $axisrotation=1;
-my $pd_color = 1;
+my $pd_color = 0;
 my $draw_cross = 0;
 my $flow_type = "shear";
 my $draw_trajectory = 0;
 my $phi6_data = 1;
+
+my $ii_min = -1;
+my $ii_max = 1;
+my $jj_min = -2;
+my $jj_max = 1;
 
 GetOptions(
 'forcefactor=f' => \$force_factor,
@@ -144,138 +149,128 @@ sub readHeader {
 	} else {
 		$number_of_header = 7;
 	}
-	for ($i = 0; $i<$number_of_header; $i++) {
-		$line = <IN_particle>;
-		printf "$line";
+    printf "=====\n";
+    for ($i = 0; $i<$number_of_header; $i++) {
+        $line = <IN_particle>;
+        printf "$line";
 	}
-	for ($i = 0; $i<21; $i++) {
+    printf "=====\n";
+	for ($i = 0; $i<20; $i++) {
 		$line = <IN_interaction>;
 		printf "$line";
 	}
-	printf "=====\n";
+    printf "=====\n";
 }
 
 sub InParticles {
-	$radius_max = 0;
-	$line = <IN_particle>;
-	if (defined $line) {
-		# cumulated strain
-		($buf, $shear_strain) = split(" : ", $line);
-		# shear disp
-		$line = <IN_particle>;
-		($buf, $shear_disp) = split(" : ", $line);
-		# shear rate
-		$line = <IN_particle>;
-		($buf, $epsilondot) = split(" : ", $line);
-		#
-		$line = <IN_particle>;
-		($buf, $timeper) = split(" : ", $line);
-		#
-		$line = <IN_particle>;
-		($buf, $retrim) = split(" : ", $line);
-			printf "---  $buf -- $retrim\n";
-		#
-		# cumulated strain - strain_retrim : 0
-		# retrim ext flow  : 0
-		#		 $epsilondot, $shear_stress, $timeper
-		if ($buf ne '#') {
-			printf "InParticles  $buf\n";
-			printf "line = $line";
-			exit;
-		}
-		printf "ed = $epsilondot \n";
-		printf "$flow_type\n";
-		for ($i = 0; $i < $np; $i ++){
-			$line = <IN_particle>;
-			if ($output == 1) {
-				# 1: number of the particle
-				# 2: radius
-				# 3, 4, 5: position
-				# 6, 7, 8: velocity
-				# 9, 10, 11: angular velocity
-				# 12: viscosity contribution of lubrication
-				# 13: viscosity contributon of contact GU xz
-				# 14: viscosity contributon of brownian xz
-				# (15: angle for 2D simulation)
-				#				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
-				#	$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
-				
-				($ip, $a, $x, $z, $vx, $vy, $vz, $ox, $oy, $oz, $angle) = split(/\s+/, $line);
-				#
-				$ang[$i] = $angle;
-				$radius[$i] = $a;
-				if ($xz_shift) {
-					$x += $xz_shift;
-					$z += $xz_shift;
-					if ($x > $Lx/2) {
-						$x -= $Lx;
-					}
-					if ($z > $Lz/2) {
-						$z -= $Lz;
-					}
-				}
-				$posx[$i] = $x;
-				$posy[$i] = $y;
-				$posz[$i] = $z;
-				$velx[$i] = $vx;
-				$vely[$i] = $vy;
-				$velz[$i] = $vz;
-				$omegax[$i] = $ox;
-				$omegay[$i] = $oy;
-				$omegaz[$i] = $oz;
-				
-				if ($radius_max < $a) {
-					$radius_max = $a;
-				}
-			}
-		}
-	}
+    
+    $radius_max = 0;
+    ##  Snapshot Header
+    $j = 0;
+    while (1) {
+        $line = <IN_particle>;
+        ($buf, $val) = split(" : ", $line);
+        ($buf1) = split(/\s+/, $buf);
+        if ($buf1 ne '#') {
+            last;
+        } else {
+            $ssHeader[$j++] = $val;
+        }
+        last unless defined $line;
+    }
+    $shear_strain = $ssHeader[0];
+    printf "strain = $shear_strain";
+    $shear_disp = $ssHeader[1];
+    $epsilondot = $ssHeader[2];
+    $timeper = $ssHeader[3]/2;
+    $retrim = $ssHeader[4];
+    for ($i = 0; $i < $np; $i ++){
+        if ($i > 0) {
+            $line = <IN_particle>;
+        }
+        if ($output == 1) {
+            # 1: number of the particle
+            # 2: radius
+            # 3, 4, 5: position
+            # 6, 7, 8: velocity
+            # 9, 10, 11: angular velocity
+            # 12: viscosity contribution of lubrication
+            # 13: viscosity contributon of contact GU xz
+            # 14: viscosity contributon of brownian xz
+            # (15: angle for 2D simulation)
+            #                ($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
+            #    $h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
+
+			# 3D
+			# ($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz) = split(/\s+/, $line);
+			# 2D
+			($ip, $a, $x, $z, $vx, $vy, $vz, $ox, $oy, $oz, $angle) = split(/\s+/, $line);
+            #
+            $ang[$i] = $angle;
+            $radius[$i] = $a;
+            if ($xz_shift) {
+                $x += $Lx/2;
+                $z += $Lz/2;
+                #if ($x > $Lx/2) {
+                #    $x -= $Lx;
+                # }
+                #if ($z > $Lz/2) {
+                #    $z -= $Lz;
+                #}
+            }
+            $posx[$i] = $x;
+            $posy[$i] = $y;
+            $posz[$i] = $z;
+            $velx[$i] = $vx;
+            $vely[$i] = $vy;
+            $velz[$i] = $vz;
+            $omegax[$i] = $ox;
+            $omegay[$i] = $oy;
+            $omegaz[$i] = $oz;
+            
+            if ($radius_max < $a) {
+                $radius_max = $a;
+            }
+        }
+    }
 }
 
 sub InInteractions{
 	#	$line = <IN_interaction>;
 	#    ($buf, $shear_strain_i, $num_interaction) = split(/\s+/, $line);
 	# printf "int $buf $shear_strain_i $num_interaction\n";
-
-	if ($first_int == 1) {
-		$line = <IN_interaction>;
-		($buf, $shear_strain) = split(" : ", $line);
-		$first_int = 0;
-	}
-	
-	# cumulated strain
-	($buf, $shear_strain) = split(" : ", $line);
-	# shear disp
-	$line = <IN_particle>;
-	($buf, $shear_disp) = split(" : ", $line);
-	# shear rate
-	$line = <IN_particle>;
-	($buf, $epsilondot) = split(" : ", $line);
-	#
-	$line = <IN_particle>;
-	($buf, $timeper) = split(" : ", $line);
-	#
-	$line = <IN_particle>;
-	($buf, $retrim) = split(" : ", $line);
-	printf "---  $buf -- $retrim\n";
-	
-	
-
+    while (1) {
+        $line = <IN_interaction>;
+        ($buf, $val) = split(" : ", $line);
+        ($buf1) = split(/\s+/, $buf);
+        if ($buf1 ne '#') {
+            last;
+        } else {
+            $ssHeader[$j++] = $val;
+        }
+        last unless defined $line;
+    }
 	$k = 0;
-	
 	while (true) {
-		$line = <IN_interaction>;
+        if ($k > 0) {
+            $line = <IN_interaction>;
+        }
 		($i, $j, $contact, $nx, $ny, $nz, #1---6
 		$gap, $f_lub_norm, # 7, 8
 		$f_lub_tan_x, $f_lub_tan_y, $f_lub_tan_z, # 9, 10, 11
 		$fc_norm, # 12
 		$fc_tan_x, $fc_tan_y, $fc_tan_z, # 13, 14, 15
 		$fr_norm, $s_xF) = split(/\s+/, $line);
-		if ($i eq '#') {
-			printf "int: $line\n";
-			last;
-		}
-		last unless defined $line;
+
+        if ($i eq '#' || $i eq NU) {
+            ($buf, $shear_strain) = split(" : ", $line);
+            last;
+        }
+        if (! defined $i) {
+            last;
+        }
+
+        #		last unless defined $line;
 		#1: particle 1 label
 		#2: particle 2 label
 		#3: contact state (0 = no contact, 1 = frictionless contact, 2 = non-sliding frictional, 3 = sliding frictional)
@@ -287,14 +282,6 @@ sub InInteractions{
 		#13-15: tangential part of the contact force
 		#16: norm of the normal repulsive force
 		#17: Viscosity contribution of contact xF
-
-		if ($i eq '#' || $i eq NU) {
-			($buf, $shear_strain) = split(" : ", $line);
-			last;
-		}
-		if (! defined $i) {
-			last;
-		}
 		if ($output == 1) {
 			$int0[$k] = $i;
 			$int1[$k] = $j;
@@ -334,13 +321,11 @@ sub OutYaplotData{
 	printf OUT "y 1\n";
 	printf OUT "@ 8\n";
 	## visualize particles
-	$epsilondot = 0.5;
+    #$epsilondot = 1;
 	$ax = exp( $epsilondot*($timeper))*$cos_ma*$cos_ma+exp(-$epsilondot*($timeper))*$sin_ma*$sin_ma;
 	$az = exp(-$epsilondot*($timeper))*$cos_ma*$sin_ma-exp( $epsilondot*($timeper))*$sin_ma*$cos_ma;
 	$bx = exp(-$epsilondot*($timeper))*$cos_ma*$sin_ma-exp( $epsilondot*($timeper))*$sin_ma*$cos_ma;
 	$bz = exp(-$epsilondot*($timeper))*$cos_ma*$cos_ma+exp( $epsilondot*($timeper))*$sin_ma*$sin_ma;
-	printf "$ax \t $az\n";
-	printf "$Lx \t $Lz \n";
 	#        if ($cnt2 == 10) {
 	#            exit;
 	#        }
@@ -348,16 +333,14 @@ sub OutYaplotData{
 	$lx2 = $Lx/2;
 	$ly2 = $Ly/2;
 	$lz2 = $Lz/2;
-	printf "flow_type $flow_type\n";
 	if ($flow_type == "extension") {
 		&OutParticleExtension;
 	} else {
 		&OutParticleShear;
 	}
 	if ($draw_trajectory) {
-		
-		for ($ii = -3; $ii <= 3; $ii++) {
-			for ($jj = -3; $jj <= 3; $jj++) {
+		for ($ii = $ii_min; $ii <= $ii_max; $ii++) {
+			for ($jj = $jj_min; $jj <= $jj_max; $jj++) {
 				$pd_xshift = $Lx*$ax*($ii)+$Lz*$bx*($jj);
 				$pd_zshift = $Lx*$az*($ii)+$Lz*$bz*($jj);
 				$xx = $posx[$i_trac] + $pd_xshift;
@@ -407,14 +390,13 @@ sub OutYaplotData{
 	if (1) {
 		printf OUT "y 4\n";
 		printf OUT "@ 7\n";
-		printf "int = $num_interaction\n";
 		for ($k = 0; $k < $num_interaction; $k ++) {
 			$forcetmp = $force[$k];
 			#$forcetmp = $F_lub[$k];
 			if ($forcetmp > 0) {
 				$w = $force_factor*$forcetmp;
-				for ($ii = -2; $ii <= 2; $ii++) {
-					for ($jj = -3; $jj <= 2; $jj++) {
+				for ($ii = $ii_min; $ii <= $ii_max; $ii++) {
+					for ($jj = $jj_min; $jj <= $jj_max; $jj++) {
 						$pd_xshift = $Lx*$ax*($ii)+$Lz*$bx*($jj);
 						$pd_zshift = $Lx*$az*($ii)+$Lz*$bz*($jj);
 						$bulk = 1;
@@ -500,8 +482,8 @@ sub OutParticleShear {
 		#			if ($i == $np-1) {
 		#				printf OUT "@ 4\n";
 		#			}
-	LOOP: for ($ii = -3; $ii <= 3; $ii++) {
-		for ($jj = -3; $jj <= 3; $jj++) {
+	LOOP: for ($ii = -1; $ii <= 1; $ii++) {
+		for ($jj = -1; $jj <= 1; $jj++) {
 			$pd_xshift = $Lx*$ax*($ii)+$Lz*$bx*($jj);
 			$pd_zshift = $Lx*$az*($ii)+$Lz*$bz*($jj);
 			$xx =  $posx[i] + $pd_xshift;
@@ -520,8 +502,8 @@ sub OutParticleExtension {
 	$particlecolor = 8;
 	printf OUT "@ 8\n";
 	$j = 0;
-	for ($ii = -3; $ii <= 3; $ii++) {
-		for ($jj = -3; $jj <= 3; $jj++) {
+	for ($ii = $ii_min; $ii <= $ii_max; $ii++) {
+		for ($jj = $jj_min; $jj <= $jj_max; $jj++) {
 			if ($pd_color) {
 				if ($particlecolor == 10){
 					$particlecolor = 8;
@@ -545,6 +527,9 @@ sub OutParticleExtension {
 				}
 				#if ($xx2> 0 && $xx2 < $Lx &&  $zz2 > 0 && $zz2 < $Lz){
 				if (abs($xx2)<$scale*$Lx && abs($zz2) < $scale*$Lz) {
+                    #                    if (abs($ii) >= 2 || abs($jj) >= 2) {
+                    #   printf "i,j = $ii, $jj\n"
+                    #}
 					if ($phi6_data == 1) {
 						$op = 119*(1-$phi6abs[$i])+4;
 						$color = int $op;

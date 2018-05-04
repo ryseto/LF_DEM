@@ -240,14 +240,19 @@ struct base_configuration readBinaryBaseConfiguration(std::ifstream &input)
 void writeBinaryBaseConfiguration(std::ofstream &conf_export, const struct base_configuration &conf) 
 {
 	std::vector<std::vector<double> > pos(conf.position.size());
-	unsigned dims = 5;
+	unsigned dims = 4;
+	if (conf.ly == 0) {
+		dims = 5;
+	}
 	for (unsigned i=0; i<conf.position.size(); i++) {
 		pos[i].resize(dims);
 		pos[i][0] = conf.position[i].x;
 		pos[i][1] = conf.position[i].y;
 		pos[i][2] = conf.position[i].z;
 		pos[i][3] = conf.radius[i];
-		pos[i][4] = conf.angle[i];
+		if (conf.ly == 0) {
+			pos[i][4] = conf.angle[i]; ///@@@@
+		}
 	}
 	unsigned np = conf.position.size();
 	conf_export.write((char*)&np, sizeof(unsigned));
