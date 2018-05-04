@@ -810,8 +810,8 @@ void Simulation::outputIntFileTxt()
 							      inter.delayed_adhesion->ratioUptimeToActivation());
 			}
 		}
+		outdata_int.writeToFile(snapshot_header.str());
 	}
-	outdata_int.writeToFile(snapshot_header.str());
 }
 
 void Simulation::outputConfigurationData()
