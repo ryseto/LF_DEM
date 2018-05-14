@@ -593,6 +593,7 @@
 		D96731B517A042AD005D02F8 /* percolation_LF_DEM.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = percolation_LF_DEM.1; sourceTree = "<group>"; };
 		D96731BA17A042D1005D02F8 /* System.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = System.cpp; sourceTree = "<group>"; };
 		D96731BB17A042D1005D02F8 /* System.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = System.h; sourceTree = "<group>"; };
+		D96B068920969E4D00EC3A0C /* extractPositionData.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = extractPositionData.pl; path = tools/extractPositionData.pl; sourceTree = SOURCE_ROOT; };
 		D972B3AB1DC785C400024381 /* StressComponent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StressComponent.h; sourceTree = "<group>"; };
 		D972B3AC1DC785C400024381 /* VelocityComponent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VelocityComponent.h; sourceTree = "<group>"; };
 		D9752C881B18285100DDE5E4 /* global.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = global.h; sourceTree = "<group>"; };
@@ -1241,6 +1242,7 @@
 			children = (
 				D9A906691BF331EF00BE8640 /* generateYaplotFile_seto.pl */,
 				D9A9066A1BF331EF00BE8640 /* generateYaplotFile.pl */,
+				D96B068920969E4D00EC3A0C /* extractPositionData.pl */,
 				D9632A401F3021A100741C43 /* averageConfigdata.pl */,
 				D9B4104F1E5BF8C400A2C9D5 /* generateYaplotFile_extflow.pl */,
 				D98F62131E62367200053198 /* convertMaterialFunctions.pl */,
@@ -1817,7 +1819,7 @@
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_COMMA = NO;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
@@ -1874,7 +1876,7 @@
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_COMMA = NO;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;

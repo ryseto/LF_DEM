@@ -17,8 +17,3 @@ xcuserdata
 Makefile_config.mk
 __pycache__
 build/
-
-pyLF_DEM/Makefile.in
-pyLF_DEM/*.so
-pyLF_DEM/pyLFDEM.py
-pyLF_DEM/pyLFDEM_wrap.cxx

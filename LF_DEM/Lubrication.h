@@ -34,7 +34,6 @@ private:
 	System *sys;
 	bool _active;
 	double range;
-
 	//======= particles data  ====================//
 	unsigned int p0;
 	unsigned int p1;
@@ -123,7 +122,10 @@ private:
 		return lubforce_p0-dot(lubforce_p0, nvec)*(*nvec);
 	}
 	vec3d getTotalForce() const;
-
+	double getNormalForceValue() const
+	{
+		return dot(getTotalForce(), nvec);
+	}
 	void addMEStresslet(const Sym2Tensor& E_inf,
 	                    Sym2Tensor& stresslet_i,
 	                    Sym2Tensor& stresslet_j) const;
@@ -146,6 +148,13 @@ private:
 	std::pair<struct DBlock, struct DBlock> RFU_DBlocks_squeeze() const;
 	void calcXFunctions();
 	void calcXYFunctions();
+	void calcLubricationForce();
+	void resetLubricationForce()
+	{
+		force = 0;
+	}
+	double force;
+	
 };
 
 #endif /* defined(__LF_DEM__Lubrication__) */

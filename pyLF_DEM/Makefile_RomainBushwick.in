@@ -1,0 +1,2 @@
+PYTHON_SITE_PACKAGES = /home/romain/anaconda3/lib/python3.6/site-packages/
+SWIG = swig3.0
