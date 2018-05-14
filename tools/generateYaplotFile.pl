@@ -18,7 +18,7 @@ my $xz_shift = 0;
 my $axis = 0;
 my $reversibility_test = 0;
 my $monodisperse = 0;
-
+my $twodim = 0;
 GetOptions(
 'forcefactor=f' => \$force_factor,
 'interval=i' => \$output_interval,
@@ -35,9 +35,16 @@ printf "reversibility = $reversibility_test\n";
 printf "monodisperse = $monodisperse\n";
 
 # Create output file name
-$i = index($particle_data, 'par_', 0)+4;
-$j = index($particle_data, '.dat', $i-1);
+printf "$particle_data\n";
+$i = index($particle_data, "par_", 0)+4;
+$iD3 = index($particle_data, "D3N");
+$j = index($particle_data, ".dat", $i-1);
 $name = substr($particle_data, $i, $j-$i);
+my $dim = 3;
+if ($iD3 eq -1){
+    $dim = 2;
+}
+printf "$dim dimension\n";;
 
 $interaction_data = "int_${name}.dat";
 $output = "y_$name.yap";
@@ -229,8 +236,12 @@ sub InParticles {
 			#11: angle
 			#				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
 			#	$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
-			($ip, $a, $x, $y, $z, $vx, $vz, $vy, $ox, $oz, $oy) = split(/\s+/, $line);
-			#($ip, $a, $x, $z, $vx, $vz, $vy, $ox, $oz, $oy, $angle) = split(/\s+/, $line);
+            if ($dim eq 3) {
+                ($ip, $a, $x, $y, $z, $vx, $vz, $vy, $ox, $oz, $oy) = split(/\s+/, $line);
+            } else {
+                ($ip, $a, $x, $z, $vx, $vz, $vy, $ox, $oz, $oy, $angle) = split(/\s+/, $line);
+            }
+			#
 			#
 			$ang[$i] = $angle;
 			$radius[$i] = $a;
