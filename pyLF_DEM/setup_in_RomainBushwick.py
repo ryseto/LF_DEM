@@ -16,21 +16,9 @@ cc = "g++"
 cxx = "g++"
 
 LFDEM_ROOT = "../"
-SUITESPARSE_ROOT = "/usr/local"
-MKLROOT = "/opt/intel/mkl/"
-Blas_Linking_Flags = ["-Wl,--no-as-needed", "-L${MKLROOT}/lib/intel64",
-                      "-Wl,--start-group",
-                      MKLROOT+"/lib/intel64/libmkl_intel_lp64.so",
-                      MKLROOT+"/lib/intel64/libmkl_core.so",
-                      MKLROOT+"/lib/intel64/libmkl_gnu_thread.so",
-                      MKLROOT+"/lib/intel64/libmkl_avx.so",
-                      MKLROOT+"/lib/intel64/libmkl_def.so",
-                      "-Wl,--end-group",
-                      "-lpthread",
-                      "-lm",
-                      "-ldl"]
-Lapack_Linking_Flags = []
-
+SUITESPARSE_ROOT = "/home/romain/src/SuiteSparse/"
+Blas_Linking_Flags = ["-lopenblas"]
+Lapack_Linking_Flags = ["-llapack"]
 SuiteSparse_Linking_Flags = [SUITESPARSE_ROOT+"/lib/libcholmod.so",
                              '-Wl,-rpath='+SUITESPARSE_ROOT+"/lib/"]
 

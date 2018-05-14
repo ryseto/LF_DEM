@@ -188,7 +188,8 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 				sys.zero_shear = true;
 			}
 		}
-	} else if (control_var == Parameters::ControlVariable::stress) {
+	}
+	if (control_var == Parameters::ControlVariable::stress) {
 		system_of_units.add(Dimensional::Unit::stress, control_value);
 		internal_unit = control_value.unit;
 	}
@@ -204,9 +205,13 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 	
 	// when there is a hydro force, its value is the non-dimensionalized shear rate.
 	auto forces = system_of_units.getForceScales();
-	if (forces.count(Dimensional::Unit::hydro) > 0) { // == if rate controlled
+	if (control_var == Parameters::ControlVariable::rate) {
 		sys.set_shear_rate(forces.at(Dimensional::Unit::hydro).value);
 	}
+	if (control_var == Parameters::ControlVariable::stress) {
+		sys.target_stress = forces.at(Dimensional::Unit::stress).value;
+	}
+
 }
 
 void Simulation::assertParameterCompatibility()
