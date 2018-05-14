@@ -999,7 +999,10 @@ void Simulation::outputIntFileTxt()
 								  doubledot(stress_contact, sys.getEinfty()/sr)/sr);
 		}
 	}
-	outdata_int.writeToFile(snapshot_header.str());
+	if (sys.interaction.size() > 0) {
+		outdata_int.writeToFile(snapshot_header.str());
+	}
+
 }
 
 void Simulation::outputConfigurationData()
