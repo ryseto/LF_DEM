@@ -2859,7 +2859,7 @@ void System::recordHistory()
 	}
 }
 
-void System::openHisotryFile(std::string &filename)
-{
-	//		fout_history.open(filename);
-}
+//void System::openHisotryFile(std::string &filename)
+//{
+//	//		fout_history.open(filename);
+//}
