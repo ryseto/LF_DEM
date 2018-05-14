@@ -429,6 +429,12 @@ void Simulation::setupSimulation(string in_args,
 		                                  simu_identifier, control_value);
 	}
 	openOutputFiles();
+
+	//	if (p.output.recording_interaction_history) {
+	//		string ihist_filename = "ihist_"+simu_name+".dat";
+	//		sys.openHisotryFile(ihist_filename);
+	//	}
+	
 	echoInputFiles(in_args, input_files);
 	cout << indent << "Simulation setup [ok]" << endl;
 }

@@ -137,8 +137,13 @@ public:
 	void calcContactSpringForce();
 	vec3d getTotalForce() const;
 	vec3d getNormalForce() const;
+	double getNormalForceValue() const;
 	vec3d getTangentialForce() const;
 	double get_normal_load() const;
+	double get_spring_force() const
+	{
+		return f_spring_normal_norm;
+	}
 	void calcContactStress();
 	void addUpStress(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1);
 	void addUpStressSpring(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1) const;

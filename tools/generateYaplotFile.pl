@@ -229,8 +229,8 @@ sub InParticles {
 			#11: angle
 			#				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
 			#	$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
-			($ip, $a, $x, $y, $z, $vx, $vz, $vy, $ox, $oz, $oy) = split(/\s+/, $line);
-			#($ip, $a, $x, $z, $vx, $vz, $vy, $ox, $oz, $oy, $angle) = split(/\s+/, $line);
+			#			($ip, $a, $x, $y, $z, $vx, $vz, $vy, $ox, $oz, $oy) = split(/\s+/, $line);
+			($ip, $a, $x, $z, $vx, $vz, $vy, $ox, $oz, $oy, $angle) = split(/\s+/, $line);
 			#
 			$ang[$i] = $angle;
 			$radius[$i] = $a;
@@ -275,18 +275,6 @@ sub InInteractions{
 		}
 		last unless defined $line;
 	}
-
-	# 1, 2: numbers of the interacting particles
-	# 3: 1=contact, 0=apart
-	# 4, 5, 6: normal vector
-	# 7: dimensionless gap = s - 2, s = 2r/(a1+a2)
-	# 8: lubrication force
-	# 9: Normal part of contact force
-	# 10: Tangential part of contact force
-	# 11: Colloidal force
-	# 12: Viscosity contribution of contact xF
-	# 13: N1 contribution of contact xF
-	# 14: N2 contribution of contact xF
 	$k = 0;
 	while (true) {
 		if ($k > 0) {
@@ -394,7 +382,7 @@ sub OutYaplotData{
 		#if (1 || $force[$k] >= 0) {
 		#	&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
 		#}
-		if ($force[$k] > 0 && $contactstate[$k] >= 2) {
+		if ($force[$k] > 0) {
 			&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
 		} else {
 			#	&OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k], 0.01);

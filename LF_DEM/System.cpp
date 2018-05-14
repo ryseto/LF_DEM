@@ -64,8 +64,8 @@ wagnerhash(time_t t, clock_t c)
 
 
 System::System(Parameters::ParameterSet& ps,
-	             list <Event>& ev,
-					     State::BasicCheckpoint chkp):
+			   list <Event>& ev,
+			   State::BasicCheckpoint chkp):
 pairwise_resistance_changed(true),
 clk(chkp.clock),
 shear_rate(0),
@@ -459,7 +459,6 @@ void System::setupParameters()
 	if (p.TA_adhesion.adhesion_max_force > 0) {
 		delayed_adhesion = true;
 	}
-
 }
 
 void System::setupBrownian()
@@ -924,6 +923,9 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		if (!p.output.out_particle_stress.empty() || couette_stress) {
 			calcTotalStressPerParticle();
 		}
+		if (p.output.recording_interaction_history) {
+			recordHistory();
+		}
 	}
 	timeStepMove(time_end, strain_end);
 	for (int i=0; i<np; i++) {
@@ -1265,6 +1267,9 @@ void System::timeEvolution(double time_end, double strain_end)
 	}
 	bool calc_stress = false;
 	if (brownian_dominated) {
+		calc_stress = true;
+	}
+	if (p.output.recording_interaction_history) {
 		calc_stress = true;
 	}
 	retrim_ext_flow = false;
@@ -2840,4 +2845,21 @@ void System::yaplotBoxing(std::ofstream &fout_boxing)
 	}
 
 	fout_boxing << endl;
+}
+
+void System::recordHistory()
+{
+	for (unsigned int k=0; k<interaction.size(); k++) {
+		if (interaction[k].lubrication.is_active()) {
+			interaction[k].lubrication.calcLubricationForce();
+		} else {
+			interaction[k].lubrication.force = 0;
+		}
+		interaction[k].recordHistory();
+	}
+}
+
+void System::openHisotryFile(std::string &filename)
+{
+	//		fout_history.open(filename);
 }

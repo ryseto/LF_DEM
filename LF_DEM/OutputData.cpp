@@ -3,9 +3,9 @@
 
 
 void OutputData::setFile(const std::string& fname,
-	          			 const std::string& data_header,
-	          			 bool force_overwrite,
-	          			 bool append)
+						 const std::string& data_header,
+						 bool force_overwrite,
+						 bool append)
 {
 	if (!force_overwrite && !append) {
 		std::ifstream file_test(fname.c_str());

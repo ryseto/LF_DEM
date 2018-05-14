@@ -491,6 +491,11 @@ vec3d Contact::getNormalForce() const
 	return dot(interaction->nvec, getTotalForce())*interaction->nvec;
 }
 
+double Contact::getNormalForceValue() const
+{
+	return dot(interaction->nvec, getTotalForce());
+}
+
 double Contact::get_normal_load() const
 {
 	return normal_load;
