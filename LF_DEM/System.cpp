@@ -414,8 +414,8 @@ void System::setupParameters()
 	} else {
 		calcInteractionRange = &System::calcInteractionRangeDefault;
 	}
-	
-	// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	// @@@@ This part need to be checked.
 	// @@@@ p.brownian or other booleans also also not set in the current version. 
 	if (p.repulsive_length <= 0) {

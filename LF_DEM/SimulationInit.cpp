@@ -236,6 +236,10 @@ void Simulation::assertParameterCompatibility()
 		p.friction_model = 2;
 		cerr << "Warning : critical load simulation -> switched to friction_model=2" << endl;
 	}
+    if (p.output.recording_interaction_history) {
+        cerr << "Interaction history recording needs to use the Euler's Method." << endl;
+        p.integration_method = 0;
+    }
 }
 
 void Simulation::setConfigToSystem(bool binary_conf, const std::string &filename)
@@ -381,7 +385,7 @@ void Simulation::setupSimulation(string in_args,
 	} else {
 		sys.zero_shear = false;
 	}
-	
+    
 	Parameters::ParameterSetFactory PFactory;
 	PFactory.setFromFile(filename_parameters);
 	setupNonDimensionalization(control_value, PFactory);
@@ -409,7 +413,7 @@ void Simulation::setupSimulation(string in_args,
 	}
 
 	setConfigToSystem(binary_conf, filename_import_positions);
-	 //@@@@ temporary repair
+    //@@@@ temporary repair
 	if (input_files[2] != "not_given") {
 		if (sys.brownian && !p.auto_determine_knkt) {
 			contactForceParameterBrownian(input_files[2]);
@@ -420,7 +424,6 @@ void Simulation::setupSimulation(string in_args,
 
 	p_initial = p;
 	sys.resetContactModelParameer(); //@@@@ temporary repair
-
 
 	if (!sys.ext_flow) {
 		// simple shear
