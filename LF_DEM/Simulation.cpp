@@ -470,7 +470,10 @@ void Simulation::outputData()
         outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, viscosity_component);
     }
     //outdata.entryData("shear stress", Dimensional::Dimension::Stress, 1, shear_stress);
-    /************** material function lambda0 **********************************************************************/
+	/************** material function lambda0 **************************************
+	 * lambda0 = - (2/3)*(N2 + 0.5*N1)/shear_rate
+	 * N2 = 0.5*rate*(-3*lambda0 + 2*lambda3)
+	 *******************************************************************************/
     double mf_inplane_pressure; // lambda_0
     if (sr != 0) {
         mf_inplane_pressure = 0.5*doubledot(sys.total_stress, stress_basis_0)/stress_basis_0.selfdoubledot();
@@ -483,7 +486,10 @@ void Simulation::outputData()
         double mf_inplane_pressure_component = 0.5*doubledot(stress_comp.second, stress_basis_0)/stress_basis_0.selfdoubledot();
         outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, mf_inplane_pressure_component);
     }
-    /************** material function lambda3 **********************************************************************/
+    /************** material function lambda3 ****************************************
+	 * lambda3 = - N1 / 2*shear_rate
+	 * N1 = -2*shear_rate*lambda_3
+	 *********************************************************************************/
     double mf_reorientation; // lambda_3
     if (sr != 0) {
         mf_reorientation = 0.5*doubledot(sys.total_stress, stress_basis_3)/stress_basis_3.selfdoubledot();
