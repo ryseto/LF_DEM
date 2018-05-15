@@ -438,22 +438,6 @@ void Simulation::outputData()
 	 */
 	outdata.setUnits(system_of_units, output_unit);
 	double sr = sqrt(2*sys.getEinfty().selfdoubledot()); // shear rate for simple shear.
-	double viscosity;
-	double material_func_inplane_pressure; // lambda_0
-	double material_func_reorientation; // lambda_3
-	if (sr != 0) {
-		// generalized viscosity kappa (= 2*eta)
-		viscosity = 0.5*doubledot(sys.total_stress, sys.getEinfty())/sys.getEinfty().selfdoubledot();
-		material_func_inplane_pressure = 0.5*doubledot(sys.total_stress, stress_basis_0)/                                                                                                                                                                                                                                                                                                                                                                                                            stress_basis_0.selfdoubledot();
-		material_func_reorientation = 0.5*doubledot(sys.total_stress, stress_basis_3)/stress_basis_3.selfdoubledot();
-	} else {
-		// @@@ tentative ouptut for Pe = 0 simulation
-		// output xz component of stress tensor
-		//viscous_material_function = sys.total_stress.elm[2];
-		viscosity = 0.5*doubledot(sys.total_stress, Einf_base)/ Einf_base.selfdoubledot();
-		material_func_inplane_pressure = 0;
-		material_func_reorientation = 0;
-	}
 	outdata.entryData("time", Dimensional::Dimension::Time, 1, sys.get_time());
 	if (sys.get_omega_wheel() == 0 || sys.wall_rheology == false) {
 		// Simple shear geometry
@@ -469,19 +453,51 @@ void Simulation::outputData()
 		outdata.entryData("rotation angle", Dimensional::Dimension::none, 1, sys.get_angle_wheel());
 		outdata.entryData("omega wheel", Dimensional::Dimension::Rate, 1, sys.get_omega_wheel());
 	}
+    /************** viscosity **********************************************************************/
+    double viscosity;
+    if (sr != 0) {
+        viscosity = 0.5*doubledot(sys.total_stress, sys.getEinfty())/sys.getEinfty().selfdoubledot();
+    } else {
+        // @@@ tentative ouptut for Pe = 0 simulation
+        // output xz component of stress tensor
+        //viscous_material_function = sys.total_stress.elm[2];
+        viscosity = 0.5*doubledot(sys.total_stress, Einf_base)/ Einf_base.selfdoubledot();
+    }
 	outdata.entryData("viscosity", Dimensional::Dimension::Viscosity, 1, viscosity);
-	for (const auto &stress_comp: sys.total_stress_groups) {
-		string entry_name = "Viscosity("+stress_comp.first+")";
-		double viscosity_component = doubledot(stress_comp.second, sys.getEinfty())/sys.getEinfty().selfdoubledot();
-		outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, viscosity_component);
-	}
-	/*
-	 * Stress
-	 */
-	//outdata.entryData("shear stress", Dimensional::Dimension::Stress, 1, shear_stress);
-	auto stress_diag = sys.total_stress.diag();
-	outdata.entryData("inviscid function 0th", Dimensional::Dimension::Viscosity, 1, material_func_inplane_pressure);
-	outdata.entryData("inviscid function 3rd", Dimensional::Dimension::Viscosity, 1, material_func_reorientation);
+    for (const auto &stress_comp: sys.total_stress_groups) {
+        string entry_name = "Viscosity("+stress_comp.first+")";
+        double viscosity_component = 0.5*doubledot(stress_comp.second, sys.getEinfty())/sys.getEinfty().selfdoubledot();
+        outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, viscosity_component);
+    }
+    //outdata.entryData("shear stress", Dimensional::Dimension::Stress, 1, shear_stress);
+    /************** material function lambda0 **********************************************************************/
+    double mf_inplane_pressure; // lambda_0
+    if (sr != 0) {
+        mf_inplane_pressure = 0.5*doubledot(sys.total_stress, stress_basis_0)/stress_basis_0.selfdoubledot();
+    } else {
+        mf_inplane_pressure = 0;
+    }
+    outdata.entryData("inviscid function 0th", Dimensional::Dimension::Viscosity, 1, mf_inplane_pressure);
+    for (const auto &stress_comp: sys.total_stress_groups) {
+        string entry_name = "inviscid function 0th("+stress_comp.first+")";
+        double mf_inplane_pressure_component = 0.5*doubledot(stress_comp.second, stress_basis_0)/stress_basis_0.selfdoubledot();
+        outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, mf_inplane_pressure_component);
+    }
+    /************** material function lambda3 **********************************************************************/
+    double mf_reorientation; // lambda_3
+    if (sr != 0) {
+        mf_reorientation = 0.5*doubledot(sys.total_stress, stress_basis_3)/stress_basis_3.selfdoubledot();
+    } else {
+        mf_reorientation = 0;
+    }
+    outdata.entryData("inviscid function 3rd", Dimensional::Dimension::Viscosity, 1, mf_reorientation);
+    for (const auto &stress_comp: sys.total_stress_groups) {
+        string entry_name = "inviscid function 3rd("+stress_comp.first+")";
+        double mf_reorientation_component = 0.5*doubledot(stress_comp.second, stress_basis_3)/stress_basis_3.selfdoubledot();
+        outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, mf_reorientation_component);
+    }
+    /***************************************************************************************************************/
+    auto stress_diag = sys.total_stress.diag();
 	outdata.entryData("N1 viscosity", Dimensional::Dimension::Viscosity, 1, (stress_diag.x-stress_diag.z)/sr);
 	outdata.entryData("N2 viscosity", Dimensional::Dimension::Viscosity, 1, (stress_diag.z-stress_diag.y)/sr);
 	outdata.entryData("particle pressure", Dimensional::Dimension::Stress, 1, -sys.total_stress.trace()/3);
