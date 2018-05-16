@@ -53,6 +53,7 @@ struct outputParams
 	Dimensional::DimensionalQty<double> time_interval_output_data;      ///< Output interval for outputing data_* file [0.01 time unit]
 	Dimensional::DimensionalQty<double> time_interval_output_config;    ///< Output interval for outputing int_* and par_* files [0.1 time unit]
 	bool log_time_interval;                								///< Output in logarithmic time [false]
+    bool new_material_functions;                                        ///< Output new material functions (eta, lambda0, lambda3, insted of standard viscometric functions (eta, N1, N2) [false]
 	Dimensional::DimensionalQty<double> initial_log_time;               ///< Initial output time in log time mode [1e-4]
 		int nb_output_data_log_time;          								///< Nb of data output in log time mode [100]
 	int nb_output_config_log_time;			           					///< Nb of config output in log time mode (must be <= nb_output_data_log_time) [100]

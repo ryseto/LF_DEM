@@ -45,6 +45,7 @@ void ParameterSetFactory::setDefaultValues() {
 		PARAM_INIT(monolayer, false),
 		PARAM_INIT(auto_determine_knkt, false),
 		PARAM_INIT(output.out_bond_order_parameter6, false),
+        PARAM_INIT(output.new_material_functions, false),
 		PARAM_INIT(output.out_data_vel_components, false),
 		PARAM_INIT(output.out_binary_conf, false),
 		PARAM_INIT(output.out_data_interaction, true),

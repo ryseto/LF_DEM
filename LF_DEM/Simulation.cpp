@@ -470,44 +470,57 @@ void Simulation::outputData()
         outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, viscosity_component);
     }
     //outdata.entryData("shear stress", Dimensional::Dimension::Stress, 1, shear_stress);
-	/************** material function lambda0 **************************************
-	 * lambda0 = - (2/3)*(N2 + 0.5*N1)/shear_rate
-	 * N2 = 0.5*rate*(-3*lambda0 + 2*lambda3)
-	 *******************************************************************************/
-    double mf_inplane_pressure; // lambda_0
-    if (sr != 0) {
-        mf_inplane_pressure = 0.5*doubledot(sys.total_stress, stress_basis_0)/stress_basis_0.selfdoubledot();
+    auto stress_diag = sys.total_stress.diag();
+    /************** isotropic stress (particle pressure) **************************************/
+    outdata.entryData("particle pressure", Dimensional::Dimension::Stress, 1, -sys.total_stress.trace()/3);
+    outdata.entryData("particle pressure contact", Dimensional::Dimension::Stress, 1, -sys.total_stress_groups["contact"].trace()/3);
+    /************** normal stress anisotropy  *************************************************/
+    if (sys.p.output.new_material_functions) {
+        /************** material function lambda0 *********************************************
+         * Anisotropy between isotropic stress in the flow plane and the out-of-plane normal stress.
+         * lambda0 has a better physical meaning than N2.
+         * lambda0 = - (2/3)*(N2 + 0.5*N1)/shear_rate
+         * N2 = rate*(-1.5*lambda0 + lambda3)
+         **************************************************************************************/
+        double mf_inplane_pressure; // lambda_0
+        if (sr != 0) {
+            mf_inplane_pressure = 0.5*doubledot(sys.total_stress, stress_basis_0)/stress_basis_0.selfdoubledot();
+        } else {
+            mf_inplane_pressure = 0;
+        }
+        outdata.entryData("inviscid function 0th", Dimensional::Dimension::Viscosity, 1, mf_inplane_pressure);
+        for (const auto &stress_comp: sys.total_stress_groups) {
+            string entry_name = "inviscid function 0th("+stress_comp.first+")";
+            double mf_inplane_pressure_component = 0.5*doubledot(stress_comp.second, stress_basis_0)/stress_basis_0.selfdoubledot();
+            outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, mf_inplane_pressure_component);
+        }
+        /************** material function lambda3 ****************************************
+         * lambda3 induces a reoreientation of the stress eigenvectors.
+         * lambda3 is equivalent to N1.
+         * lambda3 = - (1/2)*N1/shear_rate
+         * N1 = -2*shear_rate*lambda_3
+         *********************************************************************************/
+        double mf_reorientation; // lambda_3
+        if (sr != 0) {
+            mf_reorientation = 0.5*doubledot(sys.total_stress, stress_basis_3)/stress_basis_3.selfdoubledot();
+        } else {
+            mf_reorientation = 0;
+        }
+        outdata.entryData("inviscid function 3rd", Dimensional::Dimension::Viscosity, 1, mf_reorientation);
+        for (const auto &stress_comp: sys.total_stress_groups) {
+            string entry_name = "inviscid function 3rd("+stress_comp.first+")";
+            double mf_reorientation_component = 0.5*doubledot(stress_comp.second, stress_basis_3)/stress_basis_3.selfdoubledot();
+            outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, mf_reorientation_component);
+        }
     } else {
-        mf_inplane_pressure = 0;
-    }
-    outdata.entryData("inviscid function 0th", Dimensional::Dimension::Viscosity, 1, mf_inplane_pressure);
-    for (const auto &stress_comp: sys.total_stress_groups) {
-        string entry_name = "inviscid function 0th("+stress_comp.first+")";
-        double mf_inplane_pressure_component = 0.5*doubledot(stress_comp.second, stress_basis_0)/stress_basis_0.selfdoubledot();
-        outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, mf_inplane_pressure_component);
-    }
-    /************** material function lambda3 ****************************************
-	 * lambda3 = - N1 / 2*shear_rate
-	 * N1 = -2*shear_rate*lambda_3
-	 *********************************************************************************/
-    double mf_reorientation; // lambda_3
-    if (sr != 0) {
-        mf_reorientation = 0.5*doubledot(sys.total_stress, stress_basis_3)/stress_basis_3.selfdoubledot();
-    } else {
-        mf_reorientation = 0;
-    }
-    outdata.entryData("inviscid function 3rd", Dimensional::Dimension::Viscosity, 1, mf_reorientation);
-    for (const auto &stress_comp: sys.total_stress_groups) {
-        string entry_name = "inviscid function 3rd("+stress_comp.first+")";
-        double mf_reorientation_component = 0.5*doubledot(stress_comp.second, stress_basis_3)/stress_basis_3.selfdoubledot();
-        outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, mf_reorientation_component);
+        /************** Normal stress differences **************************************
+         * N1 = sigma11 - sigma22
+         * N2 = sigma22 - sigma33
+         *******************************************************************************/
+        outdata.entryData("N1 viscosity", Dimensional::Dimension::Viscosity, 1, (stress_diag.x-stress_diag.z)/sr);
+        outdata.entryData("N2 viscosity", Dimensional::Dimension::Viscosity, 1, (stress_diag.z-stress_diag.y)/sr);
     }
     /***************************************************************************************************************/
-    auto stress_diag = sys.total_stress.diag();
-	outdata.entryData("N1 viscosity", Dimensional::Dimension::Viscosity, 1, (stress_diag.x-stress_diag.z)/sr);
-	outdata.entryData("N2 viscosity", Dimensional::Dimension::Viscosity, 1, (stress_diag.z-stress_diag.y)/sr);
-	outdata.entryData("particle pressure", Dimensional::Dimension::Stress, 1, -sys.total_stress.trace()/3);
-	outdata.entryData("particle pressure contact", Dimensional::Dimension::Stress, 1, -sys.total_stress_groups["contact"].trace()/3);
 	/* energy
 	 */
 	outdata.entryData("energy", Dimensional::Dimension::none, 1, getPotentialEnergy(sys));
