@@ -454,7 +454,6 @@ void Simulation::outputData()
 		outdata.entryData("omega wheel", Dimensional::Dimension::Rate, 1, sys.get_omega_wheel());
 	}
     /************** viscosity **********************************************************************/
-    double viscosity;
     if (sr != 0) {
         viscosity = 0.5*doubledot(sys.total_stress, sys.getEinfty())/sys.getEinfty().selfdoubledot();
     } else {
@@ -517,8 +516,10 @@ void Simulation::outputData()
          * N1 = sigma11 - sigma22
          * N2 = sigma22 - sigma33
          *******************************************************************************/
-        outdata.entryData("N1 viscosity", Dimensional::Dimension::Viscosity, 1, (stress_diag.x-stress_diag.z)/sr);
-        outdata.entryData("N2 viscosity", Dimensional::Dimension::Viscosity, 1, (stress_diag.z-stress_diag.y)/sr);
+        normal_stress_diff1 = (stress_diag.x-stress_diag.z)/sr;
+        normal_stress_diff2 = (stress_diag.z-stress_diag.y)/sr;
+        outdata.entryData("N1 viscosity", Dimensional::Dimension::Viscosity, 1, normal_stress_diff1);
+        outdata.entryData("N2 viscosity", Dimensional::Dimension::Viscosity, 1, normal_stress_diff2);
     }
     /***************************************************************************************************************/
 	/* energy
@@ -613,6 +614,8 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 			snapshot_header << "# retrim ext flow " << sep << 0 << endl;
 		}
 	}
+    snapshot_header << "# viscosity" << sep << viscosity << endl;
+    snapshot_header << "# n1" << sep << normal_stress_diff1 << endl;
 }
 
 vec3d Simulation::shiftUpCoordinate(double x, double y, double z)

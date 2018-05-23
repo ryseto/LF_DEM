@@ -12,6 +12,7 @@ use Getopt::Long;
 
 my $particle_data = $ARGV[0];
 my $yap_radius = 1;
+#my $force_factor = 0.003;
 my $force_factor = 0.0001;
 my $output_interval = 1;
 my $xz_shift = 0;
@@ -155,11 +156,11 @@ sub yaplotColor {
 	printf OUT "\@1 25 50 102 \n";
 	#printf OUT "\@1 255 255 255 \n";
 	printf OUT "\@2 200 200 200 \n";
-	printf OUT "\@3 50 150 255 \n";
-	printf OUT "\@4 50 200 50 \n";
-	printf OUT "\@5 255 100 100 \n";
-	printf OUT "\@6 50 200 50 \n";
-	printf OUT "\@7 255 255 0 \n";
+    printf OUT "\@3 50 150 255 \n"; # blue
+    printf OUT "\@4 50 200 50 \n"; # green
+    printf OUT "\@5 255 100 100 \n"; #red
+    printf OUT "\@6 50 200 50 \n"; # green
+    printf OUT "\@7 255 255 0 \n"; # yellow
 	printf OUT "\@8 255 255 255\n";
 	printf OUT "\@9 150 150 150\n";
 	#printf OUT "\@8 224 143 0 \n";
@@ -213,7 +214,10 @@ sub InParticles {
 	printf "$shear_strain";
 	$shear_disp = $ssHeader[1];
 	$shear_rate = $ssHeader[2];
-	$target_stress = $ssHeader[3];
+    #	$target_stress = $ssHeader[3];
+    $viscosity = $ssHeader[3];
+    $normalstressdiff1 = $ssHeader[4];
+    
     for ($i = 0; $i < $np; $i ++){
         if ($i > 0) {
             $line = <IN_particle>;
@@ -334,24 +338,26 @@ sub InInteractions{
 			$int0[$k] = $i;
 			$int1[$k] = $j;
 			$contactstate[$k] = $contact;
-			if ($contact > 0) {
-				#$force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
-				$force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
-				#$force[$k] = $fc_norm;
-			} else {
-				$force[$k] = $f_lub_norm + $fr_norm;
-				#$force[$k] = 0;
-			}
-			$F_lub[$k] = $f_lub_norm;
-			$Fc_n[$k] = $fc_norm;
+#            if ($contact > 0) {
+#                #$force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
+#                $force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
+#                #$force[$k] = $fc_norm;
+#            } else {
+#                $force[$k] = $f_lub_norm + $fr_norm;
+#                #$force[$k] = 0;
+#            }
+            $F_lub[$k] = $f_lub_norm;
+            $Fc_n[$k] = $fc_norm;
 			$Fc_t[$k] = sqrt($fc_tan_x**2+$fc_tan_y**2+$fc_tan_z**2);
 			$F_lub_t[$k] = sqrt($f_lub_tan_x**2+ $f_lub_tan_z**2 + $f_lub_tan_y**2);
 			$S_bf[$k] =  $s_xF;
-			$force[$k] += $Fc_t[$k] + $F_lub_t[$k];
+            #$force[$k] += $Fc_t[$k] + $F_lub_t[$k];
 			$nrvec_x[$k] = $nx;
 			$nrvec_y[$k] = $ny;
 			$nrvec_z[$k] = $nz;
 			$Gap[$k] = $gap;
+            $distance[$k] = $radius[$i] + $radius[$j] + $gap;
+
 			$k++;
 		}
 	}
@@ -364,6 +370,8 @@ sub OutYaplotData{
 	} else {
 		$first = 0;
 	}
+
+    
 	printf OUT "y 1\n";
 	printf OUT "@ 8\n";
 	## visualize particles
@@ -380,6 +388,7 @@ sub OutYaplotData{
 		}
 	}
 	
+    
 	## visualize contact network
 #	printf OUT "y 2\n";
 #	printf OUT "r 0.2\n";
@@ -398,28 +407,146 @@ sub OutYaplotData{
 #		}
 #	}
 	## visualize force chain network
-	printf OUT "y 4\n";
-	printf OUT "@ 7\n";
-	for ($k = 0; $k < $num_interaction; $k ++) {
-		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-		#if (1 || $force[$k] >= 0) {
-		#	&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
-		#}
-		if ($force[$k] > 0 && $contactstate[$k] >= 2) {
-			&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
-		} else {
-			#	&OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k], 0.01);
-		}
-	}
-	#	printf OUT "y 3\n";
-	#		printf OUT "@ 5\n";
-	#		for ($k = 0; $k < $num_interaction; $k ++) {
-	#			#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-	#			if ($force[$k] < 0) {
-	#			&OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k], 0.02);
-	#			}
-	#		}
-	
+
+    #
+    printf OUT "y 4\n";
+    printf OUT "@ 7\n";
+    for ($k = 0; $k < $num_interaction; $k ++) {
+        $force = $F_lub[$k] + $Fc_n[$k];
+        if ($force > 0) {
+            &OutString_width($int0[$k], $int1[$k], $force_factor*abs($force), 0.02);
+        }
+    }
+    printf OUT "@ 5\n";
+    for ($k = 0; $k < $num_interaction; $k ++) {
+        $force = $F_lub[$k] + $Fc_n[$k];
+        if ($force < 0) {
+            &OutString_width($int0[$k], $int1[$k], $force_factor*abs($force), 0.02);
+        }
+    }
+
+    
+    
+    
+    #    for ($k = 0; $k < $num_interaction; $k ++) {
+    #    $force = $F_lub[$k] + $Fc_n[$k];
+    #    if ($force > 0) {
+    #        printf OUT "@ 7\n";
+    #    } else {
+    #        printf OUT "@ 5\n";
+    #    }
+    #    &OutString_width($int0[$k], $int1[$k], $force_factor*abs($force[$k]), 0.02);
+    #    #&OutString_width($int0[$k], $int1[$k], $force_factor*abs($n1), 0.01);
+    # }
+    $n1approx_pos_con = 0;
+    $n1approx_neg_con = 0;
+    $n1approx_pos_lub = 0;
+    $n1approx_neg_lub = 0;
+
+    $force_factor = 0.015/$viscosity;
+    printf OUT "y 5\n";
+    #    printf OUT "@ 7\n";
+    for ($k = 0; $k < $num_interaction; $k ++) {
+        #$force = $F_lub[$k] + $Fc_n[$k];
+        $nx = $nrvec_x[$k];
+        $ny = $nrvec_y[$k];
+        $n1lub = -$F_lub[$k]*$distance[$k]*($nx*$nx - $ny*$ny);
+        $n1con = -$Fc_n[$k]*$distance[$k]*($nx*$nx - $ny*$ny);
+        #        $force = $Fc_n[$k];
+        #if (1 || $force[$k] >= 0) {
+        #	&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
+        #}
+        #        if ($force > 0) {
+
+        if ($n1lub > 0) {
+            $n1approx_pos_lub += $n1lub;
+        } else {
+            $n1approx_neg_lub += $n1lub;
+        }
+        if ($n1con > 0) {
+            $n1approx_pos_con += $n1con;
+        } else {
+            $n1approx_neg_con += $n1con;
+        }
+        $n1 = $n1lub + $n1con;
+        if ($n1 > 0) {
+            printf OUT "@ 7\n";
+        } else {
+            printf OUT "@ 5\n";
+        }
+        # &OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
+        &OutString_width($int0[$k], $int1[$k], $force_factor*abs($n1), 0.01);
+        #        }
+    }
+    #    $barsize = 0.1;
+    $barsize = 10;
+    $n1approxP = $barsize*$n1approx_pos_con/($Lx*$Lz*$viscosity);
+    $n1approxN = $barsize*$n1approx_neg_con/($Lx*$Lz*$viscosity);
+    $testposition1 = $Lx/2 + 1;
+    $testposition2 = $Lx/2 + 3;
+
+    printf OUT "@ 7\n";
+    printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxP $testposition1 0 $n1approxP \n";
+    printf OUT "@ 5\n";
+    printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxN $testposition1 0 $n1approxN \n";
+
+    $n1approx = $n1approxP + $n1approxN;
+    $testposition1 = $Lx/2 + 3.2;
+    $testposition2 = $Lx/2 + 5.2;
+
+    if ($n1approx > 0) {
+        printf OUT "@ 7\n";
+    } else {
+        printf OUT "@ 5\n";
+    }
+    printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approx $testposition1 0 $n1approx \n";
+
+    $testposition1 = -$Lx/2 - 3.2;
+    $testposition2 = -$Lx/2 - 5.2;
+
+    $n1approxP = $barsize*$n1approx_pos_lub/($Lx*$Lz*$viscosity);
+    $n1approxN = $barsize*$n1approx_neg_lub/($Lx*$Lz*$viscosity);
+    printf OUT "@ 7\n";
+    printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxP $testposition1 0 $n1approxP \n";
+    printf OUT "@ 5\n";
+    printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxN $testposition1 0 $n1approxN \n";
+
+    $n1approx = $n1approxP + $n1approxN;
+    $testposition1 = -$Lx/2 - 1;
+    $testposition2 = -$Lx/2 - 3;
+    if ($n1approx > 0) {
+        printf OUT "@ 7\n";
+    } else {
+        printf OUT "@ 5\n";
+    }
+    printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approx $testposition1 0 $n1approx \n";
+
+    
+    #    $ratio = $normalstressdiff1/$n1approx;
+    #    printf "ratio = $ratio\n";
+    #    $n1approx = 20*$n1approx/$viscosity;
+    #$totaln1 = 20*$normalstressdiff1/$viscosity;
+    #    if ($normalstressdiff1 > 0 ) {
+    #    printf OUT "@ 7\n";
+    #} else {
+    #    printf OUT "@ 5\n";
+    #}
+    #printf OUT "r 1\n";
+    #printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $totaln1 $testposition1 0 $totaln1 \n";
+
+    
+    
+    
+    if (0) {
+    printf OUT "y 3\n";
+    printf OUT "@ 5\n";
+    for ($k = 0; $k < $num_interaction; $k ++) {
+        #$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+        if ($force[$k] < 0) {
+            &OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k], 0.02);
+        }
+    }
+    }
 	## visualize rotation in 2D
 	if ($Ly == 0) {
 		if (0) {
