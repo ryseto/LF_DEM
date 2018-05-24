@@ -1022,10 +1022,16 @@ void System::adaptTimeStep()
 			dt = p.disp_max/max_sliding_velocity;
 		}
 	} else {
-		dt = p.disp_max/shear_rate;
+		if (!zero_shear) {
+			dt = p.disp_max/shear_rate;
+		} else {
+			throw runtime_error("Can't adapt dt!");
+		}
 	}
-	if (dt*shear_rate > p.disp_max) { // cases where na_velocity < \dotgamma*radius
-		dt = p.disp_max/shear_rate;
+	if (!zero_shear) {
+		if (dt*shear_rate > p.disp_max) { // cases where na_velocity < \dotgamma*radius
+			dt = p.disp_max/shear_rate;
+		}
 	}
 	if (p.dt_max > 0) {
 		if (dt > p.dt_max) {
