@@ -23,12 +23,12 @@ void Str2KeyValue(const std::string& str_parameter,
 
 
 
-ParameterSetFactory::ParameterSetFactory()
+ParameterSetFactory::ParameterSetFactory() 
 {
 	setDefaultValues();
 }
 
-void ParameterSetFactory::setDefaultValues() {
+void ParameterSetFactory::setDefaultValues() { 
 
 /*================================================
 =            DEFAULT PARAMETER VALUES            =
@@ -41,11 +41,11 @@ void ParameterSetFactory::setDefaultValues() {
 	BoolParams = \
 	{
 		PARAM_INIT(fixed_dt, false),
-		PARAM_INIT(get_final_state, false),
 		PARAM_INIT(keep_input_strain, false),
 		PARAM_INIT(monolayer, false),
 		PARAM_INIT(auto_determine_knkt, false),
 		PARAM_INIT(output.out_bond_order_parameter6, false),
+        PARAM_INIT(output.new_material_functions, false),
 		PARAM_INIT(output.out_data_vel_components, false),
 		PARAM_INIT(output.out_binary_conf, false),
 		PARAM_INIT(output.out_data_interaction, true),
@@ -54,6 +54,7 @@ void ParameterSetFactory::setDefaultValues() {
 		PARAM_INIT(output.log_time_interval, false),
 		PARAM_INIT(output.out_na_vel, false),
 		PARAM_INIT(output.out_na_disp, false),
+		PARAM_INIT(output.recording_interaction_history, false)
 	};
 
 	/*===========================================
@@ -90,7 +91,7 @@ void ParameterSetFactory::setDefaultValues() {
 		PARAM_INIT(mu_dynamic, -1),
 		PARAM_INIT(mu_rolling, 0),
 		PARAM_INIT(TA_adhesion.adhesion_range, 1e-2),
-		PARAM_INIT(alpha, 1),
+		PARAM_INIT(output.recording_start, 1)
 	};
 
 	/*================================
@@ -114,7 +115,7 @@ void ParameterSetFactory::setDefaultValues() {
 		PARAM_INIT(flow_type, ""),
 		PARAM_INIT(event_handler, ""),
 		PARAM_INIT(output.out_particle_stress, ""),
-		PARAM_INIT(lubrication_model, "tangential"),
+		PARAM_INIT(lubrication_model, "tangential")
 	};
 
 	/*====================================
@@ -162,7 +163,7 @@ void ParameterSetFactory::setDefaultValues() {
 	default_qty = {Dimensional::Dimension::Time, 0, Dimensional::Unit::hydro};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(contact_relaxation_time_tan, default_qty));
 
-
+	
 	default_qty = {Dimensional::Dimension::Force, 0.1, Dimensional::Unit::kn};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(min_kn_auto_det, default_qty));
 
@@ -179,7 +180,7 @@ void ParameterSetFactory::setDefaultValues() {
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(TA_adhesion.activation_time, default_qty));
 
 	/*----------  True dim vals  ----------*/
-
+	
 	default_qty = {Dimensional::Dimension::TimeOrStrain, 10, Dimensional::Unit::hydro};
 	TrueDimValDblParams.push_back(PARAM_INIT(time_end, default_qty));
 
@@ -244,7 +245,7 @@ void ParameterSetFactory::setFromFile(const std::string& filename_parameters)
 }
 
 
-void ParameterSetFactory::setParameterFromKeyValue(const std::string &keyword,
+void ParameterSetFactory::setParameterFromKeyValue(const std::string &keyword, 
 												   const std::string &value)
 {
 	for (auto &inp: BoolParams) {
@@ -304,7 +305,7 @@ std::vector<Dimensional::ForceScale> ParameterSetFactory::getForceScales() const
 	return fs;
 };
 
-void ParameterSetFactory::convertParameterUnit(const Dimensional::UnitSystem &unit_system,
+void ParameterSetFactory::convertParameterUnit(const Dimensional::UnitSystem &unit_system, 
 											   InputParameter<Dimensional::DimensionalQty<double>> &param)
 {
 	if (param.value.dimension == Dimensional::Dimension::TimeOrStrain) {

@@ -704,3 +704,8 @@ void Lubrication::updateResistanceCoeff()
 		}
 	}
 }
+
+void Lubrication::calcLubricationForce()
+{
+	force = dot(getTotalForce(), nvec);
+}

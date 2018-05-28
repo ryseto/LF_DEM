@@ -27,6 +27,7 @@
 
 class OutputData {
 private:
+	bool first_time;
 	bool restart_from_chkp;
 	Dimensional::Unit out_unit;
 	Dimensional::Unit internal_unit;
@@ -43,7 +44,6 @@ private:
 	void initCol(std::string name, unsigned width);
 
 public:
-    bool first_time;
 	OutputData(): first_time(true), restart_from_chkp(false), default_precision(6) {}
 	~OutputData()
 	{

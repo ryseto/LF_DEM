@@ -47,6 +47,9 @@ private:
 	double target_stress_input;
 	double input_rate;
 	double dimensionless_rate;
+    double viscosity;
+    double normal_stress_diff1;
+    double normal_stress_diff2;
 	bool restart_from_chkp;
 	time_t time_strain_0;
 	time_t time_strain_1;
@@ -67,9 +70,6 @@ private:
 	OutputData outdata_pst;
 	OutputData outdata_par;
 	OutputData outdata_int;
-	OutputData outdata_st_end;
-	OutputData outdata_par_end;
-	OutputData outdata_int_end;
 	std::ofstream fout_boxing;
 	/*
 	 * For inputs
@@ -81,18 +81,8 @@ private:
 
 public:
 	/* For DEMsystem*/
-	int type_simulation;
-	bool get_final_state;
 	Simulation(State::BasicCheckpoint chkp = State::zero_time_basicchkp);
 	void simulationSteadyShear(std::string in_args,
-							   std::vector<std::string>& input_files,
-							   bool binary_conf,
-							   Parameters::ControlVariable control_variable,
-							   Dimensional::DimensionalQty<double> control_value,
-							   std::string flow_type,
-							   std::string simu_identifier);
-
-    void simulationSedimentation(std::string in_args,
 							   std::vector<std::string>& input_files,
 							   bool binary_conf,
 							   Parameters::ControlVariable control_variable,
@@ -111,10 +101,9 @@ public:
 	void setConfigToSystem(bool binary_conf, const std::string &filename);
 	TimeKeeper initTimeKeeper();
 	Parameters::ParameterSet p;
-	bool keepRunning(bool enter_once);
+	bool keepRunning();
 	// void timeEvolution(double& next_output_data);
 	void generateOutput(const std::set<std::string> &output_events, int& binconf_counter);
-	void generateOutputFinalState();
 	/*********** Events  ************/
 	std::list <Event> events;
 	void setupEvents();
@@ -136,7 +125,7 @@ public:
 	void contactForceParameter(std::string filename);
 	void contactForceParameterBrownian(std::string filename);
 	void importPreSimulationData(std::string filename);
-	void setupNonDimensionalization(Dimensional::DimensionalQty<double> control_value,
+	void setupNonDimensionalization(Dimensional::DimensionalQty<double> control_value, 
 									Parameters::ParameterSetFactory &PFact);
 	void stopShearing(TimeKeeper &tk); //simulation mode 22
 

@@ -702,40 +702,6 @@ void StokesSolver::solve(vector<vec3d> &velocity, vector<vec3d> &ang_velocity)
 #endif
 }
 
-void StokesSolver::solve2D(vector<vec3d> &velocity, vector<vec3d> &ang_velocity)
-{
-	CHOL_FUNC(solve2) (CHOLMOD_A,                // solve chol_res_mat*chol_solution = chol_rhs
-	                   chol_L,                   // Cholesky factor
-	                   chol_rhs,                 // RHS
-	                   NULL,                     // subpart of RHS, NULL means all
-	                   &chol_solution,           // solution stored here
-	                   NULL,                     // subpart of solution, NULL means all
-	                   &chol_solveY_workspace,   // reusable workspace
-	                   &chol_solveE_workspace,   // reusable workspace
-	                   &chol_c);
-	auto size = chol_solution->nrow/6;
-	if (size>velocity.size() || size>ang_velocity.size()) {
-		// we don't try to resize things here, left to the caller
-		// In particular this is sometimes called with size < velo.size(), so no resizing is safer.
-		throw runtime_error(" StokesSolver::solve: allocated solution vector too small");
-	}
-	double *solx = ((double*)chol_solution->x);
-	for (decltype(size) i=0; i<size; i++) {
-		auto i6 = 6*i;
-		velocity[i].x     = solx[i6  ];
-		velocity[i].y     = 0;
-		velocity[i].z     = solx[i6+2];
-		ang_velocity[i].x = 0;
-		ang_velocity[i].y = solx[i6+4];
-		ang_velocity[i].z = 0;
-	}
-#ifdef DEV
-#ifdef USE_GPU
-  cholmod_l_gpu_stats(&chol_c); // debug only
-#endif
-#endif
-}
-
 void StokesSolver::vec3dToDouble(double *a, const vector<vec3d>& b, const vector<vec3d>& c)
 {
 	for (unsigned i=0; i<b.size(); i++) {

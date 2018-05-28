@@ -17,6 +17,7 @@
 #define __LF_DEM__System__
 #include <iostream>
 #include <iomanip>
+#include <sstream>
 #include <vector>
 #include <fstream>
 #include <queue>
@@ -57,7 +58,7 @@ class BoxSet;
 class System{
 private:
 
-    int np; ///< number of particles
+	int np; ///< number of particles
 	std::vector<unsigned int> nb_blocks_mm;
 	std::vector<unsigned int> nb_blocks_mf;
 	std::vector<unsigned int> nb_blocks_ff;
@@ -91,6 +92,7 @@ private:
 	double sq_cos_ma; // magic angle @@@@
 	double sq_sin_ma; // magic angle @@@@
 	double cos_ma_sin_ma; // magic angle @@@@
+	//	std::stringstream history_output_stream;  <-- I cannot compile with this.
 	/* data */
 	bool keepRunning(double time_end, double strain_end);
 	bool keepRunning(const std::string& time_or_strain, const double& value_end);
@@ -107,7 +109,6 @@ private:
 	void timeStepBoxing();
 	void adaptTimeStep();
 	void adaptTimeStep(double time_end, double strain_end);
-	void setWeightForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);  // NEW: IMPLEMENTATION WEIGHT (NICO)!!!
 	void setContactForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setRepulsiveForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setTActAdhesionForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
@@ -190,8 +191,7 @@ private:
 	~System();
 
 	Parameters::ParameterSet& p;
-
-
+	
 	int np_mobile; ///< number of mobile particles
 	bool ext_flow;
 	// Interaction types
@@ -209,7 +209,6 @@ private:
 	bool twodimension;
 	Parameters::ControlVariable control;
 	bool zero_shear;
-	bool zero_gravity;
 	bool wall_rheology;
 	bool mobile_fixed;
 	bool couette_stress;
@@ -239,11 +238,6 @@ private:
 	std::vector<Sym2Tensor> total_stress_pp; // per particle
 	std::vector<std::complex<double>> phi6;
 	Sym2Tensor total_stress;
-
-    std::vector<vec3d> static_strength;
-    std::vector<double> sq_caracteristic_strength;
-    double max_static_strength;
-    double max_criterion;
 
 	/**************** Interaction machinery ***************************/
 	/* We hold the Interaction instances in a std::vector */
@@ -334,7 +328,6 @@ private:
 	vec3d force_upwall;
 	vec3d force_downwall;
 
-
 	/****************************************************************************************************
 	 * Extensional flow using Kraynik-Reinelt Method was originally implemented                         *
 	 * by Antonio Martiniello and Giulio Giuseppe Giusteri from Auguest to November 2016 at OIST.       *
@@ -369,11 +362,8 @@ private:
 
 	void setInteractions_GenerateInitConfig();
 	void setupConfiguration(struct base_shear_configuration c, Parameters::ControlVariable control_);
-	void setupConfiguration(struct base_sedimentation_configuration c, Parameters::ControlVariable control_);
-	void setupConfiguration(struct sedimentation_configuration c, Parameters::ControlVariable control_);
 	void setupConfiguration(struct fixed_velo_configuration c, Parameters::ControlVariable control_);
 	void setupConfiguration(struct circular_couette_configuration c, Parameters::ControlVariable control_);
-	void setupConfiguration(struct bottom_wall_configuration c, Parameters::ControlVariable control_);
 	void setupConfiguration(const struct delayed_adhesion_configuration &conf, Parameters::ControlVariable control_);
 	void resetContactModelParameer();
 	void allocateRessources();
@@ -414,6 +404,7 @@ private:
 	void updateH(); // Extensional flow Periodic Boundary condition
 	void yaplotBoxing(std::ofstream &fout_boxing); // Extensional flow Periodic Boundary condition
 	void calcOrderParameter();
+	void recordHistory();
 
 	void setBoxSize(double lx_, double ly_, double lz_)
 	{
@@ -540,7 +531,7 @@ private:
 	{
 		return na_disp;
 	}
-
+	
 	void resetNonAffineDispData()
 	{
 		for (auto &elm: na_disp) {

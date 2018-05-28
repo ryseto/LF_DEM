@@ -65,7 +65,6 @@ private:
 	 */
 	bool circulargap_config;
 	bool parallel_wall_config;
-	bool bottom_wall_config;
 	bool winding_wall_config;
 	double cg_radius_in;
 	double cg_radius_out;
@@ -75,8 +74,6 @@ private:
 	int np_fix;
 	int np_movable;
 	double radius_wall_particle;
-	double radius_wall_dispersion;
-	// double density_wall_particle;
 #ifndef USE_DSFMT
 	MTRand rand_gen;
 #endif
@@ -98,8 +95,8 @@ private:
 	inline vec3d randUniformCircle(double r);
 	double sqContactDistance(int i, int j, double contact_distance);
 	std::pair<std::vector<vec3d>, std::vector<double>>  putRandom(bool twodimension);
-	void setParameters(Simulation &simu);
-	void outputPositionData(const System &sys, int cnt_iteration);
+	void setParameters(Simulation &simu, double volume_frac_init);
+	void outputPositionData(const System &sys);
 	template<typename T> void baseSetup(T &conf, bool is2d, double inflate_ratio);
 public:
 	GenerateInitConfig():
@@ -107,12 +104,10 @@ public:
 	parallel_wall_config(false),
 	winding_wall_config(false) {};
 
-	int generate(int rand_seed_, int config_type);
+	int generate(int rand_seed_, double volume_frac_gen_, int config_type);
 	/* config_type = 1 -- noraml
 	 * config_type = 2 -- circular wide gap
 	 * config_type = 3 -- simple shear with wall
-	 * config_type = 4 -- winding
-	 * config_type = 5 -- one wall at the bottom
 	 */
 };
 #endif /* defined(__LF_DEM__GenerateInitConfig__) */

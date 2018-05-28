@@ -761,51 +761,6 @@ bool BoxSet::is_boxed()
 	return _is_boxed;
 }
 
-Box* BoxSet::whichBox(const vec3d &pos)
-{
-	double lx_context;
-	double ly_context;
-	double lz_context;
-	if(sys->ext_flow){
-        lx_context=sys->get_lx_ext_flow();
-        ly_context=sys->get_ly_ext_flow();
-        lz_context=sys->get_lz_ext_flow();
-	}else{
-	    lx_context=sys->get_lx();
-        ly_context=sys->get_ly();
-        lz_context=sys->get_lz();
-	}
-	unsigned int ix;
-	if(pos.x==lx_context){
-	    ix=x_box_nb-1;
-	}else{
-	    ix = (unsigned int)(pos.x/box_xsize);
-	}
-    unsigned int iy;
-	if (sys->twodimension) {
-		iy = 0;
-	}else {
-	    if(pos.y==ly_context){
-            iy = y_box_nb-1;
-	    }else{
-	        iy = (unsigned int)(pos.y/box_ysize);
-	    }
-	}
-	unsigned int iz;
-	if(pos.z==lz_context){
-        iz = z_box_nb-1;
-	}else{
-	    iz = (unsigned int)(pos.z/box_zsize);
-	}
-	unsigned int label = ix*yz_box_nb+iy*z_box_nb+iz;
-	if (label >= box_labels.size()) {
-		ostringstream error_str;
-		error_str  << " BoxSet: trying to box position out of boundaries \"" << pos	<< "\"" << endl;
-		throw runtime_error(error_str.str());
-	}
-	return box_labels[label];
-}
-
 Box* BoxSet::whichBox(unsigned int box_label)
 {
 	if (box_label >= box_labels.size()) {
@@ -817,48 +772,40 @@ Box* BoxSet::whichBox(unsigned int box_label)
 
 unsigned int BoxSet::whichBoxLabel(const vec3d &pos)
 {
-	double lx_context;
-	double ly_context;
-	double lz_context;
-	if(sys->ext_flow){
-        lx_context=sys->get_lx_ext_flow();
-        ly_context=sys->get_ly_ext_flow();
-        lz_context=sys->get_lz_ext_flow();
-	}else{
-	    lx_context=sys->get_lx();
-        ly_context=sys->get_ly();
-        lz_context=sys->get_lz();
-	}
-	unsigned int ix;
-	if(pos.x==lx_context){
-	    ix=x_box_nb-1;
-	}else{
-	    ix = (unsigned int)(pos.x/box_xsize);
-	}
-    unsigned int iy;
+	unsigned int ix = (unsigned int)(pos.x/box_xsize);
+	unsigned int iy;
 	if (sys->twodimension) {
 		iy = 0;
-	}else {
-	    if(pos.y==ly_context){
-            iy = y_box_nb-1;
-	    }else{
-	        iy = (unsigned int)(pos.y/box_ysize);
-	    }
+	} else {
+		iy = (unsigned int)(pos.y/box_ysize);
 	}
-	unsigned int iz;
-	if(pos.z==lz_context){
-        iz = z_box_nb-1;
-	}else{
-	    iz = (unsigned int)(pos.z/box_zsize);
-	}
+	unsigned int iz = (unsigned int)(pos.z/box_zsize);
 	unsigned int label = ix*yz_box_nb+iy*z_box_nb+iz;
 	if (label >= box_labels.size()) {
-		ostringstream error_str;
-		error_str << " BoxSet: trying to box position out of boundaries \"" << pos	<< "\"" << endl;
-		error_str << pos - origin_ext_flow << endl;
-		throw runtime_error(error_str.str());
+		// We first make sure it's not a rounding issue
+		if (std::nextafter(ix*box_xsize, (ix+1u)*box_xsize) > pos.x) {
+			ix--;
+		}
+		if (std::nextafter(iy*box_ysize, (iy+1u)*box_ysize) > pos.y) {
+			iy--;
+		}
+		if (std::nextafter(iz*box_zsize, (iz+1u)*box_zsize) > pos.z) {
+			iz--;
+		}
+		label = ix*yz_box_nb+iy*z_box_nb+iz;
+		if (label >= box_labels.size()) {
+			ostringstream error_str;
+			error_str << " BoxSet: trying to box position out of boundaries \"" << pos	<< "\"" << endl;
+			error_str << pos - origin_ext_flow << endl;
+			throw runtime_error(error_str.str());
+		}
 	}
 	return label;
+}
+
+Box* BoxSet::whichBox(const vec3d &pos)
+{
+	return box_labels[whichBoxLabel(pos)];
 }
 
 void BoxSet::box(int i)

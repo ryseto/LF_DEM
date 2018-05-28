@@ -64,8 +64,8 @@ wagnerhash(time_t t, clock_t c)
 
 
 System::System(Parameters::ParameterSet& ps,
-	             list <Event>& ev,
-					     State::BasicCheckpoint chkp):
+			   list <Event>& ev,
+			   State::BasicCheckpoint chkp):
 pairwise_resistance_changed(true),
 clk(chkp.clock),
 shear_rate(0),
@@ -129,8 +129,6 @@ void System::allocateRessources()
 	}
 	// Velocity
 	velocity.resize(np);
-	static_strength.resize(np_mobile);
-	sq_caracteristic_strength.resize(np_mobile);
 	for (auto &v: velocity) {
 		v.reset();
 	}
@@ -178,8 +176,6 @@ void System::declareForceComponents()
 	// a set of components that must add up exactly to the total non-affine velocity
 
 	bool torque = true;
-
-	force_components["weight"]=ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setWeightForceToParticle); // NEW: IMPLEMENTATION WEIGHT (NICO)!!!
 
 	/******* Contact force, spring part ***********/
 	if (friction) {
@@ -419,9 +415,9 @@ void System::setupParameters()
 		calcInteractionRange = &System::calcInteractionRangeDefault;
 	}
 
-	// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	// @@@@ This part need to be checked.
-	// @@@@ p.brownian or other booleans also also not set in the current version.
+	// @@@@ p.brownian or other booleans also also not set in the current version. 
 	if (p.repulsive_length <= 0) {
 		repulsiveforce = false;
 		p.repulsive_length = 0;
@@ -429,7 +425,7 @@ void System::setupParameters()
 		repulsiveforce = true;
 	}
 	// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
+	
 	p.theta_shear *= M_PI/180.;
 	setShearDirection(p.theta_shear);
 
@@ -463,12 +459,10 @@ void System::setupParameters()
 	if (p.TA_adhesion.adhesion_max_force > 0) {
 		delayed_adhesion = true;
 	}
-
 }
 
 void System::setupBrownian()
 {
-
 #ifdef DEV
 	/* In developing and debugging phases,
 	 * we give a seed to generate the same series of random number.
@@ -553,18 +547,6 @@ void System::setupConfiguration(struct base_shear_configuration conf, Parameters
 	setupGenericConfiguration(conf, control_);
 }
 
-void System::setupConfiguration(struct base_sedimentation_configuration conf, Parameters::ControlVariable control_)
-{
-	p.np_fixed=conf.np_fixed;
-	setupGenericConfiguration(conf, control_);
-	max_velocity=conf.max_velocity;
-}
-
-void System::setupConfiguration(struct sedimentation_configuration conf, Parameters::ControlVariable control_)
-{
-	setupGenericConfiguration(conf, control_);
-}
-
 void System::setupConfiguration(struct fixed_velo_configuration conf, Parameters::ControlVariable control_)
 {
 	p.np_fixed = conf.fixed_velocities.size();
@@ -581,19 +563,6 @@ void System::setupConfiguration(struct circular_couette_configuration conf, Para
 	radius_out = conf.radius_out;
 
 	setupGenericConfiguration(conf, control_);
-}
-
-void System::setupConfiguration(struct bottom_wall_configuration conf, Parameters::ControlVariable control_)
-{
-	if (conf.np_wall2){
-	    p.np_fixed = (conf.np_wall1)*(conf.np_wall2);
-	} else{
-	    p.np_fixed = conf.np_wall1;
-	}
-    np_wall1 = conf.np_wall1;
-	radius_in = conf.radius_in;
-	radius_out = conf.radius_out;
-    setupGenericConfiguration(conf, control_);
 }
 
 struct base_shear_configuration confConvertBase2Shear(const struct base_configuration &conf,
@@ -614,7 +583,7 @@ struct base_shear_configuration confConvertBase2Shear(const struct base_configur
 }
 
 
-void System::setupConfiguration(const struct delayed_adhesion_configuration &conf,
+void System::setupConfiguration(const struct delayed_adhesion_configuration &conf, 
 								Parameters::ControlVariable control_)
 {
 	setupGenericConfiguration(confConvertBase2Shear(conf.base, conf.lees_edwards_disp), control_);
@@ -684,7 +653,7 @@ void System::setupSystemPostConfiguration()
 	}
 	dt = p.dt;
 	if (p.fixed_dt) {
-		avg_dt = dt;
+        avg_dt = dt;
 	}
 }
 
@@ -808,10 +777,8 @@ void System::eventShearJamming()
 void System::forceResultantInterpaticleForces()
 {
 	auto &contact_force = force_components["contact"].force;
-	auto &weight_force = force_components["weight"].force; // essai implementation poids (NICO)
-
 	for (int i=0; i<np; i++) {
-		forceResultant[i] += (contact_force[i]+weight_force[i]);
+		forceResultant[i] += contact_force[i];
 	}
 	if (friction) {
 		auto &contact_torque = force_components["contact"].torque;
@@ -956,6 +923,9 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		if (!p.output.out_particle_stress.empty() || couette_stress) {
 			calcTotalStressPerParticle();
 		}
+		if (p.output.recording_interaction_history) {
+			recordHistory();
+		}
 	}
 	timeStepMove(time_end, strain_end);
 	for (int i=0; i<np; i++) {
@@ -1097,37 +1067,31 @@ void System::calcOrderParameter()
 
 void System::adaptTimeStep()
 {
-    /**
-     \brief Adapt the time step so that the maximum relative displacement is p.disp_max .
-     */
-    if (max_velocity > 0 || max_sliding_velocity > 0) { // small density system can have na_velocity=0
-        if (max_velocity > max_sliding_velocity) {
-            dt = p.disp_max/max_velocity;
-        } else {
-            dt = p.disp_max/max_sliding_velocity;
-        }
-    } else {
-        if (!zero_shear) {
-            dt = p.disp_max/shear_rate;
-        } else {
-            throw runtime_error("Can't adapt dt!");
-        }
-    }
-    if (!zero_shear) {
-        if (dt*shear_rate > p.disp_max) { // cases where na_velocity < \dotgamma*radius
-            dt = p.disp_max/shear_rate;
-        }
-    }
-    if (p.dt_max > 0) {
-        if (dt > p.dt_max) {
-            dt = p.dt_max;
-        }
-    }
-    if (p.dt_min > 0) {
-        if (dt < p.dt_min) {
-            dt = p.dt_min;
-        }
-    }
+	/**
+	 \brief Adapt the time step so that the maximum relative displacement is p.disp_max .
+	 */
+	if (max_velocity > 0 || max_sliding_velocity > 0) { // small density system can have na_velocity=0
+		if (max_velocity > max_sliding_velocity) {
+			dt = p.disp_max/max_velocity;
+		} else {
+			dt = p.disp_max/max_sliding_velocity;
+		}
+	} else {
+		dt = p.disp_max/shear_rate;
+	}
+	if (dt*shear_rate > p.disp_max) { // cases where na_velocity < \dotgamma*radius
+		dt = p.disp_max/shear_rate;
+	}
+	if (p.dt_max > 0) {
+		if (dt > p.dt_max) {
+			dt = p.dt_max;
+		}
+	}
+	if (p.dt_min > 0) {
+		if (dt < p.dt_min) {
+			dt = p.dt_min;
+		}
+	}
 }
 
 void System::adaptTimeStep(double time_end, double strain_end)
@@ -1183,7 +1147,7 @@ void System::timeStepMove(double time_end, double strain_end)
 	total_num_timesteps ++;
 	/* evolve PBC */
 	timeStepBoxing();
-
+	
 	/* move particles */
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
@@ -1263,10 +1227,10 @@ void System::timeStepMoveCorrector()
 
 bool System::keepRunning(double time_end, double strain_end)
 {
-	if (clk.cumulated_strain > strain_end-1e-8 && strain_end >= 0) {
+    if (clk.cumulated_strain > strain_end-1e-8 && strain_end >= 0) {
 		return false;
 	}
-	if (get_time() > time_end-1e-8 && time_end>=0) {
+	if (get_time() > time_end-1e-8 && time_end >= 0) {
 		return false;
 	}
 	if (!events.empty()) {
@@ -1305,15 +1269,19 @@ void System::timeEvolution(double time_end, double strain_end)
 	if (brownian_dominated) {
 		calc_stress = true;
 	}
+	if (p.output.recording_interaction_history) {
+		calc_stress = true;
+	}
 	retrim_ext_flow = false;
 	avg_dt = 0;
 	avg_dt_nb = 0;
 	double dt_bak = -1;
 	double loop_time_adjust = 0;
-	if (p.fixed_dt == true) {
-		loop_time_adjust = dt;
-	}
-	while (keepRunning(time_end - loop_time_adjust, strain_end - loop_time_adjust)) {
+    // @@@ When fixed_dt is true, keepRunning does not work.
+    //    if (p.fixed_dt == true) {
+    //        loop_time_adjust = dt;
+    //    }
+    while (keepRunning(time_end - loop_time_adjust, strain_end - loop_time_adjust)) {
 		retrim_ext_flow = false; // used in ext_flow simulation
 		if (!brownian && !p.fixed_dt) { // adaptative time-step for non-Brownian cases
 			adaptTimeStep(time_end, strain_end);
@@ -1412,8 +1380,8 @@ void System::checkNewInteraction()
 	vec3d pos_diff;
 	double sq_dist;
 	if (!ext_flow) {
-		for (int i=0; i<np_mobile; i++) {
-			for (auto j : boxset.neighborhood(i)) { // interaction fixed-fixed are not calculated because unused
+		for (int i=0; i<np-1; i++) {
+			for (auto j : boxset.neighborhood(i)) {
 				if (j > i) {
 					if (!hasNeighbor(i, j)) {
 						pos_diff = position[j]-position[i];
@@ -1430,7 +1398,7 @@ void System::checkNewInteraction()
 		}
 	} else {
 		vec3d pd_shift;
-		for (int i=0; i<np_mobile; i++) { // interaction fixed-fixed are not calculated because unused
+		for (int i=0; i<np-1; i++) {
 			for (auto j : boxset.neighborhood(i)) {
 				if (j > i) {
 					if (!hasNeighbor(i, j)) {
@@ -1460,12 +1428,6 @@ void System::updateInteractions()
 
 	 */
 	double sq_max_sliding_velocity = 0;
-
-	for (int i=0; i<np_mobile; i++){
-            static_strength[i].reset();
-            sq_caracteristic_strength[i]=0;
-    }
-
 	for (unsigned int k=0; k<interaction.size(); k++) {
 		bool deactivated = false;
 		interaction[k].updateState(deactivated);
@@ -1890,19 +1852,6 @@ void System::setHydroForceToParticle_squeeze_tangential(vector<vec3d> &force,
 	}
 }
 
-void System::setWeightForceToParticle(vector<vec3d> &force,  // NEW: IMPLEMENTATION WEIGHT (NICO)!!!
-									   vector<vec3d> &torque)
-{
-	for (int i=0; i<np_mobile; i++) {
-		/* force[i].x=0;
-        force[i].y=0; */
-		force[i].z=-radius_cubed[i];
-    }
-	/* for (auto &t: torque) {
-		t.reset();
-	} */
-}
-
 void System::setContactForceToParticle(vector<vec3d> &force,
 									   vector<vec3d> &torque)
 {
@@ -2060,11 +2009,7 @@ void System::computeVelocityWithoutComponents()
 		}
 		addToSolverRHS(fc.second);
 	}
-	if(twodimension){
-        stokes_solver.solve2D(na_velocity, na_ang_velocity); // get V
-    } else{
-	    stokes_solver.solve(na_velocity, na_ang_velocity); // get V
-	}
+	stokes_solver.solve(na_velocity, na_ang_velocity); // get V
 	if (brownian && twodimension) {
 		rushWorkFor2DBrownian(na_velocity, na_ang_velocity);
 	}
@@ -2081,14 +2026,8 @@ void System::computeVelocityByComponents()
 			CALL_MEMBER_FN(*this, fc.second.getForceTorque)(fc.second.force, fc.second.torque);
 		}
 		setSolverRHS(fc.second);
-		if(twodimension){
-            stokes_solver.solve2D(na_velo_components[fc.first].vel,
+		stokes_solver.solve(na_velo_components[fc.first].vel,
 							na_velo_components[fc.first].ang_vel);
-		} else{
-            stokes_solver.solve(na_velo_components[fc.first].vel,
-							na_velo_components[fc.first].ang_vel);
-		}
-
 	}
 	if (brownian && twodimension) {
 		rushWorkFor2DBrownian(na_velo_components["brownian"].vel,
@@ -2314,11 +2253,6 @@ void System::tmpMixedProblemSetVelocities()
 			na_velocity[i] = vel_from_fixed.vel[i];
 			na_ang_velocity[i] = vel_from_fixed.ang_vel[i];
 		}
-    } else if (p.simulation_mode == 32) {  // simulation mode used for sedimentation, at least some particles at the bottom of the box have to be fixed to make a "wall"
-		for (int i=np_mobile; i<np; i++) {
-			na_velocity[i].reset();
-			na_ang_velocity[i].reset();
-		}
 	} else if (p.simulation_mode == 41) {
 		int i_np_wall1 = np_mobile+np_wall1;
 		double wall_velocity = shear_rate*system_height;
@@ -2439,7 +2373,6 @@ void System::computeVelocities(bool divided_velocities)
 		setFixedParticleVelocities();
 		computeVelocityWithoutComponents();
 	}
-
 	/*
 	 * The max velocity is used to find dt from max displacement
 	 * at each time step.
@@ -2913,3 +2846,20 @@ void System::yaplotBoxing(std::ofstream &fout_boxing)
 
 	fout_boxing << endl;
 }
+
+void System::recordHistory()
+{
+	for (unsigned int k=0; k<interaction.size(); k++) {
+		if (interaction[k].lubrication.is_active()) {
+			interaction[k].lubrication.calcLubricationForce();
+		} else {
+			interaction[k].lubrication.force = 0;
+		}
+		interaction[k].recordHistory();
+	}
+}
+
+//void System::openHisotryFile(std::string &filename)
+//{
+//	//		fout_history.open(filename);
+//}

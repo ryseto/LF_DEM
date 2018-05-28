@@ -41,20 +41,19 @@ int main(int argc, char **argv)
 {
 
 	cout << endl << "LF_DEM version " << GIT_VERSION << endl << endl;
-	string usage = "(1) Simulation\n $ LF_DEM [-r Rate] [-s Stress] [-R Rate_Sequence] [-S Sedimentation]\
+	string usage = "(1) Simulation\n $ LF_DEM [-r Rate] [-s Stress] [-R Rate_Sequence] [-S Stress_Sequence]\
 	[-e] [-m ?] [-k kn_kt_File] [-v Simulation_Identifier] [-i Provisional_Data] [-n]\
 	Configuration_File Parameter_File \
-	\n\n OR \n\n(2) Generate initial configuration\n $ LF_DEM -g Random_Seed [-M]\n";
+	\n\n OR \n\n(2) Generate initial configuration\n $ LF_DEM [-a Random_Seed] [-p Volume_Fraction] -g [c/w/s]\n";
 
 	int generate_init = 0;
 	string type_init_config = "normal";
-	string type_simulation="shear_simulation";
 
 	int random_seed = 1;
+	double volume_frac_gen = 0;
 	bool binary_conf = false;
 	bool force_to_run = false;
 	bool diminish_output = false;
-	bool get_final_state=false;
 	string flow_type = "shear";
 	string config_filename = "not_given";
 	string param_filename = "not_given";
@@ -69,10 +68,10 @@ int main(int argc, char **argv)
 	const struct option longopts[] = {
 		{"rate-controlled",   required_argument, 0, 'r'},
 		{"rate-infty",        required_argument, 0, '8'},
-		{"sedimentation",     required_argument, 0, 'S'},
-		{"get final state",   required_argument, 0, 'F'},
 		{"stress-controlled", required_argument, 0, 's'},
 		{"generate",          optional_argument, 0, 'g'},
+		{"random-seed",       required_argument, 0, 'a'},
+		{"volume-fraction",   required_argument, 0, 'p'},
 		{"kn-kt-file",        required_argument, 0, 'k'},
 		{"binary",            no_argument,       0, 'n'},
 		{"name",              no_argument,       0, 'N'},
@@ -84,11 +83,9 @@ int main(int argc, char **argv)
 		{0, 0, 0, 0},
 	};
 
-
-
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hn8SFefdm:s:t:r:g:a:k:i:v:c:N:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hn8efds:t:r:g::p:a:k:i:v:c:N:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
 				rheology_control = Parameters::ControlVariable::stress;
@@ -102,16 +99,6 @@ int main(int argc, char **argv)
 				rheology_control = Parameters::ControlVariable::rate;
 				control_value = {Dimensional::Dimension::Force, 1, Dimensional::Unit::hydro};
 				cout << "Rate control, infinite shear rate (hydro + hard contacts only)" << endl;
-				break;
-            case 'S':
-				rheology_control = Parameters::ControlVariable::force;
-				control_value = {Dimensional::Dimension::Force, 1, Dimensional::Unit::gravity};
-				type_simulation="sedimentation_simulation";
-				cout << "Running sedimentation, no shear, gravitation" << endl;
-				break;
-            case 'F':
-				get_final_state=true;
-				cout << "generating final state files" << endl;
 				break;
 			case 'e':
 				flow_type = "extension";
@@ -131,15 +118,14 @@ int main(int argc, char **argv)
 					if (optarg[0] == 'c') {
 						generate_init = 2; // circular wide gap
 					} else if (optarg[0] == 'w') {
-					    if(optarg[1] == 's'){
-						generate_init = 5; // single wall at the bottom
-					    } else {
-					        generate_init = 3; // simple shear with wall
-					    }
+						generate_init = 3; // simple shear with wall
 					} else if (optarg[0] == 's') {
 						generate_init = 4; // winding
 					}
 				}
+				break;
+			case 'p':
+				volume_frac_gen = atof(optarg);
 				break;
 			case 'a':
 				random_seed = atoi(optarg);
@@ -173,12 +159,12 @@ int main(int argc, char **argv)
 	for (int i=0; i<argc; i++) {
 		in_args << argv[i] << " ";
 	}
-	if (generate_init >= 1) { // if we get -g in option we generate a configuration
+	if (generate_init >= 1) {
 		GenerateInitConfig generate_init_config;
-		generate_init_config.generate(random_seed, generate_init);
+		generate_init_config.generate(random_seed, volume_frac_gen, generate_init);
 	} else {
 #ifdef SIGINT_CATCH
-		std::signal(SIGINT, sigint_handler);
+		std::signal(SIGINT, sigint_handler);	
 #endif
 		if (optind == argc-2) {
 			config_filename = argv[optind++];
@@ -194,6 +180,7 @@ int main(int argc, char **argv)
 		input_files[3] = stress_rate_filename;
 
 		State::BasicCheckpoint state = State::zero_time_basicchkp;
+
 		if (!chkp_filename.empty()) {
 			state = State::readBasicCheckpoint(chkp_filename);
 		}
@@ -206,18 +193,11 @@ int main(int argc, char **argv)
 
 		simulation.force_to_run = force_to_run;
 		simulation.diminish_output = diminish_output;
-		simulation.get_final_state=get_final_state;
 
 		try {
-		    if(type_simulation!="sedimentation_simulation"){
 			simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
 											 rheology_control, control_value,
 											 flow_type, simu_identifier);
-            } else{
-            simulation.simulationSedimentation(in_args.str(), input_files, binary_conf,
-											 rheology_control, control_value,
-											 flow_type, simu_identifier);
-            }
 		} catch (runtime_error& e) {
 			cerr << e.what() << endl;
 			return 1;

@@ -30,7 +30,6 @@ enum class Dimension {
 // only force units are declared here
 enum class Unit {
   hydro,
-  gravity,
   repulsion,
   brownian,
   cohesion,
@@ -50,8 +49,6 @@ inline std::string unit2suffix(Unit unit) {
   switch (unit) {
     case Unit::hydro:
       return "h";
-    case Unit::gravity:
-      return "g";
     case Unit::repulsion:
       return "r";
     case Unit::brownian:
@@ -84,9 +81,6 @@ inline std::string unit2suffix(Unit unit) {
 inline Unit suffix2unit(std::string s) {
   if (s=="h") {
     return Unit::hydro;
-  }
-  if (s=="g") {
-    return Unit::gravity;
   }
   if (s=="r" || s=="repulsion") {
     return Unit::repulsion;
@@ -151,7 +145,7 @@ struct ForceScale {
 class UnitSystem {
 public:
   UnitSystem():has_internal_unit(false) {};
-
+  
   void add(Unit unit, DimensionalQty<double> quantity);
   void setInternalUnit(Unit unit);
   Unit getInternalUnit() const {assert(has_internal_unit); return (*(unit_nodes.cbegin())).second.unit;};

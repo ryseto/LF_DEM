@@ -3,9 +3,9 @@
 
 
 void OutputData::setFile(const std::string& fname,
-	          			 const std::string& data_header,
-	          			 bool force_overwrite,
-	          			 bool append)
+						 const std::string& data_header,
+						 bool force_overwrite,
+						 bool append)
 {
 	if (!force_overwrite && !append) {
 		std::ifstream file_test(fname.c_str());
@@ -22,11 +22,9 @@ void OutputData::setFile(const std::string& fname,
  			std::cerr << "Successfully opening file '" << fname << "'"<< std::endl;
 		}
 		restart_from_chkp = true;
-	} else{
+	} else {
 		fout.open(fname.c_str(), std::ofstream::out);
-		if (data_header != "none"){
-            fout << data_header;
-		}
+		fout << data_header;
 	}
 }
 
