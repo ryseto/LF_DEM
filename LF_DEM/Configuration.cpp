@@ -120,16 +120,18 @@ ConfFileFormat getTxtConfigurationFileFormat(const std::string& filename_import_
 
 	auto meta_data = getConfMetaData(header_imported_configulation[0], header_imported_configulation[1]);
 	if (meta_data.find("format") != meta_data.end()) {
-		return static_cast<ConfFileFormat>(atoi(meta_data["format"].c_str()));
+        return static_cast<ConfFileFormat>(atoi(meta_data["format"].c_str()));
 	} else if (meta_data.find("radius_in") != meta_data.end()) {
-		return ConfFileFormat::txt_format_circular_couette;
-	} else {
-		return ConfFileFormat::txt_format_base_old;
+	    return ConfFileFormat::txt_format_circular_couette;
+	} else if(meta_data.find("z_bot") != meta_data.end()){
+	    return ConfFileFormat::txt_format_sedimentation;
+	}else {
+	    return ConfFileFormat::txt_format_base_old;
 	}
 }
 
 template<typename T>
-void fillBaseConfiguration(T &vel_conf,  const struct base_configuration &base) 
+void fillBaseConfiguration(T &vel_conf,  const struct base_configuration &base)
 {
 	vel_conf.lx = base.lx;
 	vel_conf.ly = base.ly;
@@ -211,7 +213,6 @@ struct base_shear_configuration readBinaryBaseShearConfiguration(const std::stri
 	return c;
 }
 
-
 struct base_configuration readBinaryBaseConfiguration(std::ifstream &input)
 {
 	struct base_configuration c;
@@ -237,22 +238,65 @@ struct base_configuration readBinaryBaseConfiguration(std::ifstream &input)
 	return c;
 }
 
-void writeBinaryBaseConfiguration(std::ofstream &conf_export, const struct base_configuration &conf) 
+struct base_sedimentation_configuration readBinaryBaseSedimentationConfiguration(const std::string &filename)
+{
+	checkInFile(filename);
+	auto format = getBinaryConfigurationFileFormat(filename);
+	if (format != ConfFileFormat::bin_format_sedimentation) {
+		throw std::runtime_error("readBinaryBaseSedimentationConfiguration(): got incorrect binary format.");
+	}
+
+	std::ifstream input(filename.c_str(), std::ios::binary | std::ios::in);
+
+	int _switch;
+	typedef std::underlying_type<ConfFileFormat>::type format_type;
+	format_type fmt;
+	input.read((char*)&_switch, sizeof(int));
+	input.read((char*)&fmt, sizeof(format_type));
+
+
+	struct base_sedimentation_configuration c;
+	unsigned np;
+
+	input.read((char*)&np, sizeof(unsigned));
+	input.read((char*)&c.volume_or_area_fraction, sizeof(double));
+	input.read((char*)&c.lx, sizeof(double));
+	input.read((char*)&c.ly, sizeof(double));
+	input.read((char*)&c.lz, sizeof(double));
+
+	double x_, y_, z_, r_, a_;
+	for (unsigned i=0; i<np; i++) {
+		input.read((char*)&x_, sizeof(double));
+		input.read((char*)&y_, sizeof(double));
+		input.read((char*)&z_, sizeof(double));
+		input.read((char*)&r_, sizeof(double));
+		input.read((char*)&a_, sizeof(double));
+		c.position.push_back(vec3d(x_,y_,z_));
+		c.radius.push_back(r_);
+		c.angle.push_back(a_);
+	}
+	c.contact_states = Contact_ios::readStatesBStream(input, np);
+
+	unsigned np_mobile;
+	double max_velocity;
+
+	input.read((char*)&c.np_fixed, sizeof(unsigned));
+	input.read((char*)&c.max_velocity, sizeof(double));
+
+	return c;
+}
+
+void writeBinaryBaseConfiguration(std::ofstream &conf_export, const struct base_configuration &conf)
 {
 	std::vector<std::vector<double> > pos(conf.position.size());
-	unsigned dims = 4;
-	if (conf.ly == 0) {
-		dims = 5;
-	}
+	unsigned dims = 5;
 	for (unsigned i=0; i<conf.position.size(); i++) {
 		pos[i].resize(dims);
 		pos[i][0] = conf.position[i].x;
 		pos[i][1] = conf.position[i].y;
 		pos[i][2] = conf.position[i].z;
 		pos[i][3] = conf.radius[i];
-		if (conf.ly == 0) {
-			pos[i][4] = conf.angle[i]; ///@@@@
-		}
+		pos[i][4] = conf.angle[i];
 	}
 	unsigned np = conf.position.size();
 	conf_export.write((char*)&np, sizeof(unsigned));
@@ -326,7 +370,7 @@ struct delayed_adhesion_configuration readBinaryDelayedAdhesionConfiguration(std
 	c.lees_edwards_disp.reset();
 	input.read((char*)&c.lees_edwards_disp.x, sizeof(double));
 	input.read((char*)&c.lees_edwards_disp.y, sizeof(double));
-	
+
 	return c;
 }
 
@@ -380,7 +424,7 @@ struct fixed_velo_configuration readBinaryFixedVeloConfiguration(const std::stri
 		return readBinaryFixedVeloConfigurationOld(filename);
 	}
 
-	if (format != ConfFileFormat::bin_format_fixed_vel_shear) {
+	if (format != ConfFileFormat::bin_format_fixed_vel_shear && format != ConfFileFormat::bin_format_sedimentation) {
 		throw std::runtime_error("readBinaryFixedVeloConfiguration(): got incorrect binary format.");
 	}
 	std::ifstream input(filename.c_str(), std::ios::binary | std::ios::in);
@@ -413,8 +457,8 @@ void writeBinaryHeader(std::ofstream &conf_export, ConfFileFormat format)
 }
 
 
-void outputBinaryConfiguration(const System &sys, 
-							   std::string conf_filename, 
+void outputBinaryConfiguration(const System &sys,
+							   std::string conf_filename,
 							   ConfFileFormat format)
 {
 	/**
@@ -426,6 +470,7 @@ void outputBinaryConfiguration(const System &sys,
 		ConfFileFormat::bin_delayed_adhesion,
 		ConfFileFormat::bin_format_fixed_vel_shear,
 		ConfFileFormat::bin_format_base_shear,
+		ConfFileFormat::bin_format_sedimentation,
 	};
 	if (!allowed_formats.count(format)) {
 		throw std::runtime_error("outputBinaryConfiguration(): got incorrect binary format.");
@@ -439,7 +484,11 @@ void outputBinaryConfiguration(const System &sys,
 	if (format == ConfFileFormat::bin_format_fixed_vel_shear) {
 		writeBinaryFixedVelocities(conf_export, sys.fixed_velocities);
 	}
-	
+	if (format == ConfFileFormat::bin_format_sedimentation) {
+        conf_export.write((char*)&(sys.p.np_fixed), sizeof(unsigned));
+		conf_export.write((char*)&(sys.max_velocity), sizeof(double));
+	}
+
 	if (format == ConfFileFormat::bin_delayed_adhesion) {
 		TActAdhesion::writeStatesBStream(conf_export,
 			    				         sys.interaction);
@@ -560,6 +609,69 @@ void setMetadataCircularCouette(std::istream &file_import, struct circular_couet
 	conf.radius_out = atof(getMetaParameter(meta_data, key, def).c_str());
 }
 
+void setMetadataBottomWall(std::istream &file_import, struct bottom_wall_configuration &conf)
+{
+	std::string header_imported_configulation[2];
+	getline(file_import, header_imported_configulation[0]);
+	getline(file_import, header_imported_configulation[1]);
+
+	auto meta_data = getConfMetaData(header_imported_configulation[0], header_imported_configulation[1]);
+	std::string key, def;
+	key = "lx";
+	conf.lx = atof(getMetaParameter(meta_data, key).c_str());
+	key = "ly";
+	conf.ly = atof(getMetaParameter(meta_data, key).c_str());
+	key = "lz";
+	conf.lz = atof(getMetaParameter(meta_data, key).c_str());
+	key = "vf";
+	conf.volume_or_area_fraction = atof(getMetaParameter(meta_data, key).c_str());
+	conf.lees_edwards_disp.reset();
+	key = "dispx";
+	def = "0";
+	conf.lees_edwards_disp.x = atof(getMetaParameter(meta_data, key, def).c_str());
+	key = "dispy";
+	def = "0";
+	conf.lees_edwards_disp.y = atof(getMetaParameter(meta_data, key, def).c_str());
+	key = "np_wall1";
+	def = "-1";
+	conf.np_wall1= atoi(getMetaParameter(meta_data, key, def).c_str());
+	key = "radius_in";
+	def = "0";
+	conf.radius_in = atof(getMetaParameter(meta_data, key, def).c_str());
+	key = "radius_out";
+	def = "0";
+	conf.radius_out = atof(getMetaParameter(meta_data, key, def).c_str());
+}
+
+inline void setMetadataSedimentation(std::istream &input, sedimentation_configuration &conf)
+{
+
+	std::string header_imported_configulation[2];
+	getline(input, header_imported_configulation[0]);
+	getline(input, header_imported_configulation[1]);
+
+	auto meta_data = getConfMetaData(header_imported_configulation[0], header_imported_configulation[1]);
+	std::string key, def;
+	key = "lx";
+	conf.lx = atof(getMetaParameter(meta_data, key).c_str());
+	key = "ly";
+	conf.ly = atof(getMetaParameter(meta_data, key).c_str());
+	key = "lz";
+	conf.lz = atof(getMetaParameter(meta_data, key).c_str());
+	key = "vf";
+	conf.volume_or_area_fraction = atof(getMetaParameter(meta_data, key).c_str());
+	conf.lees_edwards_disp.reset();
+	key = "dispx";
+	def = "0";
+	conf.lees_edwards_disp.x = atof(getMetaParameter(meta_data, key, def).c_str());
+	key = "dispy";
+	def = "0";
+	conf.lees_edwards_disp.y = atof(getMetaParameter(meta_data, key, def).c_str());
+	key = "np_wall";
+	def="0";
+	conf.np_fixed = atof(getMetaParameter(meta_data, key, def).c_str());
+}
+
 struct circular_couette_configuration readTxtCircularCouetteConfiguration(const std::string& filename)
 {
 	/**
@@ -588,3 +700,64 @@ struct circular_couette_configuration readTxtCircularCouetteConfiguration(const 
 	}
 	return c;
 }
+
+struct bottom_wall_configuration readTxtBottomWallConfiguration(const std::string& filename)
+{
+	/**
+		\brief Import a text file circular Couette configuration.
+
+		File format:
+		# header
+
+		x y z radius
+		...
+	 */
+
+	checkInFile(filename);
+ 	std::ifstream input(filename.c_str(), std::ios::in);
+
+	struct bottom_wall_configuration c;
+	setMetadataBottomWall(input, c);
+
+	double x_, y_, z_, a_;
+	while (input >> x_ >> y_ >> z_ >> a_) {
+		c.position.push_back(vec3d(x_, y_, z_));
+		c.radius.push_back(a_);
+	}
+	if (c.ly == 0) { //2d
+		c.angle.resize(c.position.size(), 0);
+	}
+	return c;
+}
+
+
+
+struct sedimentation_configuration readTxtSedimentationConfiguration(const std::string& filename)
+{
+	/**
+		\brief Import a text file circular Couette configuration.
+
+		File format:
+		# header
+
+		x y z radius
+		...
+	 */
+
+	checkInFile(filename);
+ 	std::ifstream input(filename.c_str(), std::ios::in);
+
+	struct sedimentation_configuration c;
+	setMetadataSedimentation(input, c);
+
+	double x_, y_, z_, a_;
+	while (input >> x_ >> y_ >> z_ >> a_) {
+		c.position.push_back(vec3d(x_, y_, z_));
+		c.radius.push_back(a_);
+	}
+	if (c.ly == 0) { //2d
+		c.angle.resize(c.position.size(), 0);
+	}
+	return c;
+}
+

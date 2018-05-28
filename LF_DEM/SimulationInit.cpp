@@ -139,7 +139,7 @@ void Simulation::echoInputFiles(string in_args,
 }
 
 
-void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> control_value, 
+void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> control_value,
 											Parameters::ParameterSetFactory &PFact)
 {
 	/**
@@ -163,7 +163,7 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 			internal_unit = Dimensional::Unit::hydro;
 			double largest_force_val = 1;
 			for (auto &fs: PFact.getForceScales()) {
-				if (fs.dim_qty.value > largest_force_val && 
+				if (fs.dim_qty.value > largest_force_val &&
 					fs.type != Dimensional::Unit::kn &&
 					fs.type != Dimensional::Unit::kt &&
 					fs.type != Dimensional::Unit::kr) {
@@ -172,14 +172,12 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 				}
 			}
 			if (internal_unit == Dimensional::Unit::brownian) {
-				sys.brownian = true; // @@@@ to be checked
 				sys.brownian_dominated = true;
 			}
 		} else {
 			if (control_value.unit == Dimensional::Unit::brownian) {
 				cout << indent << "Brownian at Pe = 0 " << endl;
 				internal_unit = Dimensional::Unit::brownian;
-				sys.brownian = true; // @@@@ to be checked
 				sys.brownian_dominated = true;
 				sys.zero_shear = true;
 			} else if (control_value.unit == Dimensional::Unit::repulsion) {
@@ -188,13 +186,17 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 				sys.zero_shear = true;
 			}
 		}
-	}
-	if (control_var == Parameters::ControlVariable::stress) {
+	} else if (control_var == Parameters::ControlVariable::stress || control_var == Parameters::ControlVariable::force) {
 		system_of_units.add(Dimensional::Unit::stress, control_value);
 		internal_unit = control_value.unit;
 	}
 
-	// set the internal unit to actually determine force and parameter non-dimensionalized values 
+	if (control_value.unit == Dimensional::Unit::gravity) {
+		internal_unit = Dimensional::Unit::gravity;
+		sys.zero_shear = true;
+	}
+
+	// set the internal unit to actually determine force and parameter non-dimensionalized values
 	system_of_units.setInternalUnit(internal_unit);
 	PFact.setSystemOfUnits(system_of_units);
 	cout << indent << "internal units = " << Dimensional::unit2suffix(internal_unit) << endl;
@@ -202,17 +204,14 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 	// set the output unit
 	output_unit = control_value.unit;
 	cout << indent << "output units = " << Dimensional::unit2suffix(output_unit) << endl;
-	
+
 	// when there is a hydro force, its value is the non-dimensionalized shear rate.
 	auto forces = system_of_units.getForceScales();
-	if (control_var == Parameters::ControlVariable::rate) {
+	if (forces.count(Dimensional::Unit::hydro) > 0) { // == if rate controlled
 		sys.set_shear_rate(forces.at(Dimensional::Unit::hydro).value);
 	}
-	if (control_var == Parameters::ControlVariable::stress) {
-		sys.target_stress = forces.at(Dimensional::Unit::stress).value;
-	}
-
 }
+
 
 void Simulation::assertParameterCompatibility()
 {
@@ -236,10 +235,6 @@ void Simulation::assertParameterCompatibility()
 		p.friction_model = 2;
 		cerr << "Warning : critical load simulation -> switched to friction_model=2" << endl;
 	}
-    if (p.output.recording_interaction_history) {
-        cerr << "Interaction history recording needs to use the Euler's Method." << endl;
-        p.integration_method = 0;
-    }
 }
 
 void Simulation::setConfigToSystem(bool binary_conf, const std::string &filename)
@@ -258,6 +253,14 @@ void Simulation::setConfigToSystem(bool binary_conf, const std::string &filename
 				{
 					auto conf = readBinaryFixedVeloConfiguration(filename);
 					sys.setupConfiguration(conf, control_var);
+					break;
+				}
+            case ConfFileFormat::bin_format_sedimentation:
+				{
+					auto conf = readBinaryBaseSedimentationConfiguration(filename);
+					sys.setupConfiguration(conf, control_var);
+                    sys.p.np_fixed=conf.np_fixed;
+                    sys.max_velocity=conf.max_velocity;
 					break;
 				}
 			case ConfFileFormat::bin_delayed_adhesion:
@@ -296,6 +299,14 @@ void Simulation::setConfigToSystem(bool binary_conf, const std::string &filename
 					sys.setupConfiguration(conf, control_var);
 					break;
 				}
+            case ConfFileFormat::txt_format_sedimentation:
+				{
+					auto conf = readTxtSedimentationConfiguration(filename);
+					sys.p.np_fixed = conf.np_fixed;
+					sys.np_mobile=sys.get_np()-sys.p.np_fixed;
+					sys.setupConfiguration(conf, control_var);
+					break;
+				}
 			default:
 				throw std::runtime_error("Unable to read config text format "+to_string(static_cast<int>(format)));
 		}
@@ -305,8 +316,10 @@ void Simulation::setConfigToSystem(bool binary_conf, const std::string &filename
 
 void Simulation::setupFlow(Dimensional::DimensionalQty<double> control_value)
 {
-	// @@@ This function is quite messy, should be fixed 
+	// @@@ This function is quite messy, should be fixed
 	// when we rewrite shear and extensional in a consistent manner
+
+
 	/* dot_gamma = 1 --> dot_epsilon = 0;
 	 *
 	 */
@@ -316,9 +329,9 @@ void Simulation::setupFlow(Dimensional::DimensionalQty<double> control_value)
 			/* simple shear flow
 			 * shear_rate = 2*dot_epsilon
 			 */
-			Einf_base.set(0, 0, 1, 0, 0, 0);
-			Omegainf_base.set(0, 1, 0);
-			sys.setImposedFlow(dimensionless_deformation_rate*Einf_base, dimensionless_deformation_rate*Omegainf_base);
+			Einf_base.set(0, 0, dimensionless_deformation_rate, 0, 0, 0);
+			Omegainf_base.set(0, dimensionless_deformation_rate, 0);
+			sys.setImposedFlow(Einf_base, Omegainf_base);
 			stress_basis_0 = {-dimensionless_deformation_rate/2, 0, 0, 0,
 				dimensionless_deformation_rate, -dimensionless_deformation_rate/2};
 			stress_basis_3 = {-dimensionless_deformation_rate, 0, 0, 0, 0, dimensionless_deformation_rate};
@@ -351,14 +364,13 @@ void Simulation::setupFlow(Dimensional::DimensionalQty<double> control_value)
 		}
 	} else {
 		cerr << " dimensionlessnumber = " << control_value.value << endl;
-		Einf_base.set(0, 0, 1, 0, 0, 0);
-		Omegainf_base.set(0, 1, 0);
-		Sym2Tensor Einf_zero = {0, 0, 0, 0, 0, 0};
-		vec3d Omegainf_zero(0, 0, 0);
-		sys.setImposedFlow(Einf_zero, Omegainf_zero);
+		Sym2Tensor Einf_common = {0, 0, 0, 0, 0, 0};
+		vec3d Omegainf(0, 0, 0);
+		sys.setImposedFlow(Einf_common, Omegainf);
 		sys.zero_shear = true;
 	}
 }
+
 
 void Simulation::setupSimulation(string in_args,
                                  vector<string>& input_files,
@@ -385,26 +397,32 @@ void Simulation::setupSimulation(string in_args,
 	} else {
 		sys.zero_shear = false;
 	}
-    
+	setupFlow(control_value);
+
 	Parameters::ParameterSetFactory PFactory;
 	PFactory.setFromFile(filename_parameters);
 	setupNonDimensionalization(control_value, PFactory);
-	
+
+
 	if (control_var == Parameters::ControlVariable::stress) {
 		target_stress_input = control_value.value; //@@@ Where should we set the target stress???
 		sys.target_stress = target_stress_input/6/M_PI; //@@@
 	}
-		
+
 	p = PFactory.getParameterSet();
 
-    setupFlow(control_value); // Including parameter p setting.
-    
+	if (type_simulation){
+            p.simulation_mode=32;
+	}
+
 	p.flow_type = flow_type; // shear or extension or mix (not implemented yet)
 
 	if (sys.ext_flow) {
 		p.output.origin_zero_flow = false;
 	}
 	setupOptionalSimulation(indent);
+
+
 
 	assertParameterCompatibility();
 
@@ -413,7 +431,7 @@ void Simulation::setupSimulation(string in_args,
 	}
 
 	setConfigToSystem(binary_conf, filename_import_positions);
-    //@@@@ temporary repair
+	 //@@@@ temporary repair
 	if (input_files[2] != "not_given") {
 		if (sys.brownian && !p.auto_determine_knkt) {
 			contactForceParameterBrownian(input_files[2]);
@@ -424,6 +442,7 @@ void Simulation::setupSimulation(string in_args,
 
 	p_initial = p;
 	sys.resetContactModelParameer(); //@@@@ temporary repair
+
 
 	if (!sys.ext_flow) {
 		// simple shear
@@ -437,15 +456,10 @@ void Simulation::setupSimulation(string in_args,
 		                                  simu_identifier, control_value);
 	}
 	openOutputFiles();
-
-	//	if (p.output.recording_interaction_history) {
-	//		string ihist_filename = "ihist_"+simu_name+".dat";
-	//		sys.openHisotryFile(ihist_filename);
-	//	}
-	
 	echoInputFiles(in_args, input_files);
 	cout << indent << "Simulation setup [ok]" << endl;
 }
+
 
 void Simulation::openOutputFiles()
 {
@@ -462,7 +476,10 @@ void Simulation::openOutputFiles()
 	outdata_st.setFile("st_"+simu_name+".dat",
 	                   data_header.str(), force_to_run, restart_from_chkp);
 
-	if (!p.output.out_particle_stress.empty()) {
+    outdata_st_end.setFile("st_end_"+simu_name+".dat",
+	                   data_header.str(), force_to_run, false);
+
+    if (!p.output.out_particle_stress.empty()) {
 		outdata_pst.setFile("pst_"+simu_name+".dat",
 		                    data_header.str(), force_to_run, restart_from_chkp);
 
@@ -479,10 +496,16 @@ void Simulation::openOutputFiles()
 		outdata_par.setFile("par_"+simu_name+".dat",
 		                    data_header.str(), force_to_run, restart_from_chkp);
 
+        outdata_par_end.setFile("par_end_"+simu_name+".dat",
+	                   data_header.str(), force_to_run, false);
+
 	}
 	if (p.output.out_data_interaction) {
 		outdata_int.setFile("int_"+simu_name+".dat",
 		                    data_header.str(), force_to_run, restart_from_chkp);
+
+        outdata_int_end.setFile("int_end_"+simu_name+".dat",
+	                   data_header.str(), force_to_run, false);
 	}
 	//string box_name = "box_"+simu_name+".dat";
 	//fout_boxing.open(box_name);
@@ -520,6 +543,9 @@ string Simulation::prepareSimulationName(bool binary_conf,
 	}
 	if (control_var == Parameters::ControlVariable::stress) {
 		string_control_parameters << "_" << "stress";
+	}
+	if (control_var == Parameters::ControlVariable::force) {
+		string_control_parameters << "_" << "force";
 	}
 	// if (control_var == Parameters::ControlVariable::viscnb) {
 	// 	string_control_parameters << "_" << "viscnb";

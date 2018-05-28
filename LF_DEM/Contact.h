@@ -60,6 +60,8 @@ private:
 	double mu_static;
 	double mu_dynamic;
 	double mu_rolling;
+
+	double alpha;
 	/*********************************
 	 *       Private Methods         *
 	 *********************************/
@@ -72,6 +74,7 @@ private:
 	vec3d f_spring_total; // spring only
 	vec3d f_rolling;
 	double ft_max; // friction_model = 5;
+	double mobilisation; // m= ft/(mu*fn)
 	vec3d rolling_velocity;
 	int state;
 
@@ -111,7 +114,8 @@ public:
 	f_rolling(0),
 	ft_max(0),
 	rolling_velocity(0),
-	relative_surface_velocity_sqnorm(0)
+	relative_surface_velocity_sqnorm(0),
+	mobilisation(0)
 	{};
 
 	void init(System* sys_, Interaction* int_);
@@ -137,13 +141,9 @@ public:
 	void calcContactSpringForce();
 	vec3d getTotalForce() const;
 	vec3d getNormalForce() const;
-	double getNormalForceValue() const;
 	vec3d getTangentialForce() const;
 	double get_normal_load() const;
-	double get_spring_force() const
-	{
-		return f_spring_normal_norm;
-	}
+	double getMobilisation() const;
 	void calcContactStress();
 	void addUpStress(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1);
 	void addUpStressSpring(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1) const;

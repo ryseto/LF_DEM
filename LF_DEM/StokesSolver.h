@@ -247,6 +247,9 @@ public:
 	 */
 	 void solve(vec3d* velocity, vec3d* ang_velocity);
 	 void solve(std::vector<vec3d> &velocity, std::vector<vec3d> &ang_velocity);
+
+	 void solve2D(vec3d* velocity, vec3d* ang_velocity);
+	 void solve2D(std::vector<vec3d> &velocity, std::vector<vec3d> &ang_velocity);
     /*
 	 compute_LTRHS(double* X) :
 	 - once the resistance matrix and the RHS vector are built

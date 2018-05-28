@@ -223,34 +223,34 @@ void System::calcStressPerParticle()
 	   should be careful when calling this method from outside of the
 	   System::timeEvolutionPredictorCorrectorMethod method.
 	*/
-    if (lubrication) {
-        for (auto &inter: interaction) {
-            if (!inter.lubrication.tangential) {
-                inter.lubrication.calcXFunctionsStress();
-            } else {
-                inter.lubrication.calcXYFunctionsStress();
-            }
-        }
-    }
+	if (lubrication) {
+		for (auto &inter: interaction) {
+			if (!inter.lubrication.tangential) {
+				inter.lubrication.calcXFunctionsStress();
+			} else {
+				inter.lubrication.calcXYFunctionsStress();
+			}
+		}
+	}
 
 	for (auto &sc: stress_components) {
 		sc.second.reset();
 	}
 
-    for (auto &sc: stress_components) {
-        auto type = sc.second.type;
-        const auto &component_name = sc.first;
-        if (type == VELOCITY_STRESS) {
-            addUpInteractionStressGU(sc.second.particle_stress,
-                                     na_velo_components[component_name].vel,
-                                     na_velo_components[component_name].ang_vel);
-        }
-        if (type == STRAIN_STRESS) {
-            addUpInteractionStressME(sc.second.particle_stress);
-        }
-    }
-    if (control == Parameters::ControlVariable::rate) {
-        auto &cstress_XF = stress_components.at("xF_contact").particle_stress;
+	for (auto &sc: stress_components) {
+		auto type = sc.second.type;
+		const auto &component_name = sc.first;
+		if (type == VELOCITY_STRESS) {
+			addUpInteractionStressGU(sc.second.particle_stress,
+			                         na_velo_components[component_name].vel,
+			                         na_velo_components[component_name].ang_vel);
+		}
+		if (type == STRAIN_STRESS) {
+			addUpInteractionStressME(sc.second.particle_stress);
+		}
+	}
+	if (control == Parameters::ControlVariable::rate) {
+		auto &cstress_XF = stress_components.at("xF_contact").particle_stress;
 		for (auto &inter: interaction) {
 			if (inter.contact.is_active()) {
 				unsigned int i, j;
@@ -258,7 +258,7 @@ void System::calcStressPerParticle()
 				inter.contact.addUpStress(cstress_XF[i], cstress_XF[j]); // - rF_cont
 			}
 		}
-	} else {
+	} else if (control == Parameters::ControlVariable::stress) {
 		calcContactXFPerParticleStressControlled();
 	}
 

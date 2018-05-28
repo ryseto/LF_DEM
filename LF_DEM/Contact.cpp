@@ -6,6 +6,7 @@
 #include "Contact.h"
 #include "Interaction.h"
 #include "System.h"
+#include <cmath>
 
 void Contact::init(System* sys_, Interaction* interaction_)
 {
@@ -15,6 +16,7 @@ void Contact::init(System* sys_, Interaction* interaction_)
 	state = 0;
 	f_spring_normal_norm = 0;
 	f_spring_normal.reset();
+	alpha=sys->p.alpha;
 	if (sys->p.friction_model != 0) {
 		if (sys->p.friction_model == 1) {
 			frictionlaw = &Contact::frictionlaw_standard;
@@ -35,7 +37,7 @@ void Contact::init(System* sys_, Interaction* interaction_)
 void Contact::setSpringConstants()
 {
 	double ro_12 = (a0+a1)/2;
-	kn_scaled = ro_12*ro_12*sys->p.kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
+	kn_scaled = pow(ro_12,alpha+1)*sys->p.kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
 	if (sys->friction) {
 		kt_scaled = ro_12*sys->p.kt; // F = kt_scaled * disp_tan <-- disp is not scaled
 		if (sys->rolling_friction) {
@@ -210,11 +212,15 @@ void Contact::calcContactSpringForce()
 	if (!is_active()) {
 		return;
 	}
-	f_spring_normal_norm = -kn_scaled*interaction->get_reduced_gap();
+	double delta=interaction->get_reduced_gap();
+	f_spring_normal_norm = (kn_scaled*delta)*pow(delta,alpha-1);
+	if(f_spring_normal_norm<0){
+        f_spring_normal_norm *= -1;
+	}
 	f_spring_normal = -f_spring_normal_norm*interaction->nvec;
 	if (sys->friction) {
 		disp_tan.vertical_projection(interaction->nvec);
-		f_spring_tan = kt_scaled*disp_tan;
+		f_spring_tan = pow(disp_tan.norm(),alpha-1)*(kt_scaled*disp_tan);
 		if (sys->rolling_friction) {
 			f_rolling = kr_scaled*disp_rolling;
 		}
@@ -224,6 +230,12 @@ void Contact::calcContactSpringForce()
 		f_spring_total = f_spring_normal;
 	} else {
 		f_spring_total = f_spring_normal+f_spring_tan;
+		sys->static_strength[interaction->get_p0()]+=f_spring_total;
+		sys->sq_caracteristic_strength[interaction->get_p0()]+=f_spring_total.sq_norm();
+		if(interaction->get_p1()<sys->np_mobile){
+            sys->static_strength[interaction->get_p1()]-=f_spring_total;
+            sys->sq_caracteristic_strength[interaction->get_p1()]+=f_spring_total.sq_norm();
+		}
 	}
 }
 
@@ -253,7 +265,7 @@ void Contact::frictionlaw_standard()
 	 \brief Friction law
 	 */
 	double supportable_tanforce = 0;
-	double sq_f_tan = f_spring_tan.sq_norm();
+	double f_tan = f_spring_tan.norm();
 	normal_load = f_spring_normal_norm;
 	if (sys->cohesion) {
 		normal_load += sys->p.cohesion;
@@ -265,7 +277,7 @@ void Contact::frictionlaw_standard()
 		// dynamic friction in previous step
 		supportable_tanforce = mu_dynamic*normal_load;
 	}
-	if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
+	if (f_tan > supportable_tanforce) {
 		state = 3; // dynamic friction
 		supportable_tanforce = mu_dynamic*normal_load;
 	} else {
@@ -273,7 +285,7 @@ void Contact::frictionlaw_standard()
 	}
 	if (state == 3) {
 		// adjust the sliding spring for dynamic friction law
-		setTangentialForceNorm(sqrt(sq_f_tan), supportable_tanforce);
+		setTangentialForceNorm(f_tan, supportable_tanforce);
 	}
 	if (sys->rolling_friction) {
 		double supportable_rollingforce = mu_rolling*normal_load;
@@ -282,14 +294,19 @@ void Contact::frictionlaw_standard()
 			setRollingForceNorm(sqrt(sq_f_rolling), supportable_rollingforce);
 		}
 	}
+	if (normal_load){
+        mobilisation=f_spring_tan.norm()/(mu_static*normal_load);
+	}else{
+	    mobilisation=0;
+	}
 	return;
 }
 
 void Contact::setTangentialForceNorm(double current_force_norm,
 									 double new_force_norm)
 {
-	disp_tan *= new_force_norm/current_force_norm;
-	f_spring_tan = kt_scaled*disp_tan;
+	disp_tan *= pow(new_force_norm/current_force_norm,1/alpha);
+	f_spring_tan = kt_scaled*pow(disp_tan.norm(),alpha-1)*disp_tan;
 }
 
 void Contact::setRollingForceNorm(double current_force_norm,
@@ -445,8 +462,7 @@ void Contact::calcContactStress()
 	 * The contact force F includes both the spring force and the dashpot force.
 	 */
 	if (is_active()) {
-        contact_stresslet_XF = outer_sym(interaction->rvec, getTotalForce());
-        // contact_stresslet_XF = outer_sym(interaction->rvec, f_spring_normal);
+		contact_stresslet_XF = outer_sym(interaction->rvec, getTotalForce());
 	} else {
 		contact_stresslet_XF.reset();
 	}
@@ -463,7 +479,7 @@ void Contact::addUpStress(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1)
 void Contact::addUpStressSpring(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1) const
 {
 	Sym2Tensor spring_stress;
-    spring_stress = outer_sym(interaction->rvec, f_spring_total);
+	spring_stress = outer_sym(interaction->rvec, f_spring_total);
 	double r_ij = get_rcontact();
 	stress_p0 += (a0/r_ij)*spring_stress;
 	stress_p1 += (a1/r_ij)*spring_stress;
@@ -492,14 +508,19 @@ vec3d Contact::getNormalForce() const
 	return dot(interaction->nvec, getTotalForce())*interaction->nvec;
 }
 
-double Contact::getNormalForceValue() const
-{
-	return dot(interaction->nvec, getTotalForce());
-}
-
 double Contact::get_normal_load() const
 {
 	return normal_load;
+}
+
+double Contact::getMobilisation() const
+{
+    if(is_active()){
+        return mobilisation;
+    } else{
+        return 0;
+    }
+
 }
 
 vec3d Contact::getTangentialForce() const

@@ -37,6 +37,7 @@ private:
 	System *sys;
 	Interaction *interaction;
 	bool _active;
+
 	//======= particles data  ====================//
 	unsigned int p0;
 	unsigned int p1;
@@ -57,7 +58,6 @@ private:
 
  public:
 	ContactDashpot();
-
 	void init(System *sys_, Interaction *int_);
 	bool is_active() const {return _active;};
 	void activate();

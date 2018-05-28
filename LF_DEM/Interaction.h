@@ -20,7 +20,6 @@
 #include <iomanip>
 #include <fstream>
 #include <memory>
-#include <vector>
 #include "vec3d.h"
 #include "Contact.h"
 #include "Lubrication.h"
@@ -44,10 +43,9 @@ private:
 	//======= relative position/velocity data  =========//
 	double reduced_gap; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
 	double r; // center-center distance
-	
+
 	//===== forces and stresses ==================== //
 	double interaction_range;  // max distance
-	bool record;
 	/*********************************
 	 *       Private Methods         *
 	 *********************************/
@@ -67,12 +65,7 @@ private:
 	 * the change of contact state is informed in updateResiCoeff.
 	 */
 	bool contact_state_changed_after_predictor;
-	double birth_strain;
-	std::vector<double> strain_history;
-	std::vector<double> angle_history;
-	std::vector<double> normalforce_history;
-	std::vector<double> gap_history;
-	
+
 public:
 	Contact contact;
 	Lubrication lubrication;
@@ -108,8 +101,7 @@ public:
 	 */
 	void updateState(bool& deactivated);
 	double separation_distance() const {return r;}
-	void recordHistory();
-	void outputHisotry();
+
 
 	//======= particles data  ====================//
 	int partner(unsigned int i) const {return (i == p0 ? p1 : p0);}

@@ -23,7 +23,7 @@ using namespace std;
 template<typename T>
 void GenerateInitConfig::baseSetup(T &conf, bool is2d, double inflate_ratio) {
 	std::tie(conf.position, conf.radius) = putRandom(is2d);
-	for (int i=0; i<np; i++) {
+	for (int i=0; i<np_movable; i++) {
 		conf.radius[i] *= inflate_ratio;
 	}
 	if (is2d) {
@@ -36,7 +36,7 @@ void GenerateInitConfig::baseSetup(T &conf, bool is2d, double inflate_ratio) {
 	conf.volume_or_area_fraction = volume_fraction;
 }
 
-int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int config_type)
+int GenerateInitConfig::generate(int rand_seed_, int config_type)
 {
 	if (config_type == 2) {
 		cerr << "generate circular wide gap " <<endl;
@@ -47,17 +47,22 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 	} else if (config_type == 3) {
 		cerr << "generate flat walls" <<endl;
 		parallel_wall_config = true;
+	} else if (config_type == 5) {
+		cerr << "generate one flat wall at the bottom of the box" <<endl;
+		bottom_wall_config = true;
 	}
 
 	Simulation simu;
-	setParameters(simu, volume_frac_gen_);
+	setParameters(simu);
 	rand_seed = rand_seed_;
-	cerr << "rand_seed = " << rand_seed_ << endl;
 
 	auto &sys = simu.getSys();
 	double contact_ratio = 0.05;
-	double min_gap = -0.01;
+	double min_gap = -0.1;
 	double inflate_ratio = 1-min_gap;
+
+
+	sys.zero_gravity=true;
 
 	if (circulargap_config) {
 		/* Note:
@@ -87,7 +92,7 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 		 * Wall particles are placed at
 		 *   z = z_bot - a
 		 *   z = z_top + a;
-		 * Mobile partilces can be in radius_in < r < radius_out
+		 * Mobile particles can be in radius_in < r < radius_out
 		 */
 
 		np_wall1 = lx/(2*radius_wall_particle);
@@ -99,6 +104,27 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 		baseSetup(c, sys.twodimension, inflate_ratio);
 		c.np_wall1 = np_wall1;
 		c.np_wall2 = np_wall2;
+		c.radius_in = cg_radius_in;
+		c.radius_out = cg_radius_out;
+		sys.setupConfiguration(c, Parameters::ControlVariable::rate);
+	} else if (bottom_wall_config) {
+		/* Note:
+		 * Wall particles are placed at
+		 *   z = z_bot - a
+		 * Mobile particles can be in radius_in < r < radius_out
+		 */
+
+		/* np_wall1 = lx*density_wall_particle/(2*radius_wall_particle);
+		np_wall2 = ly*density_wall_particle/(2*radius_wall_particle); */
+
+
+		np_fix=np_wall1*np_wall2;
+		np_movable = np;
+		np += np_fix;
+		struct bottom_wall_configuration c;
+		baseSetup(c, sys.twodimension, inflate_ratio);
+		c.np_wall1 = np_wall1;
+		c.np_wall2= np_wall2;
 		c.radius_in = cg_radius_in;
 		c.radius_out = cg_radius_out;
 		sys.setupConfiguration(c, Parameters::ControlVariable::rate);
@@ -123,20 +149,32 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 		sys.setupConfiguration(c, Parameters::ControlVariable::rate);
 	}
 
+
+
+
 	sys.checkNewInteraction();
 	sys.updateInteractions();
 	auto contact_nb = countNumberOfContact(sys);
 	int cnt_iteration = 0;
-	while(((double)contact_nb.first)/sys.get_np() > contact_ratio && evaluateMinGap(sys) < min_gap) {
-		sys.timeEvolution(sys.get_time()+2, -1);
-		std::cout << "." << cnt_iteration << std::flush;
-		contact_nb = countNumberOfContact(sys);
-		if (max_iteration > 0
-			&& cnt_iteration++ > max_iteration) {
-			std::cout << "max iteration " << std::flush;
-			break;
-		}
+
+	if(max_iteration){
+        while(((double)contact_nb.first)/sys.get_np() > contact_ratio &&  evaluateMinGap(sys) < min_gap){
+            outputPositionData(sys, cnt_iteration);  // can be used for debugging
+            sys.timeEvolution(sys.get_time()+2, -1);
+            std::cout << "." << cnt_iteration << endl;
+            cout << endl << "Contact number =" << contact_nb.first << " for " << sys.get_np() << " particles" << endl;
+            cout <<  "min gap =" << evaluateMinGap(sys) << " / " << min_gap << endl;
+            contact_nb = countNumberOfContact(sys);
+            if (max_iteration > 0 && cnt_iteration++ > max_iteration) {
+                std::cout << "max iteration " << endl;
+                break;
+            }
+        }
 	}
+
+
+	cout << endl << "Contact number =" << contact_nb.first << " for " << sys.get_np() << " particles" << endl;
+	cout <<  "min gap =" << evaluateMinGap(sys) << " / " << min_gap << endl;
 
 	for (int i=0; i<np_movable; i++) {
 		if (i < np1) {
@@ -145,15 +183,12 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 			sys.radius[i] = a2;
 		}
 	}
-	for (int i=np_movable; i<np; i++) {
-		sys.radius[i] = radius_wall_particle;
-	}
 
-	outputPositionData(sys);
+	outputPositionData(sys, -1);
 	return 0;
 }
 
-void GenerateInitConfig::outputPositionData(const System &sys)
+void GenerateInitConfig::outputPositionData(const System &sys, int cnt_iteration)
 {
 	ofstream fout;
 	ofstream fout_yap;
@@ -181,6 +216,8 @@ void GenerateInitConfig::outputPositionData(const System &sys)
 		ss_posdatafilename << "cylinders" << cg_ratio_radii; // square
 	} else if (parallel_wall_config) {
 		ss_posdatafilename << "shearwalls"; // square
+	} else if (bottom_wall_config) {
+		ss_posdatafilename << "bottomwall"; // square
 	} else if (winding_wall_config) {
 		ss_posdatafilename << "windingwalls"; // square
 	} else {
@@ -198,7 +235,11 @@ void GenerateInitConfig::outputPositionData(const System &sys)
 			}
 		}
 	}
-	ss_posdatafilename << "_" << rand_seed << "_.dat";
+	if(cnt_iteration<0){
+            ss_posdatafilename << "_" << rand_seed << "_.dat";
+	} else{
+	    ss_posdatafilename << "_" << rand_seed << "it_" << cnt_iteration << "_.dat";
+	}
 	cerr << ss_posdatafilename.str() << endl;
 	fout.open(ss_posdatafilename.str().c_str());
 	ss_posdatafilename << ".yap";
@@ -217,6 +258,13 @@ void GenerateInitConfig::outputPositionData(const System &sys)
 		fout << lx << ' ' << ly << ' ' << lz << ' ';
 		fout << np_wall1 << ' ' << np_wall1 << ' ';
 		fout << z_bot << ' ' << z_top  << endl;
+	} else if (bottom_wall_config) {
+		fout << "# np1 np2 vf lx ly lz np_wall z_bot" << endl;
+		fout << std::setprecision(15);
+		fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
+		fout << lx << ' ' << ly << ' ' << lz << ' ';
+		fout << np_fix << ' ';
+		fout << z_bot << endl;
 	} else {
 		fout << "# np1 np2 vf lx ly lz vf1 vf2 disp" << endl;
 		fout << std::setprecision(15);
@@ -333,6 +381,48 @@ std::pair<std::vector<vec3d>, std::vector<double>> GenerateInitConfig::putRandom
 		}
 		cerr << "*" << endl;
 		cerr << np_wall1 << ' ' << np_wall2 << endl;
+	} else if (bottom_wall_config) {
+		for (int i=0; i < np_movable; i++) {
+			double a;
+			if (i < np1) {
+				a = a1;
+			} else {
+				a = a2;
+			}
+			vec3d pos(lx*RANDOM, ly*RANDOM, z_bot+a+radius_wall_particle+(lz-z_bot-2*a-radius_wall_particle)*RANDOM);
+			pos.cerr();
+			position[i] = pos;
+			radius[i] = a;
+		}
+		double delta_x = lx/np_wall1;
+		double delta_y = ly/max(1,np_wall2);
+		int ind=0;
+		for (int i=0; i<np_wall1; i++){
+                for (int j=0; j<np_wall2; j++){
+
+                    vec3d pos(radius_wall_particle*(1+radius_wall_dispersion)+delta_x*i, 0, 0);
+                    double rad=radius_wall_particle*(1+((RANDOM)-0.5)*radius_wall_dispersion);
+
+                    if(ly){
+                        pos.y=radius_wall_particle*(1+radius_wall_dispersion)+delta_y*j;
+                    }
+
+                    if(j && (rad+radius[ind+np_movable-1]-delta_y)>2.0){
+                        rad=delta_y-radius[ind+np_movable-1]-1.0;
+                    }
+                    if(i && (rad+radius[ind+np_movable-np_wall2]-delta_x)>2.0){
+                        rad=delta_x-radius[ind+np_movable-np_wall2]-1.0;
+                    }
+
+                    pos.z=rad;
+                    position[ind+np_movable] = pos;
+                    radius[ind+np_movable] = rad;
+                    ind++;
+                }
+
+		}
+		cerr << "*" << endl;
+		cerr << np_fix << endl;
 	} else if (winding_wall_config) {
 		int i = 0;
 		vec3d r_center1(0, 0, 0);
@@ -473,7 +563,7 @@ template<typename T> T readStdinDefault(T default_value, string message)
 	return value;
 }
 
-void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init)
+void GenerateInitConfig::setParameters(Simulation &simu)
 {
 	/*
 	 *  Read parameters from standard input
@@ -484,12 +574,14 @@ void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init
 
 	auto &sys = simu.getSys();
  	sys.zero_shear = true;
- 	simu.p.kn = 1;
+ 	sys.zero_gravity=true;
+ 	simu.p.alpha=1;
+ 	simu.p.kn = 1000;
  	simu.p.friction_model = 0;
  	simu.p.integration_method = 0;
  	simu.p.disp_max = 5e-3;
  	simu.p.lubrication_model = "none";
- 	simu.p.contact_relaxation_time_tan = 1e-4;
+ 	simu.p.contact_relaxation_time_tan = 0;
 	np = readStdinDefault(500, "number of particle");
 	if (circulargap_config || parallel_wall_config) {
 		sys.twodimension = true;
@@ -501,27 +593,37 @@ void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init
 			sys.twodimension = false;
 		}
 	}
-
-	if (volume_frac_init == 0) {
-		if (sys.twodimension) {
-			volume_fraction = readStdinDefault(0.78, "volume_fraction");
-		} else {
-			volume_fraction = readStdinDefault(0.5, "volume_fraction");
-		}
+	if (sys.twodimension) {
+		volume_fraction = readStdinDefault(0.78, "volume_fraction");
 	} else {
-		cerr << "volume_fraction is set to " << volume_frac_init << endl;
-		volume_fraction = volume_frac_init;
+		volume_fraction = readStdinDefault(0.5, "volume_fraction");
 	}
 	if (circulargap_config || parallel_wall_config) {
 		lx_lz = 1.0;
 	} else if (winding_wall_config) {
 		lx_lz = 0.5;
-	} else {
-		lx_lz = readStdinDefault(1.0 , "Lx/Lz [1]: "); // default value needs to be float number.
+	} else if(bottom_wall_config){
+	    np_wall1 = readStdinDefault(10 , "number of particles in bottom walls (first direction) ");
+	    if(!sys.twodimension){
+            np_wall2 = readStdinDefault(10 , "number of particles in bottom walls (second direction) ");
+            radius_wall_particle = readStdinDefault(1.0, "wall particle size");
+            radius_wall_dispersion = readStdinDefault(0.0, "radius wall dispersion ");
+            ly=np_wall2*2*radius_wall_particle*(1+0.5*radius_wall_dispersion);
+	    } else {
+	        radius_wall_particle = readStdinDefault(1.0, "wall particle size");
+            radius_wall_dispersion = readStdinDefault(0.0, "radius wall dispersion ");
+	        np_wall2=1;
+	        ly=0;
+	    }
+
+	    z_bot = radius_wall_particle;
+		lx=np_wall1*2*radius_wall_particle*(1+0.5*radius_wall_dispersion);
+    } else{
+        lx_lz = readStdinDefault(1.0 , "Lx/Lz [1]: "); // default value needs to be float number.
 		if (!sys.twodimension) {
-			ly_lz = readStdinDefault(1.0 , "Ly/Lz [1]: "); // default value needs to be float number.
-		}
-	}
+			ly_lz = readStdinDefault(1.0 , "Ly/Lz [1]: "); // default value needs to be float number.}
+        }
+    }
 	disperse_type = readStdinDefault('b' , "(m)onodisperse or (b)idisperse");
 	a1 = 1;
 	a2 = 1;
@@ -570,14 +672,20 @@ void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init
 			}
 			np2 = np-np1;
 			double pvolume = np1*pvolume1+np2*pvolume2;
-			if (sys.twodimension) {
+			if (sys.twodimension && !bottom_wall_config) {
 				lz = sqrt(pvolume/(lx_lz*volume_fraction));
 				lx = lz*lx_lz;
 				ly = 0;
-			} else {
+			} else if(!bottom_wall_config){
 				lz = pow(pvolume/(lx_lz*ly_lz*volume_fraction), 1.0/3);
 				lx = lz*lx_lz;
 				ly = lz*ly_lz;
+			} else{
+			    if(sys.twodimension){
+                    lz=(total_volume/lx)+2*radius_wall_dispersion;
+			    } else{
+			        lz=(total_volume/(lx*ly))+2*radius_wall_dispersion;
+			    }
 			}
 		} else {
 			lz = readStdinDefault(10, "lz");
@@ -644,6 +752,7 @@ void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init
 		z_bot = 5;
 		z_top = lz-5;
 	}
+
 	lx_half = lx/2;
 	ly_half = ly/2;
 	lz_half = lz/2;

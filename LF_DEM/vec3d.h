@@ -162,15 +162,6 @@ public:
 		return atan2(z, x);
 	}
 
-	inline double angle_0_pi()
-	{
-		if (z > 0) {
-			return atan2(z, x);
-		} else {
-			return atan2(-z, -x);
-		}
-	}
-	
 	void periodicBoundaryBox(const double& lx,
 							 const double& ly,
 							 const double& lz)

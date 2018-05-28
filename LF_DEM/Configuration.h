@@ -25,12 +25,28 @@ enum struct ConfFileFormat : int { // assign values as it is for output and othe
 	bin_format_base_shear = 8,
 	bin_format_fixed_vel_shear = 9,
 	bin_delayed_adhesion = 10,
+	txt_format_sedimentation = 11,
+	bin_format_sedimentation = 12,
 };
 
 
 struct base_configuration {
 	double lx, ly, lz;
 	double volume_or_area_fraction;
+
+	std::vector <vec3d> position;
+	std::vector <double> radius;
+	std::vector <double> angle;
+
+	std::vector <struct contact_state> contact_states;
+};
+
+struct base_sedimentation_configuration {
+    unsigned np_fixed;
+    double max_velocity;
+	double lx, ly, lz;
+	double volume_or_area_fraction;
+	vec3d lees_edwards_disp;
 
 	std::vector <vec3d> position;
 	std::vector <double> radius;
@@ -89,6 +105,36 @@ struct circular_couette_configuration {
 	std::vector <struct contact_state> contact_states;
 };
 
+struct bottom_wall_configuration {
+	int np_wall1;
+	int np_wall2;
+	double radius_in;
+	double radius_out;
+
+	double lx, ly, lz;
+	double volume_or_area_fraction;
+	vec3d lees_edwards_disp;
+
+	std::vector <vec3d> position;
+	std::vector <double> radius;
+	std::vector <double> angle;
+
+	std::vector <struct contact_state> contact_states;
+};
+
+struct sedimentation_configuration {
+	double lx, ly, lz;
+	double volume_or_area_fraction;
+	double np_fixed;
+	vec3d lees_edwards_disp;
+
+	std::vector <vec3d> position;
+	std::vector <double> radius;
+	std::vector <double> angle;
+
+	std::vector <struct contact_state> contact_states;
+};
+
 ConfFileFormat getBinaryConfigurationFileFormat(const std::string& filename_import_positions);
 
 ConfFileFormat getTxtConfigurationFileFormat(const std::string& filename_import_positions);
@@ -96,6 +142,8 @@ ConfFileFormat getTxtConfigurationFileFormat(const std::string& filename_import_
 struct base_shear_configuration readBinaryBaseShearConfiguration(const std::string& filename);
 
 struct base_configuration readBinaryBaseConfiguration(std::ifstream &input);
+
+struct base_sedimentation_configuration readBinaryBaseSedimentationConfiguration(const std::string& filename);
 
 struct delayed_adhesion_configuration readBinaryDelayedAdhesionConfiguration(std::string filename);
 
@@ -107,7 +155,11 @@ struct fixed_velo_configuration readTxtFixedVeloConfiguration(const std::string&
 
 struct circular_couette_configuration readTxtCircularCouetteConfiguration(const std::string& filename);
 
-void outputBinaryConfiguration(const System &sys, 
-							   std::string conf_filename, 
+struct bottom_wall_configuration readTxtBottomWallConfiguration(const std::string& filename);
+
+struct sedimentation_configuration readTxtSedimentationConfiguration(const std::string& filename);
+
+void outputBinaryConfiguration(const System &sys,
+							   std::string conf_filename,
 							   ConfFileFormat format);
 #endif /* defined(__LF_DEM__Configuration__) */

@@ -269,7 +269,7 @@ std::pair<struct DBlock, struct DBlock> ContactDashpot::RFU_DBlocks() const
 		b0.col4[1] = -YC[0]*nvec->y*nvec->z;                    // 54
 		// (*,5)
 		b0.col5[0] =  YC[0]*(1-nvec->z*nvec->z);                 // 55
-		
+
 		double XA3_YA3 = XA[3] - YA[3];
 		// (*,0)
 		b1.col0[0] = YA[3] + XA3_YA3*nvec->x*nvec->x; // 00 element of the dblock
@@ -313,7 +313,7 @@ std::pair<struct DBlock, struct DBlock> ContactDashpot::RFU_DBlocks() const
 		b0.col4[1] = 0;                     // 54
 		// (*,5)
 		b0.col5[0] = 0;                 // 55
-		
+
 		// (*,0)
 		b1.col0[0] = XA[3]*nvec->x*nvec->x; // 00 element of the dblock
 		b1.col0[1] = XA[3]*nvec->x*nvec->y;           // 10
@@ -371,6 +371,10 @@ vec3d ContactDashpot::getForceOnP0(const vec3d &vel_p0,
 		}
 
 		/* XAU_i */
+        //double vr=pow(100*dot(vj-vi,nvec),2);
+        double delta=interaction->get_gap();
+        //double coeff=1/(1+pow(2.71,10000*(delta-0.01)));
+
 		vec3d force_p0 = -dot(XA[0]*vi+XA[1]*vj, nvec)*(*nvec);
 		if (tangential_coeff > 0) {
 			/* YAU_i */
