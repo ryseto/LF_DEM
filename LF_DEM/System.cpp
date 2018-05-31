@@ -1255,6 +1255,13 @@ void System::timeEvolution(double time_end, double strain_end)
 	static bool firsttime = true;
 	in_predictor = false;
 	in_corrector = false;
+
+	double loop_time_adjust = 0;
+
+	if (p.fixed_dt == true && !firsttime) {
+		loop_time_adjust = dt;
+	}
+
 	if (firsttime) {
 		double dt_bak = dt; // to avoid stretching contact spring
 		dt = 0;
@@ -1276,12 +1283,8 @@ void System::timeEvolution(double time_end, double strain_end)
 	avg_dt = 0;
 	avg_dt_nb = 0;
 	double dt_bak = -1;
-	double loop_time_adjust = 0;
-    // @@@ When fixed_dt is true, keepRunning does not work.
-    //    if (p.fixed_dt == true) {
-    //        loop_time_adjust = dt;
-    //    }
-    while (keepRunning(time_end - loop_time_adjust, strain_end - loop_time_adjust)) {
+
+	while (keepRunning(time_end - loop_time_adjust, strain_end - loop_time_adjust)) {
 		retrim_ext_flow = false; // used in ext_flow simulation
 		if (!brownian && !p.fixed_dt) { // adaptative time-step for non-Brownian cases
 			adaptTimeStep(time_end, strain_end);
