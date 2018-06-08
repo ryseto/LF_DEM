@@ -480,6 +480,7 @@ void Simulation::outputData()
          * lambda0 has a better physical meaning than N2.
          * lambda0 = - (2/3)*(N2 + 0.5*N1)/shear_rate
          * N2 = rate*(-1.5*lambda0 + lambda3)
+         * lambda0*ep_dot / p = lambda0*gamma_dot / 2p = - (N2 + 0.5*N1)* / 3 p
          **************************************************************************************/
         double mf_inplane_pressure; // lambda_0
         if (sr != 0) {
