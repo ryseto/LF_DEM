@@ -315,13 +315,19 @@ void Simulation::setupFlow(Dimensional::DimensionalQty<double> control_value)
 		if (!sys.ext_flow) {
 			/* simple shear flow
 			 * shear_rate = 2*dot_epsilon
+             *
+             * The basis tensorial bases, D, E, G are given in the simple shear coordinate.
+             * sigma = -p I + 2*eta*D + 2*lambda0*E + 2*lambda3*G
+             * D = ((0, 0, 1/2), (0, 0, 0), (1/2, 0, 0))
+             * E = ((-1/4, 0, 0), (0, 1/2, 0), (0, 0, -1/4))
+             * G = ((-1/2, 0, 0), (0, 0, 0), (0, 0, 1/2)
 			 */
-			Einf_base.set(0, 0, 1, 0, 0, 0);
+			Einf_base.set(0, 0, 1, 0, 0, 0); // = D
 			Omegainf_base.set(0, 1, 0);
 			sys.setImposedFlow(dimensionless_deformation_rate*Einf_base, dimensionless_deformation_rate*Omegainf_base);
 			stress_basis_0 = {-dimensionless_deformation_rate/2, 0, 0, 0,
-				dimensionless_deformation_rate, -dimensionless_deformation_rate/2};
-			stress_basis_3 = {-dimensionless_deformation_rate, 0, 0, 0, 0, dimensionless_deformation_rate};
+                dimensionless_deformation_rate, -dimensionless_deformation_rate/2}; // = E
+			stress_basis_3 = {-dimensionless_deformation_rate, 0, 0, 0, 0, dimensionless_deformation_rate}; // = G
 		} else {
 			/* extensional flow
 			 *

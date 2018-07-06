@@ -461,6 +461,8 @@ void Simulation::outputData()
         // output xz component of stress tensor
         //viscous_material_function = sys.total_stress.elm[2];
         viscosity = 0.5*doubledot(sys.total_stress, Einf_base)/ Einf_base.selfdoubledot();
+        /* D = ((0, 0, 1/2), (0, 0, 0), (1/2, 0, 0))
+         */
     }
 	outdata.entryData("viscosity", Dimensional::Dimension::Viscosity, 1, viscosity);
     for (const auto &stress_comp: sys.total_stress_groups) {
@@ -484,6 +486,8 @@ void Simulation::outputData()
          **************************************************************************************/
         double mf_inplane_pressure; // lambda_0
         if (sr != 0) {
+            /* E = ((-1/4, 0, 0), (0, 1/2, 0), (0, 0, -1/4))
+             */
             mf_inplane_pressure = 0.5*doubledot(sys.total_stress, stress_basis_0)/stress_basis_0.selfdoubledot();
         } else {
             mf_inplane_pressure = 0;
@@ -503,6 +507,8 @@ void Simulation::outputData()
         double mf_reorientation; // lambda_3
         if (sr != 0) {
             mf_reorientation = 0.5*doubledot(sys.total_stress, stress_basis_3)/stress_basis_3.selfdoubledot();
+            /* G = ((-1/2, 0, 0), (0, 0, 0), (0, 0, 1/2)
+             */
         } else {
             mf_reorientation = 0;
         }
