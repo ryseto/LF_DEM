@@ -511,7 +511,7 @@ void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init
 	} else {
 		cerr << "volume_fraction is set to " << volume_frac_init << endl;
 		volume_fraction = volume_frac_init;
-	}
+	}    
 	if (circulargap_config || parallel_wall_config) {
 		lx_lz = 1.0;
 	} else if (winding_wall_config) {

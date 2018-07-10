@@ -55,7 +55,7 @@ struct outputParams
 	bool log_time_interval;                								///< Output in logarithmic time [false]
     bool new_material_functions;                                        ///< Output new material functions (eta, lambda0, lambda3, insted of standard viscometric functions (eta, N1, N2) [false]
 	Dimensional::DimensionalQty<double> initial_log_time;               ///< Initial output time in log time mode [1e-4]
-		int nb_output_data_log_time;          								///< Nb of data output in log time mode [100]
+    int nb_output_data_log_time;          								///< Nb of data output in log time mode [100]
 	int nb_output_config_log_time;			           					///< Nb of config output in log time mode (must be <= nb_output_data_log_time) [100]
 	bool origin_zero_flow;                   ///< Output: the middle height of the simulation box is set to the flow zero level. [true]
 	bool out_data_particle;                  ///< Output par_* file [true]

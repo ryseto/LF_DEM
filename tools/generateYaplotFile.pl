@@ -499,135 +499,6 @@ sub OutYaplotData{
     #    &OutString_width($int0[$k], $int1[$k], $force_factor*abs($force[$k]), 0.02);
     #    #&OutString_width($int0[$k], $int1[$k], $force_factor*abs($n1), 0.01);
     # }
-    $n1approx_pos_con = 0;
-    $n1approx_neg_con = 0;
-    $n1approx_pos_lub = 0;
-    $n1approx_neg_lub = 0;
-
-    $n1_factor = 0.015/$viscosity;
-    printf OUT "y 5\n";
-    #    printf OUT "@ 7\n";
-    for ($k = 0; $k < $num_interaction; $k ++) {
-        #$force = $F_lub[$k] + $Fc_n[$k];
-        $nx = $nrvec_x[$k];
-        $ny = $nrvec_y[$k];
-        $n1lub = -$F_lub[$k]*$distance[$k]*($nx*$nx - $ny*$ny);
-        $n1con = -$Fc_n[$k]*$distance[$k]*($nx*$nx - $ny*$ny);
-        #        $force = $Fc_n[$k];
-        #if (1 || $force[$k] >= 0) {
-        #	&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
-        #}
-        #        if ($force > 0) {
-
-        if ($n1lub > 0) {
-            $n1approx_pos_lub += $n1lub;
-        } else {
-            $n1approx_neg_lub += $n1lub;
-        }
-        if ($n1con > 0) {
-            $n1approx_pos_con += $n1con;
-        } else {
-            $n1approx_neg_con += $n1con;
-        }
-        $n1[$k] = $n1lub + $n1con;
-        if ($n1 > 0) {
-            printf OUT "@ 7\n";
-        } else {
-            printf OUT "@ 5\n";
-        }
-        # &OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
-        &OutString_width($int0[$k], $int1[$k], $n1_factor*abs($n1[$k]), 0.01);
-        #        }
-    }
-    
-    if ($cnt eq $confout) {
-        for ($k = 0; $k < $num_interaction; $k ++) {
-            $force = $F_lub[$k] + $Fc_n[$k];
-            $i = $int0[$k];
-            $j = $int1[$k];
-            $xi = $posx[$i];
-            $zi = $posz[$i];
-            $xj = $posx[$j];
-            $zj = $posz[$j];
-            $sq_dist = ($xi-$xj)**2 + ($zi-$zj)**2;
-            $min = ($radius[$i] + $radius[$j]+1)**2;
-            if ($sq_dist < $min) {
-                printf "$xi $zi $xj $zj $force $n1[$k] $eta[$k]\n";
-            }
-        }
-        for ($i = 0; $i < $np; $i++) {
-            printf OUTSS "$posx[$i]  $posz[$i] $radius[$i] \n";
-        }
-        exit;
-    }
-
-    
-    
-    #    $barsize = 0.1;
-    $barsize = 10;
-    $n1approxP = $n1approx_pos_con/($Lx*$Lz*$viscosity);
-    $n1approxN = $n1approx_neg_con/($Lx*$Lz*$viscosity);
-    $testposition1 = $Lx/2 + 1;
-    $testposition2 = $Lx/2 + 3;
-
-    printf OUT "@ 7\n";
-    printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxP $testposition1 0 $n1approxP \n";
-    printf OUT "@ 5\n";
-    printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxN $testposition1 0 $n1approxN \n";
-
-    $n1approxCon = $n1approxP + $n1approxN;
-    $testposition1 = $Lx/2 + 3.2;
-    $testposition2 = $Lx/2 + 5.2;
-
-    if ($n1approx > 0) {
-        printf OUT "@ 7\n";
-    } else {
-        printf OUT "@ 5\n";
-    }
-    printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxCon $testposition1 0 $n1approxCon \n";
-
-    $testposition1 = -$Lx/2 - 3.2;
-    $testposition2 = -$Lx/2 - 5.2;
-
-    $n1approxP = $n1approx_pos_lub/($Lx*$Lz*$viscosity);
-    $n1approxN = $n1approx_neg_lub/($Lx*$Lz*$viscosity);
-    printf OUT "@ 7\n";
-    printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxP $testposition1 0 $n1approxP \n";
-    printf OUT "@ 5\n";
-    printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxN $testposition1 0 $n1approxN \n";
-
-    $n1approxLub = $n1approxP + $n1approxN;
-    $testposition1 = -$Lx/2 - 1;
-    $testposition2 = -$Lx/2 - 3;
-    if ($n1approx > 0) {
-        printf OUT "@ 7\n";
-    } else {
-        printf OUT "@ 5\n";
-    }
-    printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxLub $testposition1 0 $n1approxLub \n";
-
-    
-    #    $ratio = $normalstressdiff1/$n1approx;
-    #    printf "ratio = $ratio\n";
-    #    $n1approx = 20*$n1approx/$viscosity;
-    #$totaln1 = 20*$normalstressdiff1/$viscosity;
-    #    if ($normalstressdiff1 > 0 ) {
-    #    printf OUT "@ 7\n";
-    #} else {
-    #    printf OUT "@ 5\n";
-    #}
-    #printf OUT "r 1\n";
-    #printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $totaln1 $testposition1 0 $totaln1 \n";
-
-    if ($shear_strain > 1) {
-        $n1approx = ($n1approxCon + $n1approxLub);
-        ####
-        $viscosityOUT = 6*$pi*$viscosity;
-        $visapproxOUT = 6*$pi*$visapprox;
-        $normalstressdiff1OUT = $normalstressdiff1/$viscosity;
-        $n1approxOUT = $n1approx;
-        printf OUTDR "$shear_strain $viscosityOUT $visapproxOUT $normalstressdiff1OUT $n1approxOUT\n";
-    }
     
     if (0) {
     printf OUT "y 3\n";
@@ -787,3 +658,137 @@ sub OutCross {
 	$zb = $zi+$uz;
 	printf OUT "l $xa $ya $za $xb $yb $zb\n";
 }
+
+sub calcContributions {
+    $n1approx_pos_con = 0;
+    $n1approx_neg_con = 0;
+    $n1approx_pos_lub = 0;
+    $n1approx_neg_lub = 0;
+    
+    $n1_factor = 0.015/$viscosity;
+    printf OUT "y 5\n";
+    #    printf OUT "@ 7\n";
+    for ($k = 0; $k < $num_interaction; $k ++) {
+        #$force = $F_lub[$k] + $Fc_n[$k];
+        $nx = $nrvec_x[$k];
+        $ny = $nrvec_y[$k];
+        $n1lub = -$F_lub[$k]*$distance[$k]*($nx*$nx - $ny*$ny);
+        $n1con = -$Fc_n[$k]*$distance[$k]*($nx*$nx - $ny*$ny);
+        #        $force = $Fc_n[$k];
+        #if (1 || $force[$k] >= 0) {
+        #    &OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
+        #}
+        #        if ($force > 0) {
+        
+        if ($n1lub > 0) {
+            $n1approx_pos_lub += $n1lub;
+        } else {
+            $n1approx_neg_lub += $n1lub;
+        }
+        if ($n1con > 0) {
+            $n1approx_pos_con += $n1con;
+        } else {
+            $n1approx_neg_con += $n1con;
+        }
+        $n1[$k] = $n1lub + $n1con;
+        if ($n1 > 0) {
+            printf OUT "@ 7\n";
+        } else {
+            printf OUT "@ 5\n";
+        }
+        # &OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
+        &OutString_width($int0[$k], $int1[$k], $n1_factor*abs($n1[$k]), 0.01);
+        #        }
+    }
+    
+    if ($cnt eq $confout) {
+        for ($k = 0; $k < $num_interaction; $k ++) {
+            $force = $F_lub[$k] + $Fc_n[$k];
+            $i = $int0[$k];
+            $j = $int1[$k];
+            $xi = $posx[$i];
+            $zi = $posz[$i];
+            $xj = $posx[$j];
+            $zj = $posz[$j];
+            $sq_dist = ($xi-$xj)**2 + ($zi-$zj)**2;
+            $min = ($radius[$i] + $radius[$j]+1)**2;
+            if ($sq_dist < $min) {
+                printf "$xi $zi $xj $zj $force $n1[$k] $eta[$k]\n";
+            }
+        }
+        for ($i = 0; $i < $np; $i++) {
+            printf OUTSS "$posx[$i]  $posz[$i] $radius[$i] \n";
+        }
+        exit;
+    }
+    
+    
+    
+    #    $barsize = 0.1;
+    $barsize = 10;
+    $n1approxP = $n1approx_pos_con/($Lx*$Lz*$viscosity);
+    $n1approxN = $n1approx_neg_con/($Lx*$Lz*$viscosity);
+    $testposition1 = $Lx/2 + 1;
+    $testposition2 = $Lx/2 + 3;
+    
+    printf OUT "@ 7\n";
+    printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxP $testposition1 0 $n1approxP \n";
+    printf OUT "@ 5\n";
+    printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxN $testposition1 0 $n1approxN \n";
+    
+    $n1approxCon = $n1approxP + $n1approxN;
+    $testposition1 = $Lx/2 + 3.2;
+    $testposition2 = $Lx/2 + 5.2;
+    
+    if ($n1approx > 0) {
+        printf OUT "@ 7\n";
+    } else {
+        printf OUT "@ 5\n";
+    }
+    printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxCon $testposition1 0 $n1approxCon \n";
+    
+    $testposition1 = -$Lx/2 - 3.2;
+    $testposition2 = -$Lx/2 - 5.2;
+    
+    $n1approxP = $n1approx_pos_lub/($Lx*$Lz*$viscosity);
+    $n1approxN = $n1approx_neg_lub/($Lx*$Lz*$viscosity);
+    printf OUT "@ 7\n";
+    printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxP $testposition1 0 $n1approxP \n";
+    printf OUT "@ 5\n";
+    printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxN $testposition1 0 $n1approxN \n";
+    
+    $n1approxLub = $n1approxP + $n1approxN;
+    $testposition1 = -$Lx/2 - 1;
+    $testposition2 = -$Lx/2 - 3;
+    if ($n1approx > 0) {
+        printf OUT "@ 7\n";
+    } else {
+        printf OUT "@ 5\n";
+    }
+    printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxLub $testposition1 0 $n1approxLub \n";
+    
+    
+    #    $ratio = $normalstressdiff1/$n1approx;
+    #    printf "ratio = $ratio\n";
+    #    $n1approx = 20*$n1approx/$viscosity;
+    #$totaln1 = 20*$normalstressdiff1/$viscosity;
+    #    if ($normalstressdiff1 > 0 ) {
+    #    printf OUT "@ 7\n";
+    #} else {
+    #    printf OUT "@ 5\n";
+    #}
+    #printf OUT "r 1\n";
+    #printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $totaln1 $testposition1 0 $totaln1 \n";
+    
+    if ($shear_strain > 1) {
+        $n1approx = ($n1approxCon + $n1approxLub);
+        ####
+        $viscosityOUT = 6*$pi*$viscosity;
+        $visapproxOUT = 6*$pi*$visapprox;
+        $normalstressdiff1OUT = $normalstressdiff1/$viscosity;
+        $n1approxOUT = $n1approx;
+        printf OUTDR "$shear_strain $viscosityOUT $visapproxOUT $normalstressdiff1OUT $n1approxOUT\n";
+    }
+}
+
+

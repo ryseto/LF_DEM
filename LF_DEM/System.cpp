@@ -675,13 +675,13 @@ void System::initializeBoxing()
 		}
 	}
 	if (!ext_flow) {
-		// simple shear
-		boxset.init(max_range, this);
-		for (int i=0; i<np; i++) {
-			boxset.box(i);
-		}
-		boxset.update();
-	} else {
+        // simple shear
+        boxset.init(max_range, this);
+        for (int i=0; i<np; i++) {
+            boxset.box(i);
+        }
+        boxset.update();
+    } else {
 		// extensional flow
 		double dl = max_range;
 		int num_x = (int)(lx/dl);
