@@ -11,7 +11,7 @@ from __future__ import print_function
 import tty
 import sys
 import termios
-import lfdem_file as lf
+import clfdem_file as lf
 
 
 def misuse():
