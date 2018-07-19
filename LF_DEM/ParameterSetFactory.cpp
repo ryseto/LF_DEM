@@ -45,6 +45,7 @@ void ParameterSetFactory::setDefaultValues() {
 		PARAM_INIT(monolayer, false),
 		PARAM_INIT(auto_determine_knkt, false),
 		PARAM_INIT(output.out_bond_order_parameter6, false),
+        PARAM_INIT(output.new_material_functions, false),
 		PARAM_INIT(output.out_data_vel_components, false),
 		PARAM_INIT(output.out_binary_conf, false),
 		PARAM_INIT(output.out_data_interaction, true),
@@ -53,6 +54,7 @@ void ParameterSetFactory::setDefaultValues() {
 		PARAM_INIT(output.log_time_interval, false),
 		PARAM_INIT(output.out_na_vel, false),
 		PARAM_INIT(output.out_na_disp, false),
+		PARAM_INIT(output.recording_interaction_history, false)
 	};
 
 	/*===========================================
@@ -89,6 +91,7 @@ void ParameterSetFactory::setDefaultValues() {
 		PARAM_INIT(mu_dynamic, -1),
 		PARAM_INIT(mu_rolling, 0),
 		PARAM_INIT(TA_adhesion.adhesion_range, 1e-2),
+		PARAM_INIT(output.recording_start, 1)
 	};
 
 	/*================================
@@ -112,7 +115,7 @@ void ParameterSetFactory::setDefaultValues() {
 		PARAM_INIT(flow_type, ""),
 		PARAM_INIT(event_handler, ""),
 		PARAM_INIT(output.out_particle_stress, ""),
-		PARAM_INIT(lubrication_model, "tangential"),
+		PARAM_INIT(lubrication_model, "tangential")
 	};
 
 	/*====================================

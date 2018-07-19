@@ -44,7 +44,7 @@ int main(int argc, char **argv)
 	string usage = "(1) Simulation\n $ LF_DEM [-r Rate] [-s Stress] [-R Rate_Sequence] [-S Stress_Sequence]\
 	[-e] [-m ?] [-k kn_kt_File] [-v Simulation_Identifier] [-i Provisional_Data] [-n]\
 	Configuration_File Parameter_File \
-	\n\n OR \n\n(2) Generate initial configuration\n $ LF_DEM [-a Random_Seed] [-p Volume_Fraction] -g [c/w/s]\n";
+	\n\n OR \n\n(2) Generate initial configuration\n $ LF_DEM [-a Random_Seed] [-p Volume_Fraction] -g[c/w/s]\n";
 
 	int generate_init = 0;
 	string type_init_config = "normal";

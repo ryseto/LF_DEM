@@ -445,7 +445,8 @@ void Contact::calcContactStress()
 	 * The contact force F includes both the spring force and the dashpot force.
 	 */
 	if (is_active()) {
-		contact_stresslet_XF = outer_sym(interaction->rvec, getTotalForce());
+        contact_stresslet_XF = outer_sym(interaction->rvec, getTotalForce());
+        // contact_stresslet_XF = outer_sym(interaction->rvec, f_spring_normal);
 	} else {
 		contact_stresslet_XF.reset();
 	}
@@ -462,7 +463,7 @@ void Contact::addUpStress(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1)
 void Contact::addUpStressSpring(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1) const
 {
 	Sym2Tensor spring_stress;
-	spring_stress = outer_sym(interaction->rvec, f_spring_total);
+    spring_stress = outer_sym(interaction->rvec, f_spring_total);
 	double r_ij = get_rcontact();
 	stress_p0 += (a0/r_ij)*spring_stress;
 	stress_p1 += (a1/r_ij)*spring_stress;
@@ -489,6 +490,11 @@ double Contact::calcEnergy() const
 vec3d Contact::getNormalForce() const
 {
 	return dot(interaction->nvec, getTotalForce())*interaction->nvec;
+}
+
+double Contact::getNormalForceValue() const
+{
+	return dot(interaction->nvec, getTotalForce());
 }
 
 double Contact::get_normal_load() const

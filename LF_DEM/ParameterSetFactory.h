@@ -15,7 +15,6 @@ struct InputParameter
 	T value;
 };
 
-
 class ParameterSetFactory {
 public:
 	ParameterSetFactory();
@@ -37,8 +36,6 @@ private:
 	void convertParameterUnit(const Dimensional::UnitSystem &unit_system, 
 							  InputParameter<Dimensional::DimensionalQty<double>> &param);
 };
-
-
 
 } // namespace Parameters
 #endif // #define __LF_DEM__ParameterSetFactory__

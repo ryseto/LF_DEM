@@ -236,6 +236,10 @@ void Simulation::assertParameterCompatibility()
 		p.friction_model = 2;
 		cerr << "Warning : critical load simulation -> switched to friction_model=2" << endl;
 	}
+    if (p.output.recording_interaction_history) {
+        cerr << "Interaction history recording needs to use the Euler's Method." << endl;
+        p.integration_method = 0;
+    }
 }
 
 void Simulation::setConfigToSystem(bool binary_conf, const std::string &filename)
@@ -311,13 +315,19 @@ void Simulation::setupFlow(Dimensional::DimensionalQty<double> control_value)
 		if (!sys.ext_flow) {
 			/* simple shear flow
 			 * shear_rate = 2*dot_epsilon
+             *
+             * The basis tensorial bases, D, E, G are given in the simple shear coordinate.
+             * sigma = -p I + 2*eta*D + 2*lambda0*E + 2*lambda3*G
+             * D = ((0, 0, 1/2), (0, 0, 0), (1/2, 0, 0))
+             * E = ((-1/4, 0, 0), (0, 1/2, 0), (0, 0, -1/4))
+             * G = ((-1/2, 0, 0), (0, 0, 0), (0, 0, 1/2)
 			 */
-			Einf_base.set(0, 0, 1, 0, 0, 0);
+			Einf_base.set(0, 0, 1, 0, 0, 0); // = D
 			Omegainf_base.set(0, 1, 0);
 			sys.setImposedFlow(dimensionless_deformation_rate*Einf_base, dimensionless_deformation_rate*Omegainf_base);
 			stress_basis_0 = {-dimensionless_deformation_rate/2, 0, 0, 0,
-				dimensionless_deformation_rate, -dimensionless_deformation_rate/2};
-			stress_basis_3 = {-dimensionless_deformation_rate, 0, 0, 0, 0, dimensionless_deformation_rate};
+                dimensionless_deformation_rate, -dimensionless_deformation_rate/2}; // = E
+			stress_basis_3 = {-dimensionless_deformation_rate, 0, 0, 0, 0, dimensionless_deformation_rate}; // = G
 		} else {
 			/* extensional flow
 			 *
@@ -381,7 +391,7 @@ void Simulation::setupSimulation(string in_args,
 	} else {
 		sys.zero_shear = false;
 	}
-	
+    
 	Parameters::ParameterSetFactory PFactory;
 	PFactory.setFromFile(filename_parameters);
 	setupNonDimensionalization(control_value, PFactory);
@@ -409,7 +419,7 @@ void Simulation::setupSimulation(string in_args,
 	}
 
 	setConfigToSystem(binary_conf, filename_import_positions);
-	 //@@@@ temporary repair
+    //@@@@ temporary repair
 	if (input_files[2] != "not_given") {
 		if (sys.brownian && !p.auto_determine_knkt) {
 			contactForceParameterBrownian(input_files[2]);
@@ -420,7 +430,6 @@ void Simulation::setupSimulation(string in_args,
 
 	p_initial = p;
 	sys.resetContactModelParameer(); //@@@@ temporary repair
-
 
 	if (!sys.ext_flow) {
 		// simple shear
@@ -434,6 +443,12 @@ void Simulation::setupSimulation(string in_args,
 		                                  simu_identifier, control_value);
 	}
 	openOutputFiles();
+
+	//	if (p.output.recording_interaction_history) {
+	//		string ihist_filename = "ihist_"+simu_name+".dat";
+	//		sys.openHisotryFile(ihist_filename);
+	//	}
+	
 	echoInputFiles(in_args, input_files);
 	cout << indent << "Simulation setup [ok]" << endl;
 }

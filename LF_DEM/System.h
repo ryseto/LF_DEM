@@ -17,6 +17,7 @@
 #define __LF_DEM__System__
 #include <iostream>
 #include <iomanip>
+#include <sstream>
 #include <vector>
 #include <fstream>
 #include <queue>
@@ -91,6 +92,7 @@ private:
 	double sq_cos_ma; // magic angle @@@@
 	double sq_sin_ma; // magic angle @@@@
 	double cos_ma_sin_ma; // magic angle @@@@
+	//	std::stringstream history_output_stream;  <-- I cannot compile with this.
 	/* data */
 	bool keepRunning(double time_end, double strain_end);
 	bool keepRunning(const std::string& time_or_strain, const double& value_end);
@@ -326,7 +328,6 @@ private:
 	vec3d force_upwall;
 	vec3d force_downwall;
 
-
 	/****************************************************************************************************
 	 * Extensional flow using Kraynik-Reinelt Method was originally implemented                         *
 	 * by Antonio Martiniello and Giulio Giuseppe Giusteri from Auguest to November 2016 at OIST.       *
@@ -403,6 +404,7 @@ private:
 	void updateH(); // Extensional flow Periodic Boundary condition
 	void yaplotBoxing(std::ofstream &fout_boxing); // Extensional flow Periodic Boundary condition
 	void calcOrderParameter();
+	void recordHistory();
 
 	void setBoxSize(double lx_, double ly_, double lz_)
 	{

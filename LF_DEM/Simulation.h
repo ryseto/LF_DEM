@@ -47,6 +47,9 @@ private:
 	double target_stress_input;
 	double input_rate;
 	double dimensionless_rate;
+    double viscosity;
+    double normal_stress_diff1;
+    double normal_stress_diff2;
 	bool restart_from_chkp;
 	time_t time_strain_0;
 	time_t time_strain_1;
