@@ -136,6 +136,7 @@ void Simulation::generateOutput(const set<string> &output_events, int& binconf_c
 		if (p.output.out_binary_conf) {
 			string binconf_filename = "conf_" + simu_name + "_" + to_string(++binconf_counter) + ".bin";
 			outputConfigurationBinary(binconf_filename);
+			outputConfigurationData();
 		} else {
 			outputConfigurationData();
 		}
