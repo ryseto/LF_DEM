@@ -34,6 +34,7 @@
 		D988E38E165441750009949F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D988E38D165441750009949F /* main.cpp */; };
 		D988E390165441750009949F /* LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D988E38F165441750009949F /* LF_DEM.1 */; };
 		D988E39C1654A18D0009949F /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D988E39A1654A18D0009949F /* System.cpp */; };
+		D99227B92149541200E6F77A /* libsuitesparseconfig.5.3.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D99227B82149541200E6F77A /* libsuitesparseconfig.5.3.0.dylib */; };
 		D9953515180713FB00FC99C9 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9953514180713FB00FC99C9 /* main.cpp */; };
 		D9953517180713FB00FC99C9 /* cluster_life.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D9953516180713FB00FC99C9 /* cluster_life.1 */; };
 		D9953520180716B100FC99C9 /* Cluster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D995351E180716B100FC99C9 /* Cluster.cpp */; };
@@ -44,7 +45,6 @@
 		D9BE3B71178CB35E00937C5C /* Bond.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B6F178CB35E00937C5C /* Bond.cpp */; };
 		D9BE3B74178CB8A800937C5C /* Cluster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B72178CB8A800937C5C /* Cluster.cpp */; };
 		D9CE1B421B066B3400E052D9 /* dSFMT.c in Sources */ = {isa = PBXBuildFile; fileRef = D9CE1B411B066B3400E052D9 /* dSFMT.c */; };
-		D9D6C5712074AFEB007D455F /* libsuitesparseconfig.5.2.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9D6C5702074AFEB007D455F /* libsuitesparseconfig.5.2.0.dylib */; };
 		D9D6C5732074B049007D455F /* libcholmod.3.0.12.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9D6C5722074B049007D455F /* libcholmod.3.0.12.dylib */; };
 		D9FAAA301960685B00E601A9 /* Interaction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9FAAA2F1960685B00E601A9 /* Interaction.cpp */; };
 /* End PBXBuildFile section */
@@ -602,6 +602,7 @@
 		D988E39B1654A18D0009949F /* System.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = System.h; sourceTree = "<group>"; };
 		D98B3CCD17CCF057002B2A4D /* LubricationFunctions.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = LubricationFunctions.h; sourceTree = "<group>"; };
 		D98F62131E62367200053198 /* convertMaterialFunctions.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; name = convertMaterialFunctions.pl; path = tools/convertMaterialFunctions.pl; sourceTree = SOURCE_ROOT; };
+		D99227B82149541200E6F77A /* libsuitesparseconfig.5.3.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsuitesparseconfig.5.3.0.dylib; path = ../../../SuiteSparse/lib/libsuitesparseconfig.5.3.0.dylib; sourceTree = "<group>"; };
 		D9953512180713FB00FC99C9 /* cluster_life */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cluster_life; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9953514180713FB00FC99C9 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D9953516180713FB00FC99C9 /* cluster_life.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = cluster_life.1; sourceTree = "<group>"; };
@@ -694,8 +695,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D99227B92149541200E6F77A /* libsuitesparseconfig.5.3.0.dylib in Frameworks */,
 				D9D6C5732074B049007D455F /* libcholmod.3.0.12.dylib in Frameworks */,
-				D9D6C5712074AFEB007D455F /* libsuitesparseconfig.5.2.0.dylib in Frameworks */,
 				D9251FF91EE8D8F80040520A /* libmetis.dylib in Frameworks */,
 				D9251FF31EE8D8AF0040520A /* libcolamd.2.9.6.dylib in Frameworks */,
 				D9251FF61EE8D8AF0040520A /* libcamd.2.4.6.dylib in Frameworks */,
@@ -738,6 +739,7 @@
 		D905949D1E953FA4001252CB /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D99227B82149541200E6F77A /* libsuitesparseconfig.5.3.0.dylib */,
 				D9D6C5722074B049007D455F /* libcholmod.3.0.12.dylib */,
 				D9D6C5702074AFEB007D455F /* libsuitesparseconfig.5.2.0.dylib */,
 				D9D6C56E2074AFC3007D455F /* SuiteSparse */,
