@@ -1,9 +1,8 @@
 #!/usr/bin/perl
 # Usage:
-# $ generateYaplotFile.pl par_[...].dat [output_interval] [xz_shift]
+# $ nsd_analysis.pl par_[...].dat [output_interval] [xz_shift]
 #
-# force_factor: To change the widths of strings to exhibit forces.
-# y_section: Visualize the trimed range of the y coordinates.
+#
 
 use Math::Trig;
 use IO::Handle;
@@ -19,13 +18,14 @@ my $monodisperse = 0;
 my $twodim = 0;
 my $pi = atan2(1, 1) * 4;
 my $shear_strain_min = 1;
+my $newdataformat = 1;
 GetOptions(
-'forcefactor=f' => ¥$force_factor,
-'interval=i' => ¥$output_interval,
-'shift=f' => ¥$xz_shift,
-'axis' => ¥$axis,
-'reversibility' => ¥$reversibility_test,
-'monodisperse' => ¥$monodisperse);
+'forcefactor=f' => \$force_factor,
+'interval=i' => \$output_interval,
+'shift=f' => \$xz_shift,
+'axis' => \$axis,
+'reversibility' => \$reversibility_test,
+'monodisperse' => \$monodisperse);
 
 printf "force_factor = $force_factor¥n";
 printf "output_interval = $output_interval¥n";
@@ -74,7 +74,6 @@ $first_int = 1;
 $checkpoint = 1;
 $shear_strain_previous = 0;
 $shearrate_positive = 1;
-$newdataformat = 0;
 
 $jbin = 100;
 $delta_angle = $pi/$jbin;
@@ -93,21 +92,17 @@ while (1) {
     &InParticles;
     last unless defined $line;
     while (1) {
-        $line = <IN_data>;}
+        $line = <IN_data>;
         # ($time_, $css_, $sr_, $vis_all, $vis_con, $vis_dash, $vis_hydro, $vis_rep, $mf0, $mf3, $n1, $n2, $pressure) = split(/¥s+/, $line);
         ($time_, $css_) = split(/¥s+/, $line);
         #printf "$shear_strain == $css_¥n" ;
         if ($shear_strain == $css_) {
-            #        ($time_, $css_, $sr_, $vis_all, $vis_con, $vis_dash, $vis_hydro, $vis_rep, $pressure,  $pressure_con,
-            #         $mf0, $mf0c, $mf0d, $mf0h, $mf0r,
-            #         $mf3, $mf3c, $mf3d, $mf3h, $mf3r,
-            #         $ene, $mingap, $maxtandisp, $maxrollangle, $con_num, $fric_con_num, $num_int, $max_velo, $ max_ang_velo,
-            #         $dt, $kn, $kt) = split(/¥s+/, $line);
             if ($newdataformat) {
                 ($time_, $css_, $sr_, $vis_all, $vis_con, $vis_dash, $vis_hydro, $vis_rep, $pressure,  $pressure_con,
                 $mf0, $mf0c, $mf0d, $mf0h, $mf0r,
                 $mf3, $mf3c, $mf3d, $mf3h, $mf3r,
                 $ene, $mingap, $maxtandisp, $maxrollangle, $con_num, $fric_con_num, $num_int, $max_velo, $ max_ang_velo,
+                $dt, $kn, $kt) = split(/¥s+/, $line);
             } else {
                 ($time_, $css_, $sr_, $vis_all, $vis_con, $vis_dash, $vis_hydro, $vis_rep, $mf0, $mf3,
                 $n1, $n2, $$pressure, $ene, $mingap, $maxtandisp, $maxrollangle, $con_num, $fric_con_num, $num_int, $max_velo, $ max_ang_velo,
@@ -126,7 +121,7 @@ while (1) {
         }
     }
     if ($output == 1) {
-        &OutYaplotData;
+        &calcReducedN1;
     }
     $cnt_interval ++;
 }
@@ -169,13 +164,13 @@ sub keepInitialConfig {
 
 sub readHeader {
     $line = <IN_particle>;
-    $line = <IN_particle>; ($buf, $buf, $np) = split(/¥s+/, $line);
-    $line = <IN_particle>; ($buf, $buf, $VF) = split(/¥s+/, $line);
-    $line = <IN_particle>; ($buf, $buf, $Lx) = split(/¥s+/, $line);
-    $line = <IN_particle>; ($buf, $buf, $Ly) = split(/¥s+/, $line);
-    $line = <IN_particle>; ($buf, $buf, $Lz) = split(/¥s+/, $line);
-    $line = <IN_particle>; ($buf, $buf, $flwtyp) = split(/¥s+/, $line);
-    $line = <IN_particle>; ($buf, $buf, $dataunit) = split(/¥s+/, $line);
+    $line = <IN_particle>; ($buf, $buf, $np) = split(/\s+/, $line);
+    $line = <IN_particle>; ($buf, $buf, $VF) = split(/\s+/, $line);
+    $line = <IN_particle>; ($buf, $buf, $Lx) = split(/\s+/, $line);
+    $line = <IN_particle>; ($buf, $buf, $Ly) = split(/\s+/, $line);
+    $line = <IN_particle>; ($buf, $buf, $Lz) = split(/\s+/, $line);
+    $line = <IN_particle>; ($buf, $buf, $flwtyp) = split(/\s+/, $line);
+    $line = <IN_particle>; ($buf, $buf, $dataunit) = split(/\s+/, $line);
     
     if ($Ly == 0) {
         $number_of_header = 8;
@@ -226,8 +221,8 @@ sub InParticles {
         $line = <IN_particle>;
         ($buf, $val) = split(" : ", $line);
         
-        $val =~ s/(¥n|¥r)//g;
-        ($buf1) = split(/¥s+/, $buf);
+        $val =~ s/(\n|\r)//g;
+        ($buf1) = split(/\s+/, $buf);
         if ($buf1 ne '#') {
             last;
         } else {
@@ -236,8 +231,8 @@ sub InParticles {
         last unless defined $line;
     }
     $shear_strain = $ssHeader[0];
-    $shear_strain =~ s/(¥n|¥r)//g;
-    printf "shear_strain = $shear_strain¥n";
+    $shear_strain =~ s/(\n|\r)//g;
+    printf "shear_strain = $shear_strainn";
     $shear_disp = $ssHeader[1];
     $shear_rate = $ssHeader[2];
     #    $target_stress = $ssHeader[3];
@@ -250,9 +245,9 @@ sub InParticles {
         }
         if ($output == 1) {
             if ($dim eq 3) {
-                ($ip, $a, $x, $y, $z, $vx, $vz, $vy, $ox, $oz, $oy) = split(/¥s+/, $line);
+                ($ip, $a, $x, $y, $z, $vx, $vz, $vy, $ox, $oz, $oy) = split(/\s+/, $line);
             } else {
-                ($ip, $a, $x, $z, $vx, $vz, $vy, $ox, $oz, $oy, $angle) = split(/¥s+/, $line);
+                ($ip, $a, $x, $z, $vx, $vz, $vy, $ox, $oz, $oy, $angle) = split(/\s+/, $line);
             }
             #
             #
@@ -286,16 +281,16 @@ sub InParticles {
 
 sub InInteractions{
     #$line = <IN_interaction>;
-    #($buf, $shear_strain_i, $num_interaction) = split(/¥s+/, $line);
-    #printf "int $buf $shear_strain_i $num_interaction¥n";
+    #($buf, $shear_strain_i, $num_interaction) = split(/s+/, $line);
+    #printf "int $buf $shear_strain_i $num_interactionn";
     while (1) {
         $line = <IN_interaction>;
         ($buf, $val) = split(" : ", $line);
-        ($buf1) = split(/¥s+/, $buf);
+        ($buf1) = split(/\s+/, $buf);
         if ($buf1 ne '#') {
             last;
         } else {
-            $val =~ s/(¥n|¥r)//g;
+            $val =~ s/(\n|\r)//g;
             $ssHeader[$j++] = $val;
         }
         last unless defined $line;
@@ -310,10 +305,10 @@ sub InInteractions{
         $f_lub_tan_x, $f_lub_tan_z, $f_lub_tan_y, # 9, 10, 11
         $fc_norm, # 12
         $fc_tan_x, $fc_tan_z, $fc_tan_y, # 13, 14, 15
-        $fr_norm, $s_xF) = split(/¥s+/, $line); # 16, 17
+        $fr_norm, $s_xF) = split(/\s+/, $line); # 16, 17
         if ($i eq '#' || $i eq NU) {
             ($buf, $val) = split(" : ", $line);
-            #            $val =~ s/(¥n|¥r)//g;
+            #            $val =~ s/(\n|\r)//g;
             #            $shear_strain = $val;
             last;
         }
@@ -347,9 +342,9 @@ sub InInteractions{
     $num_interaction = $k;
 }
 
-sub OutYaplotData {
+sub calcReducedN1 {
     if ($first == 0) {
-        printf OUT "¥n";
+        printf OUT "\n";
     } else {
         $first = 0;
     }
@@ -357,8 +352,8 @@ sub OutYaplotData {
         $n1_count ++;
     }
     ## visualize force chain network
-    printf OUT "y 6¥n";
-    printf OUT "@ 7¥n";
+    printf OUT "y 6\n";
+    printf OUT "@ 7\n";
     $etaTotal = 0;
     $eta_denominator = $systemvolume;
     $cf_normal_sum = 0;
@@ -379,7 +374,7 @@ sub OutYaplotData {
         $eta = $eta_lub + $eta_con;
         $etaTotal += $eta;
         if ($Fc_n[$k] > 0) {
-            #            printf "$Fc_n[$k] $Fc_t[$k] ¥n";
+            #            printf "$Fc_n[$k] $Fc_t[$k] \n";
             $cf_ratio_sum += $Fc_t[$k]/$Fc_n[$k];
             $cf_normal_sum += $Fc_n[$k];
             $cf_tangent_sum += $Fc_t[$k];
@@ -402,10 +397,10 @@ sub OutYaplotData {
         $cf_normal = $cf_normal_sum/$cf_cnt;
         $cf_tangent = $cf_tangent_sum/$cf_cnt;
     } else {
-        printf "CF =  nocontact¥n";
+        printf "CF =  nocontact\n";
     }
     if ($shear_strain > 1) {
-        printf OUTCF "$shear_strain $cf_normal $cf_tangent $cf_normal_max $cf_tangent_max¥n"
+        printf OUTCF "$shear_strain $cf_normal $cf_tangent $cf_normal_max $cf_tangent_max\n"
     }
     $visapprox = $etaTotal/$systemvolume;
     $n1approx_pos_con = 0;
@@ -413,10 +408,10 @@ sub OutYaplotData {
     $n1approx_pos_lub = 0;
     $n1approx_neg_lub = 0;
     $n1con_fric_sum = 0;
-    # printf "viscosity = $viscosity¥n";
+    # printf "viscosity = $viscosityn";
     #  $force_factor = 0.015/$viscosity;
-    printf OUT "y 5¥n";
-    #    printf OUT "@ 7¥n";
+    printf OUT "y 5\n";
+    #    printf OUT "@ 7\n";
     $n1_denominator = $systemvolume*$viscosity;
     for ($k = 0; $k < $num_interaction; $k ++) {
         $nx = $nrvec_x[$k];
@@ -448,7 +443,7 @@ sub OutYaplotData {
         $visapproxOut = 6*$pi*$visapprox;
         $normalstressdiff1ratio = $normalstressdiff1/$viscosity;
         $n1approxRatio = 6*$pi*($n1approxCon + $n1approxLub)/$viscosity;
-        printf OUTDR "$shear_strain $viscosity $visapproxOut $normalstressdiff1ratio $n1approxRatio¥n";
+        printf OUTDR "$shear_strain $viscosity $visapproxOut $normalstressdiff1ratio $n1approxRatio\n";
     }
 }
 
