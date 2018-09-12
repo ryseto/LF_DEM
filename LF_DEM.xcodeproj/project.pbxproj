@@ -585,6 +585,7 @@
 		D9573FAF16797A000081E903 /* Box.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Box.h; sourceTree = "<group>"; };
 		D9573FB016797A000081E903 /* BoxSet.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = BoxSet.cpp; sourceTree = "<group>"; };
 		D9573FB116797A000081E903 /* BoxSet.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = BoxSet.h; sourceTree = "<group>"; };
+		D95D5FC62148E9E6004953DA /* nsd_analysis.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = nsd_analysis.pl; path = tools/nsd_analysis.pl; sourceTree = SOURCE_ROOT; };
 		D95FE8081D4E2E40004D2C8A /* ContactDashpot.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ContactDashpot.cpp; sourceTree = "<group>"; };
 		D95FE8091D4E2E40004D2C8A /* ContactDashpot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ContactDashpot.h; sourceTree = "<group>"; };
 		D9632A401F3021A100741C43 /* averageConfigdata.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; name = averageConfigdata.pl; path = tools/averageConfigdata.pl; sourceTree = SOURCE_ROOT; };
@@ -680,7 +681,6 @@
 		D9DA50DC1678F61E00E864E4 /* note_LF_DEM.tex */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.tex; sourceTree = "<group>"; };
 		D9EA979A1BBCF2560041B4B0 /* analyze */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = analyze; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9EA97A51BBCF29C0041B4B0 /* analyzeLFDEM */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = analyzeLFDEM; sourceTree = BUILT_PRODUCTS_DIR; };
-		D9ED6FEB20BFF1C5009BB8B3 /* n1work.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; name = n1work.pl; path = tools/n1work.pl; sourceTree = SOURCE_ROOT; };
 		D9FAAA2F1960685B00E601A9 /* Interaction.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = Interaction.cpp; sourceTree = "<group>"; };
 		D9FB0BD61D6934E800E315B1 /* libamd.2.4.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libamd.2.4.6.dylib; path = /usr/local/lib/libamd.2.4.6.dylib; sourceTree = "<absolute>"; };
 		D9FB0BD71D6934E800E315B1 /* libcholmod.3.0.11.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcholmod.3.0.11.dylib; path = /usr/local/lib/libcholmod.3.0.11.dylib; sourceTree = "<absolute>"; };
@@ -1243,7 +1243,7 @@
 			children = (
 				D9A906691BF331EF00BE8640 /* generateYaplotFile_seto.pl */,
 				D9A9066A1BF331EF00BE8640 /* generateYaplotFile.pl */,
-				D9ED6FEB20BFF1C5009BB8B3 /* n1work.pl */,
+				D95D5FC62148E9E6004953DA /* nsd_analysis.pl */,
 				D96B068920969E4D00EC3A0C /* extractPositionData.pl */,
 				D9632A401F3021A100741C43 /* averageConfigdata.pl */,
 				D9B4104F1E5BF8C400A2C9D5 /* generateYaplotFile_extflow.pl */,
