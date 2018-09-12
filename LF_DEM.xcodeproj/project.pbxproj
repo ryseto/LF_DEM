@@ -22,6 +22,7 @@
 		D92EAA0F17E39D5100C903F5 /* Contact.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92EAA0B17E39D5100C903F5 /* Contact.cpp */; };
 		D92EAA1017E39D5100C903F5 /* Lubrication.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92EAA0D17E39D5100C903F5 /* Lubrication.cpp */; };
 		D932B8DC16C2E98000AD6E85 /* GenerateInitConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */; };
+		D932C64D21238C6B0005E67F /* libsuitesparseconfig.5.3.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D932C64C21238C6B0005E67F /* libsuitesparseconfig.5.3.0.dylib */; };
 		D941779A1F7E041F00BB44C0 /* States.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D94177991F7E041F00BB44C0 /* States.cpp */; };
 		D9506B9216D81A7C00A52CFF /* Stress.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9506B9116D81A7C00A52CFF /* Stress.cpp */; };
 		D9573FB216797A000081E903 /* Box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9573FAE16797A000081E903 /* Box.cpp */; };
@@ -52,7 +53,6 @@
 		D9BE3B74178CB8A800937C5C /* Cluster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B72178CB8A800937C5C /* Cluster.cpp */; };
 		D9CE1B421B066B3400E052D9 /* dSFMT.c in Sources */ = {isa = PBXBuildFile; fileRef = D9CE1B411B066B3400E052D9 /* dSFMT.c */; };
 		D9D6C5772074B1DE007D455F /* libcholmod.3.0.12.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9D6C5762074B1DE007D455F /* libcholmod.3.0.12.dylib */; };
-		D9D6C5782074B1FE007D455F /* libsuitesparseconfig.5.2.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9D6C5742074B1A5007D455F /* libsuitesparseconfig.5.2.0.dylib */; };
 		D9FAAA301960685B00E601A9 /* Interaction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9FAAA2F1960685B00E601A9 /* Interaction.cpp */; };
 /* End PBXBuildFile section */
 
@@ -569,6 +569,7 @@
 		D92EAA0E17E39D5100C903F5 /* Lubrication.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Lubrication.h; sourceTree = "<group>"; };
 		D92F19C21676450800411650 /* MersenneTwister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MersenneTwister.h; sourceTree = "<group>"; };
 		D932B8DF16C2EDCB00AD6E85 /* StokesSolver.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = StokesSolver.h; sourceTree = "<group>"; };
+		D932C64C21238C6B0005E67F /* libsuitesparseconfig.5.3.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsuitesparseconfig.5.3.0.dylib; path = ../../../SuiteSparse/lib/libsuitesparseconfig.5.3.0.dylib; sourceTree = "<group>"; };
 		D93C105A1C34197200460301 /* analyzeCircularWideGap.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = analyzeCircularWideGap.pl; path = tools/analyzeCircularWideGap.pl; sourceTree = SOURCE_ROOT; };
 		D94177921F7BAFE600BB44C0 /* yapgen.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = yapgen.py; path = tools/yapgen.py; sourceTree = SOURCE_ROOT; };
 		D94177931F7BAFE600BB44C0 /* binconf_info.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = binconf_info.py; path = tools/binconf_info.py; sourceTree = SOURCE_ROOT; };
@@ -714,7 +715,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D9D6C5782074B1FE007D455F /* libsuitesparseconfig.5.2.0.dylib in Frameworks */,
+				D932C64D21238C6B0005E67F /* libsuitesparseconfig.5.3.0.dylib in Frameworks */,
 				D9D6C5772074B1DE007D455F /* libcholmod.3.0.12.dylib in Frameworks */,
 				D9251FF91EE8D8F80040520A /* libmetis.dylib in Frameworks */,
 				D9251FF31EE8D8AF0040520A /* libcolamd.2.9.6.dylib in Frameworks */,
@@ -758,6 +759,7 @@
 		D905949D1E953FA4001252CB /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D932C64C21238C6B0005E67F /* libsuitesparseconfig.5.3.0.dylib */,
 				D9D6C5762074B1DE007D455F /* libcholmod.3.0.12.dylib */,
 				D9D6C5742074B1A5007D455F /* libsuitesparseconfig.5.2.0.dylib */,
 				D9251FF81EE8D8F80040520A /* libmetis.dylib */,
