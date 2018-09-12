@@ -13,7 +13,7 @@ use Getopt::Long;
 my $particle_data = $ARGV[0];
 my $yap_radius = 1;
 #my $force_factor = 0.003;
-my $force_factor = 0.0002;
+my $force_factor = 1;
 my $output_interval = 1;
 my $xz_shift = 0;
 my $axis = 0;
@@ -432,6 +432,7 @@ sub OutYaplotData{
 #	}
 	## visualize force chain network
     #
+    if (0){
     printf OUT "y 4\n";
     printf OUT "@ 7\n";
     for ($k = 0; $k < $num_interaction; $k ++) {
@@ -447,6 +448,7 @@ sub OutYaplotData{
             &OutString_width($int0[$k], $int1[$k], $force_factor*abs($force), 0);
         }
     }
+}
 #    if ($cnt eq $confout) {
 #        if (0) {
 #            for ($k = 0; $k < $num_interaction; $k ++) {
@@ -466,7 +468,7 @@ sub OutYaplotData{
 #            exit;
 #        }
 #    }
-    
+    if (0){
     
     printf OUT "y 6\n";
     printf OUT "@ 7\n";
@@ -488,7 +490,8 @@ sub OutYaplotData{
         #        }
     }
     $visapprox = $etaTotal/($Lx*$Lz);
-    
+    }
+    #    &calcContributions;
     #    for ($k = 0; $k < $num_interaction; $k ++) {
     #    $force = $F_lub[$k] + $Fc_n[$k];
     #    if ($force > 0) {
@@ -665,7 +668,8 @@ sub calcContributions {
     $n1approx_pos_lub = 0;
     $n1approx_neg_lub = 0;
     
-    $n1_factor = 0.015/$viscosity;
+    #    $n1_factor = 0.015/$viscosity;
+    $n1_factor = $force_factor;
     printf OUT "y 5\n";
     #    printf OUT "@ 7\n";
     for ($k = 0; $k < $num_interaction; $k ++) {
@@ -691,7 +695,7 @@ sub calcContributions {
             $n1approx_neg_con += $n1con;
         }
         $n1[$k] = $n1lub + $n1con;
-        if ($n1 > 0) {
+        if ($n1[$k] > 0) {
             printf OUT "@ 7\n";
         } else {
             printf OUT "@ 5\n";
