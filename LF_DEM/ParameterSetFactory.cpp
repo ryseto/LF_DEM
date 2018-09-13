@@ -77,6 +77,7 @@ void ParameterSetFactory::setDefaultValues() {
 		PARAM_INIT(dt_min, -1),
 		PARAM_INIT(dt_max, -1),
 		PARAM_INIT(dt, 1e-4),
+        PARAM_INIT(dt_std_stressctrl, -1),
 		PARAM_INIT(disp_max, 2e-3),
 		PARAM_INIT(lub_max_gap, 0.5),
 		PARAM_INIT(lub_reduce_parameter, 1e-3),

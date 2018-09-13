@@ -170,8 +170,8 @@ sub readHeader {
 sub yaplotColor {
 	printf OUT "\@0 0 0 0 \n";
 	#printf OUT "\@1 50 100 205 \n";
-    #    printf OUT "\@1 25 50 102 \n"; bg
-    printf OUT "\@1 255 255 255  \n"; #bg
+    printf OUT "\@1 25 50 102 \n"; ## bg
+    #    printf OUT "\@1 255 255 255  \n"; #bg
 	#printf OUT "\@1 255 255 255 \n";
 	printf OUT "\@2 200 200 200 \n";
     printf OUT "\@3 50 150 255 \n"; # blue
@@ -182,10 +182,10 @@ sub yaplotColor {
     #    printf OUT "\@7 255 255 0 \n"; # yellow
     printf OUT "\@7 255 0 0 \n"; # red
     printf OUT "\@8 255 255 255\n";
-    printf OUT "\@8 0 0 0\n";
-	printf OUT "\@9 150 150 150\n";
-	#printf OUT "\@8 224 143 0 \n";
-	#printf OUT "\@9 67 163 230 \n";
+    #printf OUT "\@8 0 0 0\n";
+    printf OUT "\@9 150 150 150\n";
+    #printf OUT "\@8 224 143 0 \n";
+    #printf OUT "\@9 67 163 230 \n";
 	#printf OUT "\@8 253 105 6 \n";
 	#printf OUT "\@9 109 109 109 \n";
 	printf OUT "\@10 250 250 250 \n";
@@ -414,22 +414,22 @@ sub OutYaplotData{
 	
     
 	## visualize contact network
-#	printf OUT "y 2\n";
-#	printf OUT "r 0.2\n";
-#	printf OUT "@ 6\n"; # static
-#	for ($k = 0; $k < $num_interaction; $k ++) {
-#		if ($contactstate[$k] >= 2) {
-#			&OutString2($int0[$k], $int1[$k]);
-#		}
-#	}
-#	printf OUT "y 2\n";
-#	printf OUT "r 0.2\n";
-#	printf OUT "@ 2\n"; # static
-#	for ($k = 0; $k < $num_interaction; $k ++) {
-#		if ($contactstate[$k] == 1) {
-#			&OutString2($int0[$k], $int1[$k]);
-#		}
-#	}
+	printf OUT "y 2\n";
+	printf OUT "r 0.2\n";
+	printf OUT "@ 6\n"; # static
+	for ($k = 0; $k < $num_interaction; $k ++) {
+		if ($contactstate[$k] >= 2) {
+			&OutString2($int0[$k], $int1[$k]);
+		}
+	}
+	printf OUT "y 2\n";
+	printf OUT "r 0.2\n";
+	printf OUT "@ 2\n"; # static
+	for ($k = 0; $k < $num_interaction; $k ++) {
+		if ($contactstate[$k] == 1) {
+			&OutString2($int0[$k], $int1[$k]);
+		}
+	}
 	## visualize force chain network
     #
     if (0){

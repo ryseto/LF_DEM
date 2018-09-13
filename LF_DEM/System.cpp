@@ -1140,9 +1140,21 @@ void System::timeStepMove(double time_end, double strain_end)
 	 * clk.cumulated_strain = shear_rate * t for both simple shear and extensional flow.
 	 */
 	/* Adapt dt to get desired p.disp_max	 */
-	if (!p.fixed_dt) {
-		adaptTimeStep(time_end, strain_end);
-	}
+    if (control != Parameters::ControlVariable::stress) {
+        /* rate-controled simulation */
+        if (!p.fixed_dt) {
+            adaptTimeStep(time_end, strain_end);
+        }
+    } else {
+        /* stress-controled simulation */
+        if (!p.fixed_dt) {
+            adaptTimeStep(time_end, strain_end);
+        } else {
+            double stress = 6*M_PI*target_stress;
+            dt = p.dt_std_stressctrl/stress;
+        }
+    }
+    
 	clk.time_ += dt;
 	total_num_timesteps ++;
 	/* evolve PBC */
@@ -2362,6 +2374,7 @@ void System::computeVelocities(bool divided_velocities)
 		setFixedParticleVelocities();
 		computeVelocityByComponents();
 		if (control == Parameters::ControlVariable::stress) {
+            // Stress-controlled simulation
 			if (p.simulation_mode != 31) {
 				computeShearRate();
 			} else {
