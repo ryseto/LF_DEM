@@ -166,8 +166,7 @@ struct ParameterSet
 	double disp_max;                         ///< When fixed_dt == false only: maximum displacement at each time step, the time step size dt is determined from disp_max at every step. [2e-3 length unit]
 	double dt_max;                           ///< max time step for adaptive dt [-1]
 	double dt_min;                           ///< min time step for adaptive dt [-1]
-
-
+    double dt_std_stressctrl;                ///< time step in stress-controlled simualtion is given by "dt = dt_factor_stressctrl/stress"  [-1]
 
 	/*******************************************************
 	 OUTPUT
