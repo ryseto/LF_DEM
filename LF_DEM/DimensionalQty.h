@@ -165,7 +165,6 @@ namespace Dimensional {
         /**
          \brief Convert quantity to new_unit.
          */
-        
         // special cases
         if (quantity.dimension == Dimension::none || quantity.dimension == Dimension::Strain) {
             return;

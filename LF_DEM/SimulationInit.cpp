@@ -191,7 +191,16 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 	}
 	if (control_var == Parameters::ControlVariable::stress) {
 		system_of_units.add(Dimensional::Unit::stress, control_value);
-        internal_unit = control_value.unit;
+		/* @@@ to be checked
+		 * Internal unit of stress-controlled simulation should be in 'stress'.
+		 * If repulsive forces are
+		 */
+		internal_unit = Dimensional::Unit::stress;
+		//		if (control_value.unit == Dimensional::Unit::repulsion) {
+		//			internal_unit = control_value.unit;
+		//		} else if (control_value.unit == Dimensional::Unit::critical_load) {
+		//			.....
+		//		}
 	}
 
 	// set the internal unit to actually determine force and parameter non-dimensionalized values 

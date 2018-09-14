@@ -1149,13 +1149,9 @@ void System::timeStepMove(double time_end, double strain_end)
         /* stress-controled simulation */
         if (!p.fixed_dt) {
             adaptTimeStep(time_end, strain_end);
-        } else {
-            if (p.dt_std_stressctrl != -1) {
-                double stress = 6*M_PI*target_stress;
-                dt = p.dt_std_stressctrl/stress;
-            }
         }
     }
+	//	cerr << dt << ' ' << p.critical_load  << endl;
 	clk.time_ += dt;
 	total_num_timesteps ++;
 	/* evolve PBC */
