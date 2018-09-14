@@ -13,7 +13,7 @@ use Getopt::Long;
 my $particle_data = $ARGV[0];
 my $yap_radius = 1;
 #my $force_factor = 0.003;
-my $force_factor = 0.0002;
+my $force_factor = 1;
 my $output_interval = 1;
 my $xz_shift = 0;
 my $axis = 0;
@@ -170,8 +170,8 @@ sub readHeader {
 sub yaplotColor {
 	printf OUT "\@0 0 0 0 \n";
 	#printf OUT "\@1 50 100 205 \n";
-    #    printf OUT "\@1 25 50 102 \n"; bg
-    printf OUT "\@1 255 255 255  \n"; #bg
+    printf OUT "\@1 25 50 102 \n"; ## bg
+    #    printf OUT "\@1 255 255 255  \n"; #bg
 	#printf OUT "\@1 255 255 255 \n";
 	printf OUT "\@2 200 200 200 \n";
     printf OUT "\@3 50 150 255 \n"; # blue
@@ -182,10 +182,10 @@ sub yaplotColor {
     #    printf OUT "\@7 255 255 0 \n"; # yellow
     printf OUT "\@7 255 0 0 \n"; # red
     printf OUT "\@8 255 255 255\n";
-    printf OUT "\@8 0 0 0\n";
-	printf OUT "\@9 150 150 150\n";
-	#printf OUT "\@8 224 143 0 \n";
-	#printf OUT "\@9 67 163 230 \n";
+    #printf OUT "\@8 0 0 0\n";
+    printf OUT "\@9 150 150 150\n";
+    #printf OUT "\@8 224 143 0 \n";
+    #printf OUT "\@9 67 163 230 \n";
 	#printf OUT "\@8 253 105 6 \n";
 	#printf OUT "\@9 109 109 109 \n";
 	printf OUT "\@10 250 250 250 \n";
@@ -414,24 +414,25 @@ sub OutYaplotData{
 	
     
 	## visualize contact network
-#	printf OUT "y 2\n";
-#	printf OUT "r 0.2\n";
-#	printf OUT "@ 6\n"; # static
-#	for ($k = 0; $k < $num_interaction; $k ++) {
-#		if ($contactstate[$k] >= 2) {
-#			&OutString2($int0[$k], $int1[$k]);
-#		}
-#	}
-#	printf OUT "y 2\n";
-#	printf OUT "r 0.2\n";
-#	printf OUT "@ 2\n"; # static
-#	for ($k = 0; $k < $num_interaction; $k ++) {
-#		if ($contactstate[$k] == 1) {
-#			&OutString2($int0[$k], $int1[$k]);
-#		}
-#	}
+	printf OUT "y 2\n";
+	printf OUT "r 0.2\n";
+	printf OUT "@ 6\n"; # static
+	for ($k = 0; $k < $num_interaction; $k ++) {
+		if ($contactstate[$k] >= 2) {
+			&OutString2($int0[$k], $int1[$k]);
+		}
+	}
+	printf OUT "y 2\n";
+	printf OUT "r 0.2\n";
+	printf OUT "@ 2\n"; # static
+	for ($k = 0; $k < $num_interaction; $k ++) {
+		if ($contactstate[$k] == 1) {
+			&OutString2($int0[$k], $int1[$k]);
+		}
+	}
 	## visualize force chain network
     #
+    if (0){
     printf OUT "y 4\n";
     printf OUT "@ 7\n";
     for ($k = 0; $k < $num_interaction; $k ++) {
@@ -447,6 +448,7 @@ sub OutYaplotData{
             &OutString_width($int0[$k], $int1[$k], $force_factor*abs($force), 0);
         }
     }
+}
 #    if ($cnt eq $confout) {
 #        if (0) {
 #            for ($k = 0; $k < $num_interaction; $k ++) {
@@ -466,7 +468,7 @@ sub OutYaplotData{
 #            exit;
 #        }
 #    }
-    
+    if (0){
     
     printf OUT "y 6\n";
     printf OUT "@ 7\n";
@@ -488,7 +490,8 @@ sub OutYaplotData{
         #        }
     }
     $visapprox = $etaTotal/($Lx*$Lz);
-    
+    }
+    #    &calcContributions;
     #    for ($k = 0; $k < $num_interaction; $k ++) {
     #    $force = $F_lub[$k] + $Fc_n[$k];
     #    if ($force > 0) {
@@ -665,7 +668,8 @@ sub calcContributions {
     $n1approx_pos_lub = 0;
     $n1approx_neg_lub = 0;
     
-    $n1_factor = 0.015/$viscosity;
+    #    $n1_factor = 0.015/$viscosity;
+    $n1_factor = $force_factor;
     printf OUT "y 5\n";
     #    printf OUT "@ 7\n";
     for ($k = 0; $k < $num_interaction; $k ++) {
@@ -691,7 +695,7 @@ sub calcContributions {
             $n1approx_neg_con += $n1con;
         }
         $n1[$k] = $n1lub + $n1con;
-        if ($n1 > 0) {
+        if ($n1[$k] > 0) {
             printf OUT "@ 7\n";
         } else {
             printf OUT "@ 5\n";

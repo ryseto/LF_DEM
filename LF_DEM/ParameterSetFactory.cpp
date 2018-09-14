@@ -21,8 +21,6 @@ void Str2KeyValue(const std::string& str_parameter,
 	return;
 }
 
-
-
 ParameterSetFactory::ParameterSetFactory() 
 {
 	setDefaultValues();
@@ -33,7 +31,6 @@ void ParameterSetFactory::setDefaultValues() {
 /*================================================
 =            DEFAULT PARAMETER VALUES            =
 =================================================*/
-
 
 	/*================================
 	=            BOOLEANS            =
@@ -74,9 +71,6 @@ void ParameterSetFactory::setDefaultValues() {
 		PARAM_INIT(memory_strain_k, 0.02),
 		PARAM_INIT(disp_tan_target, 0.05),
 		PARAM_INIT(overlap_target, 0.05),
-		PARAM_INIT(dt_min, -1),
-		PARAM_INIT(dt_max, -1),
-		PARAM_INIT(dt, 1e-4),
 		PARAM_INIT(disp_max, 2e-3),
 		PARAM_INIT(lub_max_gap, 0.5),
 		PARAM_INIT(lub_reduce_parameter, 1e-3),
@@ -157,12 +151,20 @@ void ParameterSetFactory::setDefaultValues() {
 
 	Dimensional::DimensionalQty<double> default_qty;
 
+	default_qty = {Dimensional::Dimension::Time, 1e-4, Dimensional::Unit::hydro};
+	DimValDblParams.push_back(PARAM_INIT_DIMQTY(dt, default_qty));
+
+//	default_qty = {Dimensional::Dimension::Time, -1, Dimensional::Unit::hydro};
+//	DimValDblParams.push_back(PARAM_INIT_DIMQTY(dt_min, default_qty));
+//
+//	default_qty = {Dimensional::Dimension::Time, -1, Dimensional::Unit::hydro};
+//	DimValDblParams.push_back(PARAM_INIT_DIMQTY(dt_max, default_qty));
+	
 	default_qty = {Dimensional::Dimension::Time, 1e-3, Dimensional::Unit::hydro};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(contact_relaxation_time, default_qty));
 
 	default_qty = {Dimensional::Dimension::Time, 0, Dimensional::Unit::hydro};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(contact_relaxation_time_tan, default_qty));
-
 	
 	default_qty = {Dimensional::Dimension::Force, 0.1, Dimensional::Unit::kn};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(min_kn_auto_det, default_qty));
@@ -249,44 +251,44 @@ void ParameterSetFactory::setParameterFromKeyValue(const std::string &keyword,
 												   const std::string &value)
 {
 	for (auto &inp: BoolParams) {
-		if (inp.name_str==keyword) {
+		if (inp.name_str == keyword) {
 			inp.value = str2bool(value);
 			return;
 		}
 	}
 	for (auto &inp: DoubleParams) {
-		if (inp.name_str==keyword) {
+		if (inp.name_str == keyword) {
 			inp.value = stod(value);
 			return;
 		}
 	}
 	for (auto &inp: IntParams) {
-		if (inp.name_str==keyword) {
+		if (inp.name_str == keyword) {
 			inp.value = stoi(value);
 			return;
 		}
 	}
 	for (auto &inp: StrParams) {
-		if (inp.name_str==keyword) {
+		if (inp.name_str == keyword) {
 			inp.value = value;
 			inp.value.erase(remove(inp.value.begin(), inp.value.end(), '\"' ), inp.value.end());
 			return;
 		}
 	}
 	for (auto &inp: DimValDblParams) {
-		if (inp.name_str==keyword) {
+		if (inp.name_str == keyword) {
 			inp.value = value;
 			return;
 		}
 	}
 	for (auto &inp: TrueDimValDblParams) {
-		if (inp.name_str==keyword) {
+		if (inp.name_str == keyword) {
 			inp.value = value;
 			return;
 		}
 	}
 	for (auto &inp: ForceScaleParams) {
-		if (inp.name_str==keyword) {
+		if (inp.name_str == keyword) {
 			inp.value.dim_qty = value;
 			return;
 		}
@@ -303,7 +305,7 @@ std::vector<Dimensional::ForceScale> ParameterSetFactory::getForceScales() const
 		fs.push_back(in_fs.value);
 	}
 	return fs;
-};
+}
 
 void ParameterSetFactory::convertParameterUnit(const Dimensional::UnitSystem &unit_system, 
 											   InputParameter<Dimensional::DimensionalQty<double>> &param)
@@ -317,7 +319,7 @@ void ParameterSetFactory::convertParameterUnit(const Dimensional::UnitSystem &un
 		}
 	}
 	if (param.value.value == 0) {
-	    param.value.unit = unit_system.getInternalUnit();
+		param.value.unit = unit_system.getInternalUnit();
 	} else {
 		unit_system.convertToInternalUnit(param.value);
 	}

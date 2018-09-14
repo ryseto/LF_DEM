@@ -143,27 +143,27 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 											Parameters::ParameterSetFactory &PFact)
 {
 	/**
-	 \brief Non-dimensionalize the simulation.
-
-		This function determines the most appropriate unit scales to use in the System class depending on the input parameters (Brownian/non-Brownian, shear rate, stress/rate controlled), and converts all the input values in these units.
-	 */
-	string indent = "  Simulation::\t";
-
-	// feed in the force scales to the UnitSystem solver
-	for (auto &fs: PFact.getForceScales()) {
-		system_of_units.add(fs.type, fs.dim_qty);
-	}
-
-	// determine the internal unit to be used
+     \brief Non-dimensionalize the simulation.
+     
+     This function determines the most appropriate unit scales to use in the System class depending on the input parameters (Brownian/non-Brownian, shear rate, stress/rate controlled), and converts all the input values in these units.
+     */
+    string indent = "  Simulation::\t";
+    
+    // feed in the force scales to the UnitSystem solver
+    for (auto &fs: PFact.getForceScales()) {
+        system_of_units.add(fs.type, fs.dim_qty);
+    }
+    
+    // determine the internal unit to be used
 	Dimensional::Unit internal_unit = Dimensional::Unit::hydro;
-	if (control_var == Parameters::ControlVariable::rate) {// || control_var == Parameters::ControlVariable::viscnb) {
-		if (control_value.value != 0) {
-			system_of_units.add(Dimensional::Unit::hydro, control_value);
-			system_of_units.setInternalUnit(Dimensional::Unit::hydro);
-			internal_unit = Dimensional::Unit::hydro;
-			double largest_force_val = 1;
-			for (auto &fs: PFact.getForceScales()) {
-				if (fs.dim_qty.value > largest_force_val && 
+    if (control_var == Parameters::ControlVariable::rate) {// || control_var == Parameters::ControlVariable::viscnb) {
+        if (control_value.value != 0) {
+            system_of_units.add(Dimensional::Unit::hydro, control_value);
+            system_of_units.setInternalUnit(Dimensional::Unit::hydro);
+            internal_unit = Dimensional::Unit::hydro;
+            double largest_force_val = 1;
+            for (auto &fs: PFact.getForceScales()) {
+                if (fs.dim_qty.value > largest_force_val &&
 					fs.type != Dimensional::Unit::kn &&
 					fs.type != Dimensional::Unit::kt &&
 					fs.type != Dimensional::Unit::kr) {
@@ -191,7 +191,16 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 	}
 	if (control_var == Parameters::ControlVariable::stress) {
 		system_of_units.add(Dimensional::Unit::stress, control_value);
-		internal_unit = control_value.unit;
+		/* @@@ to be checked
+		 * Internal unit of stress-controlled simulation should be in 'stress'.
+		 * If repulsive forces are
+		 */
+		internal_unit = Dimensional::Unit::stress;
+		//		if (control_value.unit == Dimensional::Unit::repulsion) {
+		//			internal_unit = control_value.unit;
+		//		} else if (control_value.unit == Dimensional::Unit::critical_load) {
+		//			.....
+		//		}
 	}
 
 	// set the internal unit to actually determine force and parameter non-dimensionalized values 
@@ -232,10 +241,10 @@ void Simulation::assertParameterCompatibility()
 		}
 		//p.integration_method = 0;
 	}
-	if (sys.critical_load) {
-		p.friction_model = 2;
-		cerr << "Warning : critical load simulation -> switched to friction_model=2" << endl;
-	}
+    if (sys.critical_load_model) {
+        p.friction_model = 2;
+        cerr << "Warning : critical load simulation -> switched to friction_model=2" << endl;
+    }
     if (p.output.recording_interaction_history) {
         cerr << "Interaction history recording needs to use the Euler's Method." << endl;
         p.integration_method = 0;

@@ -164,10 +164,8 @@ struct ParameterSet
 	bool fixed_dt;							///< Use constant dt [false]
 	double dt;                           ///< When fixed_dt == false: initial time step value. When fixed_dt == true: time step value. [1e-4 time unit]
 	double disp_max;                         ///< When fixed_dt == false only: maximum displacement at each time step, the time step size dt is determined from disp_max at every step. [2e-3 length unit]
-	double dt_max;                           ///< max time step for adaptive dt [-1]
-	double dt_min;                           ///< min time step for adaptive dt [-1]
-
-
+	double dt_max;                           ///< max time step for adaptive dt [-1 time unit]
+	double dt_min;                           ///< min time step for adaptive dt [-1 time unit]
 
 	/*******************************************************
 	 OUTPUT

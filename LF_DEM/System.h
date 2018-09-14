@@ -201,7 +201,7 @@ private:
 	bool repulsiveforce;
 	bool delayed_adhesion;
 	bool cohesion;
-	bool critical_load;
+	bool critical_load_model;
 	bool brownian_dominated;
 	bool lubrication;
 	bool pairwise_resistance;

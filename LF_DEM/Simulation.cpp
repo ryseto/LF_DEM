@@ -481,7 +481,7 @@ void Simulation::outputData()
         /************** material function lambda0 *********************************************
          * Anisotropy between isotropic stress in the flow plane and the out-of-plane normal stress.
          * lambda0 has a better physical meaning than N2.
-         * lambda0 = - (2/3)*(N2 + 0.5*N1)/shear_rate
+         * lambda0 = - (2/3)*(N2 + 0.5*N1)/shear_rate = (2/3)*N0/shear_rate N0 = 1.5 lambda0
          * N2 = rate*(-1.5*lambda0 + lambda3)
          * lambda0*ep_dot / p = lambda0*gamma_dot / 2p = - (N2 + 0.5*N1)* / 3 p
          **************************************************************************************/

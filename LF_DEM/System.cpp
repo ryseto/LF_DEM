@@ -78,7 +78,7 @@ rolling_friction(false),
 repulsiveforce(false),
 delayed_adhesion(false),
 cohesion(false),
-critical_load(false),
+critical_load_model(false),
 brownian_dominated(false),
 twodimension(false),
 control(Parameters::ControlVariable::rate),
@@ -1140,9 +1140,18 @@ void System::timeStepMove(double time_end, double strain_end)
 	 * clk.cumulated_strain = shear_rate * t for both simple shear and extensional flow.
 	 */
 	/* Adapt dt to get desired p.disp_max	 */
-	if (!p.fixed_dt) {
-		adaptTimeStep(time_end, strain_end);
-	}
+    if (control != Parameters::ControlVariable::stress) {
+        /* rate-controled simulation */
+        if (!p.fixed_dt) {
+            adaptTimeStep(time_end, strain_end);
+        }
+    } else {
+        /* stress-controled simulation */
+        if (!p.fixed_dt) {
+            adaptTimeStep(time_end, strain_end);
+        }
+    }
+	//	cerr << dt << ' ' << p.critical_load  << endl;
 	clk.time_ += dt;
 	total_num_timesteps ++;
 	/* evolve PBC */
@@ -1400,7 +1409,7 @@ void System::checkNewInteraction()
 			}
 		}
 	} else {
-		vec3d pd_shift;
+    vec3d pd_shift;
 		for (int i=0; i<np-1; i++) {
 			for (auto j : boxset.neighborhood(i)) {
 				if (j > i) {
@@ -1434,10 +1443,10 @@ void System::updateInteractions()
 	for (unsigned int k=0; k<interaction.size(); k++) {
 		bool deactivated = false;
 		interaction[k].updateState(deactivated);
-		if (friction && interaction[k].contact.is_active()) {
-			double sq_sliding_velocity = interaction[k].contact.relative_surface_velocity_sqnorm;
-			if (sq_sliding_velocity > sq_max_sliding_velocity) {
-				sq_max_sliding_velocity = sq_sliding_velocity;
+        if (friction && interaction[k].contact.is_active()) {
+            double sq_sliding_velocity = interaction[k].contact.relative_surface_velocity_sqnorm;
+            if (sq_sliding_velocity > sq_max_sliding_velocity) {
+                sq_max_sliding_velocity = sq_sliding_velocity;
 			}
 		}
 		if (deactivated) {
@@ -2362,6 +2371,7 @@ void System::computeVelocities(bool divided_velocities)
 		setFixedParticleVelocities();
 		computeVelocityByComponents();
 		if (control == Parameters::ControlVariable::stress) {
+            // Stress-controlled simulation
 			if (p.simulation_mode != 31) {
 				computeShearRate();
 			} else {
