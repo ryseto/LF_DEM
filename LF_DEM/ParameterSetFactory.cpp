@@ -163,7 +163,6 @@ void ParameterSetFactory::setDefaultValues() {
 
 	default_qty = {Dimensional::Dimension::Time, 0, Dimensional::Unit::hydro};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(contact_relaxation_time_tan, default_qty));
-
 	
 	default_qty = {Dimensional::Dimension::Force, 0.1, Dimensional::Unit::kn};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(min_kn_auto_det, default_qty));
@@ -304,7 +303,7 @@ std::vector<Dimensional::ForceScale> ParameterSetFactory::getForceScales() const
 		fs.push_back(in_fs.value);
 	}
 	return fs;
-};
+}
 
 void ParameterSetFactory::convertParameterUnit(const Dimensional::UnitSystem &unit_system, 
 											   InputParameter<Dimensional::DimensionalQty<double>> &param)
