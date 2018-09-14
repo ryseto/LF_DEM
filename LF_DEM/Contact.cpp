@@ -309,7 +309,7 @@ void Contact::frictionlaw_criticalload()
 	 *
 	 */
 	double normal_load = f_spring_normal_norm-sys->p.critical_load; // critical load model.
-	if (normal_load < 0) {
+    if (normal_load < 0) {
 		state = 1; // frictionless contact
 		disp_tan.reset();
 		f_spring_tan.reset();
