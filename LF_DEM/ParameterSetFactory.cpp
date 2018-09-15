@@ -153,12 +153,6 @@ void ParameterSetFactory::setDefaultValues() {
 
 	default_qty = {Dimensional::Dimension::Time, 1e-4, Dimensional::Unit::hydro};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(dt, default_qty));
-
-	default_qty = {Dimensional::Dimension::Time, -1, Dimensional::Unit::hydro};
-	DimValDblParams.push_back(PARAM_INIT_DIMQTY(dt_min, default_qty));
-
-	default_qty = {Dimensional::Dimension::Time, -1, Dimensional::Unit::hydro};
-	DimValDblParams.push_back(PARAM_INIT_DIMQTY(dt_max, default_qty));
 	
 	default_qty = {Dimensional::Dimension::Time, 1e-3, Dimensional::Unit::hydro};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(contact_relaxation_time, default_qty));
