@@ -18,11 +18,11 @@ namespace TActAdhesion {
 std::vector <struct State> readStatesBStream(std::istream &input);
 
 void writeStatesBStream(std::ostream &output,
-			    				const std::vector<Interaction> &interactions);
+						const std::vector<Interaction> &interactions);
 
 void setupInteractions(std::vector<Interaction> &interactions, 
-					          const std::vector <struct State> &adhesion_states, 
-					          double time_now);
+					   const std::vector <struct State> &adhesion_states,
+					   double time_now);
 
 } //namespace TActAdhesion
 #endif //ifndef __LF_DEM__TimeActivatedAdhesion_IO__

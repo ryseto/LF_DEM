@@ -1,7 +1,6 @@
 #include "OutputData.h"
 #include "global.h"
 
-
 void OutputData::setFile(const std::string& fname,
 						 const std::string& data_header,
 						 bool force_overwrite,
@@ -28,7 +27,6 @@ void OutputData::setFile(const std::string& fname,
 	}
 }
 
-
 unsigned OutputData::getLineNumber()
 {
 	unsigned line_nb = 0;
@@ -45,7 +43,6 @@ unsigned OutputData::getLineNumber()
 	return line_nb;
 }
 
-
 void OutputData::initCol(std::string name,
 						 unsigned width)
 {
@@ -59,7 +56,6 @@ void OutputData::initCol(std::string name,
 	output_data_width[name] = width;
 	insert_order.push_back(name);
 }
-
 
 void OutputData::writeFileHeader()
 {
@@ -122,7 +118,7 @@ void OutputData::writeToFile()
 }
 
 void OutputData::setUnits(Dimensional::UnitSystem units_,
-                          Dimensional::Unit output_unit)
+						  Dimensional::Unit output_unit)
 {
 	units = units_;
 	auto it = units.getForceScales().cbegin();

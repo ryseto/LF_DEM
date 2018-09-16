@@ -10,16 +10,14 @@
 #include <assert.h>
 #include "TimeActivatedAdhesion_io.h"
 
-
 namespace TActAdhesion {
-
 
 std::vector <struct State> readStatesBStream(std::istream &input)
 {
 	unsigned ncont;
 	typedef std::underlying_type<Activity>::type activity_type;
 	activity_type activity;
-	State state;	
+	State state;
 	std::vector <struct State> state_vec;
 
 	input.read((char*)&ncont, sizeof(unsigned));
@@ -36,7 +34,7 @@ std::vector <struct State> readStatesBStream(std::istream &input)
 }
 
 void writeStatesBStream(std::ostream &output,
-			    				const std::vector<Interaction> &interactions)
+						const std::vector<Interaction> &interactions)
 {
 	std::vector<State> adhesion_states;
 	for (auto &inter: interactions) {
@@ -46,7 +44,7 @@ void writeStatesBStream(std::ostream &output,
 	unsigned ncont = adhesion_states.size();
 	output.write((char*)&ncont, sizeof(unsigned));
 	typedef std::underlying_type<Activity>::type activity_type;
-
+	
 	for (auto &state: adhesion_states) {
 		activity_type activity = static_cast<activity_type>(state.activity);
 		output.write((char*)&state.p0, sizeof(unsigned));
@@ -57,13 +55,13 @@ void writeStatesBStream(std::ostream &output,
 }
 
 void setupInteractions(std::vector<Interaction> &interactions, 
-					          const std::vector <struct State> &adhesion_states, 
-					          double time_now)
+					   const std::vector <struct State> &adhesion_states,
+					   double time_now)
 {
 	/**
-		\brief Set a list of adhesions with their state variables.
-
-		Used to restart the simulation from a given state.
+	 \brief Set a list of adhesions with their state variables.
+	 
+	 Used to restart the simulation from a given state.
 	 */
 	for (const auto& state : adhesion_states) {
 		bool existing_interaction = false;

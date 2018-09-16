@@ -94,7 +94,6 @@ void Simulation::contactForceParameterBrownian(string filename)
 	}
 }
 
-
 void Simulation::importPreSimulationData(string filename)
 {
 	// @@@ DEPRECATED?
@@ -137,7 +136,6 @@ void Simulation::echoInputFiles(string in_args,
 	}
 	fout_input.close();
 }
-
 
 void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> control_value, 
 											Parameters::ParameterSetFactory &PFact)
@@ -191,15 +189,8 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 	}
 	if (control_var == Parameters::ControlVariable::stress) {
 		system_of_units.add(Dimensional::Unit::stress, control_value);
-		/* @@@ to be checked
-		 * Internal unit of stress-controlled simulation should be in 'stress'.
-		 * If repulsive forces are
-		 */
 		internal_unit = control_value.unit;
 		//		internal_unit = Dimensional::Unit::stress;
-		//		if (control_value.unit == Dimensional::Unit::repulsion) {
-		//		} else if (control_value.unit == Dimensional::Unit::critical_load) {
-		//		}
 	}
 
 	// set the internal unit to actually determine force and parameter non-dimensionalized values 
@@ -567,7 +558,7 @@ TimeKeeper Simulation::initTimeKeeper()
 									   p.time_end.dimension == Dimensional::Dimension::Strain));
 	} else {
 		tk.addClock("config", LinearClock(p.output.time_interval_output_config.value,
-			 							  p.output.time_interval_output_config.dimension == Dimensional::Dimension::Strain));
+										  p.output.time_interval_output_config.dimension == Dimensional::Dimension::Strain));
 	}
 	return tk;
 }

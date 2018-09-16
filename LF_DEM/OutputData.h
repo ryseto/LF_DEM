@@ -50,9 +50,9 @@ public:
 		fout.close();
 	}
 	void setFile(const std::string& fname,
-	             const std::string& data_header,
-	             bool force_overwrite=false,
-	             bool append=false);
+				 const std::string& data_header,
+				 bool force_overwrite=false,
+				 bool append=false);
 
 	void setDefaultPrecision(unsigned precision)
 	{
@@ -60,7 +60,7 @@ public:
 	}
 
 	void setUnits(Dimensional::UnitSystem units_,
-	              Dimensional::Unit output_unit);
+				  Dimensional::Unit output_unit);
 
 	template<typename T>
 	void entryData(std::string name,
@@ -94,11 +94,11 @@ inline void OutputData::entryData(std::string name,
 	}
 	std::ostringstream str_value;
 	if (dimension != Dimensional::Dimension::none) {
-	    Dimensional::DimensionalQty<T> qty = {dimension, value, internal_unit};
-	    units.convertFromInternalUnit(qty, out_unit);
-	    str_value << std::setprecision(output_precision) << qty.value;
+		Dimensional::DimensionalQty<T> qty = {dimension, value, internal_unit};
+		units.convertFromInternalUnit(qty, out_unit);
+		str_value << std::setprecision(output_precision) << qty.value;
 	} else {
-	    str_value << std::setprecision(output_precision) << value;
+		str_value << std::setprecision(output_precision) << value;
 	}
 	output_data[name].push_back(str_value.str());
 }

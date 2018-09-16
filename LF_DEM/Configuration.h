@@ -24,13 +24,13 @@ enum struct ConfFileFormat : int { // assign values as it is for output and othe
 	txt_format_circular_couette = 7,
 	bin_format_base_shear = 8,
 	bin_format_fixed_vel_shear = 9,
-	bin_delayed_adhesion = 10,
+	bin_delayed_adhesion = 10
 };
 
 struct base_configuration {
 	double lx, ly, lz;
 	double volume_or_area_fraction;
-
+	
 	std::vector <vec3d> position;
 	std::vector <double> radius;
 	std::vector <double> angle;
@@ -105,6 +105,6 @@ struct fixed_velo_configuration readTxtFixedVeloConfiguration(const std::string&
 struct circular_couette_configuration readTxtCircularCouetteConfiguration(const std::string& filename);
 
 void outputBinaryConfiguration(const System &sys, 
-							   std::string conf_filename, 
+							   std::string conf_filename,
 							   ConfFileFormat format);
 #endif /* defined(__LF_DEM__Configuration__) */

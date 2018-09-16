@@ -78,43 +78,43 @@ namespace Dimensional {
 	}
 
 	inline Unit suffix2unit(std::string s) {
-		if (s=="h") {
+		if (s == "h") {
 			return Unit::hydro;
 		}
-		if (s=="r" || s=="repulsion") {
+		if (s == "r" || s == "repulsion") {
 			return Unit::repulsion;
 		}
-		if (s=="b" || s=="brownian") {
+		if (s == "b" || s == "brownian") {
 			return Unit::brownian;
 		}
-		if (s=="c" || s=="cohesion") {
+		if (s == "c" || s == "cohesion") {
 			return Unit::cohesion;
 		}
-		if (s=="cl" || s=="critical_load") {
+		if (s == "cl" || s == "critical_load") {
 			return Unit::critical_load;
 		}
-		if (s=="ft" || s=="ft_max") {
+		if (s == "ft" || s == "ft_max") {
 			return Unit::ft_max;
 		}
-		if (s=="kn") {
+		if (s == "kn") {
 			return Unit::kn;
 		}
-		if (s=="kt") {
+		if (s == "kt") {
 			return Unit::kt;
 		}
-		if (s=="kr") {
+		if (s == "kr") {
 			return Unit::kr;
 		}
-		if (s=="s") {
+		if (s == "s") {
 			return Unit::stress;
 		}
-		if (s=="sz" || s=="sigma_zz") {
+		if (s == "sz" || s == "sigma_zz") {
 			return Unit::sigma_zz;
 		}
-		if (s=="da") {
+		if (s == "da") {
 			return Unit::delayed_adhesion;
 		}
-		if (s=="") {
+		if (s == "") {
 			return Unit::none;
 		}
 		throw std::runtime_error("  Unknown unit \""+s+"\"");
@@ -225,7 +225,6 @@ namespace Dimensional {
 		assert(has_internal_unit);
 		auto internal_unit = unit_nodes.cbegin()->second.unit;
 		assert(quantity.unit == internal_unit);
-
 		convertUnit(quantity, unit);
 	}
 

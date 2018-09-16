@@ -62,7 +62,6 @@ wagnerhash(time_t t, clock_t c)
 }
 #endif
 
-
 System::System(Parameters::ParameterSet& ps,
 			   list <Event>& ev,
 			   State::BasicCheckpoint chkp):
@@ -541,7 +540,6 @@ void System::setupGenericConfiguration(T conf, Parameters::ControlVariable contr
 	setupSystemPostConfiguration();
 }
 
-
 void System::setupConfiguration(struct base_shear_configuration conf, Parameters::ControlVariable control_)
 {
 	setupGenericConfiguration(conf, control_);
@@ -582,8 +580,7 @@ struct base_shear_configuration confConvertBase2Shear(const struct base_configur
 	return base_shear;
 }
 
-
-void System::setupConfiguration(const struct delayed_adhesion_configuration &conf, 
+void System::setupConfiguration(const struct delayed_adhesion_configuration &conf,
 								Parameters::ControlVariable control_)
 {
 	setupGenericConfiguration(confConvertBase2Shear(conf.base, conf.lees_edwards_disp), control_);
@@ -653,7 +650,7 @@ void System::setupSystemPostConfiguration()
 	}
 	dt = p.dt;
 	if (p.fixed_dt) {
-        avg_dt = dt;
+		avg_dt = dt;
 	}
 }
 
@@ -675,13 +672,13 @@ void System::initializeBoxing()
 		}
 	}
 	if (!ext_flow) {
-        // simple shear
-        boxset.init(max_range, this);
-        for (int i=0; i<np; i++) {
-            boxset.box(i);
-        }
-        boxset.update();
-    } else {
+		// simple shear
+		boxset.init(max_range, this);
+		for (int i=0; i<np; i++) {
+			boxset.box(i);
+		}
+		boxset.update();
+	} else {
 		// extensional flow
 		double dl = max_range;
 		int num_x = (int)(lx/dl);
@@ -1130,23 +1127,15 @@ void System::timeStepMove(double time_end, double strain_end)
 	 * clk.cumulated_strain = shear_rate * t for both simple shear and extensional flow.
 	 */
 	/* Adapt dt to get desired p.disp_max	 */
-    if (control != Parameters::ControlVariable::stress) {
-        /* rate-controled simulation */
-        if (!p.fixed_dt) {
-            adaptTimeStep(time_end, strain_end);
-        }
-    } else {
-        /* stress-controled simulation */
-        if (!p.fixed_dt) {
-            adaptTimeStep(time_end, strain_end);
-        }
-    }
+	if (!p.fixed_dt) {
+		adaptTimeStep(time_end, strain_end);
+	}
 	//	cerr << dt << ' ' << p.critical_load  << endl;
 	clk.time_ += dt;
 	total_num_timesteps ++;
 	/* evolve PBC */
 	timeStepBoxing();
-	
+
 	/* move particles */
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
@@ -1170,10 +1159,10 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
 	 \brief Moves particle positions according to previously computed velocities, predictor step.
 	 */
 	if (!brownian) { // adaptative time-step for non-Brownian cases
- 		if (!p.fixed_dt) {
- 			adaptTimeStep(time_end, strain_end);
- 		}
- 	}
+		if (!p.fixed_dt) {
+			adaptTimeStep(time_end, strain_end);
+		}
+	}
 	clk.time_ += dt;
 	total_num_timesteps ++;
 	/* evolve PBC
@@ -1226,7 +1215,7 @@ void System::timeStepMoveCorrector()
 
 bool System::keepRunning(double time_end, double strain_end)
 {
-    if (clk.cumulated_strain > strain_end-1e-8 && strain_end >= 0) {
+	if (clk.cumulated_strain > strain_end-1e-8 && strain_end >= 0) {
 		return false;
 	}
 	if (get_time() > time_end-1e-8 && time_end >= 0) {
@@ -1283,7 +1272,7 @@ void System::timeEvolution(double time_end, double strain_end)
 	avg_dt_nb = 0;
 	double dt_bak = -1;
 
-	while (keepRunning(time_end - loop_time_adjust, strain_end - loop_time_adjust)) {
+	while (keepRunning(time_end-loop_time_adjust, strain_end-loop_time_adjust)) {
 		retrim_ext_flow = false; // used in ext_flow simulation
 		if (!brownian && !p.fixed_dt) { // adaptative time-step for non-Brownian cases
 			adaptTimeStep(time_end, strain_end);
@@ -1399,7 +1388,7 @@ void System::checkNewInteraction()
 			}
 		}
 	} else {
-    vec3d pd_shift;
+		vec3d pd_shift;
 		for (int i=0; i<np-1; i++) {
 			for (auto j : boxset.neighborhood(i)) {
 				if (j > i) {
@@ -1433,10 +1422,10 @@ void System::updateInteractions()
 	for (unsigned int k=0; k<interaction.size(); k++) {
 		bool deactivated = false;
 		interaction[k].updateState(deactivated);
-        if (friction && interaction[k].contact.is_active()) {
-            double sq_sliding_velocity = interaction[k].contact.relative_surface_velocity_sqnorm;
-            if (sq_sliding_velocity > sq_max_sliding_velocity) {
-                sq_max_sliding_velocity = sq_sliding_velocity;
+		if (friction && interaction[k].contact.is_active()) {
+			double sq_sliding_velocity = interaction[k].contact.relative_surface_velocity_sqnorm;
+			if (sq_sliding_velocity > sq_max_sliding_velocity) {
+				sq_max_sliding_velocity = sq_sliding_velocity;
 			}
 		}
 		if (deactivated) {
@@ -2361,7 +2350,7 @@ void System::computeVelocities(bool divided_velocities)
 		setFixedParticleVelocities();
 		computeVelocityByComponents();
 		if (control == Parameters::ControlVariable::stress) {
-            // Stress-controlled simulation
+			// Stress-controlled simulation
 			if (p.simulation_mode != 31) {
 				computeShearRate();
 			} else {

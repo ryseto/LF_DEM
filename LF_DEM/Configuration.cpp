@@ -232,7 +232,7 @@ struct base_configuration readBinaryBaseConfiguration(std::ifstream &input)
 
 void writeBinaryBaseConfiguration(std::ofstream &conf_export, const struct base_configuration &conf) 
 {
-	std::vector<std::vector<double> > pos(conf.position.size());
+	std::vector<std::vector<double>> pos(conf.position.size());
 	unsigned dims = 4;
 	if (conf.ly == 0) {
 		dims = 5;
