@@ -141,8 +141,6 @@ void ParameterSetFactory::setDefaultValues() {
 	default_val = {Dimensional::Unit::brownian, {Dimensional::Dimension::Force, 0, Dimensional::Unit::hydro}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(brownian, default_val));
 
-
-
 	/*==============================================
 	=            Dimensional Quantities            =
 	==============================================*/
@@ -190,7 +188,6 @@ void ParameterSetFactory::setDefaultValues() {
 	TrueDimValDblParams.push_back(PARAM_INIT(output.initial_log_time, default_qty));
 }
 
-
 void ParameterSetFactory::setFromFile(const std::string& filename_parameters)
 {
 	/**
@@ -200,7 +197,7 @@ void ParameterSetFactory::setFromFile(const std::string& filename_parameters)
 	fin.open(filename_parameters.c_str());
 	if (!fin) {
 		std::ostringstream error_str;
-		error_str  << " Parameter file '" << filename_parameters << "' not found." << std::endl;
+		error_str << " Parameter file '" << filename_parameters << "' not found." << std::endl;
 		throw std::runtime_error(error_str.str());
 	}
 	std::string keyword, value;
@@ -239,7 +236,6 @@ void ParameterSetFactory::setFromFile(const std::string& filename_parameters)
 	}
 	fin.close();
 }
-
 
 void ParameterSetFactory::setParameterFromKeyValue(const std::string &keyword, 
 												   const std::string &value)
@@ -288,7 +284,7 @@ void ParameterSetFactory::setParameterFromKeyValue(const std::string &keyword,
 		}
 	}
 	std::ostringstream error_str;
-	error_str  << "keyword " << keyword << " is not associated with an parameter" << std::endl;
+	error_str << "keyword " << keyword << " is not associated with an parameter" << std::endl;
 	throw std::runtime_error(error_str.str());
 }
 

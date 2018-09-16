@@ -15,7 +15,7 @@
 
 enum struct ConfFileFormat : int { // assign values as it is for output and otherwise may be compiler dependent.
 	// Deprecated formats are not output anymore by LF_DEM, but should still be readable
-	bin_format_base_old = 1,    		// deprecated
+	bin_format_base_old = 1,			// deprecated
 	bin_format_base_new = 2,			// deprecated
 	bin_format_fixed_vel = 3,			// deprecated
 	txt_format_base_old = 4,
@@ -26,7 +26,6 @@ enum struct ConfFileFormat : int { // assign values as it is for output and othe
 	bin_format_fixed_vel_shear = 9,
 	bin_delayed_adhesion = 10,
 };
-
 
 struct base_configuration {
 	double lx, ly, lz;
@@ -51,7 +50,6 @@ struct base_shear_configuration {
 	std::vector <struct contact_state> contact_states;
 };
 
-
 struct fixed_velo_configuration {
 	double lx, ly, lz;
 	double volume_or_area_fraction;
@@ -70,7 +68,6 @@ struct delayed_adhesion_configuration {
 	vec3d lees_edwards_disp;
 	std::vector <struct TActAdhesion::State> adhesion_states;
 };
-
 
 struct circular_couette_configuration {
 	int np_wall1;
