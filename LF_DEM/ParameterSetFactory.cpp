@@ -85,7 +85,8 @@ void ParameterSetFactory::setDefaultValues() {
 		PARAM_INIT(mu_dynamic, -1),
 		PARAM_INIT(mu_rolling, 0),
 		PARAM_INIT(TA_adhesion.adhesion_range, 1e-2),
-		PARAM_INIT(output.recording_start, 1)
+		PARAM_INIT(output.recording_start, 1),
+		PARAM_INIT(shear_jamming_rate, 1e-6)
 	};
 
 	/*================================
@@ -98,7 +99,8 @@ void ParameterSetFactory::setDefaultValues() {
 		PARAM_INIT(integration_method, 1),
 		PARAM_INIT(friction_model, 1),
 		PARAM_INIT(np_fixed, 0),
-		PARAM_INIT(simulation_mode, 0)
+		PARAM_INIT(simulation_mode, 0),
+		PARAM_INIT(shear_jamming_max_count, 30)
 	};
 
 	/*===============================

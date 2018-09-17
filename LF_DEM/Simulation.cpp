@@ -72,19 +72,37 @@ void Simulation::handleEventsShearJamming()
 		When a negative_shear_rate event is thrown, p.disp_max is decreased.
 	 If p.disp_max is below a minimal value, the shear direction is switched to y-shear.
 	 */
-	for (const auto& ev : events) {
-		if (ev.type == "negative_shear_rate") {
-			cout << " negative rate " << endl;
-			p.disp_max /= 1.1;
+	if (p.fixed_dt == false) {
+		for (const auto& ev : events) {
+			if (ev.type == "negative_shear_rate") {
+				cout << " negative rate " << endl;
+				p.disp_max /= 1.1;
+			}
 		}
-	}
-	if (p.disp_max < 1e-6) {
-		cout << "jammed" << endl;
-		sys.calcStress();
-		outputData();
-		outputConfigurationData();
-		checkpoint();
-		kill = true;
+		if (p.disp_max < 1e-6) {
+			cout << "jammed" << endl;
+			sys.calcStress();
+			outputData();
+			outputConfigurationData();
+			checkpoint();
+			kill = true;
+		}
+	} else {
+		double sr = sqrt(2*sys.getEinfty().selfdoubledot()); // shear rate for simple shear.
+		static int shear_jam_counter = 0;
+		if (abs(sr) < sys.p.shear_jamming_rate) {
+			shear_jam_counter ++;
+			cerr << "shear_jam_counter = " << shear_jam_counter << endl;
+		} else {
+			shear_jam_counter = 0;
+		}
+		if (shear_jam_counter == sys.p.shear_jamming_max_count) {
+			sys.calcStress();
+			outputData();
+			outputConfigurationData();
+			checkpoint();
+			kill = true;
+		}
 	}
 }
 
@@ -263,6 +281,8 @@ void Simulation::printProgress()
 
 /*
  * Main simulation
+ * @@@ Discrepancy between the name and functions.
+ * @@@ (Flow rates in stress control simulations are not steady)
  */
 void Simulation::simulationSteadyShear(string in_args,
 									   vector<string>& input_files,
@@ -285,10 +305,8 @@ void Simulation::simulationSteadyShear(string in_args,
 	time_strain_1 = 0;
 	now = time(NULL);
 	time_strain_0 = now;
-
 	setupEvents();
 	cout << indent << "Time evolution started" << endl << endl;
-
 	TimeKeeper tk = initTimeKeeper();
 	if (restart_from_chkp) {
 		std::set<std::string> elapsed;
@@ -312,9 +330,7 @@ void Simulation::simulationSteadyShear(string in_args,
 			output_events.insert("config");
 		}
 		generateOutput(output_events, binconf_counter);
-
 		printProgress();
-
 		if (time_strain_1 == 0 && sys.get_cumulated_strain() > 1) {
 			now = time(NULL);
 			time_strain_1 = now;
