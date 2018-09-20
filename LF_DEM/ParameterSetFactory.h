@@ -17,7 +17,7 @@ struct InputParameter
 
 class ParameterSetFactory {
 public:
-	ParameterSetFactory();
+	ParameterSetFactory(Dimensional::Unit guarranted_unit);
 	void setFromFile(const std::string& filename_parameters);
 	void setParameterFromKeyValue(const std::string &keyword, 
 								  const std::string &value);
@@ -32,7 +32,7 @@ private:
 	std::vector<InputParameter<Dimensional::ForceScale>> ForceScaleParams;
 	std::vector<InputParameter<Dimensional::DimensionalQty<double>>> DimValDblParams;
 	std::vector<InputParameter<Dimensional::DimensionalQty<double>>> TrueDimValDblParams;
-	void setDefaultValues();
+	void setDefaultValues(Dimensional::Unit guarranted_unit);
 	void convertParameterUnit(const Dimensional::UnitSystem &unit_system, 
 							  InputParameter<Dimensional::DimensionalQty<double>> &param);
 };

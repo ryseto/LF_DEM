@@ -555,8 +555,13 @@ void Simulation::outputData()
 	if (sys.cohesion) {
 		outdata.entryData("max gap(cohesion)", Dimensional::Dimension::none, 1, evaluateMaxContactGap(sys));
 	}
-	outdata.entryData("max tangential displacement", Dimensional::Dimension::none, 1, evaluateMaxDispTan(sys));
-	outdata.entryData("max rolling displacement", Dimensional::Dimension::none, 1, evaluateMaxDispRolling(sys));
+	if (sys.friction) {
+		outdata.entryData("max tangential displacement", Dimensional::Dimension::none, 1, evaluateMaxDispTan(sys));
+	}
+	if (sys.rolling_friction) {
+		outdata.entryData("max rolling displacement", Dimensional::Dimension::none, 1, evaluateMaxDispRolling(sys));
+	}
+
 	/* contact number
 	 */
 	unsigned int contact_nb, frictional_contact_nb;

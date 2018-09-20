@@ -479,7 +479,7 @@ void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init
 	 *  Read parameters from standard input
 	 *
 	 */
-	Parameters::ParameterSetFactory PFactory;
+	Parameters::ParameterSetFactory PFactory(Dimensional::Unit::hydro);
 	simu.p = PFactory.getParameterSet();
 	
 	auto &sys = simu.getSys();

@@ -388,8 +388,15 @@ void Simulation::setupSimulation(string in_args,
 	} else {
 		sys.zero_shear = false;
 	}
+	Dimensional::Unit guarranted_unit; // a unit we're sure will mean something, for ParameterSetFactory to set default dimensional qties.
+	if (control_var == Parameters::ControlVariable::rate) {
+		guarranted_unit = Dimensional::Unit::hydro;
+	}
+	if (control_var == Parameters::ControlVariable::stress) {
+		guarranted_unit = control_value.unit;
+	}
 
-	Parameters::ParameterSetFactory PFactory;
+	Parameters::ParameterSetFactory PFactory(guarranted_unit);
 	PFactory.setFromFile(filename_parameters);
 	setupNonDimensionalization(control_value, PFactory);
 	

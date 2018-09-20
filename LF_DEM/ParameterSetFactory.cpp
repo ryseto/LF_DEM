@@ -21,12 +21,12 @@ void Str2KeyValue(const std::string& str_parameter,
 	return;
 }
 
-ParameterSetFactory::ParameterSetFactory() 
+ParameterSetFactory::ParameterSetFactory(Dimensional::Unit guarranted_unit) 
 {
-	setDefaultValues();
+	setDefaultValues(guarranted_unit);
 }
 
-void ParameterSetFactory::setDefaultValues() { 
+void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit) { 
 
 /*================================================
 =            DEFAULT PARAMETER VALUES            =
@@ -119,7 +119,7 @@ void ParameterSetFactory::setDefaultValues() {
 	====================================*/
 	Dimensional::ForceScale default_val;
 
-	default_val = {Dimensional::Unit::kn, {Dimensional::Dimension::Force, 0, Dimensional::Unit::hydro}};
+	default_val = {Dimensional::Unit::kn, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(kn, default_val));
 
 	default_val = {Dimensional::Unit::kt, {Dimensional::Dimension::Force, 0, Dimensional::Unit::kn}};
@@ -128,19 +128,19 @@ void ParameterSetFactory::setDefaultValues() {
 	default_val = {Dimensional::Unit::kr, {Dimensional::Dimension::Force, 0, Dimensional::Unit::kn}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(kr, default_val));
 
-	default_val = {Dimensional::Unit::delayed_adhesion, {Dimensional::Dimension::Force, 0, Dimensional::Unit::hydro}};
+	default_val = {Dimensional::Unit::delayed_adhesion, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(TA_adhesion.adhesion_max_force, default_val));
 
-	default_val = {Dimensional::Unit::repulsion, {Dimensional::Dimension::Force, 0, Dimensional::Unit::hydro}};
+	default_val = {Dimensional::Unit::repulsion, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(repulsion, default_val));
 
-	default_val = {Dimensional::Unit::critical_load, {Dimensional::Dimension::Force, 0, Dimensional::Unit::hydro}};
+	default_val = {Dimensional::Unit::critical_load, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(critical_load, default_val));
 
-	default_val = {Dimensional::Unit::cohesion, {Dimensional::Dimension::Force, 0, Dimensional::Unit::hydro}};
+	default_val = {Dimensional::Unit::cohesion, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(cohesion, default_val));
 
-	default_val = {Dimensional::Unit::brownian, {Dimensional::Dimension::Force, 0, Dimensional::Unit::hydro}};
+	default_val = {Dimensional::Unit::brownian, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(brownian, default_val));
 
 	/*==============================================
@@ -151,13 +151,13 @@ void ParameterSetFactory::setDefaultValues() {
 
 	Dimensional::DimensionalQty<double> default_qty;
 
-	default_qty = {Dimensional::Dimension::Time, 1e-4, Dimensional::Unit::hydro};
+	default_qty = {Dimensional::Dimension::Time, 1e-4, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(dt, default_qty));
 	
-	default_qty = {Dimensional::Dimension::Time, 1e-3, Dimensional::Unit::hydro};
+	default_qty = {Dimensional::Dimension::Time, 1e-3, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(contact_relaxation_time, default_qty));
 
-	default_qty = {Dimensional::Dimension::Time, 0, Dimensional::Unit::hydro};
+	default_qty = {Dimensional::Dimension::Time, 0, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(contact_relaxation_time_tan, default_qty));
 	
 	default_qty = {Dimensional::Dimension::Force, 0.1, Dimensional::Unit::kn};
@@ -172,21 +172,21 @@ void ParameterSetFactory::setDefaultValues() {
 	default_qty = {Dimensional::Dimension::Force, 1e3, Dimensional::Unit::kt};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(max_kt_auto_det, default_qty));
 
-	default_qty = {Dimensional::Dimension::Time, 0, Dimensional::Unit::hydro};
+	default_qty = {Dimensional::Dimension::Time, 0, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(TA_adhesion.activation_time, default_qty));
 
 	/*----------  True dim vals  ----------*/
 	
-	default_qty = {Dimensional::Dimension::TimeOrStrain, 10, Dimensional::Unit::hydro};
+	default_qty = {Dimensional::Dimension::TimeOrStrain, 10, guarranted_unit};
 	TrueDimValDblParams.push_back(PARAM_INIT(time_end, default_qty));
 
-	default_qty = {Dimensional::Dimension::TimeOrStrain, 1e-2, Dimensional::Unit::hydro};
+	default_qty = {Dimensional::Dimension::TimeOrStrain, 1e-2, guarranted_unit};
 	TrueDimValDblParams.push_back(PARAM_INIT(output.time_interval_output_data, default_qty));
 
-	default_qty = {Dimensional::Dimension::TimeOrStrain, 1e-1, Dimensional::Unit::hydro};
+	default_qty = {Dimensional::Dimension::TimeOrStrain, 1e-1, guarranted_unit};
 	TrueDimValDblParams.push_back(PARAM_INIT(output.time_interval_output_config, default_qty));
 
-	default_qty = {Dimensional::Dimension::TimeOrStrain, 1e-3, Dimensional::Unit::hydro};
+	default_qty = {Dimensional::Dimension::TimeOrStrain, 1e-3, guarranted_unit};
 	TrueDimValDblParams.push_back(PARAM_INIT(output.initial_log_time, default_qty));
 }
 
