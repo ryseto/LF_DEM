@@ -12,7 +12,6 @@
  \author Romain Mari
  */
 
-
 #ifndef __LF_DEM__TimeActivatedAdhesion__
 #define __LF_DEM__TimeActivatedAdhesion__
 
@@ -22,13 +21,12 @@
 
 namespace TActAdhesion {
 
-
 // explicit numbering as it is used in output file
 enum class Activity : unsigned {
 	inactive = 0,
 	dormant = 1,
 	active = 2
-};
+	};
 
 struct State {
 	Activity activity;
@@ -41,13 +39,14 @@ class TimeActivatedAdhesion {
 
 public:
 	TimeActivatedAdhesion(struct Parameters &p, 
-						  unsigned p0, unsigned p1, 
-						  double r0, double r1) 
-	: params(p),
+						  unsigned p0, unsigned p1,
+						  double r0, double r1):
+	params(p),
 	state({Activity::inactive, 0, p0, p1}),
 	force_amplitude(0),
 	force_on_p0(0),
 	stress_split_p0(r0/(r0+r1)) {};
+	
 	void update(double time_now, double gap, vec3d &nvec);
 	void deactivate();
 	void setState(struct State st, double time_now);

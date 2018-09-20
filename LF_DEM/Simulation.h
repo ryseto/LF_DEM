@@ -47,9 +47,9 @@ private:
 	double target_stress_input;
 	double input_rate;
 	double dimensionless_rate;
-    double viscosity;
-    double normal_stress_diff1;
-    double normal_stress_diff2;
+	double viscosity;
+	double normal_stress_diff1;
+	double normal_stress_diff2;
 	bool restart_from_chkp;
 	time_t time_strain_0;
 	time_t time_strain_1;
@@ -74,10 +74,8 @@ private:
 	/*
 	 * For inputs
 	 */
-
 	void setupOptionalSimulation(std::string indent);
 	std::vector<Sym2Tensor> getParticleStressGroup(std::string group);
-
 
 public:
 	/* For DEMsystem*/
@@ -92,11 +90,11 @@ public:
 
 
 	void setupSimulation(std::string in_args,
-	                     std::vector<std::string>& input_files,
-	                     bool binary_conf,
-	                     Dimensional::DimensionalQty<double> control_value,
-	                     std::string flow_type,
-	                     std::string simu_identifier);
+						 std::vector<std::string>& input_files,
+						 bool binary_conf,
+						 Dimensional::DimensionalQty<double> control_value,
+						 std::string flow_type,
+						 std::string simu_identifier);
 	void setupFlow(Dimensional::DimensionalQty<double> control_value);
 	void setConfigToSystem(bool binary_conf, const std::string &filename);
 	TimeKeeper initTimeKeeper();
@@ -116,10 +114,10 @@ public:
 	void assertParameterCompatibility();
 	void openOutputFiles();
 	std::string prepareSimulationName(bool binary_conf,
-	                                  const std::string& filename_import_positions,
-	                                  const std::string& filename_parameters,
-	                                  const std::string& simu_identifier,
-	                                  Dimensional::DimensionalQty<double> control_value);
+									  const std::string& filename_import_positions,
+									  const std::string& filename_parameters,
+									  const std::string& simu_identifier,
+									  Dimensional::DimensionalQty<double> control_value);
 	void echoInputFiles(std::string in_args,
 						std::vector<std::string>& input_files);
 	void contactForceParameter(std::string filename);

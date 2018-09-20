@@ -203,8 +203,8 @@ public:
 	void printFactor(std::ostream&);
 	void printRHS();
 	void convertDirectToIterative();
-    // R_FU filling methods
-    /* resetResistanceMatrix(string solver_type, chol_int nb_of_interactions) :
+	// R_FU filling methods
+	/* resetResistanceMatrix(string solver_type, chol_int nb_of_interactions) :
 	 - initialize arrays/vectors used for building
 	 - to be called before adding elements
 	 - nb_of_interactions is the number of odblocks in the matrix
@@ -247,7 +247,7 @@ public:
 	 */
 	 void solve(vec3d* velocity, vec3d* ang_velocity);
 	 void solve(std::vector<vec3d> &velocity, std::vector<vec3d> &ang_velocity);
-    /*
+	/*
 	 compute_LTRHS(double* X) :
 	 - once the resistance matrix and the RHS vector are built
 	 ( completeResistanceMatrix() must have been called )

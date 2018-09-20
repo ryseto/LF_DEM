@@ -71,7 +71,6 @@ inline void removeBlank(std::string& str)
 	str.erase(remove_if(str.begin(), str.end(), (int(*)(int))isspace), str.end());
 }
 
-
 inline bool str2bool(const std::string& value)
 {
 	if (value == "true") {

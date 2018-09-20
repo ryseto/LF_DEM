@@ -72,19 +72,37 @@ void Simulation::handleEventsShearJamming()
 		When a negative_shear_rate event is thrown, p.disp_max is decreased.
 	 If p.disp_max is below a minimal value, the shear direction is switched to y-shear.
 	 */
-	for (const auto& ev : events) {
-		if (ev.type == "negative_shear_rate") {
-			cout << " negative rate " << endl;
-			p.disp_max /= 1.1;
+	if (p.fixed_dt == false) {
+		for (const auto& ev : events) {
+			if (ev.type == "negative_shear_rate") {
+				cout << " negative rate " << endl;
+				p.disp_max /= 1.1;
+			}
 		}
-	}
-	if (p.disp_max < 1e-6) {
-		cout << "jammed" << endl;
-		sys.calcStress();
-		outputData();
-		outputConfigurationData();
-		checkpoint();
-		kill = true;
+		if (p.disp_max < 1e-6) {
+			cout << "jammed" << endl;
+			sys.calcStress();
+			outputData();
+			outputConfigurationData();
+			checkpoint();
+			kill = true;
+		}
+	} else {
+		double sr = sqrt(2*sys.getEinfty().selfdoubledot()); // shear rate for simple shear.
+		static int shear_jam_counter = 0;
+		if (abs(sr) < sys.p.shear_jamming_rate) {
+			shear_jam_counter ++;
+			cerr << "shear_jam_counter = " << shear_jam_counter << endl;
+		} else {
+			shear_jam_counter = 0;
+		}
+		if (shear_jam_counter == sys.p.shear_jamming_max_count) {
+			sys.calcStress();
+			outputData();
+			outputConfigurationData();
+			checkpoint();
+			kill = true;
+		}
 	}
 }
 
@@ -264,14 +282,16 @@ void Simulation::printProgress()
 
 /*
  * Main simulation
+ * @@@ Discrepancy between the name and functions.
+ * @@@ (Flow rates in stress control simulations are not steady)
  */
 void Simulation::simulationSteadyShear(string in_args,
-                                       vector<string>& input_files,
-                                       bool binary_conf,
-                                       Parameters::ControlVariable control_variable,
-                                       Dimensional::DimensionalQty<double> control_value,
-                                       string flow_type,
-                                       string simu_identifier)
+									   vector<string>& input_files,
+									   bool binary_conf,
+									   Parameters::ControlVariable control_variable,
+									   Dimensional::DimensionalQty<double> control_value,
+									   string flow_type,
+									   string simu_identifier)
 {
 	string indent = "  Simulation::\t";
 	if (flow_type == "extension") {
@@ -286,10 +306,8 @@ void Simulation::simulationSteadyShear(string in_args,
 	time_strain_1 = 0;
 	now = time(NULL);
 	time_strain_0 = now;
-
 	setupEvents();
 	cout << indent << "Time evolution started" << endl << endl;
-
 	TimeKeeper tk = initTimeKeeper();
 	if (restart_from_chkp) {
 		std::set<std::string> elapsed;
@@ -313,9 +331,7 @@ void Simulation::simulationSteadyShear(string in_args,
 			output_events.insert("config");
 		}
 		generateOutput(output_events, binconf_counter);
-
 		printProgress();
-
 		if (time_strain_1 == 0 && sys.get_cumulated_strain() > 1) {
 			now = time(NULL);
 			time_strain_1 = now;
@@ -454,82 +470,82 @@ void Simulation::outputData()
 		outdata.entryData("rotation angle", Dimensional::Dimension::none, 1, sys.get_angle_wheel());
 		outdata.entryData("omega wheel", Dimensional::Dimension::Rate, 1, sys.get_omega_wheel());
 	}
-    /************** viscosity **********************************************************************/
-    if (sr != 0) {
-        viscosity = 0.5*doubledot(sys.total_stress, sys.getEinfty())/sys.getEinfty().selfdoubledot();
-    } else {
-        // @@@ tentative ouptut for Pe = 0 simulation
-        // output xz component of stress tensor
-        //viscous_material_function = sys.total_stress.elm[2];
-        viscosity = 0.5*doubledot(sys.total_stress, Einf_base)/ Einf_base.selfdoubledot();
-        /* D = ((0, 0, 1/2), (0, 0, 0), (1/2, 0, 0))
-         */
-    }
+	/************** viscosity **********************************************************************/
+	if (sr != 0) {
+		viscosity = 0.5*doubledot(sys.total_stress, sys.getEinfty())/sys.getEinfty().selfdoubledot();
+	} else {
+		// @@@ tentative ouptut for Pe = 0 simulation
+		// output xz component of stress tensor
+		//viscous_material_function = sys.total_stress.elm[2];
+		viscosity = 0.5*doubledot(sys.total_stress, Einf_base)/ Einf_base.selfdoubledot();
+		/* D = ((0, 0, 1/2), (0, 0, 0), (1/2, 0, 0))
+		 */
+	}
 	outdata.entryData("viscosity", Dimensional::Dimension::Viscosity, 1, viscosity);
-    for (const auto &stress_comp: sys.total_stress_groups) {
-        string entry_name = "Viscosity("+stress_comp.first+")";
-        double viscosity_component = 0.5*doubledot(stress_comp.second, sys.getEinfty())/sys.getEinfty().selfdoubledot();
-        outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, viscosity_component);
-    }
-    //outdata.entryData("shear stress", Dimensional::Dimension::Stress, 1, shear_stress);
-    auto stress_diag = sys.total_stress.diag();
-    /************** isotropic stress (particle pressure) **************************************/
-    outdata.entryData("particle pressure", Dimensional::Dimension::Stress, 1, -sys.total_stress.trace()/3);
-    outdata.entryData("particle pressure contact", Dimensional::Dimension::Stress, 1, -sys.total_stress_groups["contact"].trace()/3);
-    /************** normal stress anisotropy  *************************************************/
-    if (sys.p.output.new_material_functions) {
-        /************** material function lambda0 *********************************************
-         * Anisotropy between isotropic stress in the flow plane and the out-of-plane normal stress.
-         * lambda0 has a better physical meaning than N2.
-         * lambda0 = - (2/3)*(N2 + 0.5*N1)/shear_rate = (2/3)*N0/shear_rate N0 = 1.5 lambda0
-         * N2 = rate*(-1.5*lambda0 + lambda3)
-         * lambda0*ep_dot / p = lambda0*gamma_dot / 2p = - (N2 + 0.5*N1)* / 3 p
-         **************************************************************************************/
-        double mf_inplane_pressure; // lambda_0
-        if (sr != 0) {
-            /* E = ((-1/4, 0, 0), (0, 1/2, 0), (0, 0, -1/4))
-             */
-            mf_inplane_pressure = 0.5*doubledot(sys.total_stress, stress_basis_0)/stress_basis_0.selfdoubledot();
-        } else {
-            mf_inplane_pressure = 0;
-        }
-        outdata.entryData("inviscid function 0th", Dimensional::Dimension::Viscosity, 1, mf_inplane_pressure);
-        for (const auto &stress_comp: sys.total_stress_groups) {
-            string entry_name = "inviscid function 0th("+stress_comp.first+")";
-            double mf_inplane_pressure_component = 0.5*doubledot(stress_comp.second, stress_basis_0)/stress_basis_0.selfdoubledot();
-            outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, mf_inplane_pressure_component);
-        }
-        /************** material function lambda3 ****************************************
-         * lambda3 induces a reoreientation of the stress eigenvectors.
-         * lambda3 is equivalent to N1.
-         * lambda3 = - (1/2)*N1/shear_rate
-         * N1 = -2*shear_rate*lambda_3
-         *********************************************************************************/
-        double mf_reorientation; // lambda_3
-        if (sr != 0) {
-            mf_reorientation = 0.5*doubledot(sys.total_stress, stress_basis_3)/stress_basis_3.selfdoubledot();
-            /* G = ((-1/2, 0, 0), (0, 0, 0), (0, 0, 1/2)
-             */
-        } else {
-            mf_reorientation = 0;
-        }
-        outdata.entryData("inviscid function 3rd", Dimensional::Dimension::Viscosity, 1, mf_reorientation);
-        for (const auto &stress_comp: sys.total_stress_groups) {
-            string entry_name = "inviscid function 3rd("+stress_comp.first+")";
-            double mf_reorientation_component = 0.5*doubledot(stress_comp.second, stress_basis_3)/stress_basis_3.selfdoubledot();
-            outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, mf_reorientation_component);
-        }
-    } else {
-        /************** Normal stress differences **************************************
-         * N1 = sigma11 - sigma22
-         * N2 = sigma22 - sigma33
-         *******************************************************************************/
-        normal_stress_diff1 = (stress_diag.x-stress_diag.z)/sr;
-        normal_stress_diff2 = (stress_diag.z-stress_diag.y)/sr;
-        outdata.entryData("N1 viscosity", Dimensional::Dimension::Viscosity, 1, normal_stress_diff1);
-        outdata.entryData("N2 viscosity", Dimensional::Dimension::Viscosity, 1, normal_stress_diff2);
-    }
-    /***************************************************************************************************************/
+	for (const auto &stress_comp: sys.total_stress_groups) {
+		string entry_name = "Viscosity("+stress_comp.first+")";
+		double viscosity_component = 0.5*doubledot(stress_comp.second, sys.getEinfty())/sys.getEinfty().selfdoubledot();
+		outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, viscosity_component);
+	}
+	//outdata.entryData("shear stress", Dimensional::Dimension::Stress, 1, shear_stress);
+	auto stress_diag = sys.total_stress.diag();
+	/************** isotropic stress (particle pressure) **************************************/
+	outdata.entryData("particle pressure", Dimensional::Dimension::Stress, 1, -sys.total_stress.trace()/3);
+	outdata.entryData("particle pressure contact", Dimensional::Dimension::Stress, 1, -sys.total_stress_groups["contact"].trace()/3);
+	/************** normal stress anisotropy  *************************************************/
+	if (sys.p.output.new_material_functions) {
+		/************** material function lambda0 *********************************************
+		 * Anisotropy between isotropic stress in the flow plane and the out-of-plane normal stress.
+		 * lambda0 has a better physical meaning than N2.
+		 * lambda0 = - (2/3)*(N2 + 0.5*N1)/shear_rate = (2/3)*N0/shear_rate N0 = 1.5 lambda0
+		 * N2 = rate*(-1.5*lambda0 + lambda3)
+		 * lambda0*ep_dot / p = lambda0*gamma_dot / 2p = - (N2 + 0.5*N1)* / 3 p
+		 **************************************************************************************/
+		double mf_inplane_pressure; // lambda_0
+		if (sr != 0) {
+			/* E = ((-1/4, 0, 0), (0, 1/2, 0), (0, 0, -1/4))
+			 */
+			mf_inplane_pressure = 0.5*doubledot(sys.total_stress, stress_basis_0)/stress_basis_0.selfdoubledot();
+		} else {
+			mf_inplane_pressure = 0;
+		}
+		outdata.entryData("inviscid function 0th", Dimensional::Dimension::Viscosity, 1, mf_inplane_pressure);
+		for (const auto &stress_comp: sys.total_stress_groups) {
+			string entry_name = "inviscid function 0th("+stress_comp.first+")";
+			double mf_inplane_pressure_component = 0.5*doubledot(stress_comp.second, stress_basis_0)/stress_basis_0.selfdoubledot();
+			outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, mf_inplane_pressure_component);
+		}
+		/************** material function lambda3 ****************************************
+		 * lambda3 induces a reoreientation of the stress eigenvectors.
+		 * lambda3 is equivalent to N1.
+		 * lambda3 = - (1/2)*N1/shear_rate
+		 * N1 = -2*shear_rate*lambda_3
+		 *********************************************************************************/
+		double mf_reorientation; // lambda_3
+		if (sr != 0) {
+			mf_reorientation = 0.5*doubledot(sys.total_stress, stress_basis_3)/stress_basis_3.selfdoubledot();
+			/* G = ((-1/2, 0, 0), (0, 0, 0), (0, 0, 1/2)
+			 */
+		} else {
+			mf_reorientation = 0;
+		}
+		outdata.entryData("inviscid function 3rd", Dimensional::Dimension::Viscosity, 1, mf_reorientation);
+		for (const auto &stress_comp: sys.total_stress_groups) {
+			string entry_name = "inviscid function 3rd("+stress_comp.first+")";
+			double mf_reorientation_component = 0.5*doubledot(stress_comp.second, stress_basis_3)/stress_basis_3.selfdoubledot();
+			outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, mf_reorientation_component);
+		}
+	} else {
+		/************** Normal stress differences **************************************
+		 * N1 = sigma11 - sigma22
+		 * N2 = sigma22 - sigma33
+		 *******************************************************************************/
+		normal_stress_diff1 = (stress_diag.x-stress_diag.z)/sr;
+		normal_stress_diff2 = (stress_diag.z-stress_diag.y)/sr;
+		outdata.entryData("N1 viscosity", Dimensional::Dimension::Viscosity, 1, normal_stress_diff1);
+		outdata.entryData("N2 viscosity", Dimensional::Dimension::Viscosity, 1, normal_stress_diff2);
+	}
+	/***************************************************************************************************************/
 	/* energy
 	 */
 	outdata.entryData("energy", Dimensional::Dimension::none, 1, getPotentialEnergy(sys));
@@ -622,8 +638,8 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 			snapshot_header << "# retrim ext flow " << sep << 0 << endl;
 		}
 	}
-    snapshot_header << "# viscosity" << sep << viscosity << endl;
-    snapshot_header << "# n1" << sep << normal_stress_diff1 << endl;
+	snapshot_header << "# viscosity" << sep << viscosity << endl;
+	snapshot_header << "# n1" << sep << normal_stress_diff1 << endl;
 }
 
 vec3d Simulation::shiftUpCoordinate(double x, double y, double z)
@@ -737,11 +753,11 @@ void Simulation::outputParFileTxt()
 			outdata_par.entryData("position z", Dimensional::Dimension::none, 1, pos[i].z, 6);
 		}
 		if (diminish_output == false) {
-		  outdata_par.entryData("velocity (x, y, z)", Dimensional::Dimension::Velocity, 3, vel[i]);
-		  outdata_par.entryData("angular velocity (x, y, z)", Dimensional::Dimension::none, 3, sys.ang_velocity[i]);
-		  if (sys.twodimension) {
-			outdata_par.entryData("angle", Dimensional::Dimension::none, 1, sys.angle[i]);
-		  }
+			outdata_par.entryData("velocity (x, y, z)", Dimensional::Dimension::Velocity, 3, vel[i]);
+			outdata_par.entryData("angular velocity (x, y, z)", Dimensional::Dimension::none, 3, sys.ang_velocity[i]);
+			if (sys.twodimension) {
+				outdata_par.entryData("angle", Dimensional::Dimension::none, 1, sys.angle[i]);
+			}
 		}
 		//		if (sys.couette_stress) {
 		//			double stress_rr, stress_thetatheta, stress_rtheta;
@@ -761,7 +777,7 @@ void Simulation::outputParFileTxt()
 		}
 		if (p.output.out_na_disp) {
 			outdata_par.entryData("non affine displacement (x, y, z)", Dimensional::Dimension::none, 3, sys.getNonAffineDisp()[i]);
-	  	}	
+		}
 		if (p.output.out_data_vel_components) {
 			for (const auto &vc: sys.na_velo_components) {
 				string entry_name_vel = "non-affine "+vc.first+" velocity (x, y, z)";
@@ -794,11 +810,11 @@ void Simulation::outputIntFileTxt()
 		outdata_int.entryData("particle 1 label", Dimensional::Dimension::none, 1, i);
 		outdata_int.entryData("particle 2 label", Dimensional::Dimension::none, 1, j);
 		if (diminish_output == false) {
-	        outdata_int.entryData("contact state "
-							      "(0 = no contact, "
-							      "1 = frictionless contact, "
-							      "2 = non-sliding frictional, "
-							      "3 = sliding frictional)",
+			outdata_int.entryData("contact state "
+								  "(0 = no contact, "
+								  "1 = frictionless contact, "
+								  "2 = non-sliding frictional, "
+								  "3 = sliding frictional)",
 								  Dimensional::Dimension::none, 1, inter.contact.getFrictionState());
 			outdata_int.entryData("normal vector, oriented from particle 1 to particle 2", \
 								  Dimensional::Dimension::none, 3, inter.nvec);
@@ -842,22 +858,21 @@ void Simulation::outputIntFileTxt()
 								  inter.repulsion.getForceNorm());
 		}
 		if (diminish_output == false) {
-		  	outdata_int.entryData("Viscosity contribution of contact xF", Dimensional::Dimension::Stress, 1, \
-		                                   doubledot(stress_contact, sys.getEinfty()/sr)/sr);
+			outdata_int.entryData("Viscosity contribution of contact xF", Dimensional::Dimension::Stress, 1, \
+								  doubledot(stress_contact, sys.getEinfty()/sr)/sr);
 		}
 		if (sys.delayed_adhesion) {
 			outdata_int.entryData("norm of the normal adhesion force", Dimensional::Dimension::Force, 1, \
-							      inter.delayed_adhesion->getForceNorm());
+								  inter.delayed_adhesion->getForceNorm());
 			if (diminish_output == false) {
-			  outdata_int.entryData("adhesion ratio uptime to activation time", Dimensional::Dimension::none, 1, \
-							      inter.delayed_adhesion->ratioUptimeToActivation());
+				outdata_int.entryData("adhesion ratio uptime to activation time", Dimensional::Dimension::none, 1, \
+									  inter.delayed_adhesion->ratioUptimeToActivation());
 			}
 		}
 	}
 	if (sys.interaction.size() > 0) {
 		outdata_int.writeToFile(snapshot_header.str());
 	}
-
 }
 
 void Simulation::outputConfigurationData()

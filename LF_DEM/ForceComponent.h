@@ -47,7 +47,7 @@ struct ForceComponent
 	}
 
 	template <typename T>
-	struct ForceComponent&	operator*=(const T& a)
+	struct ForceComponent& operator*=(const T& a)
 	{
 		for (auto &f: force) {
 			f *= a;
