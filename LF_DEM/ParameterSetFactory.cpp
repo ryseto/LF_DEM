@@ -48,6 +48,7 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit) {
 		PARAM_INIT(output.out_data_interaction, true),
 		PARAM_INIT(output.out_data_particle, true),
 		PARAM_INIT(output.origin_zero_flow, true),
+		PARAM_INIT(output.relative_position_view, false),
 		PARAM_INIT(output.log_time_interval, false),
 		PARAM_INIT(output.out_na_vel, false),
 		PARAM_INIT(output.out_na_disp, false),

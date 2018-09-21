@@ -417,6 +417,9 @@ void Simulation::setupSimulation(string in_args,
 	if (sys.ext_flow) {
 		p.output.origin_zero_flow = false;
 	}
+	if (sys.p.output.relative_position_view) {
+		p.output.origin_zero_flow = false;
+	}
 	setupOptionalSimulation(indent);
 
 	assertParameterCompatibility();
