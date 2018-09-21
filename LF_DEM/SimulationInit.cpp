@@ -391,9 +391,12 @@ void Simulation::setupSimulation(string in_args,
 	Dimensional::Unit guarranted_unit; // a unit we're sure will mean something, for ParameterSetFactory to set default dimensional qties.
 	if (control_var == Parameters::ControlVariable::rate) {
 		guarranted_unit = Dimensional::Unit::hydro;
-	}
-	if (control_var == Parameters::ControlVariable::stress) {
+	} else if (control_var == Parameters::ControlVariable::stress) {
 		guarranted_unit = control_value.unit;
+	} else {
+		ostringstream error_str;
+		error_str  << "control_var is not set properly." << endl;
+		throw runtime_error(error_str.str());
 	}
 
 	Parameters::ParameterSetFactory PFactory(guarranted_unit);

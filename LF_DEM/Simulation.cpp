@@ -561,7 +561,6 @@ void Simulation::outputData()
 	if (sys.rolling_friction) {
 		outdata.entryData("max rolling displacement", Dimensional::Dimension::none, 1, evaluateMaxDispRolling(sys));
 	}
-
 	/* contact number
 	 */
 	unsigned int contact_nb, frictional_contact_nb;
