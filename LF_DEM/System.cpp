@@ -247,7 +247,8 @@ void System::setInteractions_GenerateInitConfig()
 }
 
 void System::setConfiguration(const vector <vec3d>& initial_positions,
-							  const vector <double>& radii)
+							  const vector <double>& radii,
+							  const vector <double>& angles)
 {
 	/**
 		\brief Set positions of the particles for initialization.
@@ -266,6 +267,12 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	for (int i=0; i<np; i++) {
 		position[i] = initial_positions[i];
 		radius[i] = radii[i];
+	}
+	if (twodimension) {
+		angle.resize(np);
+		for (int i=0; i<np; i++) {
+			angle[i] = angles[i];
+		}
 	}
 	radius_wall_particle = radius[np-1];
 	setSystemVolume();
@@ -520,7 +527,7 @@ void System::setupGenericConfiguration(T conf, Parameters::ControlVariable contr
 		shear_strain = {0, 0, 0};
 	}
 
-	setConfiguration(conf.position, conf.radius);
+	setConfiguration(conf.position, conf.radius, conf.angle);
 	if (ext_flow) {
 		// extensional flow
 		// @@@ Some variables need to be set before initializeBoxing() @@@

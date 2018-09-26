@@ -182,7 +182,8 @@ private:
 	void setupParametersIntegrator();
 	void setupSystemPostConfiguration();
 	void setConfiguration(const std::vector <vec3d>& initial_positions,
-						  const std::vector <double>& radii);
+						  const std::vector <double>& radii,
+						  const std::vector <double>& angles);
  protected:
  public:
 	System(Parameters::ParameterSet& ps, std::list <Event>& ev, struct State::BasicCheckpoint = State::zero_time_basicchkp);
