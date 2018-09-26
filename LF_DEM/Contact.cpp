@@ -313,6 +313,10 @@ void Contact::frictionlaw_criticalload()
 		state = 1; // frictionless contact
 		disp_tan.reset();
 		f_spring_tan.reset();
+		if (sys->rolling_friction) {
+			disp_rolling.reset();
+			f_rolling.reset();
+		}
 	} else {
 		double supportable_tanforce = mu_static*normal_load;
 		double sq_f_tan = f_spring_tan.sq_norm();
