@@ -107,7 +107,6 @@ inline vec3d str2vec3d(const std::string& value)
 	return vec3d(vx,vy,vz);
 }
 
-
 inline std::vector<std::string> splitString(const std::string& str)
 {
 	std::string stripped_str = str;
@@ -135,11 +134,11 @@ inline std::vector<std::string> splitString(const std::string& str)
 }
 
 namespace Parameters {
-enum class ControlVariable : unsigned {
-	rate,
-	stress,
-	// viscnb
-};
+	enum class ControlVariable : unsigned {
+		rate,
+		stress,
+		// viscnb
+	};
 }
 
 inline void checkInFile(std::string filename)

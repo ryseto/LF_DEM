@@ -141,6 +141,7 @@ public:
 	void outputConfigurationBinary(std::string);
 	void checkpoint();
 	vec3d shiftUpCoordinate(double x, double y, double z);
+	void relativePositionView(std::vector<vec3d> &pos, std::vector<vec3d> &vel);
 	void outputComputationTime();
 	bool kill;
 	bool force_to_run;
