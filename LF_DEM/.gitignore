@@ -50,3 +50,4 @@ config/Makefile_config.mk
 .nfs*
 gmon.out
 LF_DEM_*
+.vscode
