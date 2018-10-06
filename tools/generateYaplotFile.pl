@@ -141,7 +141,7 @@ sub readHeader {
 	$line = <IN_particle>; ($buf, $buf, $dataunit) = split(/\s+/, $line);
 	
 	if ($Ly==0) {
-		$number_of_header = 8;
+		$number_of_header = 9;
 	} else {
 		$number_of_header = 7;
 	}
@@ -263,9 +263,9 @@ sub InParticles {
 			#				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
 			#	$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
             if ($dim eq 3) {
-                ($ip, $a, $x, $y, $z, $vx, $vz, $vy, $ox, $oz, $oy) = split(/\s+/, $line);
+                ($ip, $a, $x, $y, $z, $vx, $vz, $vy, $ox, $oz, $oy, $connum) = split(/\s+/, $line);
             } else {
-                ($ip, $a, $x, $z, $vx, $vz, $vy, $ox, $oz, $oy, $angle) = split(/\s+/, $line);
+                ($ip, $a, $x, $z, $vx, $vz, $vy, $ox, $oz, $oy, $angle, $connum) = split(/\s+/, $line);
             }
 			#
 			#
@@ -290,6 +290,7 @@ sub InParticles {
 			$omegax[$i] = $ox;
 			$omegay[$i] = $oy;
 			$omegaz[$i] = $oz;
+			$contactnumber[$i] = $connum;
 			if ($radius_max < $a) {
 				$radius_max = $a;
 			}
@@ -411,8 +412,29 @@ sub OutYaplotData{
 			printf OUT "c $posx[$i] $posy[$i] $posz[$i]  \n";
 		}
 	}
+	printf OUT "y 3\n";
+	printf OUT "@ 0\n";
+	$npjamming = 0;
+	$totalcontact = 0;
+	for ($i = 0; $i < $np; $i++) {
+		#		if ($contactnumber[$i] == 0) {
+		#	$rr = $yap_radius*$radius[$i];
+		#	printf OUT "r $rr\n";
+		printf OUT "t $posx[$i] -0.1 $posz[$i] $contactnumber[$i] \n";
+		if ($contactnumber[$i] >= 2) {
+			$npjamming ++;
+			$totalcontact += $contactnumber[$i];
+		}
+	}
+	if ($npjamming > 0) {
+		$coordinationnumber = $totalcontact / $npjamming;
+		printf "$npjamming $totalcontact  : z = $coordinationnumber \n";
+		$zt = 0.53*$Lz;
+		printf OUT "@ 8\n";
+		printf OUT "r 20\n";
+		printf OUT "t 0 -0.1 $zt z = $coordinationnumber\n";
+	}
 	
-    
 	## visualize contact network
 	printf OUT "y 2\n";
 	printf OUT "r 0.2\n";

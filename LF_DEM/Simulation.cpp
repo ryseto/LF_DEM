@@ -454,6 +454,9 @@ void Simulation::outputData()
 	 */
 	outdata.setUnits(system_of_units, output_unit);
 	double sr = sqrt(2*sys.getEinfty().selfdoubledot()); // shear rate for simple shear.
+	if (p.output.effective_coordination_number) {
+		sys.countContactNumber();
+	}
 	outdata.entryData("time", Dimensional::Dimension::Time, 1, sys.get_time());
 	if (sys.get_omega_wheel() == 0 || sys.wall_rheology == false) {
 		// Simple shear geometry
@@ -598,6 +601,10 @@ void Simulation::outputData()
 		outdata.entryData("max_velocity_brownian", Dimensional::Dimension::Velocity, 1, sys.max_velocity_brownian);
 		outdata.entryData("max_velocity_contact", Dimensional::Dimension::Velocity, 1, sys.max_velocity_contact);
 	}
+	if (sys.p.output.effective_coordination_number) {
+		outdata.entryData("eff_coordination_number", Dimensional::Dimension::none, 1, sys.effective_coordination_number);
+	}
+	
 	outdata.writeToFile();
 	/****************************   Stress Tensor Output *****************/
 	outdata_st.setUnits(system_of_units, output_unit);
@@ -701,7 +708,6 @@ void Simulation::outputPstFileTxt()
 void Simulation::outputParFileTxt()
 {
 	int np = sys.get_np();
-
 	int output_precision = 6;
 	if (diminish_output) {
 		output_precision = 4;
@@ -789,6 +795,10 @@ void Simulation::outputParFileTxt()
 			outdata_par.entryData("abs_phi6", Dimensional::Dimension::none, 1, abs(sys.phi6[i]));
 			outdata_par.entryData("arg_phi6", Dimensional::Dimension::none, 1, arg(sys.phi6[i]));
 		}
+		if (sys.p.output.effective_coordination_number) {
+			outdata_par.entryData("contact_number", Dimensional::Dimension::none, 1, sys.n_contact[i]);
+		}
+		
 	}
 	sys.resetNonAffineDispData();
 	stringstream snapshot_header;

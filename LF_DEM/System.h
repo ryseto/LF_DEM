@@ -236,6 +236,7 @@ private:
 	std::vector<Sym2Tensor> total_stress_pp; // per particle
 	std::vector<std::complex<double>> phi6;
 	Sym2Tensor total_stress;
+	std::vector<int> n_contact;
 
 	/**************** Interaction machinery ***************************/
 	/* We hold the Interaction instances in a std::vector */
@@ -322,7 +323,7 @@ private:
 	double normalstress_wall2;
 	vec3d force_upwall;
 	vec3d force_downwall;
-
+	double effective_coordination_number;
 	/****************************************************************************************************
 	 * Extensional flow using Kraynik-Reinelt Method was originally implemented                         *
 	 * by Antonio Martiniello and Giulio Giuseppe Giusteri from Auguest to November 2016 at OIST.       *
@@ -400,7 +401,8 @@ private:
 	void yaplotBoxing(std::ofstream &fout_boxing); // Extensional flow Periodic Boundary condition
 	void calcOrderParameter();
 	void recordHistory();
-
+	void countContactNumber();
+	
 	void setBoxSize(double lx_, double ly_, double lz_)
 	{
 		lx = lx_;

@@ -165,6 +165,7 @@ void System::allocateRessources()
 	declareStressComponents();
 	total_stress_pp.resize(np);
 	phi6.resize(np);
+	n_contact.resize(np);
 }
 
 void System::declareForceComponents()
@@ -2850,6 +2851,47 @@ void System::recordHistory()
 		interaction[k].recordHistory();
 	}
 }
+
+void System::countContactNumber()
+{
+	n_contact.clear();
+	n_contact.resize(np, 0);
+	for (auto &inter: interaction) {
+		if (inter.contact.is_active()) {
+			n_contact[inter.get_p0()] ++;
+			n_contact[inter.get_p1()] ++;
+		}
+	}
+	bool cn_change;
+	do {
+		cn_change = false;
+		for (auto &inter: interaction) {
+			if (inter.contact.is_active()) {
+				if (n_contact[inter.get_p0()] == 1
+					&& n_contact[inter.get_p1()] == 1) {
+					n_contact[inter.get_p0()] = 0;
+					n_contact[inter.get_p1()] = 0;
+					cn_change = true;
+				} else if (n_contact[inter.get_p0()] == 1
+						   || n_contact[inter.get_p1()] == 1) {
+					n_contact[inter.get_p0()] --;
+					n_contact[inter.get_p1()] --;
+					cn_change = true;
+				}
+			}
+		}
+	} while (cn_change);
+	int num_node_contact_network = 0;
+	int num_bond_contact_network = 0;
+	for (int i = 0; i < np; i++) {
+		if (n_contact[i] >= 2) {
+			num_node_contact_network ++;
+			num_bond_contact_network += n_contact[i];
+		}
+	}
+	effective_coordination_number = num_bond_contact_network*(1.0/num_node_contact_network);
+}
+
 
 //void System::openHisotryFile(std::string &filename)
 //{

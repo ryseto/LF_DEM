@@ -67,6 +67,7 @@ namespace Parameters {
 		bool out_na_disp;					///< Output non-affine displacements since last time step in the par* file [false]
 		bool recording_interaction_history;	///< Output all histories of interactions (time_end should be short enough) [false]
 		double recording_start;				///< Hisotry is recorded after this strain [1]
+		bool effective_coordination_number; ///< Count and output effective coordination number [false]
 	};
 	
 	struct ParameterSet
