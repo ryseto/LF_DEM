@@ -435,23 +435,31 @@ sub OutYaplotData{
 		printf OUT "t 0 -0.1 $zt z = $coordinationnumber\n";
 	}
 	
+	printf OUT "y 2\n";
+	printf OUT "@ 0\n";
+	## visualize particles
+	printf OUT "r 0.1\n";
+	for ($i = 0; $i < $np; $i++) {
+		printf OUT "c $posx[$i] -0.01 $posz[$i]  \n";
+	}
+	
 	## visualize contact network
-	printf OUT "y 2\n";
-	printf OUT "r 0.2\n";
-	printf OUT "@ 6\n"; # static
-	for ($k = 0; $k < $num_interaction; $k ++) {
-		if ($contactstate[$k] >= 2) {
-			&OutString2($int0[$k], $int1[$k]);
-		}
-	}
-	printf OUT "y 2\n";
-	printf OUT "r 0.2\n";
-	printf OUT "@ 2\n"; # static
-	for ($k = 0; $k < $num_interaction; $k ++) {
-		if ($contactstate[$k] == 1) {
-			&OutString2($int0[$k], $int1[$k]);
-		}
-	}
+#	printf OUT "y 2\n";
+#	printf OUT "r 0.2\n";
+#	printf OUT "@ 6\n"; # static
+#	for ($k = 0; $k < $num_interaction; $k ++) {
+#		if ($contactstate[$k] >= 2) {
+#			&OutString2($int0[$k], $int1[$k]);
+#		}
+#	}
+#	printf OUT "y 2\n";
+#	printf OUT "r 0.2\n";
+#	printf OUT "@ 2\n"; # static
+#	for ($k = 0; $k < $num_interaction; $k ++) {
+#		if ($contactstate[$k] == 1) {
+#			&OutString2($int0[$k], $int1[$k]);
+#		}
+#	}
 	## visualize force chain network
     #
     if (0){
@@ -460,14 +468,14 @@ sub OutYaplotData{
     for ($k = 0; $k < $num_interaction; $k ++) {
         $force = $F_lub[$k] + $Fc_n[$k];
         if ($force > 0) {
-            &OutString_width($int0[$k], $int1[$k], $force_factor*abs($force), 0);
+            &OutString_width($int0[$k], $int1[$k], $force_factor*abs($force), 0.01);
         }
     }
     printf OUT "@ 5\n";
     for ($k = 0; $k < $num_interaction; $k ++) {
         $force = $F_lub[$k] + $Fc_n[$k];
         if ($force < 0) {
-            &OutString_width($int0[$k], $int1[$k], $force_factor*abs($force), 0);
+            &OutString_width($int0[$k], $int1[$k], $force_factor*abs($force), 0.05);
         }
     }
 }
@@ -537,7 +545,7 @@ sub OutYaplotData{
     }
 	## visualize rotation in 2D
 	if ($Ly == 0) {
-		if (0) {
+		if (1) {
 			printf OUT "y 6\n";
 			printf OUT "@ 1\n";
 			for ($i = 0; $i < $np; $i++) {

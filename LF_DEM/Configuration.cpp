@@ -207,6 +207,7 @@ struct base_shear_configuration readBinaryBaseShearConfiguration(const std::stri
 
 struct base_configuration readBinaryBaseConfiguration(std::ifstream &input)
 {
+	// When modifying this function, don't forget to make the equivalent modification for the writeBinaryBaseConfiguration function.
 	struct base_configuration c;
 	unsigned np;
 	input.read((char*)&np, sizeof(unsigned));
@@ -221,10 +222,12 @@ struct base_configuration readBinaryBaseConfiguration(std::ifstream &input)
 		input.read((char*)&y_, sizeof(double));
 		input.read((char*)&z_, sizeof(double));
 		input.read((char*)&r_, sizeof(double));
-		input.read((char*)&a_, sizeof(double));
 		c.position.push_back(vec3d(x_,y_,z_));
 		c.radius.push_back(r_);
-		c.angle.push_back(a_);
+		if (c.ly == 0) {
+			input.read((char*)&a_, sizeof(double)); // angle
+			c.angle.push_back(a_);
+		}
 	}
 	c.contact_states = Contact_ios::readStatesBStream(input, np);
 	return c;
@@ -232,6 +235,7 @@ struct base_configuration readBinaryBaseConfiguration(std::ifstream &input)
 
 void writeBinaryBaseConfiguration(std::ofstream &conf_export, const struct base_configuration &conf) 
 {
+	// When modifying this function, don't forget to make the equivalent modification for the readBinaryBaseConfiguration function.
 	std::vector<std::vector<double>> pos(conf.position.size());
 	unsigned dims = 4;
 	if (conf.ly == 0) {
@@ -244,7 +248,7 @@ void writeBinaryBaseConfiguration(std::ofstream &conf_export, const struct base_
 		pos[i][2] = conf.position[i].z;
 		pos[i][3] = conf.radius[i];
 		if (conf.ly == 0) {
-			pos[i][4] = conf.angle[i]; ///@@@@
+			pos[i][4] = conf.angle[i];
 		}
 	}
 	unsigned np = conf.position.size();
