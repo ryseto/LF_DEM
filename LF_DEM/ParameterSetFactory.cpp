@@ -52,7 +52,8 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit) {
 		PARAM_INIT(output.log_time_interval, false),
 		PARAM_INIT(output.out_na_vel, false),
 		PARAM_INIT(output.out_na_disp, false),
-		PARAM_INIT(output.recording_interaction_history, false)
+		PARAM_INIT(output.recording_interaction_history, false),
+		PARAM_INIT(output.effective_coordination_number, false)
 	};
 
 	/*===========================================
