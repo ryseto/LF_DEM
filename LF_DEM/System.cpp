@@ -2861,6 +2861,12 @@ void System::recordHistory()
 
 void System::countContactNumber()
 {
+	/*
+	 * This counts effective contact numbers by particles.
+	 * It excludes particles to be pushed out in the force balance state,
+	 * These particles do not contribute the force balance.
+	 * Coordination number after excluding such particles is relevent for isostatic conditions.
+	 */
 	n_contact.clear();
 	n_contact.resize(np, 0);
 	for (auto &inter: interaction) {
