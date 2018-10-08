@@ -184,6 +184,10 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 				cout << indent << "non-Brownain at rate = 0 " << endl;
 				internal_unit = Dimensional::Unit::repulsion;
 				sys.zero_shear = true;
+			} else {
+				cout << indent << "non-Brownain at rate = 0 " << endl;
+				internal_unit = Dimensional::Unit::kn;
+				sys.zero_shear = true;
 			}
 		}
 	}
@@ -193,7 +197,7 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 		//		internal_unit = Dimensional::Unit::stress;
 	}
 
-	// set the internal unit to actually determine force and parameter non-dimensionalized values 
+	// set the internal unit to actually determine force and parameter non-dimensionalized values
 	system_of_units.setInternalUnit(internal_unit);
 	PFact.setSystemOfUnits(system_of_units);
 	cout << indent << "internal units = " << Dimensional::unit2suffix(internal_unit) << endl;
@@ -205,7 +209,9 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 	// when there is a hydro force, its value is the non-dimensionalized shear rate.
 	auto forces = system_of_units.getForceScales();
 	if (control_var == Parameters::ControlVariable::rate) {
-		sys.set_shear_rate(forces.at(Dimensional::Unit::hydro).value);
+		if (!sys.zero_shear) {
+			sys.set_shear_rate(forces.at(Dimensional::Unit::hydro).value);
+		}
 	}
 	if (control_var == Parameters::ControlVariable::stress) {
 		sys.target_stress = forces.at(Dimensional::Unit::stress).value;
@@ -390,7 +396,11 @@ void Simulation::setupSimulation(string in_args,
 	}
 	Dimensional::Unit guarranted_unit; // a unit we're sure will mean something, for ParameterSetFactory to set default dimensional qties.
 	if (control_var == Parameters::ControlVariable::rate) {
-		guarranted_unit = Dimensional::Unit::hydro;
+		if (control_value.value != 0) {
+			guarranted_unit = Dimensional::Unit::hydro;
+		} else {
+			guarranted_unit = control_value.unit;
+		}
 	} else if (control_var == Parameters::ControlVariable::stress) {
 		guarranted_unit = control_value.unit;
 	} else {
