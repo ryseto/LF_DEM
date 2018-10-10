@@ -122,7 +122,6 @@ public:
 						std::vector<std::string>& input_files);
 	void contactForceParameter(std::string filename);
 	void contactForceParameterBrownian(std::string filename);
-	void importPreSimulationData(std::string filename);
 	void setupNonDimensionalization(Dimensional::DimensionalQty<double> control_value, 
 									Parameters::ParameterSetFactory &PFact);
 	void stopShearing(TimeKeeper &tk); //simulation mode 22

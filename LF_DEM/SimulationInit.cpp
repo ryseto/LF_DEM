@@ -94,24 +94,6 @@ void Simulation::contactForceParameterBrownian(string filename)
 	}
 }
 
-void Simulation::importPreSimulationData(string filename)
-{
-	// @@@ DEPRECATED?
-	ifstream fin_PreSimulationData;
-	fin_PreSimulationData.open(filename.c_str());
-	if (!fin_PreSimulationData) {
-		ostringstream error_str;
-		error_str  << " Pre-simulation data file '" << filename << "' not found." << endl;
-		throw runtime_error(error_str.str());
-	}
-	double stress_, shear_rate_;
-	while (fin_PreSimulationData >> stress_ >> shear_rate_) {
-		if (stress_ == target_stress_input) {
-			break;
-		}
-	}
-}
-
 void Simulation::echoInputFiles(string in_args,
 								vector<string>& input_files)
 {
