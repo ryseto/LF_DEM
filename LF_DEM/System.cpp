@@ -386,6 +386,9 @@ void System::setupParametersContacts()
 	} else if (p.friction_model == 2 || p.friction_model == 3) {
 		cout << indent+"friction model: Coulomb + Critical Load" << endl;
 		friction = true;
+	} else if (p.friction_model == 4) {
+		cout << indent+"friction model: Static friction (mu = infinity)" << endl;
+		friction = true;
 	} else if (p.friction_model == 5) {
 		cout << indent+"friction_model: Max tangential force" << endl;
 		friction = true;
@@ -2188,23 +2191,6 @@ void System::tmpMixedProblemSetVelocities()
 			na_ang_velocity[i].reset();
 		}
 		na_velocity[np_mobile].x = direction;
-	} else if (p.simulation_mode == 2) {
-		/* ????, yeah what happened here and below?? Haha. I guess whoever created simulation_mode 2/3 does not use it often :)
-		 */
-		for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
-			na_velocity[i].reset();
-			na_ang_velocity[i].reset();
-		}
-		na_ang_velocity[np_mobile].y = 2*shear_rate;
-	} else if (p.simulation_mode == 3) {
-		/* ????
-		 */
-
-		for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
-			na_velocity[i].reset();
-			na_ang_velocity[i].reset();
-		}
-		na_velocity[np_mobile].x = 1;
 	} else if (p.simulation_mode == 4) {
 		static double time_next = 10;
 		if (get_time() > time_next) {

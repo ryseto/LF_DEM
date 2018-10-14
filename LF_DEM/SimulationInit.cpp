@@ -172,8 +172,7 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 				sys.zero_shear = true;
 			}
 		}
-	}
-	if (control_var == Parameters::ControlVariable::stress) {
+	} else if (control_var == Parameters::ControlVariable::stress) {
 		system_of_units.add(Dimensional::Unit::stress, control_value);
 		internal_unit = control_value.unit;
 		//		internal_unit = Dimensional::Unit::stress;
@@ -367,15 +366,6 @@ void Simulation::setupSimulation(string in_args,
 	cout << indent << "Simulation setup starting... " << endl;
 	string filename_import_positions = input_files[0];
 	string filename_parameters = input_files[1];
-	/*
-	 * @@@@ This way to prepare relaxed initial configuration should be changed.
-	 */
-	if (filename_parameters.find("init_relax", 0) != string::npos) {
-		cout << "init_relax" << endl;
-		sys.zero_shear = true;
-	} else {
-		sys.zero_shear = false;
-	}
 	Dimensional::Unit guarranted_unit; // a unit we're sure will mean something, for ParameterSetFactory to set default dimensional qties.
 	if (control_var == Parameters::ControlVariable::rate) {
 		if (control_value.value != 0) {
@@ -394,7 +384,7 @@ void Simulation::setupSimulation(string in_args,
 	Parameters::ParameterSetFactory PFactory(guarranted_unit);
 	PFactory.setFromFile(filename_parameters);
 	setupNonDimensionalization(control_value, PFactory);
-	
+
 	if (control_var == Parameters::ControlVariable::stress) {
 		target_stress_input = control_value.value; //@@@ Where should we set the target stress???
 		sys.target_stress = target_stress_input/6/M_PI; //@@@

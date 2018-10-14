@@ -83,6 +83,7 @@ private:
 	 * 1 Friction is not activated (critical load model)
 	 * 2 Static friction
 	 * 3 Sliding
+	 * 4 Infinite friction coeffient
 	 * -2 Switching dynamic to static
 	 */
 	void frictionlaw_criticalload();
@@ -90,6 +91,7 @@ private:
 	void frictionlaw_standard();
 	void frictionlaw_ft_max();
 	void frictionlaw_coulomb_max();
+	void frictionlaw_infinity();
 	inline void setTangentialForceNorm(double, double);
 	inline void setRollingForceNorm(double, double);
 

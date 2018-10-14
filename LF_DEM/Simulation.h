@@ -51,6 +51,7 @@ private:
 	double normal_stress_diff1;
 	double normal_stress_diff2;
 	bool restart_from_chkp;
+	bool jammed_state;
 	time_t time_strain_0;
 	time_t time_strain_1;
 	time_t time_strain_end;

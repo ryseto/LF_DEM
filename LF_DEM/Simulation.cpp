@@ -173,14 +173,8 @@ void Simulation::setupOptionalSimulation(string indent)
 			sys.mobile_fixed = true;
 			break;
 		case 2:
-			cout << indent << "Test simulation for a mixed problem" << endl;
-			sys.zero_shear = true;
-			sys.mobile_fixed = true;
-			break;
-		case 3:
-			cout << indent << "Test simulation for a mixed problem" << endl;
-			sys.zero_shear = true;
-			sys.mobile_fixed = true;
+			cout << indent << "Stress reversal test (fragility of shear jamming)" << endl;
+			cout << indent << "stress is reversed once jammed" << endl;
 			break;
 		case 4:
 			cout << indent << "Test simulation for relax" << endl;
@@ -316,11 +310,6 @@ void Simulation::simulationSteadyShear(string in_args,
 		while (!elapsed.empty()); // flush tk to not output on first time step
 	}
 	int binconf_counter = 0;
-	double stress_factor = 8;
-	double time_stress_switch_increment = 200;
-	double time_stress_switch_increment_jam = 200;
-	double time_stress_switch = time_stress_switch_increment;
-	double target_stress_orig = sys.target_stress;
 	while (keepRunning()) {
 		if (p.simulation_mode == 22) {
 			stopShearing(tk);
@@ -328,41 +317,30 @@ void Simulation::simulationSteadyShear(string in_args,
 				break;
 			}
 		}
-		double sr = sqrt(2*sys.getEinfty().selfdoubledot()); // shear rate for simple shear.
-		bool jammed = false;
-		static int shear_jam_counter = 0;
-		if (abs(sr) < sys.p.shear_jamming_rate) {
-			shear_jam_counter ++;
-			cerr << "shear_jam_counter = " << shear_jam_counter << endl;
-		} else {
-			shear_jam_counter = 0;
-		}
-		if (sys.get_time() > time_stress_switch || shear_jam_counter > sys.p.shear_jamming_max_count) {
-			sys.p.theta_shear += M_PI;
-			sys.setShearDirection(sys.p.theta_shear);
-			cerr << "theta_shear = " << sys.p.theta_shear << endl;
-			time_stress_switch += time_stress_switch_increment_jam;
-//			if (abs(sys.target_stress-target_stress_orig) < 1e-5) {
-//				time_stress_switch += time_stress_switch_increment_jam;
-//				sys.target_stress *= stress_factor;
-//				sys.p.kn *= stress_factor;
-//				sys.p.kt *= stress_factor;
-//				sys.dt /= stress_factor;
-//			} else {
-//				time_stress_switch += time_stress_switch_increment;
-//				sys.target_stress /= stress_factor;
-//				sys.p.kn /= stress_factor;
-//				sys.p.kt /= stress_factor;
-//				sys.dt *= stress_factor;;
-//			}
-//			sys.resetContactModelParameer();
-//			cerr << "target_stress = " << 6*M_PI*sys.target_stress << endl;
-		}
 		timeEvolutionUntilNextOutput(tk);
 		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_cumulated_strain());
 		if (sys.retrim_ext_flow) {
 			output_events.insert("data");
 			output_events.insert("config");
+		}
+		if (p.simulation_mode == 2) {
+			double sr = sqrt(2*sys.getEinfty().selfdoubledot()); // shear rate for simple shear.
+			static int shear_jam_counter = 0;
+			static double strain_checkout = 0;
+			if (abs(sr) < sys.p.shear_jamming_rate) {
+				shear_jam_counter ++;
+				cerr << "shear_jam_counter = " << shear_jam_counter << endl;
+			} else {
+				shear_jam_counter = 0;
+			}
+			if (shear_jam_counter > sys.p.shear_jamming_max_count) {
+				sys.p.theta_shear += M_PI;
+				cerr << "stress reversal" << endl;
+				sys.setShearDirection(sys.p.theta_shear);
+				double jamming_strain = sys.get_cumulated_strain()-strain_checkout;
+				strain_checkout = sys.get_cumulated_strain();
+				p.time_end.value += jamming_strain;
+			}
 		}
 		generateOutput(output_events, binconf_counter);
 		printProgress();
@@ -644,8 +622,9 @@ void Simulation::outputData()
 		outdata.entryData("eff_coordination_number", Dimensional::Dimension::none, 1, sys.effective_coordination_number);
 	}
 	outdata.entryData("shear stress", Dimensional::Dimension::Stress, 1, sys.target_stress);
-
-	
+	if (p.simulation_mode == 2) {
+		outdata.entryData("jammed state", Dimensional::Dimension::none, 1, jammed_state);
+	}
 	outdata.writeToFile();
 	/****************************   Stress Tensor Output *****************/
 	outdata_st.setUnits(system_of_units, output_unit);

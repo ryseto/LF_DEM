@@ -197,6 +197,8 @@ void ParameterSetFactory::setFromFile(const std::string& filename_parameters)
 	/**
 	 \brief Read and parse the parameter file
 	 */
+	std::string indent = "  ParameterSetFactory::\t";
+	std::cout << indent << "setFromFile..." << std::endl;
 	std::ifstream fin;
 	fin.open(filename_parameters.c_str());
 	if (!fin) {
@@ -207,6 +209,7 @@ void ParameterSetFactory::setFromFile(const std::string& filename_parameters)
 	std::string keyword, value;
 	while (!fin.eof()) {
 		std::string line;
+		std::cout << indent << line << std::endl;
 		if (!getline(fin, line, ';')) {
 			break;
 		}

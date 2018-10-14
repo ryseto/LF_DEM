@@ -22,6 +22,8 @@ void Contact::init(System* sys_, Interaction* interaction_)
 			frictionlaw = &Contact::frictionlaw_criticalload;
 		} else if (sys->p.friction_model == 3) {
 			frictionlaw = &Contact::frictionlaw_criticalload_mu_inf;
+		} else if (sys->p.friction_model == 4) {
+			frictionlaw = &Contact::frictionlaw_infinity;
 		} else if (sys->p.friction_model == 5) {
 			frictionlaw = &Contact::frictionlaw_ft_max;
 			ft_max = sys->p.ft_max;
@@ -290,6 +292,15 @@ void Contact::frictionlaw_standard()
 			setRollingForceNorm(sqrt(sq_f_rolling), supportable_rollingforce);
 		}
 	}
+	return;
+}
+
+void Contact::frictionlaw_infinity()
+{
+	/**
+	 \brief Friction law
+	 */
+	state = 2; // static friction
 	return;
 }
 
