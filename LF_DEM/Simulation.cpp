@@ -324,23 +324,7 @@ void Simulation::simulationSteadyShear(string in_args,
 			output_events.insert("config");
 		}
 		if (p.simulation_mode == 2) {
-			double sr = sqrt(2*sys.getEinfty().selfdoubledot()); // shear rate for simple shear.
-			static int shear_jam_counter = 0;
-			static double strain_checkout = 0;
-			if (abs(sr) < sys.p.shear_jamming_rate) {
-				shear_jam_counter ++;
-				cerr << "shear_jam_counter = " << shear_jam_counter << endl;
-			} else {
-				shear_jam_counter = 0;
-			}
-			if (shear_jam_counter > sys.p.shear_jamming_max_count) {
-				sys.p.theta_shear += M_PI;
-				cerr << "stress reversal" << endl;
-				sys.setShearDirection(sys.p.theta_shear);
-				double jamming_strain = sys.get_cumulated_strain()-strain_checkout;
-				strain_checkout = sys.get_cumulated_strain();
-				p.time_end.value += jamming_strain;
-			}
+			stressReversal();
 		}
 		generateOutput(output_events, binconf_counter);
 		printProgress();
@@ -396,6 +380,28 @@ void Simulation::stopShearing(TimeKeeper &tk)
 			tk.addClock("config", LogClock(sys.get_time()+sys.dt, sys.get_time()+1, 100, false));
 			initial_shearing = false;
 		}
+	}
+}
+
+void Simulation::stressReversal()
+{
+	static int shear_jam_counter = 0;
+	static double strain_checkout = 0;
+	double sr = sqrt(2*sys.getEinfty().selfdoubledot()); // shear rate for simple shear.
+	if (abs(sr) < sys.p.shear_jamming_rate) {
+		shear_jam_counter ++;
+		cerr << "shear_jam_counter = " << shear_jam_counter << endl;
+	} else {
+		shear_jam_counter = 0;
+	}
+	jamming_strain = 0;
+	if (shear_jam_counter > sys.p.shear_jamming_max_count) {
+		sys.p.theta_shear += M_PI;
+		cerr << "stress reversal" << endl;
+		sys.setShearDirection(sys.p.theta_shear);
+		jamming_strain = sys.get_cumulated_strain()-strain_checkout;
+		strain_checkout = sys.get_cumulated_strain();
+		p.time_end.value += jamming_strain;
 	}
 }
 
@@ -623,7 +629,7 @@ void Simulation::outputData()
 	}
 	outdata.entryData("shear stress", Dimensional::Dimension::Stress, 1, sys.target_stress);
 	if (p.simulation_mode == 2) {
-		outdata.entryData("jammed state", Dimensional::Dimension::none, 1, jammed_state);
+		outdata.entryData("jamming strain", Dimensional::Dimension::none, 1, jamming_strain);
 	}
 	outdata.writeToFile();
 	/****************************   Stress Tensor Output *****************/
