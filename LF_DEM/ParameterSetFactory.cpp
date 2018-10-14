@@ -209,7 +209,6 @@ void ParameterSetFactory::setFromFile(const std::string& filename_parameters)
 	std::string keyword, value;
 	while (!fin.eof()) {
 		std::string line;
-		std::cout << indent << line << std::endl;
 		if (!getline(fin, line, ';')) {
 			break;
 		}
@@ -241,6 +240,7 @@ void ParameterSetFactory::setFromFile(const std::string& filename_parameters)
 		Str2KeyValue(str_parameter, keyword, value);
 		setParameterFromKeyValue(keyword, value);
 	}
+	std::cout << indent << "setFromFile...done" << std::endl;
 	fin.close();
 }
 

@@ -394,7 +394,6 @@ void Simulation::stressReversal()
 	} else {
 		shear_jam_counter = 0;
 	}
-	jamming_strain = 0;
 	if (shear_jam_counter > sys.p.shear_jamming_max_count) {
 		sys.p.theta_shear += M_PI;
 		cerr << "stress reversal" << endl;
@@ -402,6 +401,8 @@ void Simulation::stressReversal()
 		jamming_strain = sys.get_cumulated_strain()-strain_checkout;
 		strain_checkout = sys.get_cumulated_strain();
 		p.time_end.value += jamming_strain;
+	} else {
+		jamming_strain = 0;
 	}
 }
 
