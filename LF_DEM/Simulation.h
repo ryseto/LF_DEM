@@ -51,6 +51,7 @@ private:
 	double normal_stress_diff1;
 	double normal_stress_diff2;
 	bool restart_from_chkp;
+	double jamming_strain; // Strain stroke to get jamming (simulation_mode = 2)
 	time_t time_strain_0;
 	time_t time_strain_1;
 	time_t time_strain_end;
@@ -76,7 +77,7 @@ private:
 	 */
 	void setupOptionalSimulation(std::string indent);
 	std::vector<Sym2Tensor> getParticleStressGroup(std::string group);
-
+	
 public:
 	/* For DEMsystem*/
 	Simulation(State::BasicCheckpoint chkp = State::zero_time_basicchkp);
@@ -122,11 +123,10 @@ public:
 						std::vector<std::string>& input_files);
 	void contactForceParameter(std::string filename);
 	void contactForceParameterBrownian(std::string filename);
-	void importPreSimulationData(std::string filename);
 	void setupNonDimensionalization(Dimensional::DimensionalQty<double> control_value, 
 									Parameters::ParameterSetFactory &PFact);
 	void stopShearing(TimeKeeper &tk); //simulation mode 22
-
+	void stressReversal(); //simulation mode 2
 	/*
 	 * For outputs
 	 */

@@ -102,7 +102,8 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit) {
 		PARAM_INIT(friction_model, 1),
 		PARAM_INIT(np_fixed, 0),
 		PARAM_INIT(simulation_mode, 0),
-		PARAM_INIT(shear_jamming_max_count, 30)
+		PARAM_INIT(shear_jamming_max_count, 30),
+		PARAM_INIT(shear_jamming_repetition, 2)
 	};
 
 	/*===============================
@@ -197,6 +198,8 @@ void ParameterSetFactory::setFromFile(const std::string& filename_parameters)
 	/**
 	 \brief Read and parse the parameter file
 	 */
+	std::string indent = "  ParameterSetFactory::\t";
+	std::cout << indent << "setFromFile..." << std::endl;
 	std::ifstream fin;
 	fin.open(filename_parameters.c_str());
 	if (!fin) {
@@ -238,6 +241,7 @@ void ParameterSetFactory::setFromFile(const std::string& filename_parameters)
 		Str2KeyValue(str_parameter, keyword, value);
 		setParameterFromKeyValue(keyword, value);
 	}
+	std::cout << indent << "setFromFile...done" << std::endl;
 	fin.close();
 }
 
