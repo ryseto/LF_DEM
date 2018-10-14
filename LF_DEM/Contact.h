@@ -118,6 +118,7 @@ public:
 	ContactDashpot dashpot;
 	void setInteractionData();
 	void setSpringConstants();
+	void setDashpotConstants();
 	void activate();
 	void deactivate();
 	vec3d disp_tan; // tangential displacement

@@ -58,6 +58,7 @@ if ($printinfo) {
 }
 
 $interaction_data = "int_${name}.dat";
+$rheology_data = "data_${name}.dat";
 $output = "y_$name.yap";
 $outputss = "ss_$name.dat";
 $outputDataReconstruct = "r_$name.dat";
@@ -67,6 +68,29 @@ open (OUTSS, "> ${outputss}");
 open (OUTDR, "> ${outputDataReconstruct}");
 open (IN_particle, "< ${particle_data}");
 open (IN_interaction, "< ${interaction_data}");
+open (IN_rheo, "< ${rheology_data}");
+
+${sum_fmax} = 0;
+${cnt} = 0;
+
+$number_of_header = 44;
+for ($i = 0; $i<$number_of_header; $i++) {
+	$line = <IN_rheo>;
+	printf "$line";
+}
+$i=0;
+while (1) {
+	$line = <IN_rheo>;
+	($d1, $d2, $d3, $d4, $d5, $d6, $d7, $d8, $d9, $d10,
+	$d11, $d12, $d13, $d14, $d15, $d16, $d17, $d18, $d19, $d20,
+	$d21, $d22, $d23, $d24, $d25, $d26, $d27, $d28, $d29, $d30,
+	$d31, $d32, $d33, $d34, $d35, $d36, $d37) = split(/\s+/, $line);
+	last unless defined $line;
+	$stress[$i] = $d37;
+	$strain[$i] = $d32;
+	$i++;
+}
+
 
 &readHeader;
 &yaplotColor;
@@ -78,6 +102,7 @@ $checkpoint = 1;
 $shear_strain_previous = 0;
 $shearrate_positive = 1;
 $cnt = 0;
+$ii = 0;
 while (1) {
 	if ($cnt_interval == 0 ||
 		$cnt_interval % $output_interval == 0) {
@@ -85,6 +110,9 @@ while (1) {
 		} else {
 			$output = 0;
 		}
+	$target_stress = $stress[$ii];
+	$shear_strain2 = $strain[$ii];
+	$ii ++;
 	&InParticles;
 	last unless defined $line;
 	if ($shearrate_positive > 0) {
@@ -107,7 +135,7 @@ while (1) {
 			&keepInitialConfig;
 		}
 	}
-	if ($output == 1) {
+	if ($shear_rate > 1e-4) {
 		&OutYaplotData;
         $cnt ++;
 	}
@@ -168,9 +196,9 @@ sub readHeader {
 }
 
 sub yaplotColor {
-	printf OUT "\@0 0 0 0 \n";
+	printf OUT "\@1 0 0 0 \n";
 	#printf OUT "\@1 50 100 205 \n";
-    printf OUT "\@1 25 50 102 \n"; ## bg
+    printf OUT "\@0 25 50 102 \n"; ## bg
     #    printf OUT "\@1 255 255 255  \n"; #bg
 	#printf OUT "\@1 255 255 255 \n";
 	printf OUT "\@2 200 200 200 \n";
@@ -179,8 +207,8 @@ sub yaplotColor {
     #printf OUT "\@5 255 100 100 \n"; #red
     printf OUT "\@5 0 0 255 \n"; #blue
     printf OUT "\@6 50 200 50 \n"; # green
-    #    printf OUT "\@7 255 255 0 \n"; # yellow
-    printf OUT "\@7 255 0 0 \n"; # red
+	printf OUT "\@7 255 255 0 \n"; # yellow
+	#printf OUT "\@7 255 0 0 \n"; # red
     printf OUT "\@8 255 255 255\n";
     #printf OUT "\@8 0 0 0\n";
     printf OUT "\@9 150 150 150\n";
@@ -236,8 +264,8 @@ sub InParticles {
 	$shear_strain = $ssHeader[0];
     $shear_disp = $ssHeader[1];
 	$shear_rate = $ssHeader[2];
-    #	$target_stress = $ssHeader[3];
-    $viscosity = $ssHeader[3];
+	#$target_stress = $ssHeader[3];
+	#$viscosity = $ssHeader[3];
     $normalstressdiff1 = $ssHeader[4];
     
     for ($i = 0; $i < $np; $i ++){
@@ -396,7 +424,10 @@ sub OutYaplotData{
 	} else {
 		$first = 0;
 	}
-    
+	#printf OUT "@ 7\n";
+
+	#	&OutStress($target_stress, 20);
+
 	printf OUT "y 1\n";
 	printf OUT "@ 8\n";
 	## visualize particles
@@ -412,27 +443,29 @@ sub OutYaplotData{
 			printf OUT "c $posx[$i] $posy[$i] $posz[$i]  \n";
 		}
 	}
-	printf OUT "y 3\n";
-	printf OUT "@ 0\n";
-	$npjamming = 0;
-	$totalcontact = 0;
-	for ($i = 0; $i < $np; $i++) {
-		#		if ($contactnumber[$i] == 0) {
-		#	$rr = $yap_radius*$radius[$i];
-		#	printf OUT "r $rr\n";
-		printf OUT "t $posx[$i] -0.1 $posz[$i] $contactnumber[$i] \n";
-		if ($contactnumber[$i] >= 2) {
-			$npjamming ++;
-			$totalcontact += $contactnumber[$i];
+	if (0) {
+		printf OUT "y 3\n";
+		printf OUT "@ 0\n";
+		$npjamming = 0;
+		$totalcontact = 0;
+		for ($i = 0; $i < $np; $i++) {
+			#		if ($contactnumber[$i] == 0) {
+			#	$rr = $yap_radius*$radius[$i];
+			#	printf OUT "r $rr\n";
+			printf OUT "t $posx[$i] -0.1 $posz[$i] $contactnumber[$i] \n";
+			if ($contactnumber[$i] >= 2) {
+				$npjamming ++;
+				$totalcontact += $contactnumber[$i];
+			}
 		}
-	}
-	if ($npjamming > 0) {
-		$coordinationnumber = $totalcontact / $npjamming;
-		printf "$npjamming $totalcontact  : z = $coordinationnumber \n";
-		$zt = 0.53*$Lz;
-		printf OUT "@ 8\n";
-		printf OUT "r 20\n";
-		printf OUT "t 0 -0.1 $zt z = $coordinationnumber\n";
+		if ($npjamming > 0) {
+			$coordinationnumber = $totalcontact / $npjamming;
+			printf "$npjamming $totalcontact  : z = $coordinationnumber \n";
+			$zt = 0.53*$Lz;
+			printf OUT "@ 8\n";
+			printf OUT "r 20\n";
+			printf OUT "t 0 -0.1 $zt z = $coordinationnumber\n";
+		}
 	}
 	
 #	printf OUT "y 2\n";
@@ -444,12 +477,17 @@ sub OutYaplotData{
 #	}
 	
 	## visualize contact network
+	if (0) {
 	printf OUT "y 2\n";
 	printf OUT "r 0.2\n";
 	printf OUT "@ 6\n"; # static
 	for ($k = 0; $k < $num_interaction; $k ++) {
 		if ($contactstate[$k] >= 2) {
-			&OutString2($int0[$k], $int1[$k]);
+			$i = $int0[$k];
+			$j = $int1[$k];
+			if ($contactnumber[$i] >= 2 && $contactnumber[$j] >= 2) {
+				&OutString2($int0[$k], $int1[$k]);
+			}
 		}
 	}
 	printf OUT "y 2\n";
@@ -457,28 +495,40 @@ sub OutYaplotData{
 	printf OUT "@ 2\n"; # static
 	for ($k = 0; $k < $num_interaction; $k ++) {
 		if ($contactstate[$k] == 1) {
-			&OutString2($int0[$k], $int1[$k]);
+			$i = $int0[$k];
+			$j = $int1[$k];
+			if ($contactnumber[$i] >= 2 && $contactnumber[$j] >= 2) {
+				&OutString2($int0[$k], $int1[$k]);
+			}
 		}
+	}
 	}
 	# visualize force chain network
     #
-    if (0){
-    printf OUT "y 4\n";
-    printf OUT "@ 7\n";
-    for ($k = 0; $k < $num_interaction; $k ++) {
-        $force = $F_lub[$k] + $Fc_n[$k];
-        if ($force > 0) {
-            &OutString_width($int0[$k], $int1[$k], $force_factor*abs($force), 0.01);
-        }
-    }
-    printf OUT "@ 5\n";
-    for ($k = 0; $k < $num_interaction; $k ++) {
-        $force = $F_lub[$k] + $Fc_n[$k];
-        if ($force < 0) {
-            &OutString_width($int0[$k], $int1[$k], $force_factor*abs($force), 0.05);
-        }
-    }
-}
+	if (1){
+		printf OUT "y 4\n";
+		printf OUT "@ 7\n";
+		for ($k = 0; $k < $num_interaction; $k ++) {
+			$i = $int0[$k];
+			$j = $int1[$k];
+			if ($contactnumber[$i] >= 2 && $contactnumber[$j] >= 2) {
+				$force = $F_lub[$k] + $Fc_n[$k];
+				if ($force > 0) {
+					&OutString_width($int0[$k], $int1[$k], $force_factor*abs($force), 0.01);
+					#&OutString_width($int0[$k], $int1[$k], $force_factor*abs($force)/$target_stress, 0.01);
+				}
+			}
+		}
+	}
+	if (0) {
+		printf OUT "@ 5\n";
+		for ($k = 0; $k < $num_interaction; $k ++) {
+			$force = $F_lub[$k] + $Fc_n[$k];
+			if ($force < 0) {
+				&OutString_width($int0[$k], $int1[$k], $force_factor*abs($force), 0.05);
+			}
+		}
+	}
 #    if ($cnt eq $confout) {
 #        if (0) {
 #            for ($k = 0; $k < $num_interaction; $k ++) {
@@ -611,12 +661,10 @@ sub OutBoundaryBox {
 		printf OUT "l $lx2 $ly2 -$lz2    $lx2 -$ly2 -$lz2\n";
 		printf OUT "l -$lx2 $ly2 -$lz2    -$lx2 -$ly2 -$lz2\n";
 	}
-	
 	if ($axis) {
 		printf OUT "l -$lx2 0 0 $lx2 0 0\n";
 		printf OUT "l 0 0 -$lz2 0 0 $lz2\n";
 	}
-	
 }
 
 sub OutString_width {
@@ -755,9 +803,7 @@ sub calcContributions {
         }
         exit;
     }
-    
-    
-    
+	
     #    $barsize = 0.1;
     $barsize = 10;
     $n1approxP = $n1approx_pos_con/($Lx*$Lz*$viscosity);
@@ -800,8 +846,7 @@ sub calcContributions {
         printf OUT "@ 5\n";
     }
     printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxLub $testposition1 0 $n1approxLub \n";
-    
-    
+	
     #    $ratio = $normalstressdiff1/$n1approx;
     #    printf "ratio = $ratio\n";
     #    $n1approx = 20*$n1approx/$viscosity;
@@ -824,5 +869,20 @@ sub calcContributions {
         printf OUTDR "$shear_strain $viscosityOUT $visapproxOUT $normalstressdiff1OUT $n1approxOUT\n";
     }
 }
-
-
+sub OutStress {
+	($value, $maxvalue) = @_;
+	$xx = 0.5*$Lz*$value/$maxvalue;
+	$xxTip = $xx + 2;
+	$arrowhead = 2;
+	$arrowwidth = 1;
+	$zz0 = $Lz/2+2;
+	
+	$zzB1 = $zz0-$arrowwidth;
+	$zzB2 = $zz0-$arrowhead;
+	$zzT1 = $zz0+$arrowwidth;
+	$zzT2 = $zz0+$arrowhead;
+	
+	$xxTip = $xx + 2*$arrowhead;
+	printf OUT "p 7 -$xx 0 $zzB1 $xx 0 $zzB1 $xx 0 $zzB2 $xxTip 0 $zz0 $xx 0 $zzT2 $xx 0 $zzT1 -$xx 0 $zzT1\n";
+	printf OUT "p 7 $xx 0 -$zzB1 -$xx 0 -$zzB1 -$xx 0 -$zzB2 -$xxTip 0 -$zz0 -$xx 0 -$zzT2 -$xx 0 -$zzT1 $xx 0 -$zzT1\n";
+}

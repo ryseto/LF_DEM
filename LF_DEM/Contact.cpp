@@ -44,6 +44,13 @@ void Contact::setSpringConstants()
 	}
 }
 
+void Contact::setDashpotConstants()
+{
+	dashpot.setDashpotResistanceCoeffs(sys->p.kn, sys->p.kt,
+									   sys->p.contact_relaxation_time, sys->p.contact_relaxation_time_tan);
+	
+}
+
 void Contact::setInteractionData()
 {
 	std::tie(p0, p1) = interaction->get_par_num();
@@ -66,8 +73,9 @@ void Contact::setInteractionData()
 		}
 	}
 	dashpot.setParticleData();
-	dashpot.setDashpotResistanceCoeffs(sys->p.kn, sys->p.kt,
-									   sys->p.contact_relaxation_time, sys->p.contact_relaxation_time_tan);
+	setDashpotConstants();
+//	dashpot.setDashpotResistanceCoeffs(sys->p.kn, sys->p.kt,
+//									   sys->p.contact_relaxation_time, sys->p.contact_relaxation_time_tan);
 }
 
 void Contact::activate()

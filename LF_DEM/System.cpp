@@ -2725,6 +2725,7 @@ void System::resetContactModelParameer()
 {
 	for (auto &inter: interaction) {
 		inter.contact.setSpringConstants();
+		inter.contact.setDashpotConstants();
 	}
 }
 

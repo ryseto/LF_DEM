@@ -16,7 +16,6 @@
 #include <complex>
 #include "Simulation.h"
 #include "SystemHelperFunctions.h"
-
 using namespace std;
 
 Simulation::Simulation(State::BasicCheckpoint chkp):
@@ -317,12 +316,47 @@ void Simulation::simulationSteadyShear(string in_args,
 		while (!elapsed.empty()); // flush tk to not output on first time step
 	}
 	int binconf_counter = 0;
+	double stress_factor = 8;
+	double time_stress_switch_increment = 200;
+	double time_stress_switch_increment_jam = 200;
+	double time_stress_switch = time_stress_switch_increment;
+	double target_stress_orig = sys.target_stress;
 	while (keepRunning()) {
 		if (p.simulation_mode == 22) {
 			stopShearing(tk);
 			if (sys.get_time() > 20) {
 				break;
 			}
+		}
+		double sr = sqrt(2*sys.getEinfty().selfdoubledot()); // shear rate for simple shear.
+		bool jammed = false;
+		static int shear_jam_counter = 0;
+		if (abs(sr) < sys.p.shear_jamming_rate) {
+			shear_jam_counter ++;
+			cerr << "shear_jam_counter = " << shear_jam_counter << endl;
+		} else {
+			shear_jam_counter = 0;
+		}
+		if (sys.get_time() > time_stress_switch || shear_jam_counter > sys.p.shear_jamming_max_count) {
+			sys.p.theta_shear += M_PI;
+			sys.setShearDirection(sys.p.theta_shear);
+			cerr << "theta_shear = " << sys.p.theta_shear << endl;
+			time_stress_switch += time_stress_switch_increment_jam;
+//			if (abs(sys.target_stress-target_stress_orig) < 1e-5) {
+//				time_stress_switch += time_stress_switch_increment_jam;
+//				sys.target_stress *= stress_factor;
+//				sys.p.kn *= stress_factor;
+//				sys.p.kt *= stress_factor;
+//				sys.dt /= stress_factor;
+//			} else {
+//				time_stress_switch += time_stress_switch_increment;
+//				sys.target_stress /= stress_factor;
+//				sys.p.kn /= stress_factor;
+//				sys.p.kt /= stress_factor;
+//				sys.dt *= stress_factor;;
+//			}
+//			sys.resetContactModelParameer();
+//			cerr << "target_stress = " << 6*M_PI*sys.target_stress << endl;
 		}
 		timeEvolutionUntilNextOutput(tk);
 		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_cumulated_strain());
@@ -609,6 +643,8 @@ void Simulation::outputData()
 	if (sys.p.output.effective_coordination_number) {
 		outdata.entryData("eff_coordination_number", Dimensional::Dimension::none, 1, sys.effective_coordination_number);
 	}
+	outdata.entryData("shear stress", Dimensional::Dimension::Stress, 1, sys.target_stress);
+
 	
 	outdata.writeToFile();
 	/****************************   Stress Tensor Output *****************/
@@ -631,10 +667,11 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 	snapshot_header << "# shear disp" << sep << sys.shear_disp.x << endl;
 	Dimensional::DimensionalQty<double> rate = {Dimensional::Dimension::Rate, sys.get_shear_rate(), system_of_units.getInternalUnit()};
 	system_of_units.convertFromInternalUnit(rate, output_unit);
+	Dimensional::DimensionalQty<double> stress = {Dimensional::Dimension::Stress, sys.target_stress, system_of_units.getInternalUnit()};
+	system_of_units.convertFromInternalUnit(stress, output_unit);
 	snapshot_header << "# shear rate" << sep << rate.value << endl;
-
 	if (control_var == Parameters::ControlVariable::stress) {
-		snapshot_header << "# target stress" << sep << target_stress_input << endl;
+		snapshot_header << "# target stress" << sep << stress.value << endl;
 	}
 	if (sys.ext_flow) {
 		/* The following snapshot data is required to
