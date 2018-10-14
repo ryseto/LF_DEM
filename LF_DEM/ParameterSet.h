@@ -196,6 +196,7 @@ namespace Parameters {
 		std::string event_handler;  ///< Select event handler [""]
 		double shear_jamming_rate;	///< Maximum shear rate for shear jamming [1e-6]
 		int shear_jamming_max_count;	///< Stop simulation after counting abs(rate)<shear_jamming_rate [30]
+		int shear_jamming_repetition;     ///< Repetition number for shear reversal [2]
 		double theta_shear;  ///< Shear direction, in degress, 0 is shear along x, 90 is shear along y [0]
 		double strain_reversal;  ///< for test_simulation = 21 (rtest1)
 		bool keep_input_strain;  ///< Use as initial strain value the strain from initial Lees-Edwards displacement [false]

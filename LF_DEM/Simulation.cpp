@@ -385,22 +385,28 @@ void Simulation::stopShearing(TimeKeeper &tk)
 
 void Simulation::stressReversal()
 {
-	static int shear_jam_counter = 0;
+	static int cnt_shear_jamming_repetation = 0;
+	static int jam_check_counter = 0;
 	static double strain_checkout = 0;
 	double sr = sqrt(2*sys.getEinfty().selfdoubledot()); // shear rate for simple shear.
 	if (abs(sr) < sys.p.shear_jamming_rate) {
-		shear_jam_counter ++;
-		cerr << "shear_jam_counter = " << shear_jam_counter << endl;
+		jam_check_counter ++;
+		cerr << "jam_check_counter = " << jam_check_counter << endl;
 	} else {
-		shear_jam_counter = 0;
+		jam_check_counter = 0;
 	}
-	if (shear_jam_counter > sys.p.shear_jamming_max_count) {
+	if (jam_check_counter > sys.p.shear_jamming_max_count) {
 		sys.p.theta_shear += M_PI;
 		cerr << "stress reversal" << endl;
 		sys.setShearDirection(sys.p.theta_shear);
 		jamming_strain = sys.get_cumulated_strain()-strain_checkout;
 		strain_checkout = sys.get_cumulated_strain();
 		p.time_end.value += jamming_strain;
+		cnt_shear_jamming_repetation++;
+		cerr << "cnt_shear_jamming_repetation = " << cnt_shear_jamming_repetation << endl;
+		if (cnt_shear_jamming_repetation > sys.p.shear_jamming_repetition) {
+			kill = true;
+		}
 	} else {
 		jamming_strain = 0;
 	}

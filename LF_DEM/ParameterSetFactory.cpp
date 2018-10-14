@@ -102,7 +102,8 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit) {
 		PARAM_INIT(friction_model, 1),
 		PARAM_INIT(np_fixed, 0),
 		PARAM_INIT(simulation_mode, 0),
-		PARAM_INIT(shear_jamming_max_count, 30)
+		PARAM_INIT(shear_jamming_max_count, 30),
+		PARAM_INIT(shear_jamming_repetition, 2)
 	};
 
 	/*===============================
