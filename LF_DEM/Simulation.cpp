@@ -324,7 +324,7 @@ void Simulation::simulationSteadyShear(string in_args,
 			output_events.insert("config");
 		}
 		if (p.simulation_mode == 2) {
-			stressReversal();
+			stressReversal(output_events);
 		}
 		generateOutput(output_events, binconf_counter);
 		printProgress();
@@ -383,7 +383,7 @@ void Simulation::stopShearing(TimeKeeper &tk)
 	}
 }
 
-void Simulation::stressReversal()
+void Simulation::stressReversal(std::set<std::string> &output_events)
 {
 	static int cnt_shear_jamming_repetation = 0;
 	static int jam_check_counter = 0;
@@ -402,6 +402,8 @@ void Simulation::stressReversal()
 		jamming_strain = sys.get_cumulated_strain();
 		sys.reset_cumulated_strain();
 		cnt_shear_jamming_repetation ++;
+		output_events.insert("data");
+		output_events.insert("config");
 		cerr << "stress reversal, cnt_shear_jamming_repetation = " << cnt_shear_jamming_repetation << endl;
 		if (cnt_shear_jamming_repetation > sys.p.shear_jamming_repetition) {
 			kill = true;
