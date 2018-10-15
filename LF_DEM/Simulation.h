@@ -126,7 +126,7 @@ public:
 	void setupNonDimensionalization(Dimensional::DimensionalQty<double> control_value, 
 									Parameters::ParameterSetFactory &PFact);
 	void stopShearing(TimeKeeper &tk); //simulation mode 22
-	void stressReversal(); //simulation mode 2
+	void stressReversal(std::set<std::string> &output_events); //simulation mode 2
 	/*
 	 * For outputs
 	 */

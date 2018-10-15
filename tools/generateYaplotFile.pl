@@ -33,17 +33,17 @@ GetOptions(
 'monodisperse' => \$monodisperse);
 my $printinfo = 0;
 if ($printinfo) {
-    printf "force_factor = $force_factor\n";
-    printf "output_interval = $output_interval\n";
-    printf "xz_shift = $xz_shift\n";
-    printf "axis = $axis\n";
-    printf "reversibility = $reversibility_test\n";
-    printf "monodisperse = $monodisperse\n";
+	printf "force_factor = $force_factor\n";
+	printf "output_interval = $output_interval\n";
+	printf "xz_shift = $xz_shift\n";
+	printf "axis = $axis\n";
+	printf "reversibility = $reversibility_test\n";
+	printf "monodisperse = $monodisperse\n";
 }
 
 # Create output file name
 if ($printinfo) {
-    printf "$particle_data\n";
+	printf "$particle_data\n";
 }
 $i = index($particle_data, "par_", 0)+4;
 $iD3 = index($particle_data, "D3N");
@@ -51,10 +51,10 @@ $j = index($particle_data, ".dat", $i-1);
 $name = substr($particle_data, $i, $j-$i);
 my $dim = 3;
 if ($iD3 eq -1){
-    $dim = 2;
+	$dim = 2;
 }
 if ($printinfo) {
-    printf "$dim dimension\n";;
+	printf "$dim dimension\n";;
 }
 
 $interaction_data = "int_${name}.dat";
@@ -79,18 +79,6 @@ for ($i = 0; $i<$number_of_header; $i++) {
 	printf "$line";
 }
 $i=0;
-while (1) {
-	$line = <IN_rheo>;
-	($d1, $d2, $d3, $d4, $d5, $d6, $d7, $d8, $d9, $d10,
-	$d11, $d12, $d13, $d14, $d15, $d16, $d17, $d18, $d19, $d20,
-	$d21, $d22, $d23, $d24, $d25, $d26, $d27, $d28, $d29, $d30,
-	$d31, $d32, $d33, $d34, $d35, $d36, $d37) = split(/\s+/, $line);
-	last unless defined $line;
-	$stress[$i] = $d37;
-	$strain[$i] = $d32;
-	$i++;
-}
-
 
 &readHeader;
 &yaplotColor;
@@ -101,7 +89,7 @@ $first_int = 1;
 $checkpoint = 1;
 $shear_strain_previous = 0;
 $shearrate_positive = 1;
-$cnt = 0;
+$cntjamming = 0;
 $ii = 0;
 while (1) {
 	if ($cnt_interval == 0 ||
@@ -135,9 +123,15 @@ while (1) {
 			&keepInitialConfig;
 		}
 	}
-	if ($shear_rate > 1e-4) {
-		&OutYaplotData;
-        $cnt ++;
+	#&OutYaplotData;
+	### Jamming strobe
+	if ($jamming > 0) {
+		$evenodd = $cntjamming % 2;
+		printf "even or odd $evenodd, $cntjamming\n";
+		if ($evenodd == 1) {
+			&OutYaplotData;
+		}
+		$cntjamming ++;
 	}
 	$cnt_interval ++;
 }
@@ -175,9 +169,9 @@ sub readHeader {
 	}
 	for ($i = 0; $i<$number_of_header; $i++) {
 		$line = <IN_particle>;
-        if ($printinfo) {
-            printf "$line";
-        }
+		if ($printinfo) {
+			printf "$line";
+		}
 	}
 	if ($Ly == 0) {
 		$number_of_header_int = 20;
@@ -198,22 +192,22 @@ sub readHeader {
 sub yaplotColor {
 	printf OUT "\@1 0 0 0 \n";
 	#printf OUT "\@1 50 100 205 \n";
-    printf OUT "\@0 25 50 102 \n"; ## bg
-    #    printf OUT "\@1 255 255 255  \n"; #bg
+	printf OUT "\@0 25 50 102 \n"; ## bg
+	#    printf OUT "\@1 255 255 255  \n"; #bg
 	#printf OUT "\@1 255 255 255 \n";
 	printf OUT "\@2 200 200 200 \n";
-    printf OUT "\@3 50 150 255 \n"; # blue
-    printf OUT "\@4 50 200 50 \n"; # green
-    #printf OUT "\@5 255 100 100 \n"; #red
-    printf OUT "\@5 0 0 255 \n"; #blue
-    printf OUT "\@6 50 200 50 \n"; # green
+	printf OUT "\@3 50 150 255 \n"; # blue
+	printf OUT "\@4 50 200 50 \n"; # green
+	#printf OUT "\@5 255 100 100 \n"; #red
+	printf OUT "\@5 0 0 255 \n"; #blue
+	printf OUT "\@6 50 200 50 \n"; # green
 	printf OUT "\@7 255 255 0 \n"; # yellow
 	#printf OUT "\@7 255 0 0 \n"; # red
-    printf OUT "\@8 255 255 255\n";
-    #printf OUT "\@8 0 0 0\n";
-    printf OUT "\@9 150 150 150\n";
-    #printf OUT "\@8 224 143 0 \n";
-    #printf OUT "\@9 67 163 230 \n";
+	printf OUT "\@8 255 255 255\n";
+	#printf OUT "\@8 0 0 0\n";
+	printf OUT "\@9 150 150 150\n";
+	#printf OUT "\@8 224 143 0 \n";
+	#printf OUT "\@9 67 163 230 \n";
 	#printf OUT "\@8 253 105 6 \n";
 	#printf OUT "\@9 109 109 109 \n";
 	printf OUT "\@10 250 250 250 \n";
@@ -248,11 +242,11 @@ sub InParticles {
 	$radius_max = 0;
 	##  Snapshot Header
 	$j = 0;
-    
+	
 	while (1) {
 		$line = <IN_particle>;
 		($buf, $val) = split(" : ", $line);
-        $val =~ s/(\n|\r)//g;
+		$val =~ s/(\n|\r)//g;
 		($buf1) = split(/\s+/, $buf);
 		if ($buf1 ne '#') {
 			last;
@@ -262,18 +256,37 @@ sub InParticles {
 		last unless defined $line;
 	}
 	$shear_strain = $ssHeader[0];
-    $shear_disp = $ssHeader[1];
+	$shear_disp = $ssHeader[1];
 	$shear_rate = $ssHeader[2];
 	#$target_stress = $ssHeader[3];
 	#$viscosity = $ssHeader[3];
-    $normalstressdiff1 = $ssHeader[4];
-    
-    for ($i = 0; $i < $np; $i ++){
-        if ($i > 0) {
-            $line = <IN_particle>;
-        }
+	$normalstressdiff1 = $ssHeader[4];
+	$jamming = 0;
+	while (1) {
+		$line = <IN_rheo>;
+		($d1, $d2, $d3, $d4, $d5, $d6, $d7, $d8, $d9, $d10,
+		$d11, $d12, $d13, $d14, $d15, $d16, $d17, $d18, $d19, $d20,
+		$d21, $d22, $d23, $d24, $d25, $d26, $d27, $d28, $d29, $d30,
+		$d31, $d32, $d33, $d34, $d35, $d36, $d37, $d38) = split(/\s+/, $line);
+		$straindata = $d2;
+		if ($d38 > 0) {
+			printf "#################3\n";
+			$jamming = $d38;
+		}
+		if ($straindata >= $shear_strain) {
+			$stressdata = $d37;
+			printf "strain= $straindata $shear_strain $jamming\n";
+			last;
+		}
+		last unless defined $line;
+		#$i++;
+	}
+	for ($i = 0; $i < $np; $i ++){
+		if ($i > 0) {
+			$line = <IN_particle>;
+		}
 		if ($output == 1) {
-            # LF_DEM version v3.0-53-g9f8a2585-dirty
+			# LF_DEM version v3.0-53-g9f8a2585-dirty
 			# np 500
 			# VF 0.78
 			# Lx 51.6458
@@ -290,11 +303,11 @@ sub InParticles {
 			#11: angle
 			#				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
 			#	$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
-            if ($dim eq 3) {
-                ($ip, $a, $x, $y, $z, $vx, $vz, $vy, $ox, $oz, $oy, $connum) = split(/\s+/, $line);
-            } else {
-                ($ip, $a, $x, $z, $vx, $vz, $vy, $ox, $oz, $oy, $angle, $connum) = split(/\s+/, $line);
-            }
+			if ($dim eq 3) {
+				($ip, $a, $x, $y, $z, $vx, $vz, $vy, $ox, $oz, $oy, $connum) = split(/\s+/, $line);
+			} else {
+				($ip, $a, $x, $z, $vx, $vz, $vy, $ox, $oz, $oy, $angle, $connum) = split(/\s+/, $line);
+			}
 			#
 			#
 			$ang[$i] = $angle;
@@ -337,12 +350,12 @@ sub InInteractions{
 		if ($buf1 ne '#') {
 			last;
 		} else {
-            $val =~ s/(\n|\r)//g;
+			$val =~ s/(\n|\r)//g;
 			$ssHeader[$j++] = $val;
 		}
 		last unless defined $line;
 	}
-
+	
 	# 1, 2: numbers of the interacting particles
 	# 3: 1=contact, 0=apart
 	# 4, 5, 6: normal vector
@@ -377,11 +390,11 @@ sub InInteractions{
 		$fc_norm, # 12
 		$fc_tan_x, $fc_tan_z, $fc_tan_y, # 13, 14, 15
 		$fr_norm, $s_xF) = split(/\s+/, $line); # 16, 17
-	
+		
 		if ($i eq '#' || $i eq NU) {
-            ($buf, $val) = split(" : ", $line);
-            $val =~ s/(\n|\r)//g;
-            $shear_strain = $val;
+			($buf, $val) = split(" : ", $line);
+			$val =~ s/(\n|\r)//g;
+			$shear_strain = $val;
 			last;
 		}
 		if (! defined $i) {
@@ -392,26 +405,26 @@ sub InInteractions{
 			$int0[$k] = $i;
 			$int1[$k] = $j;
 			$contactstate[$k] = $contact;
-#            if ($contact > 0) {
-#                #$force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
-#                $force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
-#                #$force[$k] = $fc_norm;
-#            } else {
-#                $force[$k] = $f_lub_norm + $fr_norm;
-#                #$force[$k] = 0;
-#            }
-            $F_lub[$k] = $f_lub_norm;
-            $Fc_n[$k] = $fc_norm;
+			#            if ($contact > 0) {
+			#                #$force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
+			#                $force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
+			#                #$force[$k] = $fc_norm;
+			#            } else {
+			#                $force[$k] = $f_lub_norm + $fr_norm;
+			#                #$force[$k] = 0;
+			#            }
+			$F_lub[$k] = $f_lub_norm;
+			$Fc_n[$k] = $fc_norm;
 			$Fc_t[$k] = sqrt($fc_tan_x**2+$fc_tan_y**2+$fc_tan_z**2);
 			$F_lub_t[$k] = sqrt($f_lub_tan_x**2+ $f_lub_tan_z**2 + $f_lub_tan_y**2);
 			$S_bf[$k] =  $s_xF;
-            #$force[$k] += $Fc_t[$k] + $F_lub_t[$k];
+			#$force[$k] += $Fc_t[$k] + $F_lub_t[$k];
 			$nrvec_x[$k] = $nx;
 			$nrvec_y[$k] = $ny;
 			$nrvec_z[$k] = $nz;
 			$Gap[$k] = $gap;
-            $distance[$k] = $radius[$i] + $radius[$j] + $gap;
-
+			$distance[$k] = $radius[$i] + $radius[$j] + $gap;
+			
 			$k++;
 		}
 	}
@@ -425,9 +438,9 @@ sub OutYaplotData{
 		$first = 0;
 	}
 	#printf OUT "@ 7\n";
-
+	
 	#	&OutStress($target_stress, 20);
-
+	
 	printf OUT "y 1\n";
 	printf OUT "@ 8\n";
 	## visualize particles
@@ -468,43 +481,43 @@ sub OutYaplotData{
 		}
 	}
 	
-#	printf OUT "y 2\n";
-#	printf OUT "@ 0\n";
-#	## visualize particles
-#	printf OUT "r 0.1\n";
-#	for ($i = 0; $i < $np; $i++) {
-#		printf OUT "c $posx[$i] -0.01 $posz[$i]  \n";
-#	}
+	#	printf OUT "y 2\n";
+	#	printf OUT "@ 0\n";
+	#	## visualize particles
+	#	printf OUT "r 0.1\n";
+	#	for ($i = 0; $i < $np; $i++) {
+	#		printf OUT "c $posx[$i] -0.01 $posz[$i]  \n";
+	#	}
 	
 	## visualize contact network
 	if (0) {
-	printf OUT "y 2\n";
-	printf OUT "r 0.2\n";
-	printf OUT "@ 6\n"; # static
-	for ($k = 0; $k < $num_interaction; $k ++) {
-		if ($contactstate[$k] >= 2) {
-			$i = $int0[$k];
-			$j = $int1[$k];
-			if ($contactnumber[$i] >= 2 && $contactnumber[$j] >= 2) {
-				&OutString2($int0[$k], $int1[$k]);
+		printf OUT "y 2\n";
+		printf OUT "r 0.2\n";
+		printf OUT "@ 6\n"; # static
+		for ($k = 0; $k < $num_interaction; $k ++) {
+			if ($contactstate[$k] >= 2) {
+				$i = $int0[$k];
+				$j = $int1[$k];
+				if ($contactnumber[$i] >= 2 && $contactnumber[$j] >= 2) {
+					&OutString2($int0[$k], $int1[$k]);
+				}
 			}
 		}
-	}
-	printf OUT "y 2\n";
-	printf OUT "r 0.2\n";
-	printf OUT "@ 2\n"; # static
-	for ($k = 0; $k < $num_interaction; $k ++) {
-		if ($contactstate[$k] == 1) {
-			$i = $int0[$k];
-			$j = $int1[$k];
-			if ($contactnumber[$i] >= 2 && $contactnumber[$j] >= 2) {
-				&OutString2($int0[$k], $int1[$k]);
+		printf OUT "y 2\n";
+		printf OUT "r 0.2\n";
+		printf OUT "@ 2\n"; # static
+		for ($k = 0; $k < $num_interaction; $k ++) {
+			if ($contactstate[$k] == 1) {
+				$i = $int0[$k];
+				$j = $int1[$k];
+				if ($contactnumber[$i] >= 2 && $contactnumber[$j] >= 2) {
+					&OutString2($int0[$k], $int1[$k]);
+				}
 			}
 		}
-	}
 	}
 	# visualize force chain network
-    #
+	#
 	if (1){
 		printf OUT "y 4\n";
 		printf OUT "@ 7\n";
@@ -529,73 +542,73 @@ sub OutYaplotData{
 			}
 		}
 	}
-#    if ($cnt eq $confout) {
-#        if (0) {
-#            for ($k = 0; $k < $num_interaction; $k ++) {
-#                $force = $F_lub[$k] + $Fc_n[$k];
-#                $i = $int0[$k];
-#                $j = $int1[$k];
-#                $xi = $posx[$i];
-#                $zi = $posz[$i];
-#                $xj = $posx[$j];
-#                $zj = $posz[$j];
-#                $sq_dist = ($xi-$xj)**2 + ($zi-$zj)**2;
-#                $min = ($radius[$i] + $radius[$j]+1)**2;
-#                if ($sq_dist < $min) {
-#                    printf "$xi $zi $xj $zj $force\n";
-#                }
-#            }
-#            exit;
-#        }
-#    }
-    if (0){
-    
-    printf OUT "y 6\n";
-    printf OUT "@ 7\n";
-    $etaTotal = 0;
-    for ($k = 0; $k < $num_interaction; $k ++) {
-        #$force = $F_lub[$k] + $Fc_n[$k];
-        $nx = $nrvec_x[$k];
-        $ny = $nrvec_y[$k];
-        $eta_lub = -$F_lub[$k]*$distance[$k]*($nx*$ny);
-        $eta_con = -$Fc_n[$k]*$distance[$k]*($nx*$ny);
-        $eta[$k] = $eta_lub + $eta_con;
-        $etaTotal += $eta[$k];
-        if ($eta[$k] > 0) {
-            printf OUT "@ 7\n";
-        } else {
-            printf OUT "@ 5\n";
-        }
-        &OutString_width($int0[$k], $int1[$k],  $force_factor*abs($eta[$k]), 0.01);
-        #        }
-    }
-    $visapprox = $etaTotal/($Lx*$Lz);
-    }
-    #    &calcContributions;
-    #    for ($k = 0; $k < $num_interaction; $k ++) {
-    #    $force = $F_lub[$k] + $Fc_n[$k];
-    #    if ($force > 0) {
-    #        printf OUT "@ 7\n";
-    #    } else {
-    #        printf OUT "@ 5\n";
-    #    }
-    #    &OutString_width($int0[$k], $int1[$k], $force_factor*abs($force[$k]), 0.02);
-    #    #&OutString_width($int0[$k], $int1[$k], $force_factor*abs($n1), 0.01);
-    # }
-    
-    if (0) {
-    printf OUT "y 3\n";
-    printf OUT "@ 5\n";
-    for ($k = 0; $k < $num_interaction; $k ++) {
-        #$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-        if ($force[$k] < 0) {
-            &OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k], 0.02);
-        }
-    }
-    }
+	#    if ($cnt eq $confout) {
+	#        if (0) {
+	#            for ($k = 0; $k < $num_interaction; $k ++) {
+	#                $force = $F_lub[$k] + $Fc_n[$k];
+	#                $i = $int0[$k];
+	#                $j = $int1[$k];
+	#                $xi = $posx[$i];
+	#                $zi = $posz[$i];
+	#                $xj = $posx[$j];
+	#                $zj = $posz[$j];
+	#                $sq_dist = ($xi-$xj)**2 + ($zi-$zj)**2;
+	#                $min = ($radius[$i] + $radius[$j]+1)**2;
+	#                if ($sq_dist < $min) {
+	#                    printf "$xi $zi $xj $zj $force\n";
+	#                }
+	#            }
+	#            exit;
+	#        }
+	#    }
+	if (0){
+		
+		printf OUT "y 6\n";
+		printf OUT "@ 7\n";
+		$etaTotal = 0;
+		for ($k = 0; $k < $num_interaction; $k ++) {
+			#$force = $F_lub[$k] + $Fc_n[$k];
+			$nx = $nrvec_x[$k];
+			$ny = $nrvec_y[$k];
+			$eta_lub = -$F_lub[$k]*$distance[$k]*($nx*$ny);
+			$eta_con = -$Fc_n[$k]*$distance[$k]*($nx*$ny);
+			$eta[$k] = $eta_lub + $eta_con;
+			$etaTotal += $eta[$k];
+			if ($eta[$k] > 0) {
+				printf OUT "@ 7\n";
+			} else {
+				printf OUT "@ 5\n";
+			}
+			&OutString_width($int0[$k], $int1[$k],  $force_factor*abs($eta[$k]), 0.01);
+			#        }
+		}
+		$visapprox = $etaTotal/($Lx*$Lz);
+	}
+	#    &calcContributions;
+	#    for ($k = 0; $k < $num_interaction; $k ++) {
+	#    $force = $F_lub[$k] + $Fc_n[$k];
+	#    if ($force > 0) {
+	#        printf OUT "@ 7\n";
+	#    } else {
+	#        printf OUT "@ 5\n";
+	#    }
+	#    &OutString_width($int0[$k], $int1[$k], $force_factor*abs($force[$k]), 0.02);
+	#    #&OutString_width($int0[$k], $int1[$k], $force_factor*abs($n1), 0.01);
+	# }
+	
+	if (0) {
+		printf OUT "y 3\n";
+		printf OUT "@ 5\n";
+		for ($k = 0; $k < $num_interaction; $k ++) {
+			#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+			if ($force[$k] < 0) {
+				&OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k], 0.02);
+			}
+		}
+	}
 	## visualize rotation in 2D
 	if ($Ly == 0) {
-		if (1) {
+		if (0) {
 			printf OUT "y 6\n";
 			printf OUT "@ 1\n";
 			for ($i = 0; $i < $np; $i++) {
@@ -741,133 +754,133 @@ sub OutCross {
 }
 
 sub calcContributions {
-    $n1approx_pos_con = 0;
-    $n1approx_neg_con = 0;
-    $n1approx_pos_lub = 0;
-    $n1approx_neg_lub = 0;
-    
-    #    $n1_factor = 0.015/$viscosity;
-    $n1_factor = $force_factor;
-    printf OUT "y 5\n";
-    #    printf OUT "@ 7\n";
-    for ($k = 0; $k < $num_interaction; $k ++) {
-        #$force = $F_lub[$k] + $Fc_n[$k];
-        $nx = $nrvec_x[$k];
-        $ny = $nrvec_y[$k];
-        $n1lub = -$F_lub[$k]*$distance[$k]*($nx*$nx - $ny*$ny);
-        $n1con = -$Fc_n[$k]*$distance[$k]*($nx*$nx - $ny*$ny);
-        #        $force = $Fc_n[$k];
-        #if (1 || $force[$k] >= 0) {
-        #    &OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
-        #}
-        #        if ($force > 0) {
-        
-        if ($n1lub > 0) {
-            $n1approx_pos_lub += $n1lub;
-        } else {
-            $n1approx_neg_lub += $n1lub;
-        }
-        if ($n1con > 0) {
-            $n1approx_pos_con += $n1con;
-        } else {
-            $n1approx_neg_con += $n1con;
-        }
-        $n1[$k] = $n1lub + $n1con;
-        if ($n1[$k] > 0) {
-            printf OUT "@ 7\n";
-        } else {
-            printf OUT "@ 5\n";
-        }
-        # &OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
-        &OutString_width($int0[$k], $int1[$k], $n1_factor*abs($n1[$k]), 0.01);
-        #        }
-    }
-    
-    if ($cnt eq $confout) {
-        for ($k = 0; $k < $num_interaction; $k ++) {
-            $force = $F_lub[$k] + $Fc_n[$k];
-            $i = $int0[$k];
-            $j = $int1[$k];
-            $xi = $posx[$i];
-            $zi = $posz[$i];
-            $xj = $posx[$j];
-            $zj = $posz[$j];
-            $sq_dist = ($xi-$xj)**2 + ($zi-$zj)**2;
-            $min = ($radius[$i] + $radius[$j]+1)**2;
-            if ($sq_dist < $min) {
-                printf "$xi $zi $xj $zj $force $n1[$k] $eta[$k]\n";
-            }
-        }
-        for ($i = 0; $i < $np; $i++) {
-            printf OUTSS "$posx[$i]  $posz[$i] $radius[$i] \n";
-        }
-        exit;
-    }
+	$n1approx_pos_con = 0;
+	$n1approx_neg_con = 0;
+	$n1approx_pos_lub = 0;
+	$n1approx_neg_lub = 0;
 	
-    #    $barsize = 0.1;
-    $barsize = 10;
-    $n1approxP = $n1approx_pos_con/($Lx*$Lz*$viscosity);
-    $n1approxN = $n1approx_neg_con/($Lx*$Lz*$viscosity);
-    $testposition1 = $Lx/2 + 1;
-    $testposition2 = $Lx/2 + 3;
-    
-    printf OUT "@ 7\n";
-    printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxP $testposition1 0 $n1approxP \n";
-    printf OUT "@ 5\n";
-    printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxN $testposition1 0 $n1approxN \n";
-    
-    $n1approxCon = $n1approxP + $n1approxN;
-    $testposition1 = $Lx/2 + 3.2;
-    $testposition2 = $Lx/2 + 5.2;
-    
-    if ($n1approx > 0) {
-        printf OUT "@ 7\n";
-    } else {
-        printf OUT "@ 5\n";
-    }
-    printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxCon $testposition1 0 $n1approxCon \n";
-    
-    $testposition1 = -$Lx/2 - 3.2;
-    $testposition2 = -$Lx/2 - 5.2;
-    
-    $n1approxP = $n1approx_pos_lub/($Lx*$Lz*$viscosity);
-    $n1approxN = $n1approx_neg_lub/($Lx*$Lz*$viscosity);
-    printf OUT "@ 7\n";
-    printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxP $testposition1 0 $n1approxP \n";
-    printf OUT "@ 5\n";
-    printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxN $testposition1 0 $n1approxN \n";
-    
-    $n1approxLub = $n1approxP + $n1approxN;
-    $testposition1 = -$Lx/2 - 1;
-    $testposition2 = -$Lx/2 - 3;
-    if ($n1approx > 0) {
-        printf OUT "@ 7\n";
-    } else {
-        printf OUT "@ 5\n";
-    }
-    printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxLub $testposition1 0 $n1approxLub \n";
+	#    $n1_factor = 0.015/$viscosity;
+	$n1_factor = $force_factor;
+	printf OUT "y 5\n";
+	#    printf OUT "@ 7\n";
+	for ($k = 0; $k < $num_interaction; $k ++) {
+		#$force = $F_lub[$k] + $Fc_n[$k];
+		$nx = $nrvec_x[$k];
+		$ny = $nrvec_y[$k];
+		$n1lub = -$F_lub[$k]*$distance[$k]*($nx*$nx - $ny*$ny);
+		$n1con = -$Fc_n[$k]*$distance[$k]*($nx*$nx - $ny*$ny);
+		#        $force = $Fc_n[$k];
+		#if (1 || $force[$k] >= 0) {
+		#    &OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
+		#}
+		#        if ($force > 0) {
+		
+		if ($n1lub > 0) {
+			$n1approx_pos_lub += $n1lub;
+		} else {
+			$n1approx_neg_lub += $n1lub;
+		}
+		if ($n1con > 0) {
+			$n1approx_pos_con += $n1con;
+		} else {
+			$n1approx_neg_con += $n1con;
+		}
+		$n1[$k] = $n1lub + $n1con;
+		if ($n1[$k] > 0) {
+			printf OUT "@ 7\n";
+		} else {
+			printf OUT "@ 5\n";
+		}
+		# &OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
+		&OutString_width($int0[$k], $int1[$k], $n1_factor*abs($n1[$k]), 0.01);
+		#        }
+	}
 	
-    #    $ratio = $normalstressdiff1/$n1approx;
-    #    printf "ratio = $ratio\n";
-    #    $n1approx = 20*$n1approx/$viscosity;
-    #$totaln1 = 20*$normalstressdiff1/$viscosity;
-    #    if ($normalstressdiff1 > 0 ) {
-    #    printf OUT "@ 7\n";
-    #} else {
-    #    printf OUT "@ 5\n";
-    #}
-    #printf OUT "r 1\n";
-    #printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $totaln1 $testposition1 0 $totaln1 \n";
-    
-    if ($shear_strain > 1) {
-        $n1approx = ($n1approxCon + $n1approxLub);
-        ####
-        $viscosityOUT = 6*$pi*$viscosity;
-        $visapproxOUT = 6*$pi*$visapprox;
-        $normalstressdiff1OUT = $normalstressdiff1/$viscosity;
-        $n1approxOUT = $n1approx;
-        printf OUTDR "$shear_strain $viscosityOUT $visapproxOUT $normalstressdiff1OUT $n1approxOUT\n";
-    }
+	if ($cnt eq $confout) {
+		for ($k = 0; $k < $num_interaction; $k ++) {
+			$force = $F_lub[$k] + $Fc_n[$k];
+			$i = $int0[$k];
+			$j = $int1[$k];
+			$xi = $posx[$i];
+			$zi = $posz[$i];
+			$xj = $posx[$j];
+			$zj = $posz[$j];
+			$sq_dist = ($xi-$xj)**2 + ($zi-$zj)**2;
+			$min = ($radius[$i] + $radius[$j]+1)**2;
+			if ($sq_dist < $min) {
+				printf "$xi $zi $xj $zj $force $n1[$k] $eta[$k]\n";
+			}
+		}
+		for ($i = 0; $i < $np; $i++) {
+			printf OUTSS "$posx[$i]  $posz[$i] $radius[$i] \n";
+		}
+		exit;
+	}
+	
+	#    $barsize = 0.1;
+	$barsize = 10;
+	$n1approxP = $n1approx_pos_con/($Lx*$Lz*$viscosity);
+	$n1approxN = $n1approx_neg_con/($Lx*$Lz*$viscosity);
+	$testposition1 = $Lx/2 + 1;
+	$testposition2 = $Lx/2 + 3;
+	
+	printf OUT "@ 7\n";
+	printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxP $testposition1 0 $n1approxP \n";
+	printf OUT "@ 5\n";
+	printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxN $testposition1 0 $n1approxN \n";
+	
+	$n1approxCon = $n1approxP + $n1approxN;
+	$testposition1 = $Lx/2 + 3.2;
+	$testposition2 = $Lx/2 + 5.2;
+	
+	if ($n1approx > 0) {
+		printf OUT "@ 7\n";
+	} else {
+		printf OUT "@ 5\n";
+	}
+	printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxCon $testposition1 0 $n1approxCon \n";
+	
+	$testposition1 = -$Lx/2 - 3.2;
+	$testposition2 = -$Lx/2 - 5.2;
+	
+	$n1approxP = $n1approx_pos_lub/($Lx*$Lz*$viscosity);
+	$n1approxN = $n1approx_neg_lub/($Lx*$Lz*$viscosity);
+	printf OUT "@ 7\n";
+	printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxP $testposition1 0 $n1approxP \n";
+	printf OUT "@ 5\n";
+	printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxN $testposition1 0 $n1approxN \n";
+	
+	$n1approxLub = $n1approxP + $n1approxN;
+	$testposition1 = -$Lx/2 - 1;
+	$testposition2 = -$Lx/2 - 3;
+	if ($n1approx > 0) {
+		printf OUT "@ 7\n";
+	} else {
+		printf OUT "@ 5\n";
+	}
+	printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $n1approxLub $testposition1 0 $n1approxLub \n";
+	
+	#    $ratio = $normalstressdiff1/$n1approx;
+	#    printf "ratio = $ratio\n";
+	#    $n1approx = 20*$n1approx/$viscosity;
+	#$totaln1 = 20*$normalstressdiff1/$viscosity;
+	#    if ($normalstressdiff1 > 0 ) {
+	#    printf OUT "@ 7\n";
+	#} else {
+	#    printf OUT "@ 5\n";
+	#}
+	#printf OUT "r 1\n";
+	#printf OUT "p 4 $testposition1 0 0 $testposition2 0 0 $testposition2 0 $totaln1 $testposition1 0 $totaln1 \n";
+	
+	if ($shear_strain > 1) {
+		$n1approx = ($n1approxCon + $n1approxLub);
+		####
+		$viscosityOUT = 6*$pi*$viscosity;
+		$visapproxOUT = 6*$pi*$visapprox;
+		$normalstressdiff1OUT = $normalstressdiff1/$viscosity;
+		$n1approxOUT = $n1approx;
+		printf OUTDR "$shear_strain $viscosityOUT $visapproxOUT $normalstressdiff1OUT $n1approxOUT\n";
+	}
 }
 sub OutStress {
 	($value, $maxvalue) = @_;
@@ -886,3 +899,4 @@ sub OutStress {
 	printf OUT "p 7 -$xx 0 $zzB1 $xx 0 $zzB1 $xx 0 $zzB2 $xxTip 0 $zz0 $xx 0 $zzT2 $xx 0 $zzT1 -$xx 0 $zzT1\n";
 	printf OUT "p 7 $xx 0 -$zzB1 -$xx 0 -$zzB1 -$xx 0 -$zzB2 -$xxTip 0 -$zz0 -$xx 0 -$zzT2 -$xx 0 -$zzT1 $xx 0 -$zzT1\n";
 }
+
