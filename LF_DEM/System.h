@@ -490,6 +490,11 @@ private:
 	{
 		return clk.cumulated_strain;
 	}
+	
+	void reset_cumulated_strain()
+	{
+		clk.cumulated_strain = 0;
+	}
 
 	double get_angle_wheel()
 	{

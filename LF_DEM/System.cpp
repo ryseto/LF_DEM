@@ -2082,7 +2082,22 @@ void System::setShearDirection(double theta_shear) // will probably be deprecate
 		p.theta_shear = theta_shear;
 		double costheta_shear = cos(theta_shear);
 		double sintheta_shear = sin(theta_shear);
-		setImposedFlow({0, 0, costheta_shear/2, sintheta_shear/2, 0, 0},
+		if (abs(sintheta_shear) < 1e-15) {
+			sintheta_shear = 0;
+			if (costheta_shear > 0) {
+				costheta_shear = 1;
+			} else {
+				costheta_shear = -1;
+			}
+		} else if (abs(costheta_shear) < 1e-15) {
+			costheta_shear = 0;
+			if (sintheta_shear > 0) {
+				sintheta_shear = 1;
+			} else {
+				sintheta_shear = -1;
+			}
+		}
+		setImposedFlow({0, 0, 0.5*costheta_shear, 0.5*sintheta_shear, 0, 0},
 					   {-0.5*sintheta_shear, 0.5*costheta_shear, 0});
 	}
 }
