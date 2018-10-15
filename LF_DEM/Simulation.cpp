@@ -664,7 +664,9 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 	system_of_units.convertFromInternalUnit(stress, output_unit);
 	snapshot_header << "# shear rate" << sep << rate.value << endl;
 	if (control_var == Parameters::ControlVariable::stress) {
+		Dimensional::DimensionalQty<double> time = {Dimensional::Dimension::Time, sys.get_time(), system_of_units.getInternalUnit()};
 		snapshot_header << "# target stress" << sep << stress.value << endl;
+		snapshot_header << "# time" << sep << time.value << endl;
 	}
 	if (sys.ext_flow) {
 		/* The following snapshot data is required to
@@ -679,8 +681,8 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 			snapshot_header << "# retrim ext flow " << sep << 0 << endl;
 		}
 	}
-	snapshot_header << "# viscosity" << sep << viscosity << endl;
-	snapshot_header << "# n1" << sep << normal_stress_diff1 << endl;
+	//snapshot_header << "# viscosity" << sep << viscosity << endl;
+	//snapshot_header << "# n1" << sep << normal_stress_diff1 << endl;
 }
 
 vec3d Simulation::shiftUpCoordinate(double x, double y, double z)

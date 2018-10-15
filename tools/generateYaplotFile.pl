@@ -79,7 +79,6 @@ for ($i = 0; $i<$number_of_header; $i++) {
 	printf "$line";
 }
 $i=0;
-
 &readHeader;
 &yaplotColor;
 
@@ -124,11 +123,10 @@ while (1) {
 		}
 	}
 	#&OutYaplotData;
-	### Jamming strobe
 	if ($jamming > 0) {
 		$evenodd = $cntjamming % 2;
 		printf "even or odd $evenodd, $cntjamming\n";
-		if ($evenodd == 1) {
+		if ($evenodd == 0) {
 			&OutYaplotData;
 		}
 		$cntjamming ++;
@@ -258,9 +256,10 @@ sub InParticles {
 	$shear_strain = $ssHeader[0];
 	$shear_disp = $ssHeader[1];
 	$shear_rate = $ssHeader[2];
-	#$target_stress = $ssHeader[3];
+	$target_stress = $ssHeader[3];
+	$time = $ssHeader[4];
 	#$viscosity = $ssHeader[3];
-	$normalstressdiff1 = $ssHeader[4];
+	#$normalstressdiff1 = $ssHeader[4];
 	$jamming = 0;
 	while (1) {
 		$line = <IN_rheo>;
@@ -268,12 +267,11 @@ sub InParticles {
 		$d11, $d12, $d13, $d14, $d15, $d16, $d17, $d18, $d19, $d20,
 		$d21, $d22, $d23, $d24, $d25, $d26, $d27, $d28, $d29, $d30,
 		$d31, $d32, $d33, $d34, $d35, $d36, $d37, $d38) = split(/\s+/, $line);
-		$straindata = $d2;
+		$time_rheo = $d1;
 		if ($d38 > 0) {
-			printf "#################3\n";
 			$jamming = $d38;
 		}
-		if ($straindata >= $shear_strain) {
+		if (abs($time_rheo-$time) < 1e-4) {
 			$stressdata = $d37;
 			printf "strain= $straindata $shear_strain $jamming\n";
 			last;
@@ -899,4 +897,3 @@ sub OutStress {
 	printf OUT "p 7 -$xx 0 $zzB1 $xx 0 $zzB1 $xx 0 $zzB2 $xxTip 0 $zz0 $xx 0 $zzT2 $xx 0 $zzT1 -$xx 0 $zzT1\n";
 	printf OUT "p 7 $xx 0 -$zzB1 -$xx 0 -$zzB1 -$xx 0 -$zzB2 -$xxTip 0 -$zz0 -$xx 0 -$zzT2 -$xx 0 -$zzT1 $xx 0 -$zzT1\n";
 }
-
