@@ -396,12 +396,12 @@ void Simulation::stressReversal()
 		jam_check_counter = 0;
 	}
 	if (jam_check_counter > sys.p.shear_jamming_max_count) {
-		sys.p.theta_shear = (shear_direction % 2) ? M_PI : 0;
-		sys.setShearDirection(sys.p.theta_shear);
-		shear_direction++;
+		double theta_shear = (shear_direction % 2) ? M_PI : 0;
+		sys.setShearDirection(theta_shear);
+		shear_direction ++;
 		jamming_strain = sys.get_cumulated_strain();
 		sys.reset_cumulated_strain();
-		cnt_shear_jamming_repetation++;
+		cnt_shear_jamming_repetation ++;
 		cerr << "stress reversal, cnt_shear_jamming_repetation = " << cnt_shear_jamming_repetation << endl;
 		if (cnt_shear_jamming_repetation > sys.p.shear_jamming_repetition) {
 			kill = true;
