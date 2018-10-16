@@ -273,7 +273,7 @@ sub InParticles {
 		}
 		if (abs($time_rheo-$time) < 1e-4) {
 			$stressdata = $d37;
-			printf "strain= $straindata $shear_strain $jamming\n";
+			printf "$time_rheo  = $time jamming $jamming\n";
 			last;
 		}
 		last unless defined $line;

@@ -395,7 +395,8 @@ void Simulation::stressReversal(std::set<std::string> &output_events)
 	} else {
 		jam_check_counter = 0;
 	}
-	if (jam_check_counter > sys.p.shear_jamming_max_count) {
+	if (jam_check_counter > sys.p.shear_jamming_max_count
+		|| sys.get_time() >= p.time_end.value-1e-8) {
 		double theta_shear = (shear_direction % 2) ? M_PI : 0;
 		sys.setShearDirection(theta_shear);
 		shear_direction ++;
@@ -404,6 +405,7 @@ void Simulation::stressReversal(std::set<std::string> &output_events)
 		cnt_shear_jamming_repetation ++;
 		output_events.insert("data");
 		output_events.insert("config");
+		jam_check_counter = 0;
 		cerr << "stress reversal, cnt_shear_jamming_repetation = " << cnt_shear_jamming_repetation << endl;
 		if (cnt_shear_jamming_repetation > sys.p.shear_jamming_repetition) {
 			kill = true;
