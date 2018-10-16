@@ -397,7 +397,7 @@ void Simulation::stressReversal(std::set<std::string> &output_events)
 	}
 	if (jam_check_counter > sys.p.shear_jamming_max_count
 		|| sys.get_cumulated_strain() >= p.time_end.value-1e-8) {
-		double theta_shear = (shear_direction % 2) ? M_PI : 0;
+		double theta_shear = (shear_direction % 2) ? 0 : M_PI;
 		sys.setShearDirection(theta_shear);
 		shear_direction ++;
 		jamming_strain = sys.get_cumulated_strain();

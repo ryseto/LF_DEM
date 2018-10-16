@@ -122,8 +122,8 @@ while (1) {
 			&keepInitialConfig;
 		}
 	}
-	#&OutYaplotData;
-	if ($jamming > 0) {
+	&OutYaplotData;
+	if (0 && $jamming > 0) {
 		$evenodd = $cntjamming % 2;
 		printf "even or odd $evenodd, $cntjamming\n";
 		if ($evenodd == 0) {
