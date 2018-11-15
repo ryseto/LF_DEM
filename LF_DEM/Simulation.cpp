@@ -136,8 +136,6 @@ void Simulation::handleEventsJammingStressReversal()
 	//	double sr = sqrt(2*sys.getEinfty().selfdoubledot()); // shear rate for simple shear.
 	for (const auto& ev : events) {
 		if (ev.type == "negative_shear_rate") {
-			cout << " negative rate " << endl;
-			cout << "rate =" << sys.get_shear_rate() << endl;
 			sys.p.disp_max /= sys.p.sj_disp_max_shrink_factor;
 		}
 	}
@@ -145,7 +143,6 @@ void Simulation::handleEventsJammingStressReversal()
 		stress_reversal = true;
 		sys.p.disp_max = p_initial.disp_max;
 		cout << " stress reversal " << endl;
-		cout << " p.disp_max = " << sys.p.disp_max << endl;
 		cnt_shear_jamming_repetation ++;
 		if (cnt_shear_jamming_repetation > sys.p.sj_reversal_repetition) {
 			kill = true;

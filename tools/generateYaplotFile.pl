@@ -701,7 +701,7 @@ sub OutYaplotData{
 	if ($Ly == 0) {
 		if (1) {
 			printf OUT "y 6\n";
-			printf OUT "@ 1\n";
+			printf OUT "@ 8\n";
 			for ($i = 0; $i < $np; $i++) {
 				OutCross($i);
 			}
