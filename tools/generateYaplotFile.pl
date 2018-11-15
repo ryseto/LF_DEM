@@ -262,21 +262,21 @@ sub InParticles {
 	#$normalstressdiff1 = $ssHeader[4];
 	$jamming = 0;
 	while (1) {
-		$line = <IN_rheo>;
+		$line2 = <IN_rheo>;
 		($d1, $d2, $d3, $d4, $d5, $d6, $d7, $d8, $d9, $d10,
 		$d11, $d12, $d13, $d14, $d15, $d16, $d17, $d18, $d19, $d20,
 		$d21, $d22, $d23, $d24, $d25, $d26, $d27, $d28, $d29, $d30,
-		$d31, $d32, $d33, $d34, $d35, $d36, $d37, $d38) = split(/\s+/, $line);
+		$d31, $d32, $d33, $d34, $d35, $d36, $d37, $d38) = split(/\s+/, $line2);
 		$time_rheo = $d1;
 		if ($d38 > 0) {
 			$jamming = $d38;
 		}
-		if (abs($time_rheo-$time) < 1e-4) {
+		if ($time_rheo >= $time -1e-8) {
 			$stressdata = $d37;
 			printf "$time_rheo  = $time jamming $jamming\n";
 			last;
 		}
-		last unless defined $line;
+		last unless defined $line2;
 		#$i++;
 	}
 	for ($i = 0; $i < $np; $i ++){
