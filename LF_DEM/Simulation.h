@@ -52,6 +52,7 @@ private:
 	double normal_stress_diff2;
 	bool restart_from_chkp;
 	double jamming_strain; // Strain stroke to get jamming (simulation_mode = 2)
+	bool stress_reversal;
 	time_t time_strain_0;
 	time_t time_strain_1;
 	time_t time_strain_end;
@@ -99,7 +100,7 @@ public:
 	void setupFlow(Dimensional::DimensionalQty<double> control_value);
 	void setConfigToSystem(bool binary_conf, const std::string &filename);
 	TimeKeeper initTimeKeeper();
-	Parameters::ParameterSet p;
+	Parameters::ParameterSet p; // @@@@ We should distinguish p and sys.p more carefully.
 	bool keepRunning();
 	// void timeEvolution(double& next_output_data);
 	void generateOutput(const std::set<std::string> &output_events, int& binconf_counter);
@@ -149,6 +150,7 @@ public:
 	/*********** Events  ************/
 	void handleEventsShearJamming();
 	void handleEventsFragility();
+	void handleEventsJammingStressReversal();
 	std::string gitVersion();
 	std::string simu_name;
 	void timeEvolutionUntilNextOutput(const TimeKeeper &tk);

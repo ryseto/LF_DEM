@@ -14,7 +14,6 @@ my $particle_data = $ARGV[0];
 my $yap_radius = 1;
 #my $force_factor = 0.003;
 my $force_factor = 1;
-my $output_interval = 1;
 my $xz_shift = 0;
 my $axis = 0;
 my $reversibility_test = 0;
@@ -31,7 +30,7 @@ GetOptions(
 'axis' => \$axis,
 'reversibility' => \$reversibility_test,
 'monodisperse' => \$monodisperse);
-my $printinfo = 0;
+my $printinfo = 1;
 if ($printinfo) {
 	printf "force_factor = $force_factor\n";
 	printf "output_interval = $output_interval\n";
@@ -59,11 +58,11 @@ if ($printinfo) {
 
 $interaction_data = "int_${name}.dat";
 $rheology_data = "data_${name}.dat";
-$output = "y_$name.yap";
+$filename_yap = "y_$name.yap";
 $outputss = "ss_$name.dat";
 $outputDataReconstruct = "r_$name.dat";
 
-open (OUT, "> ${output}");
+open (OUT, "> ${filename_yap}");
 open (OUTSS, "> ${outputss}");
 open (OUTDR, "> ${outputDataReconstruct}");
 open (IN_particle, "< ${particle_data}");
@@ -73,30 +72,36 @@ open (IN_rheo, "< ${rheology_data}");
 ${sum_fmax} = 0;
 ${cnt} = 0;
 
-$number_of_header = 44;
-for ($i = 0; $i<$number_of_header; $i++) {
+my $friction = 1;
+if ($friction == 1) {
+	$number_of_header_data = 45;
+	$elm_jamming = 37;
+} else {
+	$number_of_header_data = 44;
+	$elm_jamming = 36;
+}
+for ($i = 0; $i<$number_of_header_data; $i++) {
 	$line = <IN_rheo>;
 	printf "$line";
 }
+printf "---------\n";
 $i=0;
 &readHeader;
 &yaplotColor;
 
-$cnt_interval = 0;
+
 $first = 1;
 $first_int = 1;
 $checkpoint = 1;
 $shear_strain_previous = 0;
 $shearrate_positive = 1;
+$shear_direction = 1;
 $cntjamming = 0;
+$output = 1;
 $ii = 0;
+$cnt_history = 0;
+
 while (1) {
-	if ($cnt_interval == 0 ||
-		$cnt_interval % $output_interval == 0) {
-			$output = 1;
-		} else {
-			$output = 0;
-		}
 	$target_stress = $stress[$ii];
 	$shear_strain2 = $strain[$ii];
 	$ii ++;
@@ -123,21 +128,93 @@ while (1) {
 		}
 	}
 	&OutYaplotData;
+	#printf "$jamming  $shear_strain\n";
 	if (0 && $jamming > 0) {
 		$evenodd = $cntjamming % 2;
-		printf "even or odd $evenodd, $cntjamming\n";
+		printf "even or odd $evenodd, $cntjamming  $jamming  $shear_strain $time\n";
 		if ($evenodd == 0) {
-			&OutYaplotData;
+			printf "output\n";
+			#&OutYaplotData;
+			&recordTrajectory;
+			if ($cnt_history >= 2) {
+				if ($cnt_history != 2) {
+					printf OUT "\n";
+				} else {
+					for ($i = 0; $i < $np; $i ++){
+						$xx = $traj_posx[$i][0];
+						$zz = $traj_posz[$i][0];
+						$rr = sqrt($xx*$xx + $zz*$zz);
+						if ($rr > 13 && $rr < 18) {
+							$mark[$i] = 1;
+						} else {
+							$mark[$i] = 0;
+						}
+					}
+				}
+				printf OUT "y 1 \n";
+				printf OUT "@ 8 \n";
+				printf OUT "r 0.1 \n";
+				$vmax = 0;
+				for ($i = 0; $i < $np; $i ++){
+					for ($j = $cnt_history-1; $j < $cnt_history; $j++) {
+						$xs[$i] = $traj_posx[$i][$j-1];
+						$zs[$i] = $traj_posz[$i][$j-1];
+						$xe = $traj_posx[$i][$j];
+						$ze = $traj_posz[$i][$j];
+						if (abs($xs[$i]-$xe) < 10
+							&& abs($zs[$i]-$ze) < 10 ) {
+								$vx[$i] = $xe - $xs[$i];
+								$vz[$i] = $ze - $zs[$i];
+								#  printf OUT "s $xs[$i] 0 $zs[$i]  $xe 0 $ze \n";
+								$v = $vx[$i]*$vx[$i] + $vy[$i]*$vy[$i];
+								if ($v > $vmax) {
+									$vmax = $v;
+								}
+							}
+					}
+				}
+				
+				printf OUT "y 1 \n";
+				for ($i = 0; $i < $np; $i ++){
+					if ($mark[$i] == 1) {
+						printf OUT "@ 12 \n";
+					} else {
+						printf OUT "@ 10 \n";
+					}
+					printf OUT "r $radius[$i]\n";
+					printf OUT "c $xs[$i] 0.01 $zs[$i]\n";
+				}
+				if (1) {
+					$vfactor = 2.0/sqrt($vmax);
+					printf OUT "y 2 \n";
+					printf OUT "@ 11 \n";
+					printf OUT "r 0.2 \n";
+					for ($i = 0; $i < $np; $i ++){
+						$xe = $xs[$i] + $vfactor*$vx[$i];
+						$ze = $zs[$i] + $vfactor*$vz[$i];
+						printf OUT "s $xs[$i] 0 $zs[$i]  $xe 0 $ze \n";
+					}
+				}
+				
+			}
 		}
 		$cntjamming ++;
 	}
-	$cnt_interval ++;
 }
 
 close (OUT);
 
 close (IN_particle);
 close (IN_interaction);
+
+sub recordTrajectory {
+	for ($i = 0; $i < $np; $i ++){
+		$traj_posx[$i][$cnt_history] = $posx[$i];
+		$traj_posy[$i][$cnt_history] = $posy[$i];
+		$traj_posz[$i][$cnt_history] = $posz[$i];
+	}
+	$cnt_history++;
+}
 
 ##################################################################
 sub keepInitialConfig {
@@ -160,7 +237,7 @@ sub readHeader {
 	$line = <IN_particle>; ($buf, $buf, $flwtyp) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $dataunit) = split(/\s+/, $line);
 	
-	if ($Ly==0) {
+	if ($Ly == 0) {
 		$number_of_header = 9;
 	} else {
 		$number_of_header = 7;
@@ -171,6 +248,7 @@ sub readHeader {
 			printf "$line";
 		}
 	}
+	printf "---\n";
 	if ($Ly == 0) {
 		$number_of_header_int = 20;
 	} else {
@@ -188,11 +266,11 @@ sub readHeader {
 }
 
 sub yaplotColor {
-	printf OUT "\@1 0 0 0 \n";
+	#printf OUT "\@1 0 0 0 \n";
 	#printf OUT "\@1 50 100 205 \n";
 	printf OUT "\@0 25 50 102 \n"; ## bg
 	#    printf OUT "\@1 255 255 255  \n"; #bg
-	#printf OUT "\@1 255 255 255 \n";
+	printf OUT "\@1 255 255 255 \n";
 	printf OUT "\@2 200 200 200 \n";
 	printf OUT "\@3 50 150 255 \n"; # blue
 	printf OUT "\@4 50 200 50 \n"; # green
@@ -201,16 +279,16 @@ sub yaplotColor {
 	printf OUT "\@6 50 200 50 \n"; # green
 	printf OUT "\@7 255 255 0 \n"; # yellow
 	#printf OUT "\@7 255 0 0 \n"; # red
-	printf OUT "\@8 255 255 255\n";
-	#printf OUT "\@8 0 0 0\n";
+	#printf OUT "\@8 255 255 255\n";
+	printf OUT "\@8 0 0 0\n";
 	printf OUT "\@9 150 150 150\n";
 	#printf OUT "\@8 224 143 0 \n";
 	#printf OUT "\@9 67 163 230 \n";
 	#printf OUT "\@8 253 105 6 \n";
 	#printf OUT "\@9 109 109 109 \n";
-	printf OUT "\@10 250 250 250 \n";
-	printf OUT "\@11 240 240 240 \n";
-	printf OUT "\@12 230 230 230 \n";
+	printf OUT "\@10 224 240 253 \n";
+	printf OUT "\@11 250 50 50 \n";
+	printf OUT "\@12 0 0 255 \n";
 	printf OUT "\@13 220 220 220 \n";
 	printf OUT "\@14 210 210 210 \n";
 	printf OUT "\@15 200 200 200 \n";
@@ -261,22 +339,21 @@ sub InParticles {
 	#$viscosity = $ssHeader[3];
 	#$normalstressdiff1 = $ssHeader[4];
 	$jamming = 0;
+	
 	while (1) {
-		$line2 = <IN_rheo>;
-		($d1, $d2, $d3, $d4, $d5, $d6, $d7, $d8, $d9, $d10,
-		$d11, $d12, $d13, $d14, $d15, $d16, $d17, $d18, $d19, $d20,
-		$d21, $d22, $d23, $d24, $d25, $d26, $d27, $d28, $d29, $d30,
-		$d31, $d32, $d33, $d34, $d35, $d36, $d37, $d38) = split(/\s+/, $line2);
-		$time_rheo = $d1;
-		if ($d38 > 0) {
-			$jamming = $d38;
+		$line_rheo = <IN_rheo>;
+		my @d = split(/\s+/, $line_rheo);
+		$time_rheo = $d[0];
+		if ($d[$elm_jamming] > 0) {
+			$jamming = $d[$elm_jamming];
+			$shear_direction *= -1;
 		}
-		if ($time_rheo >= $time -1e-8) {
-			$stressdata = $d37;
-			printf "$time_rheo  = $time jamming $jamming\n";
+		if ($time_rheo >= $time) {
+			#	printf "$time_rheo == $time jamming $jamming\n";
+			$stressdata = $d[$elm_jamming];
 			last;
 		}
-		last unless defined $line2;
+		last unless defined $line_rheo;;
 		#$i++;
 	}
 	for ($i = 0; $i < $np; $i ++){
@@ -398,7 +475,6 @@ sub InInteractions{
 		if (! defined $i) {
 			last;
 		}
-		
 		if ($output == 1) {
 			$int0[$k] = $i;
 			$int1[$k] = $j;
@@ -422,7 +498,6 @@ sub InInteractions{
 			$nrvec_z[$k] = $nz;
 			$Gap[$k] = $gap;
 			$distance[$k] = $radius[$i] + $radius[$j] + $gap;
-			
 			$k++;
 		}
 	}
@@ -434,13 +509,24 @@ sub OutYaplotData{
 		printf OUT "\n";
 	} else {
 		$first = 0;
+		if (0) {
+			for ($i = 0; $i < $np; $i ++){
+				$xx = $posx[$i];
+				$zz = $posz[$i];
+				$rr = sqrt($xx*$xx + $zz*$zz);
+				if ($rr > 13 && $rr < 18) {
+					$mark[$i] = 1;
+				} else {
+					$mark[$i] = 0;
+				}
+			}
+		}
 	}
-	#printf OUT "@ 7\n";
-	
-	#	&OutStress($target_stress, 20);
+	#	printf OUT "@ 7\n";
+	# &OutStress($shear_direction*$target_stress, 5);
 	
 	printf OUT "y 1\n";
-	printf OUT "@ 8\n";
+	printf OUT "@ 10\n";
 	## visualize particles
 	if ($monodisperse) {
 		printf OUT "r $radius[0]\n";
@@ -450,6 +536,13 @@ sub OutYaplotData{
 	} else {
 		for ($i = 0; $i < $np; $i++) {
 			$rr = $yap_radius*$radius[$i];
+			if (0) {
+				if ($mark[$i] == 1) {
+					printf OUT "@ 12 \n";
+				} else {
+					printf OUT "@ 10 \n";
+				}
+			}
 			printf OUT "r $rr\n";
 			printf OUT "c $posx[$i] $posy[$i] $posz[$i]  \n";
 		}
@@ -606,9 +699,9 @@ sub OutYaplotData{
 	}
 	## visualize rotation in 2D
 	if ($Ly == 0) {
-		if (0) {
+		if (1) {
 			printf OUT "y 6\n";
-			printf OUT "@ 1\n";
+			printf OUT "@ 8\n";
 			for ($i = 0; $i < $np; $i++) {
 				OutCross($i);
 			}
@@ -882,7 +975,8 @@ sub calcContributions {
 }
 sub OutStress {
 	($value, $maxvalue) = @_;
-	$xx = 0.5*$Lz*$value/$maxvalue;
+	
+	$xx = 0.5*$Lz*abs($value)/$maxvalue;
 	$xxTip = $xx + 2;
 	$arrowhead = 2;
 	$arrowwidth = 1;
@@ -894,6 +988,12 @@ sub OutStress {
 	$zzT2 = $zz0+$arrowhead;
 	
 	$xxTip = $xx + 2*$arrowhead;
-	printf OUT "p 7 -$xx 0 $zzB1 $xx 0 $zzB1 $xx 0 $zzB2 $xxTip 0 $zz0 $xx 0 $zzT2 $xx 0 $zzT1 -$xx 0 $zzT1\n";
-	printf OUT "p 7 $xx 0 -$zzB1 -$xx 0 -$zzB1 -$xx 0 -$zzB2 -$xxTip 0 -$zz0 -$xx 0 -$zzT2 -$xx 0 -$zzT1 $xx 0 -$zzT1\n";
+	if ($value > 0) {
+		printf OUT "p 7 -$xx 0 $zzB1 $xx 0 $zzB1 $xx 0 $zzB2 $xxTip 0 $zz0 $xx 0 $zzT2 $xx 0 $zzT1 -$xx 0 $zzT1\n";
+		printf OUT "p 7 $xx 0 -$zzB1 -$xx 0 -$zzB1 -$xx 0 -$zzB2 -$xxTip 0 -$zz0 -$xx 0 -$zzT2 -$xx 0 -$zzT1 $xx 0 -$zzT1\n";
+	} else {
+		printf OUT "p 7 $xx 0 $zzB1 -$xx 0 $zzB1 -$xx 0 $zzB2 -$xxTip 0 $zz0 -$xx 0 $zzT2 -$xx 0 $zzT1 $xx 0 $zzT1\n";
+		printf OUT "p 7 -$xx 0 -$zzB1 $xx 0 -$zzB1 $xx 0 -$zzB2 $xxTip 0 -$zz0 $xx 0 -$zzT2 $xx 0 -$zzT1 -$xx 0 -$zzT1\n";
+	}
+	
 }

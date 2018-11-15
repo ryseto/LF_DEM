@@ -37,7 +37,7 @@ while (1) {
 		last;
 	}
 }
-$outputfilename = "${configname}preshear.dat";
+$outputfilename = "${configname}rlx.dat";
 open (OUT, "> ${outputfilename}");
 ($buf, $np1, $np2, $vf, $lx, $ly, $lz, $vf1, $vf2, $dispx0, $dispy0) = split(/\s+/, $configline2);
 printf OUT "# np1 np2 vf lx ly lz vf1 vf2 dispx dispy\n";
@@ -68,15 +68,19 @@ sub keepInitialConfig {
 sub readHeader {
 	$line = <IN_particle>;
 	$line = <IN_particle>; ($buf, $buf, $np) = split(/\s+/, $line);
+	printf "np = $np\n";
 	$line = <IN_particle>; ($buf, $buf, $VF) = split(/\s+/, $line);
+	printf "VF = $VF\n";
+
 	$line = <IN_particle>; ($buf, $buf, $Lx) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $Ly) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $Lz) = split(/\s+/, $line);
+	printf "Lx Ly Lz = $Lx $Ly $Lz\n";
 	$line = <IN_particle>; ($buf, $buf, $flwtyp) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $dataunit) = split(/\s+/, $line);
 	
 	if ($Ly==0) {
-		$number_of_header = 9;
+		$number_of_header = 8;
 	} else {
 		$number_of_header = 7;
 	}

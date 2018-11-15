@@ -1043,6 +1043,9 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	for (int i=0; i<np; i++) {
 		na_disp[i] += na_velocity[i]*dt;
 	}
+	if (eventLookUp != NULL) {
+		(this->*eventLookUp)();
+	}
 }
 
 void System::calcOrderParameter()
