@@ -237,7 +237,7 @@ sub readHeader {
 	$line = <IN_particle>; ($buf, $buf, $flwtyp) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $dataunit) = split(/\s+/, $line);
 	
-	if ($Ly==0) {
+	if ($Ly == 0) {
 		$number_of_header = 9;
 	} else {
 		$number_of_header = 7;
@@ -509,22 +509,24 @@ sub OutYaplotData{
 		printf OUT "\n";
 	} else {
 		$first = 0;
-		for ($i = 0; $i < $np; $i ++){
-			$xx = $posx[$i];
-			$zz = $posz[$i];
-			$rr = sqrt($xx*$xx + $zz*$zz);
-			if ($rr > 13 && $rr < 18) {
-				$mark[$i] = 1;
-			} else {
-				$mark[$i] = 0;
+		if (0) {
+			for ($i = 0; $i < $np; $i ++){
+				$xx = $posx[$i];
+				$zz = $posz[$i];
+				$rr = sqrt($xx*$xx + $zz*$zz);
+				if ($rr > 13 && $rr < 18) {
+					$mark[$i] = 1;
+				} else {
+					$mark[$i] = 0;
+				}
 			}
 		}
 	}
-	printf OUT "@ 7\n";
-	&OutStress($shear_direction*$target_stress, 5);
+	#	printf OUT "@ 7\n";
+	# &OutStress($shear_direction*$target_stress, 5);
 	
 	printf OUT "y 1\n";
-	printf OUT "@ 8\n";
+	printf OUT "@ 10\n";
 	## visualize particles
 	if ($monodisperse) {
 		printf OUT "r $radius[0]\n";
@@ -534,10 +536,12 @@ sub OutYaplotData{
 	} else {
 		for ($i = 0; $i < $np; $i++) {
 			$rr = $yap_radius*$radius[$i];
-			if ($mark[$i] == 1) {
-				printf OUT "@ 12 \n";
-			} else {
-				printf OUT "@ 10 \n";
+			if (0) {
+				if ($mark[$i] == 1) {
+					printf OUT "@ 12 \n";
+				} else {
+					printf OUT "@ 10 \n";
+				}
 			}
 			printf OUT "r $rr\n";
 			printf OUT "c $posx[$i] $posy[$i] $posz[$i]  \n";
@@ -605,7 +609,7 @@ sub OutYaplotData{
 	}
 	# visualize force chain network
 	#
-	if (0){
+	if (1){
 		printf OUT "y 4\n";
 		printf OUT "@ 7\n";
 		for ($k = 0; $k < $num_interaction; $k ++) {
@@ -695,7 +699,7 @@ sub OutYaplotData{
 	}
 	## visualize rotation in 2D
 	if ($Ly == 0) {
-		if (0) {
+		if (1) {
 			printf OUT "y 6\n";
 			printf OUT "@ 1\n";
 			for ($i = 0; $i < $np; $i++) {

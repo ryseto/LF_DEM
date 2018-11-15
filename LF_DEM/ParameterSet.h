@@ -194,9 +194,9 @@ namespace Parameters {
 		bool monolayer;							///< Particle movements are confined in monolayer. 3D rotations are allowed. [false]
 		double rest_threshold; ///< criteria to judge saturation of deformation, i.e. jammed state etc. [1e-4]
 		std::string event_handler;  ///< Select event handler [""]
-		double shear_jamming_rate;	///< Maximum shear rate for shear jamming [1e-6]
-		int shear_jamming_max_count;	///< Stop simulation after counting abs(rate)<shear_jamming_rate [30]
-		int shear_jamming_repetition;     ///< Repetition number for shear reversal [2]
+		double sj_disp_max_goal;	///< Maximum displacment for shear jamming [1e-6]
+		double sj_disp_max_shrink_factor;	///< rescaling factor for negative shear rate for shear jamming [1.1]
+		int sj_reversal_repetition;			///< Repetition number for shear reversal [2]
 		double theta_shear;  ///< Shear direction, in degress, 0 is shear along x, 90 is shear along y [0]
 		double strain_reversal;  ///< for test_simulation = 21 (rtest1)
 		bool keep_input_strain;  ///< Use as initial strain value the strain from initial Lees-Edwards displacement [false]
