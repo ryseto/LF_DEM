@@ -356,6 +356,8 @@ void Simulation::simulationSteadyShear(string in_args,
 		}
 		if (stress_reversal) {
 			stressReversal(output_events);
+		} else {
+			jamming_strain = 0;
 		}
 		generateOutput(output_events, binconf_counter);
 		printProgress();
