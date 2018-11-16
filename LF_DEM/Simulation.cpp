@@ -79,8 +79,8 @@ void Simulation::handleEventsShearJamming()
 	bool ending_simulation = false;
 	if (sys.p.fixed_dt == false) {
 		for (const auto& ev : events) {
-			if (ev.type == "negative_shear_rate") {
-				cout << " negative rate " << endl;
+			if (ev.type == "jammed_shear_rate") {
+				cout << " jammed rate " << endl;
 				sys.p.disp_max /= sys.p.sj_disp_max_shrink_factor;
 			}
 		}
@@ -115,12 +115,12 @@ void Simulation::handleEventsFragility()
 {
 	/** \brief Event handler to test for shear jamming
 
-		When a negative_shear_rate event is thrown, p.disp_max is decreased.
+		When a jammed_shear_rate event is thrown, p.disp_max is decreased.
 	 If p.disp_max is below a minimal value, the shear direction is switched to y-shear.
 	 */
 	for (const auto& ev : events) {
-		if (ev.type == "negative_shear_rate") {
-			cout << " negative rate " << endl;
+		if (ev.type == "jammed_shear_rate") {
+			cout << " jammed rate " << endl;
 			sys.p.disp_max /= sys.p.sj_disp_max_shrink_factor;
 		}
 	}
@@ -135,7 +135,7 @@ void Simulation::handleEventsJammingStressReversal()
 	static int cnt_shear_jamming_repetation = 0;
 	//	double sr = sqrt(2*sys.getEinfty().selfdoubledot()); // shear rate for simple shear.
 	for (const auto& ev : events) {
-		if (ev.type == "negative_shear_rate") {
+		if (ev.type == "jammed_shear_rate") {
 			sys.p.disp_max /= sys.p.sj_disp_max_shrink_factor;
 		}
 	}
@@ -649,7 +649,7 @@ void Simulation::outputData()
 		outdata.entryData("eff_coordination_number", Dimensional::Dimension::none, 1, sys.effective_coordination_number);
 	}
 	outdata.entryData("shear stress", Dimensional::Dimension::Stress, 1, sys.target_stress);
-	if (sys.p.simulation_mode == 2) {
+	if (sys.p.event_handler == "jamming_stress_reversal") {
 		outdata.entryData("jamming strain", Dimensional::Dimension::none, 1, jamming_strain);
 	}
 	outdata.writeToFile();

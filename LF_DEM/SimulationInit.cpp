@@ -82,7 +82,6 @@ void Simulation::contactForceParameterBrownian(string filename)
 		}
 	}
 	fin_knktdt.close();
-
 	if (found) {
 		p.kn = kn_, p.kt = kt_, p.dt = dt_;
 		string indent = "  Simulation::\t";

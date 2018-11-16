@@ -775,9 +775,9 @@ void System::eventShearJamming()
 	/**
 	 \brief Create an event when the shear rate is negative
 	*/
-	if (shear_rate < 0) {
+	if (shear_rate < p.sj_shear_rate) {
 		Event ev;
-		ev.type = "negative_shear_rate";
+		ev.type = "jammed_shear_rate";
 		events.push_back(Event(ev));
 	}
 }
@@ -1092,6 +1092,11 @@ void System::adaptTimeStep()
 	}
 	if (dt*shear_rate > p.disp_max) { // cases where na_velocity < \dotgamma*radius
 		dt = p.disp_max/shear_rate;
+	}
+	if (p.dt_max > 0) {
+		if (dt > p.dt_max) {
+			dt = p.dt_max;
+		}
 	}
 }
 
