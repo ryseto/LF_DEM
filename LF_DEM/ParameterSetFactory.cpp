@@ -89,7 +89,8 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit) {
 		PARAM_INIT(TA_adhesion.adhesion_range, 1e-2),
 		PARAM_INIT(output.recording_start, 1),
 		PARAM_INIT(sj_disp_max_shrink_factor, 1.1),
-		PARAM_INIT(sj_disp_max_goal, 1e-6)
+		PARAM_INIT(sj_disp_max_goal, 1e-6),
+		PARAM_INIT(sj_shear_rate, 0)
 	};
 
 	/*================================
@@ -156,6 +157,9 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit) {
 
 	default_qty = {Dimensional::Dimension::Time, 1e-4, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(dt, default_qty));
+
+	default_qty = {Dimensional::Dimension::Time, -1, guarranted_unit};
+	DimValDblParams.push_back(PARAM_INIT_DIMQTY(dt_max, default_qty));
 	
 	default_qty = {Dimensional::Dimension::Time, 1e-3, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(contact_relaxation_time, default_qty));

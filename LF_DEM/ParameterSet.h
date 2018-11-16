@@ -165,7 +165,7 @@ namespace Parameters {
 		bool fixed_dt;					///< Use constant dt [false]
 		double dt;				///< When fixed_dt == false: initial time step value. When fixed_dt == true: time step value. [1e-4 time unit]
 		double disp_max;		///< When fixed_dt == false only: maximum displacement at each time step, the time step size dt is determined from disp_max at every step. [2e-3 length unit]
-		
+		double dt_max;          ///< When fixed_dt == false: forbid too large time step (if -1, no limitation) [-1]
 		/*******************************************************
 		 OUTPUT
 		 ********************************************************/
@@ -196,6 +196,7 @@ namespace Parameters {
 		std::string event_handler;  ///< Select event handler [""]
 		double sj_disp_max_goal;	///< Maximum displacment for shear jamming [1e-6]
 		double sj_disp_max_shrink_factor;	///< rescaling factor for negative shear rate for shear jamming [1.1]
+		double sj_shear_rate;		///< Shear rate to judge shear jamming [0]
 		int sj_reversal_repetition;			///< Repetition number for shear reversal [2]
 		double theta_shear;  ///< Shear direction, in degress, 0 is shear along x, 90 is shear along y [0]
 		double strain_reversal;  ///< for test_simulation = 21 (rtest1)
