@@ -773,9 +773,9 @@ void System::timeStepBoxing()
 void System::eventShearJamming()
 {
 	/**
-	 \brief Create an event when the shear rate is negative
+	 \brief Create an event when the shear rate is less than p.sj_shear_rate
 	*/
-	if (shear_rate < p.sj_shear_rate) {
+	if (abs(shear_rate) < p.sj_shear_rate) {
 		Event ev;
 		ev.type = "jammed_shear_rate";
 		events.push_back(Event(ev));
@@ -1130,7 +1130,7 @@ void System::retrimProcess()
 		boxset.box(i);
 		velocity[i] -= u_inf[i];
 		u_inf[i] = grad_u*position[i];
-		velocity[i] +=  u_inf[i];
+		velocity[i] += u_inf[i];
 	}
 	boxset.updateExtFlow();
 }

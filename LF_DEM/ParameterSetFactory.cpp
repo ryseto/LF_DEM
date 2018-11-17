@@ -161,6 +161,9 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit) {
 	default_qty = {Dimensional::Dimension::Time, -1, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(dt_max, default_qty));
 	
+	default_qty = {Dimensional::Dimension::Time, -1, guarranted_unit};
+	DimValDblParams.push_back(PARAM_INIT_DIMQTY(dt_jamming, default_qty));
+	
 	default_qty = {Dimensional::Dimension::Time, 1e-3, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(contact_relaxation_time, default_qty));
 

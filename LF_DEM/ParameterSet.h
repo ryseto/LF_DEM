@@ -166,6 +166,7 @@ namespace Parameters {
 		double dt;				///< When fixed_dt == false: initial time step value. When fixed_dt == true: time step value. [1e-4 time unit]
 		double disp_max;		///< When fixed_dt == false only: maximum displacement at each time step, the time step size dt is determined from disp_max at every step. [2e-3 length unit]
 		double dt_max;          ///< When fixed_dt == false: forbid too large time step (if -1, no limitation) [-1]
+		double dt_jamming;      ///< fixed_dt == true  [0.001s]
 		/*******************************************************
 		 OUTPUT
 		 ********************************************************/
