@@ -775,10 +775,16 @@ void System::eventShearJamming()
 	/**
 	 \brief Create an event when the shear rate is less than p.sj_shear_rate
 	*/
+	static int cnt_shear_jamming = 0;
 	if (abs(shear_rate) < p.sj_shear_rate) {
-		Event ev;
-		ev.type = "jammed_shear_rate";
-		events.push_back(Event(ev));
+		cnt_shear_jamming ++;
+		if (cnt_shear_jamming > 20) {
+			Event ev;
+			ev.type = "jammed_shear_rate";
+			events.push_back(Event(ev));
+		}
+	} else {
+		cnt_shear_jamming = 0;
 	}
 }
 
