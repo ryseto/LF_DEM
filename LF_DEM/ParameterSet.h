@@ -198,6 +198,7 @@ namespace Parameters {
 		double sj_disp_max_goal;	///< Maximum displacment for shear jamming [1e-6]
 		double sj_disp_max_shrink_factor;	///< rescaling factor for negative shear rate for shear jamming [1.1]
 		double sj_shear_rate;		///< Shear rate to judge shear jamming [0]
+		double sj_velocity;         ///< Velocity to judge shear jamming [1e-3]
 		int sj_reversal_repetition;			///< Repetition number for shear reversal [2]
 		double theta_shear;  ///< Shear direction, in degress, 0 is shear along x, 90 is shear along y [0]
 		double strain_reversal;  ///< for test_simulation = 21 (rtest1)
