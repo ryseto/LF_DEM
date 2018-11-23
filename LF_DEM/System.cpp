@@ -775,7 +775,7 @@ void System::eventShearJamming()
 	/**
 	 \brief Create an event when the shear rate is negative
 	*/
-	if (shear_rate < p.sj_shear_rate) {
+	if (shear_rate < p.sj_shear_rate && max_velocity < 1e-4) {
 		Event ev;
 		ev.type = "jammed_shear_rate";
 		events.push_back(Event(ev));
@@ -2386,8 +2386,10 @@ void System::computeVelocities(bool divided_velocities)
 	 * The max velocity is used to find dt from max displacement
 	 * at each time step.
 	 */
-	if (!p.fixed_dt && in_predictor) {
-		computeMaxNAVelocity();
+	if (in_predictor){
+		if (!p.fixed_dt || eventLookUp != NULL) {
+			computeMaxNAVelocity();
+		}
 	}
 	adjustVelocityPeriodicBoundary();
 	if (divided_velocities && wall_rheology) {
