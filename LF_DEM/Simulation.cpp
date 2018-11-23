@@ -134,14 +134,25 @@ void Simulation::handleEventsJammingStressReversal()
 {
 	static int cnt_shear_jamming_repetation = 0;
 	//	double sr = sqrt(2*sys.getEinfty().selfdoubledot()); // shear rate for simple shear.
+	bool jammed = false;
 	for (const auto& ev : events) {
 		if (ev.type == "jammed_shear_rate") {
-			sys.p.disp_max /= sys.p.sj_disp_max_shrink_factor;
+			if (sys.p.fixed_dt) {
+				jammed = true;
+			} else {
+				/* @@ I think this is not effective way to handle jamming.
+				 */
+				sys.p.disp_max /= sys.p.sj_disp_max_shrink_factor;
+				if (sys.p.disp_max < sys.p.sj_disp_max_goal) {
+					jammed = true;
+				}
+			}
 		}
 	}
-	if (sys.p.disp_max < sys.p.sj_disp_max_goal || sys.get_cumulated_strain() >= sys.p.time_end.value-1e-8) {
+	if (jammed || sys.get_cumulated_strain() >= sys.p.time_end.value-1e-8) {
 		stress_reversal = true;
 		sys.p.disp_max = p_initial.disp_max;
+		sys.dt = sys.p.dt;
 		cout << " stress reversal " << endl;
 		cnt_shear_jamming_repetation ++;
 		if (cnt_shear_jamming_repetation > sys.p.sj_reversal_repetition) {
@@ -289,6 +300,15 @@ void Simulation::timeEvolutionUntilNextOutput(const TimeKeeper &tk)
 	}
 #endif
 	handleEvents();
+	if (sys.p.event_handler == "jamming_stress_reversal") {
+		// To manage shear jamming.
+		if (sys.get_shear_rate() < 100*sys.p.sj_shear_rate) {
+			cerr << "jamming_approaching" << endl;
+			sys.dt = sys.p.dt_jamming;
+		} else {
+			sys.dt = sys.p.dt;
+		}
+	}
 }
 
 void Simulation::printProgress()

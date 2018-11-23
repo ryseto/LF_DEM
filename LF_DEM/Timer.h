@@ -151,7 +151,6 @@ public:
 		}
 		return elapsed_clocks;
 	}
-
 	// TimeKeeper();
 	// ~TimeKeeper();
 };
