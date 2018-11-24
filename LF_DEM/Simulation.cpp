@@ -149,7 +149,7 @@ void Simulation::handleEventsJammingStressReversal()
 			}
 		}
 	}
-	if (jammed || sys.get_cumulated_strain() >= sys.p.time_end.value-1e-8) {
+	if (jammed) {
 		stress_reversal = true;
 		sys.p.disp_max = p_initial.disp_max;
 		sys.dt = sys.p.dt;
@@ -438,12 +438,16 @@ void Simulation::stopShearing(TimeKeeper &tk)
 
 void Simulation::stressReversal(std::set<std::string> &output_events)
 {
-	static int shear_direction = 0;
-	double theta_shear = (shear_direction % 2) ? 0 : M_PI;
-	sys.setShearDirection(theta_shear);
-	shear_direction ++;
 	jamming_strain = sys.get_cumulated_strain();
-	sys.reset_cumulated_strain();
+	if (0) {
+		sys.target_stress = 0;
+	} else {
+		static int shear_direction = 0;
+		double theta_shear = (shear_direction % 2) ? 0 : M_PI;
+		sys.setShearDirection(theta_shear);
+		shear_direction ++;
+		sys.reset_cumulated_strain();
+	}
 	output_events.insert("data");
 	output_events.insert("config");
 }
