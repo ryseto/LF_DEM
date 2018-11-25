@@ -116,7 +116,8 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit) {
 		PARAM_INIT(flow_type, ""),
 		PARAM_INIT(event_handler, ""),
 		PARAM_INIT(output.out_particle_stress, ""),
-		PARAM_INIT(lubrication_model, "tangential")
+		PARAM_INIT(lubrication_model, "tangential"),
+		PARAM_INIT(sj_program_file, "")
 	};
 
 	/*====================================

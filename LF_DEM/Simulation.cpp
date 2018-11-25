@@ -56,17 +56,26 @@ void Simulation::setupEvents()
 	 */
 	if (sys.p.event_handler == "shear_jamming") {
 		sys.eventLookUp = &System::eventShearJamming;
-		return;
-	}
-	if (sys.p.event_handler == "fragility") {
+	} else if (sys.p.event_handler == "fragility") {
 		sys.eventLookUp = &System::eventShearJamming;
-		return;
-	}
-	if (sys.p.event_handler == "jamming_stress_reversal") {
+	} else if (sys.p.event_handler == "jamming_stress_reversal") {
 		sys.eventLookUp = &System::eventShearJamming;
-		return;
+		ifstream sj_program_file;
+		sj_program_file.open(sys.p.sj_program_file.c_str());
+		int sj_stress;
+		double dt_factor;
+		double sjrate_factor;
+		while(sj_program_file >> sj_stress >> dt_factor >> sjrate_factor) {
+			cerr << "stress program, dt_factor, sjrate_factor: ";
+			cerr << sj_stress << ' '<< dt_factor << ' ' << sjrate_factor << endl;
+			sj_stress_program.push_back(sj_stress);
+			dt_factor_program.push_back(dt_factor);
+			sjrate_factor_program.push_back(sjrate_factor);
+		}
+		sj_program_file.close();
+	} else {
+		sys.eventLookUp = NULL;
 	}
-	sys.eventLookUp = NULL;
 }
 
 void Simulation::handleEventsShearJamming()
@@ -151,9 +160,6 @@ void Simulation::handleEventsJammingStressReversal()
 	}
 	if (jammed) {
 		stress_reversal = true;
-		sys.p.disp_max = p_initial.disp_max;
-		sys.dt = sys.p.dt;
-		cout << " stress reversal " << endl;
 		cnt_shear_jamming_repetation ++;
 		if (cnt_shear_jamming_repetation > sys.p.sj_reversal_repetition) {
 			kill = true;
@@ -300,15 +306,6 @@ void Simulation::timeEvolutionUntilNextOutput(const TimeKeeper &tk)
 	}
 #endif
 	handleEvents();
-	if (sys.p.event_handler == "jamming_stress_reversal") {
-		// To manage shear jamming.
-		if (sys.get_shear_rate() < 100*sys.p.sj_shear_rate) {
-			cerr << "jamming_approaching" << endl;
-			sys.dt = sys.p.dt_jamming;
-		} else {
-			sys.dt = sys.p.dt;
-		}
-	}
 }
 
 void Simulation::printProgress()
@@ -361,6 +358,9 @@ void Simulation::simulationSteadyShear(string in_args,
 		while (!elapsed.empty()); // flush tk to not output on first time step
 	}
 	int binconf_counter = 0;
+	if (sys.p.sj_program_file != "") {
+		stressProgram();
+	}
 	while (keepRunning()) {
 		if (sys.p.simulation_mode == 22) {
 			stopShearing(tk);
@@ -374,10 +374,9 @@ void Simulation::simulationSteadyShear(string in_args,
 			output_events.insert("data");
 			output_events.insert("config");
 		}
-		if (stress_reversal) {
-			stressReversal(output_events);
-		} else {
-			jamming_strain = 0;
+		//
+		if (sys.p.event_handler == "jamming_stress_reversal") {
+			operateJammingStressReversal(output_events);
 		}
 		generateOutput(output_events, binconf_counter);
 		printProgress();
@@ -401,6 +400,33 @@ void Simulation::simulationSteadyShear(string in_args,
 		outputFinalConfiguration(filename_configuration);
 	}
 	cout << indent << "Time evolution done" << endl << endl;
+}
+
+void Simulation::operateJammingStressReversal(std::set<std::string> &output_events)
+{
+	if (stress_reversal) {
+		jamming_strain = sys.get_cumulated_strain();
+		if (sys.p.sj_program_file == "") {
+			stressReversal();
+			sys.p.disp_max = p_initial.disp_max;
+			sys.dt = sys.p.dt;
+		} else {
+			stressProgram();
+		}
+		output_events.insert("data");
+		output_events.insert("config");
+	} else {
+		jamming_strain = 0;
+		if (sys.get_shear_rate() < 100*sys.p.sj_shear_rate) {
+			if (sys.dt > sys.p.dt_jamming) {
+				sys.dt = sys.p.dt_jamming;
+			}
+		} else {
+			if (sys.p.sj_program_file == "") {
+				sys.dt = sys.p.dt;
+			}
+		}
+	}
 }
 
 void Simulation::stopShearing(TimeKeeper &tk)
@@ -436,20 +462,52 @@ void Simulation::stopShearing(TimeKeeper &tk)
 	}
 }
 
-void Simulation::stressReversal(std::set<std::string> &output_events)
+void Simulation::stressReversal()
 {
 	jamming_strain = sys.get_cumulated_strain();
-	if (0) {
-		sys.target_stress = 0;
-	} else {
-		static int shear_direction = 0;
-		double theta_shear = (shear_direction % 2) ? 0 : M_PI;
-		sys.setShearDirection(theta_shear);
-		shear_direction ++;
-		sys.reset_cumulated_strain();
+	static int shear_direction = 0;
+	double theta_shear = (shear_direction % 2) ? 0 : M_PI;
+	sys.setShearDirection(theta_shear);
+	shear_direction ++;
+	sys.reset_cumulated_strain();
+}
+
+void Simulation::stressProgram()
+{
+	static bool first_time = true;
+	static double stress_original;
+	static double sj_rate_original;
+	if (first_time) {
+		first_time = false;
+		stress_original = sys.target_stress;
+		sj_rate_original = sys.p.sj_shear_rate;
 	}
-	output_events.insert("data");
-	output_events.insert("config");
+	cerr << " shear jamming stress program " << sj_stress_program.front() << endl;
+	if (sj_stress_program.front() == 0) {
+		sys.target_stress = 0;
+		sys.dt = dt_factor_program.front()*sys.p.dt_jamming;
+		sys.p.sj_shear_rate = sjrate_factor_program.front()*sj_rate_original;
+	} else if (sj_stress_program.front() == 1) {
+		sys.setShearDirection(0);
+		sys.target_stress = stress_original;
+		sys.dt = dt_factor_program.front()*sys.p.dt_jamming;
+		sys.p.sj_shear_rate = sjrate_factor_program.front()*sj_rate_original;
+	} else if (sj_stress_program.front() == -1) {
+		sys.setShearDirection(M_PI);
+		sys.target_stress = stress_original;
+		sys.dt = dt_factor_program.front()*sys.p.dt_jamming;
+		sys.p.sj_shear_rate = sjrate_factor_program.front()*sj_rate_original;
+	} else if (sj_stress_program.front() == 999) {
+		kill = true;
+	} else {
+		cerr << "Only 1, 0, -1, 999 in the program file\n";
+		exit(1);
+	}
+	cerr << sys.dt << ' ' << sys.p.sj_shear_rate << endl;
+	sj_stress_program.pop_front();
+	dt_factor_program.pop_front();
+	sjrate_factor_program.pop_front();
+	//sys.reset_cumulated_strain();
 }
 
 void Simulation::outputComputationTime()

@@ -62,6 +62,9 @@ private:
 	Sym2Tensor stress_basis_3;
 	Sym2Tensor Einf_base; // This original Einf is kept and can be used when flow is stopped.
 	vec3d Omegainf_base; // Same as Einf_base.
+	std::deque<int> sj_stress_program;
+	std::deque<double> dt_factor_program;
+	std::deque<double> sjrate_factor_program;
 	/*
 	 * For output data.
 	 */
@@ -78,7 +81,9 @@ private:
 	 */
 	void setupOptionalSimulation(std::string indent);
 	std::vector<Sym2Tensor> getParticleStressGroup(std::string group);
-	
+	/*********** shear jamming  ************/
+	void operateJammingStressReversal(std::set<std::string> &output_events);
+
 public:
 	/* For DEMsystem*/
 	Simulation(State::BasicCheckpoint chkp = State::zero_time_basicchkp);
@@ -127,7 +132,8 @@ public:
 	void setupNonDimensionalization(Dimensional::DimensionalQty<double> control_value, 
 									Parameters::ParameterSetFactory &PFact);
 	void stopShearing(TimeKeeper &tk); //simulation mode 22
-	void stressReversal(std::set<std::string> &output_events); //simulation mode 2
+	void stressReversal();
+	void stressProgram();
 	/*
 	 * For outputs
 	 */

@@ -200,6 +200,7 @@ namespace Parameters {
 		double sj_shear_rate;		///< Shear rate to judge shear jamming [0]
 		double sj_velocity;         ///< Velocity to judge shear jamming [1e-3]
 		int sj_reversal_repetition;			///< Repetition number for shear reversal [2]
+		std::string sj_program_file;        ///< [""]
 		double theta_shear;  ///< Shear direction, in degress, 0 is shear along x, 90 is shear along y [0]
 		double strain_reversal;  ///< for test_simulation = 21 (rtest1)
 		bool keep_input_strain;  ///< Use as initial strain value the strain from initial Lees-Edwards displacement [false]
