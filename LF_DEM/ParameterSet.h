@@ -156,7 +156,7 @@ namespace Parameters {
 		 */
 		double contact_relaxation_time;			///< Relaxation time (normal) of the contact model. Sets the normal dashpot. If <0, use normal lubrication at contact as normal dashpot. [1e-3input_unit]
 		double contact_relaxation_time_tan;		///< Relaxation time (tangential) of the contact model. Sets the tangential dashpot. If <0, use tangential lubrication at contact as tangential dashpot. [-1input_unit]
-		
+		double contact_breakup_distance;  /// [0]
 		/*******************************************************
 		 INTEGRATOR
 		 ********************************************************/
