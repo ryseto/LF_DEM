@@ -1342,14 +1342,13 @@ void System::smoothStressTransition()
 	 * abrupt changes of the target stress causes
 	 *
 	 */
-	double stress_increment = 1e-5;
 	if (stress_transition_target > target_stress) {
-		target_stress += stress_increment;
+		target_stress += p.sj_stress_increment;
 		if (target_stress > stress_transition_target) {
 			target_stress = stress_transition_target;
 		}
 	} else if (stress_transition_target < target_stress) {
-		target_stress -= stress_increment;
+		target_stress -= p.sj_stress_increment;
 		if (target_stress < stress_transition_target) {
 			target_stress = stress_transition_target;
 		}
