@@ -148,6 +148,7 @@ private:
 	void checkForceBalance();
 	void wallForces();
 	bool hasNeighbor(int i, int j);
+	void smoothStressTransition();
 #ifndef USE_DSFMT
 	MTRand *r_gen;
 #endif
@@ -325,6 +326,7 @@ private:
 	vec3d force_upwall;
 	vec3d force_downwall;
 	double effective_coordination_number;
+	double stress_transition_target;
 	/****************************************************************************************************
 	 * Extensional flow using Kraynik-Reinelt Method was originally implemented                         *
 	 * by Antonio Martiniello and Giulio Giuseppe Giusteri from Auguest to November 2016 at OIST.       *

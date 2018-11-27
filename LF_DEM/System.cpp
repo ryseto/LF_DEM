@@ -1312,6 +1312,9 @@ void System::timeEvolution(double time_end, double strain_end)
 		if (dt_bak != -1){
 			dt = dt_bak;
 		}
+		if (p.sj_program_file != "") {
+			smoothStressTransition();
+		}
 #ifdef SIGINT_CATCH
 		if (sig_caught == SIGINT) { // return to Simulation immediatly for checkpointing
 			return;
@@ -1330,6 +1333,26 @@ void System::timeEvolution(double time_end, double strain_end)
 	if (p.auto_determine_knkt
 		&& clk.cumulated_strain > p.start_adjust) {
 		adjustContactModelParameters();
+	}
+}
+
+void System::smoothStressTransition()
+{
+	/* In the stress-control algorithm,
+	 * abrupt changes of the target stress causes
+	 *
+	 */
+	double stress_increment = 1e-5;
+	if (stress_transition_target > target_stress) {
+		target_stress += stress_increment;
+		if (target_stress > stress_transition_target) {
+			target_stress = stress_transition_target;
+		}
+	} else if (stress_transition_target < target_stress) {
+		target_stress -= stress_increment;
+		if (target_stress < stress_transition_target) {
+			target_stress = stress_transition_target;
+		}
 	}
 }
 
