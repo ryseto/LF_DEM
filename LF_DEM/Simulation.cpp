@@ -1051,7 +1051,7 @@ void Simulation::outputIntFileTxt()
 		 * Contact forces include only spring forces.
 		 */
 		outdata_int.entryData("norm of the normal part of the contact force", Dimensional::Dimension::Force, 1, \
-							  inter.contact.getNormalForce().norm());
+							  -inter.contact.getNormalForceValue());
 		
 		if (diminish_output == false) {
 			outdata_int.entryData("tangential part of the contact force", Dimensional::Dimension::Force, 3, \

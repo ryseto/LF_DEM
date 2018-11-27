@@ -93,7 +93,7 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit) {
 		PARAM_INIT(sj_shear_rate, 0),
 		PARAM_INIT(sj_velocity, 1e-3),
 		PARAM_INIT(contact_breakup_distance, 0),
-		PARAM_INIT(sj_stress_increment, 1e-6)
+		PARAM_INIT(sj_stress_increment, 1e-5)
 	};
 
 	/*================================
