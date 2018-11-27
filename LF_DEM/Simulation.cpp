@@ -738,7 +738,7 @@ void Simulation::outputData()
 		outdata.entryData("eff_coordination_number", Dimensional::Dimension::none, 1, sys.effective_coordination_number);
 	}
 	outdata.entryData("shear stress", Dimensional::Dimension::Stress, 1, sys.target_stress);
-	outdata.entryData("theta shear", Dimensional::Dimension::Stress, 1, sys.p.theta_shear);
+	outdata.entryData("theta shear", Dimensional::Dimension::none, 1, sys.p.theta_shear);
 	if (sys.p.event_handler == "jamming_stress_reversal") {
 		outdata.entryData("jamming strain", Dimensional::Dimension::none, 1, jamming_strain);
 	}
