@@ -54,6 +54,7 @@ private:
 	double jamming_strain; // Strain stroke to get jamming
 	bool stress_reversal;
 	double time_last_sj_program;
+	double sj_duration_min;
 	time_t time_strain_0;
 	time_t time_strain_1;
 	time_t time_strain_end;
@@ -63,9 +64,8 @@ private:
 	Sym2Tensor stress_basis_3;
 	Sym2Tensor Einf_base; // This original Einf is kept and can be used when flow is stopped.
 	vec3d Omegainf_base; // Same as Einf_base.
-	std::deque<int> sj_stress_program;
-	std::deque<double> dt_factor_program;
-	std::deque<double> sjrate_factor_program;
+	std::deque<double> sj_program_stress;
+	std::deque<double> sj_program_duration;
 	/*
 	 * For output data.
 	 */
@@ -134,7 +134,7 @@ public:
 									Parameters::ParameterSetFactory &PFact);
 	void stopShearing(TimeKeeper &tk); //simulation mode 22
 	void stressReversal();
-	bool stressProgram();
+	void stressProgram();
 	/*
 	 * For outputs
 	 */

@@ -374,6 +374,7 @@ private:
 	void declareResistance(int p0, int p1);
 	void eraseResistance(int p0, int p1);
 	void updateInteractions();
+	void calculateForces(); //
 	int periodize(vec3d& pos);
 	void periodizeExtFlow(const int &i, bool &pd_transport);
 	vec3d periodized(const vec3d& pos_diff);

@@ -63,14 +63,12 @@ void Simulation::setupEvents()
 		ifstream sj_program_file;
 		sj_program_file.open(sys.p.sj_program_file.c_str());
 		int sj_stress;
-		double dt_factor;
-		double sjrate_factor;
-		while(sj_program_file >> sj_stress >> dt_factor >> sjrate_factor) {
-			cerr << "stress program, dt_factor, sjrate_factor: ";
-			cerr << sj_stress << ' '<< dt_factor << ' ' << sjrate_factor << endl;
-			sj_stress_program.push_back(sj_stress);
-			dt_factor_program.push_back(dt_factor);
-			sjrate_factor_program.push_back(sjrate_factor);
+		double sj_duration;
+		while(sj_program_file >> sj_stress >> sj_duration) {
+			cerr << "stress program sj_duration";
+			cerr << sj_stress << ' '<< sj_duration << endl;
+			sj_program_stress.push_back(sj_stress);
+			sj_program_duration.push_back(sj_duration);
 		}
 		sj_program_file.close();
 	} else {
@@ -142,28 +140,20 @@ void Simulation::handleEventsFragility()
 void Simulation::handleEventsJammingStressReversal()
 {
 	//	double sr = sqrt(2*sys.getEinfty().selfdoubledot()); // shear rate for simple shear.
-	if (sys.get_time()-time_last_sj_program < 50) {
-		return;
-	}
-	bool jammed = false;
+	stress_reversal = false;
 	for (const auto& ev : events) {
 		if (ev.type == "jammed_shear_rate") {
 			if (sys.p.fixed_dt) {
-				jammed = true;
+				stress_reversal = true;
 			} else {
 				/* @@ I think this is not effective way to handle jamming.
 				 */
 				sys.p.disp_max /= sys.p.sj_disp_max_shrink_factor;
 				if (sys.p.disp_max < sys.p.sj_disp_max_goal) {
-					jammed = true;
+					stress_reversal = true;
 				}
 			}
 		}
-	}
-	if (jammed) {
-		stress_reversal = true;
-	} else {
-		stress_reversal = false;
 	}
 }
 
@@ -311,11 +301,13 @@ void Simulation::printProgress()
 	Dimensional::DimensionalQty<double> current_time = {Dimensional::Dimension::Time, sys.get_time(), system_of_units.getInternalUnit()};
 	system_of_units.convertFromInternalUnit(current_time, output_unit);
 	if (sys.p.time_end.dimension == Dimensional::Dimension::Time) {
-		cout << "time: " << current_time.value << " / " << sys.p.time_end.value\
-		     << " , strain: " << sys.get_cumulated_strain() << endl;
+		cout << "time: " << current_time.value << " / " << sys.p.time_end.value << " , strain: " << sys.get_cumulated_strain() << endl;
 	} else {
-		cout << "time: " << current_time.value\
-		     << " , strain: " << sys.get_cumulated_strain() << " / " << sys.p.time_end.value << endl;
+		cout << "time: " << current_time.value << " , strain: " << sys.get_cumulated_strain() << " / " << sys.p.time_end.value << ' ';
+		if (sys.p.sj_program_file != "") {
+			cout << "sjp " << sj_program_stress.front();
+		}
+		cout << endl;
 	}
 }
 
@@ -372,9 +364,10 @@ void Simulation::simulationSteadyShear(string in_args,
 			output_events.insert("data");
 			output_events.insert("config");
 		}
-		//
-		if (sys.p.event_handler == "jamming_stress_reversal") {
-			operateJammingStressReversal(output_events);
+		if (sys.get_time()-time_last_sj_program > sj_duration_min) {
+			if (sys.p.event_handler == "jamming_stress_reversal") {
+				operateJammingStressReversal(output_events);
+			}
 		}
 		generateOutput(output_events, binconf_counter);
 		printProgress();
@@ -414,9 +407,8 @@ void Simulation::operateJammingStressReversal(std::set<std::string> &output_even
 			sys.p.disp_max = p_initial.disp_max;
 			sys.dt = sys.p.dt;
 		} else {
-			if (stressProgram()) {
-				jamming_strain = sys.get_cumulated_strain();
-			}
+			stressProgram();
+			jamming_strain = sys.get_cumulated_strain();
 		}
 		output_events.insert("data");
 		output_events.insert("config");
@@ -477,7 +469,7 @@ void Simulation::stressReversal()
 	sys.reset_cumulated_strain();
 }
 
-bool Simulation::stressProgram()
+void Simulation::stressProgram()
 {
 	/* Return true when the program is accepted.
 	 */
@@ -493,44 +485,37 @@ bool Simulation::stressProgram()
 		kn_original = sys.p.kn;
 		kt_original = sys.p.kt;
 	}
-	cerr << " shear jamming stress program " << sj_stress_program.front() << endl;
-	if (sj_stress_program.front() == 0) {
+	cerr << " shear jamming stress program " << sj_program_stress.front() << endl;
+	if (sj_program_stress.front() == 0) {
 		double infinitesimal_stress = 1e-4;
 		sys.target_stress = infinitesimal_stress*stress_original;
-		sys.p.kn = kn_original/infinitesimal_stress;
-		sys.p.kt = kt_original/infinitesimal_stress;
-		sys.resetContactModelParameer();
-		sys.dt = dt_factor_program.front()*sys.p.dt_jamming;
-		sys.p.sj_shear_rate = sjrate_factor_program.front()*sj_rate_original;
-	} else if (sj_stress_program.front() == 1) {
+		sys.p.kn = kn_original*infinitesimal_stress;
+		sys.p.kt = kt_original*infinitesimal_stress;
+		sys.dt = sys.p.dt_jamming/infinitesimal_stress;
+	} else if (sj_program_stress.front() == 1) {
 		sys.setShearDirection(0);
 		sys.target_stress = stress_original;
 		sys.p.kn = kn_original;
 		sys.p.kt = kt_original;
-		sys.resetContactModelParameer();
-		sys.dt = dt_factor_program.front()*sys.p.dt_jamming;
-		sys.p.sj_shear_rate = sjrate_factor_program.front()*sj_rate_original;
-	} else if (sj_stress_program.front() == -1) {
+		sys.dt = sys.p.dt_jamming;
+	} else if (sj_program_stress.front() == -1) {
 		sys.setShearDirection(M_PI);
 		sys.target_stress = stress_original;
 		sys.p.kn = kn_original;
 		sys.p.kt = kt_original;
-		sys.resetContactModelParameer();
-		sys.dt = dt_factor_program.front()*sys.p.dt_jamming;
-		sys.p.sj_shear_rate = sjrate_factor_program.front()*sj_rate_original;
-	} else if (sj_stress_program.front() == 999) {
+		sys.dt = sys.p.dt_jamming;
+	} else if (sj_program_stress.front() == 999) {
 		kill = true;
 	} else {
 		cerr << "Only 1, 0, -1, 999 in the program file\n";
 		exit(1);
 	}
-	cerr << sys.dt << ' ' << sys.p.sj_shear_rate << endl;
+	sj_duration_min = sj_program_duration.front();
+	sys.resetContactModelParameer();
+	sys.calculateForces();
 	time_last_sj_program = sys.get_time();
-	sj_stress_program.pop_front();
-	dt_factor_program.pop_front();
-	sjrate_factor_program.pop_front();
-	return true;
-	//sys.reset_cumulated_strain();
+	sj_program_stress.pop_front();
+	sj_program_duration.pop_front();
 }
 
 void Simulation::outputComputationTime()

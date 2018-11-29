@@ -1246,6 +1246,17 @@ bool System::keepRunning(double time_end, double strain_end)
 	return true;
 }
 
+void System::calculateForces()
+{
+	double dt_bak = dt; // to avoid stretching contact spring
+	dt = 0;
+	checkNewInteraction();
+	in_predictor = true;
+	updateInteractions();
+	in_predictor = false;
+	dt = dt_bak;
+}
+
 void System::timeEvolution(double time_end, double strain_end)
 {
 	/**
@@ -1270,13 +1281,7 @@ void System::timeEvolution(double time_end, double strain_end)
 	}
 
 	if (firsttime) {
-		double dt_bak = dt; // to avoid stretching contact spring
-		dt = 0;
-		checkNewInteraction();
-		in_predictor = true;
-		updateInteractions();
-		in_predictor = false;
-		dt = dt_bak;
+		calculateForces();
 		firsttime = false;
 	}
 	bool calc_stress = false;
