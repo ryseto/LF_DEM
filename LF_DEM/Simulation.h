@@ -51,8 +51,9 @@ private:
 	double normal_stress_diff1;
 	double normal_stress_diff2;
 	bool restart_from_chkp;
-	double jamming_strain; // Strain stroke to get jamming (simulation_mode = 2)
+	double jamming_strain; // Strain stroke to get jamming
 	bool stress_reversal;
+	double time_last_sj_program;
 	time_t time_strain_0;
 	time_t time_strain_1;
 	time_t time_strain_end;
@@ -133,7 +134,7 @@ public:
 									Parameters::ParameterSetFactory &PFact);
 	void stopShearing(TimeKeeper &tk); //simulation mode 22
 	void stressReversal();
-	void stressProgram();
+	bool stressProgram();
 	/*
 	 * For outputs
 	 */

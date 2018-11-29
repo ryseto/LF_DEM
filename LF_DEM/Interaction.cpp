@@ -283,7 +283,7 @@ void Interaction::updateContactState()
 		bool breakup_contact_bond = false;
 		if (!sys->cohesion) {
 			// no cohesion: breakup based on distance
-			if (reduced_gap > sys->p.contact_breakup_distance) {
+			if (reduced_gap > 0) {
 				breakup_contact_bond = true;
 			}
 		} else {

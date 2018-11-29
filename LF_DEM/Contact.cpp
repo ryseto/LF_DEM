@@ -128,7 +128,7 @@ void Contact::deactivate()
 
 /*********************************
  *                                *
- *	   Contact Forces Methods    *
+ *	   Contact Forces Methods     *
  *                                *
  *********************************/
 

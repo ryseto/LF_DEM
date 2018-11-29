@@ -156,7 +156,6 @@ namespace Parameters {
 		 */
 		double contact_relaxation_time;			///< Relaxation time (normal) of the contact model. Sets the normal dashpot. If <0, use normal lubrication at contact as normal dashpot. [1e-3input_unit]
 		double contact_relaxation_time_tan;		///< Relaxation time (tangential) of the contact model. Sets the tangential dashpot. If <0, use tangential lubrication at contact as tangential dashpot. [-1input_unit]
-		double contact_breakup_distance;  /// [0]
 		/*******************************************************
 		 INTEGRATOR
 		 ********************************************************/
@@ -199,7 +198,6 @@ namespace Parameters {
 		double sj_disp_max_shrink_factor;	///< rescaling factor for negative shear rate for shear jamming [1.1]
 		double sj_shear_rate;		///< Shear rate to judge shear jamming [0]
 		double sj_velocity;         ///< Velocity to judge shear jamming [1e-3]
-		double sj_stress_increment;         ///<  [1e-6]
 		int sj_reversal_repetition;			///< Repetition number for shear reversal [2]
 		std::string sj_program_file;        ///< [""]
 		double theta_shear;  ///< Shear direction, in degress, 0 is shear along x, 90 is shear along y [0]

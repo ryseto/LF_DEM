@@ -142,6 +142,9 @@ void Simulation::handleEventsFragility()
 void Simulation::handleEventsJammingStressReversal()
 {
 	//	double sr = sqrt(2*sys.getEinfty().selfdoubledot()); // shear rate for simple shear.
+	if (sys.get_time()-time_last_sj_program < 50) {
+		return;
+	}
 	bool jammed = false;
 	for (const auto& ev : events) {
 		if (ev.type == "jammed_shear_rate") {
@@ -400,23 +403,20 @@ void Simulation::simulationSteadyShear(string in_args,
 void Simulation::operateJammingStressReversal(std::set<std::string> &output_events)
 {
 	if (stress_reversal) {
-		if (sys.target_stress != sys.stress_transition_target) {
-			stress_reversal = false;
-		}
-	}
-	if (stress_reversal) {
-		static int cnt_shear_jamming_repetation = 0;
-		cnt_shear_jamming_repetation ++;
-		if (cnt_shear_jamming_repetation > sys.p.sj_reversal_repetition) {
-			kill = true;
-		}
-		jamming_strain = sys.get_cumulated_strain();
 		if (sys.p.sj_program_file == "") {
+			jamming_strain = sys.get_cumulated_strain();
+			static int cnt_shear_jamming_repetation = 0;
+			cnt_shear_jamming_repetation ++;
+			if (cnt_shear_jamming_repetation > sys.p.sj_reversal_repetition) {
+				kill = true;
+			}
 			stressReversal();
 			sys.p.disp_max = p_initial.disp_max;
 			sys.dt = sys.p.dt;
 		} else {
-			stressProgram();
+			if (stressProgram()) {
+				jamming_strain = sys.get_cumulated_strain();
+			}
 		}
 		output_events.insert("data");
 		output_events.insert("config");
@@ -477,29 +477,45 @@ void Simulation::stressReversal()
 	sys.reset_cumulated_strain();
 }
 
-void Simulation::stressProgram()
+bool Simulation::stressProgram()
 {
+	/* Return true when the program is accepted.
+	 */
 	static bool first_time = true;
 	static double stress_original;
 	static double sj_rate_original;
+	static double kn_original;
+	static double kt_original;
 	if (first_time) {
 		first_time = false;
 		stress_original = sys.target_stress;
 		sj_rate_original = sys.p.sj_shear_rate;
+		kn_original = sys.p.kn;
+		kt_original = sys.p.kt;
 	}
 	cerr << " shear jamming stress program " << sj_stress_program.front() << endl;
 	if (sj_stress_program.front() == 0) {
-		sys.stress_transition_target = 0;
+		double infinitesimal_stress = 1e-4;
+		sys.target_stress = infinitesimal_stress*stress_original;
+		sys.p.kn = kn_original/infinitesimal_stress;
+		sys.p.kt = kt_original/infinitesimal_stress;
+		sys.resetContactModelParameer();
 		sys.dt = dt_factor_program.front()*sys.p.dt_jamming;
 		sys.p.sj_shear_rate = sjrate_factor_program.front()*sj_rate_original;
 	} else if (sj_stress_program.front() == 1) {
 		sys.setShearDirection(0);
-		sys.stress_transition_target = stress_original;
+		sys.target_stress = stress_original;
+		sys.p.kn = kn_original;
+		sys.p.kt = kt_original;
+		sys.resetContactModelParameer();
 		sys.dt = dt_factor_program.front()*sys.p.dt_jamming;
 		sys.p.sj_shear_rate = sjrate_factor_program.front()*sj_rate_original;
 	} else if (sj_stress_program.front() == -1) {
 		sys.setShearDirection(M_PI);
-		sys.stress_transition_target = stress_original;
+		sys.target_stress = stress_original;
+		sys.p.kn = kn_original;
+		sys.p.kt = kt_original;
+		sys.resetContactModelParameer();
 		sys.dt = dt_factor_program.front()*sys.p.dt_jamming;
 		sys.p.sj_shear_rate = sjrate_factor_program.front()*sj_rate_original;
 	} else if (sj_stress_program.front() == 999) {
@@ -509,9 +525,11 @@ void Simulation::stressProgram()
 		exit(1);
 	}
 	cerr << sys.dt << ' ' << sys.p.sj_shear_rate << endl;
+	time_last_sj_program = sys.get_time();
 	sj_stress_program.pop_front();
 	dt_factor_program.pop_front();
 	sjrate_factor_program.pop_front();
+	return true;
 	//sys.reset_cumulated_strain();
 }
 
