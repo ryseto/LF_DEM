@@ -65,8 +65,8 @@ void Simulation::setupEvents()
 		int sj_stress;
 		double sj_duration;
 		while(sj_program_file >> sj_stress >> sj_duration) {
-			cerr << "stress program sj_duration";
-			cerr << sj_stress << ' '<< sj_duration << endl;
+			cerr << "stress program, sj_duration : ";
+			cerr << sj_stress << " , " << sj_duration << endl;
 			sj_program_stress.push_back(sj_stress);
 			sj_program_duration.push_back(sj_duration);
 		}

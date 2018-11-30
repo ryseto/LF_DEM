@@ -263,31 +263,36 @@ void Contact::frictionlaw_standard()
 	 \brief Friction law
 	 */
 	double supportable_tanforce = 0;
-	double sq_f_tan = f_spring_tan.sq_norm();
+	double supportable_rollingforce = 0;
+	double sq_f_tan;
+	double sq_f_rolling;
 	normal_load = f_spring_normal_norm;
 	if (sys->cohesion) {
 		normal_load += sys->p.cohesion;
 	}
-	if (state == 2) {
-		// static friction in previous step
-		supportable_tanforce = mu_static*normal_load;
-	} else {
-		// dynamic friction in previous step
-		supportable_tanforce = mu_dynamic*normal_load;
+	if (normal_load > 0) {
+		if (state == 2) {
+			// static friction in previous step
+			supportable_tanforce = mu_static*normal_load;
+		} else {
+			// dynamic friction in previous step
+			supportable_tanforce = mu_dynamic*normal_load;
+		}
+		if (sys->rolling_friction) {
+			supportable_rollingforce = mu_rolling*normal_load;
+		}
 	}
-	if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
+	sq_f_tan = f_spring_tan.sq_norm();
+	if (sq_f_tan < supportable_tanforce*supportable_tanforce) {
+		state = 2; // static friction
+	} else {
 		state = 3; // dynamic friction
 		supportable_tanforce = mu_dynamic*normal_load;
-	} else {
-		state = 2; // static friction
-	}
-	if (state == 3) {
 		// adjust the sliding spring for dynamic friction law
 		setTangentialForceNorm(sqrt(sq_f_tan), supportable_tanforce);
 	}
 	if (sys->rolling_friction) {
-		double supportable_rollingforce = mu_rolling*normal_load;
-		double sq_f_rolling = f_rolling.sq_norm();
+		sq_f_rolling = f_rolling.sq_norm();
 		if (sq_f_rolling > supportable_rollingforce*supportable_rollingforce) {
 			setRollingForceNorm(sqrt(sq_f_rolling), supportable_rollingforce);
 		}
@@ -431,7 +436,6 @@ void Contact::frictionlaw_coulomb_max()
 	}
 	return;
 }
-
 
 void Contact::addUpForce(std::vector<vec3d> &force_per_particle) const
 {
