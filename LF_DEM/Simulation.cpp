@@ -182,9 +182,6 @@ void Simulation::generateOutput(const set<string> &output_events, int& binconf_c
 		sys.calcStress();
 		outputData();
 	}
-	if (sys.p.output.out_bond_order_parameter6) {
-		sys.calcOrderParameter();
-	}
 	if (output_events.find("config") != output_events.end()) {
 		if (sys.p.output.out_binary_conf) {
 			string binconf_filename = "conf_" + simu_name + "_" + to_string(++binconf_counter) + ".bin";
@@ -932,10 +929,6 @@ void Simulation::outputParFileTxt()
 				outdata_par.entryData(entry_name_vel, Dimensional::Dimension::Velocity, 3, vc.second.vel[i]);
 				outdata_par.entryData(entry_name_ang_vel, Dimensional::Dimension::Velocity, 3, vc.second.ang_vel[i]);
 			}
-		}
-		if (sys.p.output.out_bond_order_parameter6) {
-			outdata_par.entryData("abs_phi6", Dimensional::Dimension::none, 1, abs(sys.phi6[i]));
-			outdata_par.entryData("arg_phi6", Dimensional::Dimension::none, 1, arg(sys.phi6[i]));
 		}
 		if (sys.p.output.effective_coordination_number) {
 			outdata_par.entryData("contact_number", Dimensional::Dimension::none, 1, sys.n_contact[i]);

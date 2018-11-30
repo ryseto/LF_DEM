@@ -403,7 +403,6 @@ private:
 	void retrim(vec3d&); // Extensional flow Periodic Boundary condition
 	void updateH(); // Extensional flow Periodic Boundary condition
 	void yaplotBoxing(std::ofstream &fout_boxing); // Extensional flow Periodic Boundary condition
-	void calcOrderParameter();
 	void recordHistory();
 	void countContactNumber();
 	

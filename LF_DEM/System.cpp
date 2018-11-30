@@ -1048,34 +1048,6 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	}
 }
 
-void System::calcOrderParameter()
-{
-	if (twodimension == false) {
-		cerr << "The bond-orientation order parameter can be calculated only 2D simulation." << endl;
-		throw runtime_error("  The bond-orientation order parameter is only for 2D simulation. out_bond_order_parameter6 must be false for 3D simulation\n");
-	}
-	for (auto phi6_ : phi6) {
-		phi6_.real(0);
-		phi6_.imag(0);
-	}
-	vector<int> n_neighobr(np, 0);
-	for (auto &inter: interaction) {
-		double phase = inter.nvec.angle_elevation_xz()+M_PI; // nvec = p1 - p0
-		complex<double> bond_phase1(cos(6*phase), sin(6*phase));
-		/*
-		 complex<double> bond_phase2(cos(6*(phase+M_PI)), sin(6*(phase+M_PI)));
-		 bond_phase2 = bond_phase1
-		 */
-		phi6[inter.get_p0()] += bond_phase1;
-		phi6[inter.get_p1()] += bond_phase1;
-		n_neighobr[inter.get_p0()] ++;
-		n_neighobr[inter.get_p1()] ++;
-	}
-	for (int i=0; i<np; i++) {
-		phi6[i] *= 1.0/n_neighobr[i];
-	}
-}
-
 void System::adaptTimeStep()
 {
 	/**

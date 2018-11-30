@@ -63,7 +63,6 @@ namespace Parameters {
 		bool out_binary_conf;				///< Output binary configurations conf_*.bin files [false]
 		std::string out_particle_stress;	///< Output stress per particle in pst_* file, indicating which component ("c" for contact, "r" for repulsion, "b" for Brownian, "t" for total, "l" for lubrication) by a string, e.g "tc" for total stress and contact stress [""]
 		bool out_data_vel_components;		///< Output velocity components in the par* file [false]
-		bool out_bond_order_parameter6;		///< Output amplitudes and arguments of 6-fold bond orientation order parameters in the par* file [false]
 		bool out_na_vel;					///< Output non-affine velocity components in the par* file [false]
 		bool out_na_disp;					///< Output non-affine displacements since last time step in the par* file [false]
 		bool recording_interaction_history;	///< Output all histories of interactions (time_end should be short enough) [false]
