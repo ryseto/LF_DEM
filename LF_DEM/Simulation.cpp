@@ -491,19 +491,16 @@ void Simulation::stressProgram()
 		sys.target_stress = infinitesimal_stress*stress_original;
 		sys.p.kn = kn_original*infinitesimal_stress;
 		sys.p.kt = kt_original*infinitesimal_stress;
-		sys.dt = sys.p.dt_jamming/infinitesimal_stress;
 	} else if (sj_program_stress.front() == 1) {
 		sys.setShearDirection(0);
 		sys.target_stress = stress_original;
 		sys.p.kn = kn_original;
 		sys.p.kt = kt_original;
-		sys.dt = sys.p.dt_jamming;
 	} else if (sj_program_stress.front() == -1) {
 		sys.setShearDirection(M_PI);
 		sys.target_stress = stress_original;
 		sys.p.kn = kn_original;
 		sys.p.kt = kt_original;
-		sys.dt = sys.p.dt_jamming;
 	} else if (sj_program_stress.front() == 999) {
 		kill = true;
 	} else {
