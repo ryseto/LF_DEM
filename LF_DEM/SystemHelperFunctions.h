@@ -87,18 +87,6 @@ inline double evaluateMaxDispRolling(const System &sys)
 	return _max_disp_rolling;
 }
 
-inline double evaluateMaxFcNormal(const System &sys)
-{
-	double max_fc_normal_ = 0;
-	for (const auto &inter: sys.interaction) {
-		if (inter.contact.is_active() &&
-			inter.contact.getNormalForce().norm() > max_fc_normal_) {
-				max_fc_normal_ = inter.contact.getNormalForce().norm();
-		}
-	}
-	return max_fc_normal_;
-}
-
 inline std::pair<unsigned int, unsigned int> countNumberOfContact(const System &sys)
 {
 	unsigned int contact_nb = 0;

@@ -1051,7 +1051,8 @@ void Simulation::outputIntFileTxt()
 			}
 		}
 		/*
-		 * Contact forces include only spring forces.
+		 * Contact forces are the sums of spring forces and dashpot forces.
+		 * (It can be negative even repulsive contact force).
 		 */
 		outdata_int.entryData("norm of the normal part of the contact force", Dimensional::Dimension::Force, 1, \
 							  -inter.contact.getNormalForceValue());

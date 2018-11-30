@@ -254,7 +254,6 @@ vec3d Contact::getTotalForce() const
 	} else {
 		return vec3d();
 	}
-
 }
 
 void Contact::frictionlaw_standard()
@@ -332,7 +331,7 @@ void Contact::frictionlaw_criticalload()
 	 * supportable_tanforce = mu*(F_normal - critical_force)
 	 *
 	 */
-	double normal_load = f_spring_normal_norm-sys->p.critical_load; // critical load model.
+	normal_load = f_spring_normal_norm-sys->p.critical_load; // critical load model.
     if (normal_load < 0) {
 		state = 1; // frictionless contact
 		disp_tan.reset();
