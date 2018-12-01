@@ -12,6 +12,7 @@ install_dir = ~/bin/
 
 # C++ compiler
 CXX=g++
+CC=gcc
 
 # Libraries
 #

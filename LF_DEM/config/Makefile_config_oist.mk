@@ -13,6 +13,7 @@ install_dir = ~/bin/
 
 # C++ compiler
 CXX = icpc
+CC = icc
 
 # Libraries
 #

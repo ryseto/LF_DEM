@@ -12,6 +12,7 @@ install_dir = ~/bin/
 
 # C++ compiler
 CXX=clang
+CC=clang
 
 # Libraries
 #
