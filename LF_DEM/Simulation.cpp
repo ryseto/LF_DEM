@@ -190,6 +190,9 @@ void Simulation::generateOutput(const set<string> &output_events, int& binconf_c
 		} else {
 			outputConfigurationData();
 		}
+		if (sys.p.output.out_gsd) {
+			outputGSD();
+		}
 	}
 }
 
@@ -1113,4 +1116,94 @@ void Simulation::outputFinalConfiguration(const string& filename_import_position
 	}
 	filename_bin.replace(start_pos, ext.length(), ".bin");
 	outputConfigurationBinary(filename_bin);
+}
+
+void Simulation::outputGSD()
+{
+	bool first_time = true;
+	int np = sys.get_np();
+	static int ts = 0;
+	auto pos = sys.position;
+	auto vel = sys.velocity;
+	if (!sys.ext_flow) {
+		for (int i=0; i<np; i++) {
+				pos[i] = shiftUpCoordinate(sys.position[i].x-0.5*sys.get_lx(),
+										   sys.position[i].y-0.5*sys.get_ly(),
+										   sys.position[i].z-0.5*sys.get_lz());
+		}
+	} else {
+		for (int i=0; i<np; i++) {
+			pos[i] = shiftUpCoordinate(sys.position[i].x,
+									   sys.position[i].y,
+									   sys.position[i].z);
+		}
+	}
+	/* If the origin is shifted,
+	 * we need to change the velocities of particles as well.
+	 */
+	for (int i=0; i<np; i++) {
+		if (pos[i].z < 0) {
+			vel[i] -= sys.vel_difference;
+		}
+	}
+	if (first_time) {
+		first_time = false;
+		vectorBuffer.resize(3*np, 0);
+		scalarBuffer.resize(np, 0);
+	}
+	{
+		uint64_t _ts = ts;
+		uint8_t dim = 3;
+		float box[6] = {static_cast<float>(sys.get_lx()),
+			static_cast<float>(sys.get_lz()),
+			static_cast<float>(sys.get_ly()), 0.0, 0.0, 0.0};
+		gsd_write_chunk(&gsdOut, "configuration/step", GSD_TYPE_UINT64, 1, 1, 0, &_ts);
+		gsd_write_chunk(&gsdOut, "configuration/dimensions", GSD_TYPE_UINT8, 1, 1, 0, &dim);
+		gsd_write_chunk(&gsdOut, "configuration/box", GSD_TYPE_FLOAT, 6, 1, 0, &box);
+	}
+	// Total number of elements / particles
+	uint32_t n = np;
+	gsd_write_chunk(&gsdOut, "particles/N", GSD_TYPE_UINT32, 1, 1, 0, &n);
+
+	if (ts == 0) { // Write type/particle names
+		const int max_size = 63;
+		int  n_types = 2;
+		gsd_write_chunk(&gsdOut, "particles/types", GSD_TYPE_INT8, n_types, max_size, 0, "colloid1");
+	}
+
+	{
+		float* fptr = scalarBuffer.data();
+		// particle radius
+		for (int i=0; i<np; i++) {
+			fptr[i] = 2*sys.radius[i];
+		}
+		gsd_write_chunk(&gsdOut, "particles/diameter", GSD_TYPE_FLOAT, np, 1, 0, fptr);
+	}
+	
+	// particle positions
+	{
+		float* fptr = vectorBuffer.data();
+		int j = 0;
+		for (int i=0; i<np; i++) {
+			fptr[j++] = pos[i].x;
+			fptr[j++] = pos[i].z;
+			fptr[j++] = pos[i].y;
+		}
+		gsd_write_chunk(&gsdOut, "particles/position", GSD_TYPE_FLOAT, np, 3, 0, fptr);
+	}
+
+	// particle velocities
+	{
+		float* fptr = vectorBuffer.data();
+		int j = 0;
+		for (int i=0; i<np; i++) {
+			fptr[j++] = vel[i].x;
+			fptr[j++] = vel[i].z;
+			fptr[j++] = vel[i].y;
+		}
+		gsd_write_chunk(&gsdOut, "particles/velocity", GSD_TYPE_FLOAT, np, 3, 0, fptr);
+	}
+
+	gsd_end_frame(&gsdOut);
+	ts++;
 }

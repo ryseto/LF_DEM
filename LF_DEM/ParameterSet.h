@@ -61,6 +61,7 @@ namespace Parameters {
 		bool out_data_particle;				///< Output par_* file [true]
 		bool out_data_interaction;			///< Output int_* file [true]
 		bool out_binary_conf;				///< Output binary configurations conf_*.bin files [false]
+		bool out_gsd;						///< Output gsd data file [false]
 		std::string out_particle_stress;	///< Output stress per particle in pst_* file, indicating which component ("c" for contact, "r" for repulsion, "b" for Brownian, "t" for total, "l" for lubrication) by a string, e.g "tc" for total stress and contact stress [""]
 		bool out_data_vel_components;		///< Output velocity components in the par* file [false]
 		bool out_na_vel;					///< Output non-affine velocity components in the par* file [false]

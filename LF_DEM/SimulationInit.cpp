@@ -480,6 +480,11 @@ void Simulation::openOutputFiles()
 		outdata_int.setFile("int_"+simu_name+".dat",
 							data_header.str(), force_to_run, restart_from_chkp);
 	}
+	if (sys.p.output.out_gsd) {
+		string gsd_filename = simu_name+".gsd";
+		gsd_create(gsd_filename.c_str(), "CIL", "hoomd", gsd_make_version(1, 1));
+		gsd_open(&gsdOut, gsd_filename.c_str() , GSD_OPEN_APPEND);
+	}
 	//string box_name = "box_"+simu_name+".dat";
 	//fout_boxing.open(box_name);
 	return;

@@ -30,6 +30,7 @@
 #include "OutputData.h"
 #include "Events.h"
 #include "Timer.h"
+#include "gsd.h"
 
 class Simulation
 {
@@ -77,6 +78,9 @@ private:
 	OutputData outdata_par;
 	OutputData outdata_int;
 	std::ofstream fout_boxing;
+	gsd_handle gsdOut;
+	std::vector<float> vectorBuffer;    // DIM * bufferSize
+	std::vector<float> scalarBuffer;    // bufferSize
 	/*
 	 * For inputs
 	 */
@@ -147,6 +151,7 @@ public:
 	void outputParFileTxt();
 	void outputPstFileTxt();
 	void outputConfigurationBinary(std::string);
+	void outputGSD();
 	void checkpoint();
 	vec3d shiftUpCoordinate(double x, double y, double z);
 	void relativePositionView(std::vector<vec3d> &pos, std::vector<vec3d> &vel);
