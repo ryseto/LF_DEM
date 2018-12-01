@@ -770,6 +770,7 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 		Dimensional::DimensionalQty<double> time = {Dimensional::Dimension::Time, sys.get_time(), system_of_units.getInternalUnit()};
 		snapshot_header << "# target stress" << sep << stress.value << endl;
 		snapshot_header << "# time" << sep << time.value << endl;
+		snapshot_header << "# theta" << sep << sys.p.theta_shear << endl;
 	}
 	if (sys.ext_flow) {
 		/* The following snapshot data is required to
