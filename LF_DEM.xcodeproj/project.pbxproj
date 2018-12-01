@@ -620,6 +620,13 @@
 		D995351F180716B100FC99C9 /* Cluster.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Cluster.h; sourceTree = "<group>"; };
 		D99535211807276D00FC99C9 /* StrainSnapShot.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StrainSnapShot.cpp; sourceTree = "<group>"; };
 		D99535221807276D00FC99C9 /* StrainSnapShot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StrainSnapShot.h; sourceTree = "<group>"; };
+		D9970BD221B2932600738214 /* Makefile_config_Romain_Orwell_mkl.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_Romain_Orwell_mkl.mk; sourceTree = "<group>"; };
+		D9970BD321B2933900738214 /* Makefile_config_Romain_Ucam_shared_SuiteSparse_MKL.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_Romain_Ucam_shared_SuiteSparse_MKL.mk; sourceTree = "<group>"; };
+		D9970BD421B2935100738214 /* Makefile_config_uga.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_uga.mk; sourceTree = "<group>"; };
+		D9970BD521B2935100738214 /* Makefile_config_osx.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_osx.mk; sourceTree = "<group>"; };
+		D9970BD621B2935100738214 /* Makefile_config_uga_gpu.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_uga_gpu.mk; sourceTree = "<group>"; };
+		D9970BD721B2935100738214 /* Makefile_config_Ubuntu_OpenBLAS.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_Ubuntu_OpenBLAS.mk; sourceTree = "<group>"; };
+		D9970BD821B293D200738214 /* Makefile_config_kyoto.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_kyoto.mk; sourceTree = "<group>"; };
 		D9A80BF31B1A9BA700F4BFD3 /* nondimensionalization.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = nondimensionalization.pdf; sourceTree = "<group>"; };
 		D9A80BF41B1A9BA700F4BFD3 /* note_LF_DEM.tex */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.tex; sourceTree = "<group>"; };
 		D9A80BF51B1A9BC200F4BFD3 /* nondimensionalization.tex */ = {isa = PBXFileReference; lastKnownFileType = text; path = nondimensionalization.tex; sourceTree = "<group>"; };
@@ -1212,9 +1219,16 @@
 			children = (
 				D92A7C1A1BE3C9BD000092DF /* Makefile_config_generic.mk */,
 				D92A7C1C1BE3C9BD000092DF /* Makefile_config_Romain_HPCCam.mk */,
+				D9970BD321B2933900738214 /* Makefile_config_Romain_Ucam_shared_SuiteSparse_MKL.mk */,
+				D9970BD221B2932600738214 /* Makefile_config_Romain_Orwell_mkl.mk */,
+				D9970BD521B2935100738214 /* Makefile_config_osx.mk */,
+				D9970BD721B2935100738214 /* Makefile_config_Ubuntu_OpenBLAS.mk */,
+				D9970BD621B2935100738214 /* Makefile_config_uga_gpu.mk */,
+				D9970BD421B2935100738214 /* Makefile_config_uga.mk */,
 				D92A7C1D1BE3C9BD000092DF /* Makefile_config_Romain_Ucam.mk */,
 				D92A7C1B1BE3C9BD000092DF /* Makefile_config_oist.mk */,
 				D92A7C211BE75862000092DF /* Makefile_config_oist_gpu.mk */,
+				D9970BD821B293D200738214 /* Makefile_config_kyoto.mk */,
 			);
 			path = config;
 			sourceTree = "<group>";

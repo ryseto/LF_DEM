@@ -1124,44 +1124,36 @@ void Simulation::outputGSD()
 	bool first_time = true;
 	int np = sys.get_np();
 	static int ts = 0;
-	auto pos = sys.position;
-	auto vel = sys.velocity;
-	if (!sys.ext_flow) {
-		for (int i=0; i<np; i++) {
-				pos[i] = shiftUpCoordinate(sys.position[i].x-0.5*sys.get_lx(),
-										   sys.position[i].y-0.5*sys.get_ly(),
-										   sys.position[i].z-0.5*sys.get_lz());
-		}
-	} else {
-		for (int i=0; i<np; i++) {
-			pos[i] = shiftUpCoordinate(sys.position[i].x,
-									   sys.position[i].y,
-									   sys.position[i].z);
-		}
-	}
-	/* If the origin is shifted,
-	 * we need to change the velocities of particles as well.
-	 */
-	for (int i=0; i<np; i++) {
-		if (pos[i].z < 0) {
-			vel[i] -= sys.vel_difference;
-		}
-	}
 	if (first_time) {
 		first_time = false;
 		vectorBuffer.resize(3*np, 0);
 		scalarBuffer.resize(np, 0);
 	}
-	{
-		uint64_t _ts = ts;
-		uint8_t dim = 3;
-		float box[6] = {static_cast<float>(sys.get_lx()),
-			static_cast<float>(sys.get_lz()),
-			static_cast<float>(sys.get_ly()), 0.0, 0.0, 0.0};
-		gsd_write_chunk(&gsdOut, "configuration/step", GSD_TYPE_UINT64, 1, 1, 0, &_ts);
-		gsd_write_chunk(&gsdOut, "configuration/dimensions", GSD_TYPE_UINT8, 1, 1, 0, &dim);
-		gsd_write_chunk(&gsdOut, "configuration/box", GSD_TYPE_FLOAT, 6, 1, 0, &box);
+	auto pos = sys.position;
+	auto vel = sys.velocity;
+	double shear_x = sys.shear_disp.x;
+	double lx = sys.get_lx();
+	double ly = sys.get_ly();
+	double lz = sys.get_lz();
+	for (int i=0; i<np; i++) {
+		if (-lz*pos[i].x+shear_x*pos[i].z > 0) {
+			pos[i].x += lx;
+		}
+		pos[i].x -= (lx+shear_x)/2;
+		pos[i].z -= lz/2;
+		if (!sys.twodimension) {
+			pos[i].y -= ly/2;
+		}
 	}
+
+	uint64_t _ts = ts;
+	uint8_t dim = 3;
+	float box[6] = {static_cast<float>(lx), static_cast<float>(lz), static_cast<float>(ly),
+		static_cast<float>(shear_x/lz), 0.0, 0.0};
+	gsd_write_chunk(&gsdOut, "configuration/step", GSD_TYPE_UINT64, 1, 1, 0, &_ts);
+	gsd_write_chunk(&gsdOut, "configuration/dimensions", GSD_TYPE_UINT8, 1, 1, 0, &dim);
+	gsd_write_chunk(&gsdOut, "configuration/box", GSD_TYPE_FLOAT, 6, 1, 0, &box);
+	
 	// Total number of elements / particles
 	uint32_t n = np;
 	gsd_write_chunk(&gsdOut, "particles/N", GSD_TYPE_UINT32, 1, 1, 0, &n);
