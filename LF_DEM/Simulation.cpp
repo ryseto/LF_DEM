@@ -1133,29 +1133,46 @@ void Simulation::outputGSD()
 	}
 	auto pos = sys.position;
 	auto vel = sys.velocity;
-	double shear_x = sys.shear_disp.x;
 	double lx = sys.get_lx();
 	double ly = sys.get_ly();
 	double lz = sys.get_lz();
+	vec3d shear_strain = sys.get_shear_strain();
+	if (sys.eventLookUp == NULL) {
+		/* modulate for 0 < strain < 1
+		 */
+		shear_strain = sys.shear_disp/lz;
+	} else {
+		/* no modulation for deformed simulation cell.
+		 * This is useful to visualize shear jamming.
+		 */
+		shear_strain = sys.get_shear_strain();
+	}
+
 	if (sys.twodimension) {
 		ly = 2*sys.radius[np-1];
 	}
+
 	for (int i=0; i<np; i++) {
-		if (-lz*pos[i].x+shear_x*pos[i].z > 0) {
+		if (-pos[i].x+shear_strain.x*pos[i].z > 0) {
 			pos[i].x += lx;
 		}
-		pos[i].x -= (lx+shear_x)/2;
+		if (-pos[i].x+shear_strain.x*pos[i].z < -lx) {
+			pos[i].x -= lx;
+		}
+		pos[i].x -= (lx+shear_strain.x*lz)/2;
 		pos[i].z -= lz/2;
 		if (!sys.twodimension) {
 			pos[i].y -= ly/2;
 		}
 	}
-
 	uint64_t _ts = ts;
 	uint8_t dim = 3;
 	float box[6] = {static_cast<float>(lx), static_cast<float>(lz), static_cast<float>(ly),
-		static_cast<float>(shear_x/lz), 0.0, 0.0};
-	gsd_write_chunk(&gsdOut, "configuration/step", GSD_TYPE_UINT64, 1, 1, 0, &_ts);
+		static_cast<float>(shear_strain.x),
+		static_cast<float>(shear_strain.y),
+		static_cast<float>(shear_strain.z)};
+	
+	gsd_write_chunk(&gsdOut, "confix1guration/step", GSD_TYPE_UINT64, 1, 1, 0, &_ts);
 	gsd_write_chunk(&gsdOut, "configuration/dimensions", GSD_TYPE_UINT8, 1, 1, 0, &dim);
 	gsd_write_chunk(&gsdOut, "configuration/box", GSD_TYPE_FLOAT, 6, 1, 0, &box);
 	
@@ -1171,7 +1188,6 @@ void Simulation::outputGSD()
 			n_types = 1;
 			types = new char [n_types*max_size];
 			snprintf(types, max_size, "colloid");
-					 
 		} else if (dispersion_type == DispersionType::bi) {
 			n_types = 2;
 			types = new char [n_types*max_size];

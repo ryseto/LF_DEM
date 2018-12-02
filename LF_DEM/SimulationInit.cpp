@@ -573,7 +573,6 @@ void Simulation::checkDispersionType()
 			np1 = i+1;
 		}
 	}
-	cerr << "cnt_type = " << cnt_type << ' ' << np1 << endl;
 	if (cnt_type == 0) {
 		dispersion_type = DispersionType::mono;
 	} else if (cnt_type == 1) {
