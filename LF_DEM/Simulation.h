@@ -86,9 +86,12 @@ private:
 	 */
 	void setupOptionalSimulation(std::string indent);
 	std::vector<Sym2Tensor> getParticleStressGroup(std::string group);
+	void checkDispersionType();
 	/*********** shear jamming  ************/
 	void operateJammingStressReversal(std::set<std::string> &output_events);
-
+	enum class DispersionType { mono, bi, poly };
+	DispersionType dispersion_type;
+	int np1;
 public:
 	/* For DEMsystem*/
 	Simulation(State::BasicCheckpoint chkp = State::zero_time_basicchkp);

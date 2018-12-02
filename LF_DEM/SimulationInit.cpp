@@ -441,6 +441,7 @@ void Simulation::setupSimulation(string in_args,
 	//	}
 	
 	echoInputFiles(in_args, input_files);
+	checkDispersionType();
 	cout << indent << "Simulation setup [ok]" << endl;
 }
 
@@ -561,3 +562,24 @@ TimeKeeper Simulation::initTimeKeeper()
 	}
 	return tk;
 }
+
+void Simulation::checkDispersionType()
+{
+	int cnt_type = 0;
+	np1 = sys.get_np();
+	for (int i=0; i<sys.get_np()-1; i++) {
+		if (sys.radius[i+1] != sys.radius[i]) {
+			cnt_type ++;
+			np1 = i+1;
+		}
+	}
+	cerr << "cnt_type = " << cnt_type << ' ' << np1 << endl;
+	if (cnt_type == 0) {
+		dispersion_type = DispersionType::mono;
+	} else if (cnt_type == 1) {
+		dispersion_type = DispersionType::bi;
+	} else {
+		dispersion_type = DispersionType::poly;
+	}
+}
+

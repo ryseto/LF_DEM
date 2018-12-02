@@ -1135,6 +1135,9 @@ void Simulation::outputGSD()
 	double lx = sys.get_lx();
 	double ly = sys.get_ly();
 	double lz = sys.get_lz();
+	if (sys.twodimension) {
+		ly = 2*sys.radius[np-1];
+	}
 	for (int i=0; i<np; i++) {
 		if (-lz*pos[i].x+shear_x*pos[i].z > 0) {
 			pos[i].x += lx;
@@ -1160,17 +1163,40 @@ void Simulation::outputGSD()
 
 	if (ts == 0) { // Write type/particle names
 		const int max_size = 63;
-		int  n_types = 2;
-		gsd_write_chunk(&gsdOut, "particles/types", GSD_TYPE_INT8, n_types, max_size, 0, "colloid1");
+		int  n_types;
+		char *types;
+		if (dispersion_type == DispersionType::mono) {
+			n_types = 1;
+			types = new char [n_types*max_size];
+			snprintf(types, max_size, "colloid");
+					 
+		} else if (dispersion_type == DispersionType::bi) {
+			n_types = 2;
+			types = new char [n_types*max_size];
+			snprintf(types, max_size, "colloid1");
+			snprintf(types+max_size, max_size, "colloid2");
+		} else {
+			exit(1);
+		}
+		gsd_write_chunk(&gsdOut, "particles/types", GSD_TYPE_INT8, n_types, max_size, 0, types);
 	}
-
+	
+	// particle diameters
+	// particle IDs
 	{
 		float* fptr = scalarBuffer.data();
+		unsigned int*  uptr = new unsigned int [sys.get_np()];
 		// particle radius
 		for (int i=0; i<np; i++) {
 			fptr[i] = 2*sys.radius[i];
+			if (i < np1) {
+				uptr[i] = 0;
+			} else {
+				uptr[i] = 1;
+			}
 		}
 		gsd_write_chunk(&gsdOut, "particles/diameter", GSD_TYPE_FLOAT, np, 1, 0, fptr);
+		gsd_write_chunk(&gsdOut, "particles/typeid", GSD_TYPE_UINT32, np, 1, 0, uptr);
 	}
 	
 	// particle positions
@@ -1181,8 +1207,9 @@ void Simulation::outputGSD()
 			fptr[j++] = pos[i].x;
 			fptr[j++] = pos[i].z;
 			fptr[j++] = pos[i].y;
-		}
+			}
 		gsd_write_chunk(&gsdOut, "particles/position", GSD_TYPE_FLOAT, np, 3, 0, fptr);
+
 	}
 
 	// particle velocities
