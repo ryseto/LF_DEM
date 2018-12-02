@@ -1121,6 +1121,8 @@ void Simulation::outputFinalConfiguration(const string& filename_import_position
 
 void Simulation::outputGSD()
 {
+	static std::vector<float> vectorBuffer;    // DIM * bufferSize
+	static std::vector<float> scalarBuffer;    // bufferSize
 	bool first_time = true;
 	int np = sys.get_np();
 	static int ts = 0;
@@ -1179,6 +1181,7 @@ void Simulation::outputGSD()
 			exit(1);
 		}
 		gsd_write_chunk(&gsdOut, "particles/types", GSD_TYPE_INT8, n_types, max_size, 0, types);
+		delete[] types;
 	}
 	
 	// particle diameters
@@ -1197,6 +1200,7 @@ void Simulation::outputGSD()
 		}
 		gsd_write_chunk(&gsdOut, "particles/diameter", GSD_TYPE_FLOAT, np, 1, 0, fptr);
 		gsd_write_chunk(&gsdOut, "particles/typeid", GSD_TYPE_UINT32, np, 1, 0, uptr);
+		delete[] uptr;
 	}
 	
 	// particle positions
@@ -1209,7 +1213,6 @@ void Simulation::outputGSD()
 			fptr[j++] = pos[i].y;
 			}
 		gsd_write_chunk(&gsdOut, "particles/position", GSD_TYPE_FLOAT, np, 3, 0, fptr);
-
 	}
 
 	// particle velocities

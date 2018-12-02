@@ -79,8 +79,6 @@ private:
 	OutputData outdata_int;
 	std::ofstream fout_boxing;
 	gsd_handle gsdOut;
-	std::vector<float> vectorBuffer;    // DIM * bufferSize
-	std::vector<float> scalarBuffer;    // bufferSize
 	/*
 	 * For inputs
 	 */
