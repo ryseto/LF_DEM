@@ -928,7 +928,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		if (wall_rheology) {
 			calcStress();
 		}
-		if (!p.output.out_particle_stress.empty() || couette_stress) {
+		if (!p.output.out_particle_stress.empty() || couette_stress || p.output.out_gsd) {
 			calcTotalStressPerParticle();
 		}
 		if (p.output.recording_interaction_history) {

@@ -179,6 +179,7 @@ void Simulation::generateOutput(const set<string> &output_events, int& binconf_c
 {
 	checkpoint(); // generic, for recovery if crash
 	if (output_events.find("data") != output_events.end()) {
+		sys.calcStressPerParticle();
 		sys.calcStress();
 		outputData();
 	}
@@ -1246,7 +1247,6 @@ void Simulation::outputGSD()
 	{
 		//particles/charge
 		float* fptr = scalarBuffer.data();
-		sys.calcTotalStressPerParticle();
 		//float* fptr = scalarBuffer.data();
 		for (int i=0; i<np; i++) {
 			fptr[i] = -sys.total_stress_pp[i].trace()/3;
