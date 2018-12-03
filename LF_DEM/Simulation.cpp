@@ -1123,12 +1123,14 @@ void Simulation::outputGSD()
 {
 	static std::vector<float> vectorBuffer;    // DIM * bufferSize
 	static std::vector<float> scalarBuffer;    // bufferSize
-	bool first_time = true;
-	int np = sys.get_np();
+	static std::vector<float> quaternionBuffer;    // bufferSize
+	static bool first_time = true;
 	static int ts = 0;
+	int np = sys.get_np();
 	if (first_time) {
 		first_time = false;
 		vectorBuffer.resize(3*np, 0);
+		quaternionBuffer.resize(4*np, 0);
 		scalarBuffer.resize(np, 0);
 	}
 	auto pos = sys.position;
@@ -1147,11 +1149,9 @@ void Simulation::outputGSD()
 		 */
 		shear_strain = sys.get_shear_strain();
 	}
-
 	if (sys.twodimension) {
 		ly = 2*sys.radius[np-1];
 	}
-
 	for (int i=0; i<np; i++) {
 		if (-pos[i].x+shear_strain.x*pos[i].z > 0) {
 			pos[i].x += lx;
@@ -1204,7 +1204,7 @@ void Simulation::outputGSD()
 	// particle IDs
 	{
 		float* fptr = scalarBuffer.data();
-		unsigned int*  uptr = new unsigned int [sys.get_np()];
+		unsigned int*  uptr = new unsigned int [np];
 		// particle radius
 		for (int i=0; i<np; i++) {
 			fptr[i] = 2*sys.radius[i];
@@ -1227,7 +1227,7 @@ void Simulation::outputGSD()
 			fptr[j++] = pos[i].x;
 			fptr[j++] = pos[i].z;
 			fptr[j++] = pos[i].y;
-			}
+		}
 		gsd_write_chunk(&gsdOut, "particles/position", GSD_TYPE_FLOAT, np, 3, 0, fptr);
 	}
 
@@ -1241,6 +1241,37 @@ void Simulation::outputGSD()
 			fptr[j++] = vel[i].y;
 		}
 		gsd_write_chunk(&gsdOut, "particles/velocity", GSD_TYPE_FLOAT, np, 3, 0, fptr);
+	}
+
+	{
+		//particles/charge
+		float* fptr = scalarBuffer.data();
+		sys.calcTotalStressPerParticle();
+		//float* fptr = scalarBuffer.data();
+		for (int i=0; i<np; i++) {
+			fptr[i] = -sys.total_stress_pp[i].trace()/3;
+		}
+		gsd_write_chunk(&gsdOut, "particles/charge", GSD_TYPE_FLOAT, np, 1, 0, fptr);
+	}
+	
+	//	particles/orientation
+	{
+		if (sys.twodimension) {
+			float* fptr = quaternionBuffer.data();
+			int j = 0;
+			// outdata_par.entryData("angle", Dimensional::Dimension::none, 1, sys.angle[i]);
+			
+			/* q = cos(theta/2) + rot_vec * sin(theta/2)
+			 *   = (cos(theta/2), 0, 0 , sin(theta/2)
+			 */
+			for (int i=0; i<np; i++) {
+				fptr[j++] = cos(sys.angle[i]/2);
+				fptr[j++] = 0;
+				fptr[j++] = 0;
+				fptr[j++] = sin(sys.angle[i]/2);
+			}
+			gsd_write_chunk(&gsdOut, "particles/orientation", GSD_TYPE_FLOAT, np, 4, 0, fptr);
+		}
 	}
 
 	gsd_end_frame(&gsdOut);
