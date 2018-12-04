@@ -2851,9 +2851,8 @@ void System::recordHistory()
 void System::countContactNumber()
 {
 	/*
-	 * This counts effective contact numbers by particles.
-	 * It excludes particles to be pushed out in the force balance state,
-	 * These particles do not contribute the force balance.
+	 * This counts effective contact number per particle.
+	 * It considers only contacts to effective particles in the force balance.
 	 * Coordination number after excluding such particles is relevent for isostatic conditions.
 	 */
 	n_contact.clear();
@@ -2893,7 +2892,6 @@ void System::countContactNumber()
 	}
 	effective_coordination_number = num_bond_contact_network*(1.0/num_node_contact_network);
 }
-
 
 //void System::openHisotryFile(std::string &filename)
 //{
