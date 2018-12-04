@@ -1125,6 +1125,7 @@ void Simulation::outputGSD()
 	static std::vector<float> vectorBuffer;    // DIM * bufferSize
 	static std::vector<float> scalarBuffer;    // bufferSize
 	static std::vector<float> quaternionBuffer;    // bufferSize
+	static std::vector<unsigned int> uintBuffer;    // bufferSize
 	static bool first_time = true;
 	static int ts = 0;
 	int np = sys.get_np();
@@ -1133,6 +1134,7 @@ void Simulation::outputGSD()
 		vectorBuffer.resize(3*np, 0);
 		quaternionBuffer.resize(4*np, 0);
 		scalarBuffer.resize(np, 0);
+		uintBuffer.resize(np, 0);
 	}
 	auto pos = sys.position;
 	auto vel = sys.velocity;
@@ -1166,68 +1168,86 @@ void Simulation::outputGSD()
 			pos[i].y -= ly/2;
 		}
 	}
+	vector<int> eff_contact;
+	for (int k=0; k<sys.interaction.size(); k++) {
+		unsigned int i, j;
+		std::tie(i, j) = sys.interaction[k].get_par_num();
+		if (sys.interaction[k].contact.is_active()) {
+			if (sys.n_contact[i] >= 2 && sys.n_contact[j] >= 2) {
+				eff_contact.push_back(k);
+			}
+		}
+	}
+	
 	uint64_t _ts = ts;
 	uint8_t dim = 3;
 	float box[6] = {static_cast<float>(lx), static_cast<float>(lz), static_cast<float>(ly),
 		static_cast<float>(shear_strain.x),
-		static_cast<float>(shear_strain.y),
-		static_cast<float>(shear_strain.z)};
+		static_cast<float>(shear_strain.z),
+		static_cast<float>(shear_strain.y)};
 	
 	gsd_write_chunk(&gsdOut, "confix1guration/step", GSD_TYPE_UINT64, 1, 1, 0, &_ts);
 	gsd_write_chunk(&gsdOut, "configuration/dimensions", GSD_TYPE_UINT8, 1, 1, 0, &dim);
 	gsd_write_chunk(&gsdOut, "configuration/box", GSD_TYPE_FLOAT, 6, 1, 0, &box);
-	
-	// Total number of elements / particles
+	if (ts == 0) {
+		const int max_size = 63;
+		{
+			// Prticle type names
+			int  n_types;
+			char *types;
+			if (dispersion_type == DispersionType::mono) {
+				n_types = 1;
+				types = new char [n_types*max_size];
+				snprintf(types, max_size, "colloid");
+			} else if (dispersion_type == DispersionType::bi) {
+				n_types = 2;
+				types = new char [n_types*max_size];
+				snprintf(types, max_size, "colloid1");
+				snprintf(types+max_size, max_size, "colloid2");
+			} else {
+				exit(1);
+			}
+			gsd_write_chunk(&gsdOut, "particles/types", GSD_TYPE_INT8, n_types, max_size, 0, types);
+			delete[] types;
+		}
+		{
+			// Bond type names
+			int  n_types = 1;
+			char types[n_types*max_size];
+			snprintf(types, max_size, "effective contact");
+			gsd_write_chunk(&gsdOut, "bonds/types", GSD_TYPE_INT8, n_types, max_size, 0, types);
+		}
+	}
+
+	// Total number of particles
 	uint32_t n = np;
 	gsd_write_chunk(&gsdOut, "particles/N", GSD_TYPE_UINT32, 1, 1, 0, &n);
-
-	if (ts == 0) { // Write type/particle names
-		const int max_size = 63;
-		int  n_types;
-		char *types;
-		if (dispersion_type == DispersionType::mono) {
-			n_types = 1;
-			types = new char [n_types*max_size];
-			snprintf(types, max_size, "colloid");
-		} else if (dispersion_type == DispersionType::bi) {
-			n_types = 2;
-			types = new char [n_types*max_size];
-			snprintf(types, max_size, "colloid1");
-			snprintf(types+max_size, max_size, "colloid2");
-		} else {
-			exit(1);
-		}
-		gsd_write_chunk(&gsdOut, "particles/types", GSD_TYPE_INT8, n_types, max_size, 0, types);
-		delete[] types;
-	}
-	
-	// particle diameters
 	// particle IDs
+	// particle diameters
 	{
+		unsigned int* uptr = uintBuffer.data();
 		float* fptr = scalarBuffer.data();
-		unsigned int*  uptr = new unsigned int [np];
 		// particle radius
 		for (int i=0; i<np; i++) {
-			fptr[i] = 2*sys.radius[i];
 			if (i < np1) {
 				uptr[i] = 0;
 			} else {
 				uptr[i] = 1;
 			}
+			fptr[i] = 2*sys.radius[i];
 		}
-		gsd_write_chunk(&gsdOut, "particles/diameter", GSD_TYPE_FLOAT, np, 1, 0, fptr);
 		gsd_write_chunk(&gsdOut, "particles/typeid", GSD_TYPE_UINT32, np, 1, 0, uptr);
-		delete[] uptr;
+		gsd_write_chunk(&gsdOut, "particles/diameter", GSD_TYPE_FLOAT, np, 1, 0, fptr);
 	}
 	
 	// particle positions
 	{
 		float* fptr = vectorBuffer.data();
-		int j = 0;
 		for (int i=0; i<np; i++) {
-			fptr[j++] = pos[i].x;
-			fptr[j++] = pos[i].z;
-			fptr[j++] = pos[i].y;
+			int i3 = i*3;
+			fptr[i3  ] = pos[i].x;
+			fptr[i3+1] = pos[i].z;
+			fptr[i3+2] = pos[i].y;
 		}
 		gsd_write_chunk(&gsdOut, "particles/position", GSD_TYPE_FLOAT, np, 3, 0, fptr);
 	}
@@ -1235,13 +1255,40 @@ void Simulation::outputGSD()
 	// particle velocities
 	{
 		float* fptr = vectorBuffer.data();
-		int j = 0;
 		for (int i=0; i<np; i++) {
-			fptr[j++] = vel[i].x;
-			fptr[j++] = vel[i].z;
-			fptr[j++] = vel[i].y;
+			int i3= i*3;
+			fptr[i3  ] = vel[i].x;
+			fptr[i3+1] = vel[i].z;
+			fptr[i3+2] = vel[i].y;
 		}
 		gsd_write_chunk(&gsdOut, "particles/velocity", GSD_TYPE_FLOAT, np, 3, 0, fptr);
+	}
+
+	{
+		//particles/charge
+		float* fptr = scalarBuffer.data();
+		for (int i=0; i<np; i++) {
+			fptr[i] = -sys.total_stress_pp[i].trace()/3;
+		}
+		gsd_write_chunk(&gsdOut, "particles/charge", GSD_TYPE_FLOAT, np, 1, 0, fptr);
+	}
+	
+	//	particles/orientation
+	{
+		if (sys.twodimension) {
+			float* fptr = quaternionBuffer.data();
+			/* q = cos(theta/2) + rot_vec * sin(theta/2)
+			 *   = (cos(theta/2), 0, 0 , sin(theta/2)
+			 */
+			for (int i=0; i<np; i++) {
+				int i4 = 4*i;
+				fptr[i4  ] = cos(sys.angle[i]/2);
+				fptr[i4+1] = 0;
+				fptr[i4+2] = 0;
+				fptr[i4+3] = sin(sys.angle[i]/2);
+			}
+			gsd_write_chunk(&gsdOut, "particles/orientation", GSD_TYPE_FLOAT, np, 4, 0, fptr);
+		}
 	}
 
 	{
@@ -1253,27 +1300,31 @@ void Simulation::outputGSD()
 		}
 		gsd_write_chunk(&gsdOut, "particles/charge", GSD_TYPE_FLOAT, np, 1, 0, fptr);
 	}
-	
-	//	particles/orientation
+
 	{
-		if (sys.twodimension) {
-			float* fptr = quaternionBuffer.data();
-			int j = 0;
-			// outdata_par.entryData("angle", Dimensional::Dimension::none, 1, sys.angle[i]);
-			
-			/* q = cos(theta/2) + rot_vec * sin(theta/2)
-			 *   = (cos(theta/2), 0, 0 , sin(theta/2)
-			 */
-			for (int i=0; i<np; i++) {
-				fptr[j++] = cos(sys.angle[i]/2);
-				fptr[j++] = 0;
-				fptr[j++] = 0;
-				fptr[j++] = sin(sys.angle[i]/2);
+		uint32_t nb = eff_contact.size();
+		gsd_write_chunk(&gsdOut, "bonds/N", GSD_TYPE_UINT32, 1, 1, 0, &nb);
+		{
+			unsigned int* uptr = new unsigned int [nb];
+			for (int k=0; k<nb; k++) {
+				uptr[k] = 0;
 			}
-			gsd_write_chunk(&gsdOut, "particles/orientation", GSD_TYPE_FLOAT, np, 4, 0, fptr);
+			gsd_write_chunk(&gsdOut, "bonds/typeid", GSD_TYPE_UINT32, nb, 1, 0, uptr);
+			delete[] uptr;
+		}
+		{
+			unsigned int* uptr = new unsigned int [nb*2];
+			unsigned int i, j;
+			for (int k=0; k<nb; k++) {
+				int k2 = 2*k;
+				std::tie(i, j) = sys.interaction[eff_contact[k]].get_par_num();
+				uptr[k2] = i;
+				uptr[k2+1] = j;
+			}
+			gsd_write_chunk(&gsdOut, "bonds/group", GSD_TYPE_UINT32, nb, 2, 0, uptr);
+			delete [] uptr;
 		}
 	}
-
 	gsd_end_frame(&gsdOut);
 	ts++;
 }
