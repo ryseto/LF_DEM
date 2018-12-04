@@ -24,7 +24,8 @@ target_stress_input(0),
 restart_from_chkp(false),
 stress_reversal(false),
 timestep_1(0),
-diminish_output(false)
+diminish_output(false),
+jamming_strain(0)
 {
 	kill = false;
 	restart_from_chkp = !isZeroTimeChkp(chkp);
@@ -365,10 +366,8 @@ void Simulation::simulationSteadyShear(string in_args,
 			output_events.insert("data");
 			output_events.insert("config");
 		}
-		if (sys.get_time()-time_last_sj_program > sj_duration_min) {
-			if (sys.p.event_handler == "jamming_stress_reversal") {
-				operateJammingStressReversal(output_events);
-			}
+		if (sys.p.event_handler == "jamming_stress_reversal") {
+			operateJammingStressReversal(output_events);
 		}
 		generateOutput(output_events, binconf_counter);
 		printProgress();
@@ -396,7 +395,7 @@ void Simulation::simulationSteadyShear(string in_args,
 
 void Simulation::operateJammingStressReversal(std::set<std::string> &output_events)
 {
-	if (stress_reversal) {
+	if (stress_reversal && sys.get_time()-time_last_sj_program > sj_duration_min) {
 		if (sys.p.sj_program_file == "") {
 			jamming_strain = sys.get_cumulated_strain();
 			static int cnt_shear_jamming_repetation = 0;
