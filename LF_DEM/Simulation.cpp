@@ -501,6 +501,12 @@ void Simulation::stressProgram()
 		sys.target_stress = stress_original;
 		sys.p.kn = kn_original;
 		sys.p.kt = kt_original;
+	} else if (sj_program_stress.front() == 2) {
+		exit(1);
+		sys.setShearDirection(M_PI/2);
+		sys.target_stress = stress_original;
+		sys.p.kn = kn_original;
+		sys.p.kt = kt_original;
 	} else if (sj_program_stress.front() == 999) {
 		kill = true;
 	} else {
@@ -1161,10 +1167,18 @@ void Simulation::outputGSD()
 		if (-pos[i].x+shear_strain.x*pos[i].z < -lx) {
 			pos[i].x -= lx;
 		}
+		if (!sys.twodimension) {
+			if (-pos[i].y+shear_strain.x*pos[i].z > 0) {
+				pos[i].y += ly;
+			}
+			if (-pos[i].y+shear_strain.x*pos[i].z < -ly) {
+				pos[i].y -= ly;
+			}
+		}
 		pos[i].x -= (lx+shear_strain.x*lz)/2;
 		pos[i].z -= lz/2;
 		if (!sys.twodimension) {
-			pos[i].y -= ly/2;
+			pos[i].y -= (ly+shear_strain.y*lz)/2;
 		}
 	}
 	vector<int> eff_contact;
@@ -1180,10 +1194,32 @@ void Simulation::outputGSD()
 	
 	uint64_t _ts = ts;
 	uint8_t dim = 3;
+	/*
+	 * Simulation box. Each array element defines a different box property. See the hoomd documentation for a full description on how these box parameters map to a triclinic geometry.
+	 * box[0:3]: (lx,ly,lz)
+	 * the box length in each direction, in length units
+	 * box[3:]: (xy,xz,yz)
+	 * the tilt factors, unitless values
+	 */
+	/*
+	 * https://hoomd-blue.readthedocs.io/en/stable/box.html
+	double sy_ly = -shear_strain.y*ly;
+	double Lxbox = lx;
+	double Lybox = sqrt(lz*lz + sy_ly*sy_ly);
+	double Lzbox = lz*ly/sqrt(sy_ly*sy_ly+lz*lz);
+	double xybox = shear_strain.x*lz/sqrt(lz*lz + sy_ly*sy_ly);
+	double xzbox = 0;
+	double yzbox = sy_ly/lz;
+	float box[6] = {static_cast<float>(Lxbox), static_cast<float>(Lybox), static_cast<float>(Lzbox),
+		static_cast<float>(xybox), static_cast<float>(xzbox), static_cast<float>(yzbox)};
+	 */
+	if (shear_strain.y != 0 || shear_strain.z != 0) {
+		ostringstream error_str;
+		error_str  << " error: simulation box for gsd data"<< endl;
+		throw runtime_error(error_str.str());
+	}
 	float box[6] = {static_cast<float>(lx), static_cast<float>(lz), static_cast<float>(ly),
-		static_cast<float>(shear_strain.x),
-		static_cast<float>(shear_strain.z),
-		static_cast<float>(shear_strain.y)};
+		static_cast<float>(shear_strain.x), 0, 0};
 	
 	gsd_write_chunk(&gsdOut, "confix1guration/step", GSD_TYPE_UINT64, 1, 1, 0, &_ts);
 	gsd_write_chunk(&gsdOut, "configuration/dimensions", GSD_TYPE_UINT8, 1, 1, 0, &dim);
