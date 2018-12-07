@@ -1141,11 +1141,10 @@ void Simulation::outputGSD()
 		uintBuffer.resize(np, 0);
 	}
 	auto pos = sys.position;
-	auto vel = sys.velocity;
 	double lx = sys.get_lx();
 	double ly = sys.get_ly();
 	double lz = sys.get_lz();
-	vec3d shear_strain = sys.get_shear_strain();
+	vec3d shear_strain;
 	if (sys.eventLookUp == NULL) {
 		/* modulate for 0 < strain < 1
 		 */
@@ -1159,22 +1158,29 @@ void Simulation::outputGSD()
 	if (sys.twodimension) {
 		ly = 2*sys.radius[np-1];
 	}
+	/* In OVITO, the origin is always the center of simulation cell ((lx+ gamma*lz)/2, lz/2).
+	 * The strain gamma is modulated between 0 and 1.
+	 * We need the follwoing treratment avoid discontinous jump of particle positions.
+	 */
+	double total_strain = sys.get_shear_strain().x;
+	while (abs(total_strain) > 2) {
+		if (total_strain > 0) {
+			total_strain -=  2;
+		} else {
+			total_strain += 2;
+		}
+	}
 	for (int i=0; i<np; i++) {
-		if (-pos[i].x+shear_strain.x*(pos[i].z-lz/2) > 0) {
+		if (abs(total_strain) > 1) {
+			pos[i].x += lx/2;
+		}
+		if (-(pos[i].x)+(shear_strain.x)*(pos[i].z) > 0) {
 			pos[i].x += lx;
 		}
-		if (-pos[i].x+shear_strain.x*(pos[i].z-lz/2) < -lx) {
+		if (-(pos[i].x-lx)+(shear_strain.x)*(pos[i].z) < 0) {
 			pos[i].x -= lx;
 		}
-		if (!sys.twodimension) {
-			if (-pos[i].y+shear_strain.x*pos[i].z > 0) {
-				pos[i].y += ly;
-			}
-			if (-pos[i].y+shear_strain.x*pos[i].z < -ly) {
-				pos[i].y -= ly;
-			}
-		}
-		pos[i].x -= lx/2;
+		pos[i].x -= (lx+shear_strain.x*lz)/2;
 		pos[i].z -= lz/2;
 		if (!sys.twodimension) {
 			pos[i].y -= ly/2;
@@ -1190,7 +1196,6 @@ void Simulation::outputGSD()
 			}
 		}
 	}
-	
 	uint64_t _ts = ts;
 	uint8_t dim = 3;
 	/*
@@ -1291,13 +1296,13 @@ void Simulation::outputGSD()
 		float* fptr = vectorBuffer.data();
 		for (int i=0; i<np; i++) {
 			int i3= i*3;
-			fptr[i3  ] = vel[i].x;
-			fptr[i3+1] = vel[i].z;
-			fptr[i3+2] = vel[i].y;
+			fptr[i3  ] = sys.na_velocity[i].x;
+			fptr[i3+1] = sys.na_velocity[i].z;
+			fptr[i3+2] = sys.na_velocity[i].y;
 		}
 		gsd_write_chunk(&gsdOut, "particles/velocity", GSD_TYPE_FLOAT, np, 3, 0, fptr);
 	}
-
+	
 	{
 		//particles/charge
 		float* fptr = scalarBuffer.data();
