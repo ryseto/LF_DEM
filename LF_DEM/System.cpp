@@ -2870,11 +2870,22 @@ void System::countContactNumber()
 			if (inter.contact.is_active()) {
 				if (n_contact[inter.get_p0()] == 1
 					&& n_contact[inter.get_p1()] == 1) {
+					/* If two particles are in contact with one bond,
+					 * these particles are isolated.
+					 * The contact will disappear.
+					 * Residual overlaps can be considered as numerical artifact.
+					 */
 					n_contact[inter.get_p0()] = 0;
 					n_contact[inter.get_p1()] = 0;
 					cn_change = true;
 				} else if (n_contact[inter.get_p0()] == 1
 						   || n_contact[inter.get_p1()] == 1) {
+					/*
+					 * If one particle has only one contacting neighbor,
+					 * the particle is a dead-end branch.
+					 * Removing them.
+					 * This iteration algortim removes them from the tip one by one.
+					 */
 					n_contact[inter.get_p0()] --;
 					n_contact[inter.get_p1()] --;
 					cn_change = true;

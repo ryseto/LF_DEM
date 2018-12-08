@@ -501,6 +501,11 @@ void Simulation::stressProgram()
 		sys.target_stress = stress_original;
 		sys.p.kn = kn_original;
 		sys.p.kt = kt_original;
+	} else if (sj_program_stress.front() == 2) {
+		sys.setShearDirection(M_PI/2);
+		sys.target_stress = stress_original;
+		sys.p.kn = kn_original;
+		sys.p.kt = kt_original;
 	} else if (sj_program_stress.front() == 999) {
 		kill = true;
 	} else {
@@ -1136,11 +1141,10 @@ void Simulation::outputGSD()
 		uintBuffer.resize(np, 0);
 	}
 	auto pos = sys.position;
-	auto vel = sys.velocity;
 	double lx = sys.get_lx();
 	double ly = sys.get_ly();
 	double lz = sys.get_lz();
-	vec3d shear_strain = sys.get_shear_strain();
+	vec3d shear_strain;
 	if (sys.eventLookUp == NULL) {
 		/* modulate for 0 < strain < 1
 		 */
@@ -1154,11 +1158,26 @@ void Simulation::outputGSD()
 	if (sys.twodimension) {
 		ly = 2*sys.radius[np-1];
 	}
+	/* In OVITO, the origin is always the center of simulation cell ((lx+ gamma*lz)/2, lz/2).
+	 * The strain gamma is modulated between 0 and 1.
+	 * We need the follwoing treratment avoid discontinous jump of particle positions.
+	 */
+	double total_strain = sys.get_shear_strain().x;
+	while (abs(total_strain) > 2) {
+		if (total_strain > 0) {
+			total_strain -=  2;
+		} else {
+			total_strain += 2;
+		}
+	}
 	for (int i=0; i<np; i++) {
-		if (-pos[i].x+shear_strain.x*pos[i].z > 0) {
+		if (abs(total_strain) > 1) {
+			pos[i].x += lx/2;
+		}
+		if (-(pos[i].x)+(shear_strain.x)*(pos[i].z) > 0) {
 			pos[i].x += lx;
 		}
-		if (-pos[i].x+shear_strain.x*pos[i].z < -lx) {
+		if (-(pos[i].x-lx)+(shear_strain.x)*(pos[i].z) < 0) {
 			pos[i].x -= lx;
 		}
 		pos[i].x -= (lx+shear_strain.x*lz)/2;
@@ -1177,13 +1196,34 @@ void Simulation::outputGSD()
 			}
 		}
 	}
-	
 	uint64_t _ts = ts;
 	uint8_t dim = 3;
+	/*
+	 * Simulation box. Each array element defines a different box property. See the hoomd documentation for a full description on how these box parameters map to a triclinic geometry.
+	 * box[0:3]: (lx,ly,lz)
+	 * the box length in each direction, in length units
+	 * box[3:]: (xy,xz,yz)
+	 * the tilt factors, unitless values
+	 */
+	/*
+	 * https://hoomd-blue.readthedocs.io/en/stable/box.html
+	double sy_ly = shear_strain.y*ly;
+	double Lxbox = lx;
+	double Lybox = sqrt(lz*lz + sy_ly*sy_ly);
+	double Lzbox = lz*ly/sqrt(sy_ly*sy_ly+lz*lz);
+	double xybox = shear_strain.x*lz/sqrt(lz*lz + sy_ly*sy_ly);
+	double xzbox = 0;
+	double yzbox = sy_ly/lz;
+	float box[6] = {static_cast<float>(Lxbox), static_cast<float>(Lybox), static_cast<float>(Lzbox),
+		static_cast<float>(xybox), static_cast<float>(xzbox), static_cast<float>(yzbox)};
+	 */
+	//	if (shear_strain.y != 0 || shear_strain.z != 0) {
+	//		ostringstream error_str;
+	//		error_str  << " error: simulation box for gsd data"<< endl;
+	//		throw runtime_error(error_str.str());
+	//	}
 	float box[6] = {static_cast<float>(lx), static_cast<float>(lz), static_cast<float>(ly),
-		static_cast<float>(shear_strain.x),
-		static_cast<float>(shear_strain.z),
-		static_cast<float>(shear_strain.y)};
+		static_cast<float>(shear_strain.x), 0, 0};
 	
 	gsd_write_chunk(&gsdOut, "confix1guration/step", GSD_TYPE_UINT64, 1, 1, 0, &_ts);
 	gsd_write_chunk(&gsdOut, "configuration/dimensions", GSD_TYPE_UINT8, 1, 1, 0, &dim);
@@ -1256,13 +1296,13 @@ void Simulation::outputGSD()
 		float* fptr = vectorBuffer.data();
 		for (int i=0; i<np; i++) {
 			int i3= i*3;
-			fptr[i3  ] = vel[i].x;
-			fptr[i3+1] = vel[i].z;
-			fptr[i3+2] = vel[i].y;
+			fptr[i3  ] = sys.na_velocity[i].x;
+			fptr[i3+1] = sys.na_velocity[i].z;
+			fptr[i3+2] = sys.na_velocity[i].y;
 		}
 		gsd_write_chunk(&gsdOut, "particles/velocity", GSD_TYPE_FLOAT, np, 3, 0, fptr);
 	}
-
+	
 	{
 		//particles/charge
 		// ---> We use this for particle pressure
