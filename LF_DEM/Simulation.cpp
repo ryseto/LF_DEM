@@ -1265,13 +1265,22 @@ void Simulation::outputGSD()
 
 	{
 		//particles/charge
+		// ---> We use this for particle pressure
 		float* fptr = scalarBuffer.data();
 		for (int i=0; i<np; i++) {
 			fptr[i] = -sys.total_stress_pp[i].trace()/3;
 		}
 		gsd_write_chunk(&gsdOut, "particles/charge", GSD_TYPE_FLOAT, np, 1, 0, fptr);
 	}
-	
+	{
+		//particles/mass
+		// ---> We use this for the effective coordination number
+		float* fptr = scalarBuffer.data();
+		for (int i=0; i<np; i++) {
+			fptr[i] = sys.n_contact[i];
+		}
+		gsd_write_chunk(&gsdOut, "particles/mass", GSD_TYPE_FLOAT, np, 1, 0, fptr);
+	}
 	//	particles/orientation
 	{
 		if (sys.twodimension) {
