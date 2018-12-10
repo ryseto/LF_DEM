@@ -96,18 +96,22 @@ void Simulation::handleEventsShearJamming()
 			ending_simulation = true;
 		}
 	} else {
-		exit(1);
-//		static int shear_jam_counter = 0;
-//		double sr = sqrt(2*sys.getEinfty().selfdoubledot()); // shear rate for simple shear.
-//		if (abs(sr) < sys.p.shear_jamming_rate) {
-//			shear_jam_counter ++;
-//			cerr << "shear_jam_counter = " << shear_jam_counter << endl;
-//		} else {
-//			shear_jam_counter = 0;
-//		}
-//		if (shear_jam_counter == sys.p.shear_jamming_max_count) {
-//			ending_simulation = true;
-//		}
+		static int shear_jam_counter = 0;
+		bool jammed = false;
+		for (const auto& ev : events) {
+			if (ev.type == "jammed_shear_rate") {
+				jammed = true;
+			}
+		}
+		if (jammed) {
+			shear_jam_counter ++;
+			cout << " jammed " << shear_jam_counter << endl;
+		} else {
+			shear_jam_counter = 0;
+		}
+		if (shear_jam_counter == sys.p.sj_check_count) {
+			ending_simulation = true;
+		}
 	}
 	if (ending_simulation == true) {
 		cout << "jammed" << endl;

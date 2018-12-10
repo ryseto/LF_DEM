@@ -105,6 +105,7 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit) {
 		PARAM_INIT(friction_model, 1),
 		PARAM_INIT(np_fixed, 0),
 		PARAM_INIT(simulation_mode, 0),
+		PARAM_INIT(sj_check_count, 10),
 		PARAM_INIT(sj_reversal_repetition, 10)
 	};
 
