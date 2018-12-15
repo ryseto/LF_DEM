@@ -1177,8 +1177,8 @@ void Simulation::outputGSD()
 	}
 	while (abs(total_strain) >= 2) {
 		if (total_strain > 0) {
-			total_strain -=  2;
-		} else if (total_strain < 0) {
+			total_strain -= 2;
+		} else {
 			total_strain += 2;
 		}
 	}
