@@ -736,17 +736,29 @@ void System::timeStepBoxing()
 			vec3d shear_strain_increment = 2*dot(E_infinity, {0, 0, 1})*dt;
 			shear_strain += shear_strain_increment;
 			shear_disp += shear_strain_increment*lz;
-			int m = (int)(shear_disp.x/lx);
-			if (shear_disp.x < 0) {
-				m--;
-			}
-			shear_disp.x = shear_disp.x-m*lx;
-			if (!twodimension) {
-				m = (int)(shear_disp.y/ly);
-				if (shear_disp.y < 0) {
-					m--;
+			{
+				int mx = 0;
+				if (abs(shear_disp.x - lx) < 1e-10) {
+					mx = 1;
+				} else if (abs(shear_disp.x + lx) < 1e-10) {
+					mx = -1;
 				}
-				shear_disp.y = shear_disp.y-m*ly;
+				if (shear_disp.x < 0) {
+					mx --;
+				}
+				shear_disp.x = shear_disp.x-mx*lx;
+			}
+			if (!twodimension) {
+				int my = 0;
+				if (abs(shear_disp.y - ly) < 1e-10) {
+					my = 1;
+				} else if (abs(shear_disp.y + ly) < 1e-10) {
+					my = -1;
+				}
+				if (shear_disp.y < 0) {
+					my--;
+				}
+				shear_disp.y = shear_disp.y-my*ly;
 			}
 		}
 	} else {

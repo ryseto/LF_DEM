@@ -1167,15 +1167,27 @@ void Simulation::outputGSD()
 	 * We need the follwoing treratment avoid discontinous jump of particle positions.
 	 */
 	double total_strain = sys.get_shear_strain().x;
-	while (abs(total_strain) > 2) {
+	int int_total_strain = roundf(total_strain);
+	if (abs(total_strain-int_total_strain) < 1e-13) {
+		total_strain = int_total_strain;
+	}
+	int int_shear_strain_x = roundf(shear_strain.x);
+	if (abs(shear_strain.x-int_shear_strain_x) < 1e-13) {
+		shear_strain.x = int_shear_strain_x;
+	}
+	while (abs(total_strain) >= 2) {
 		if (total_strain > 0) {
 			total_strain -=  2;
-		} else {
+		} else if (total_strain < 0) {
 			total_strain += 2;
 		}
 	}
+	bool half_shift = false;
+	if (abs(total_strain) >= 1) {
+		half_shift = true;
+	}
 	for (int i=0; i<np; i++) {
-		if (abs(total_strain) > 1) {
+		if (half_shift) {
 			pos[i].x += lx/2;
 		}
 		if (-(pos[i].x)+(shear_strain.x)*(pos[i].z) > 0) {
