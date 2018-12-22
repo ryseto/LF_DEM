@@ -738,9 +738,9 @@ void System::timeStepBoxing()
 			shear_disp += shear_strain_increment*lz;
 			{
 				int mx = 0;
-				if (abs(shear_disp.x - lx) < 1e-10) {
+				if (abs(shear_disp.x-lx) < 1e-8) {
 					mx = 1;
-				} else if (abs(shear_disp.x + lx) < 1e-10) {
+				} else if (abs(shear_disp.x+lx) < 1e-8) {
 					mx = -1;
 				}
 				if (shear_disp.x < 0) {
@@ -750,9 +750,9 @@ void System::timeStepBoxing()
 			}
 			if (!twodimension) {
 				int my = 0;
-				if (abs(shear_disp.y - ly) < 1e-10) {
+				if (abs(shear_disp.y-ly) < 1e-8) {
 					my = 1;
-				} else if (abs(shear_disp.y + ly) < 1e-10) {
+				} else if (abs(shear_disp.y+ly) < 1e-8) {
 					my = -1;
 				}
 				if (shear_disp.y < 0) {

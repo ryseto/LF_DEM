@@ -1168,11 +1168,11 @@ void Simulation::outputGSD()
 	 */
 	double total_strain = sys.get_shear_strain().x;
 	int int_total_strain = roundf(total_strain);
-	if (abs(total_strain-int_total_strain) < 1e-13) {
+	if (abs(total_strain-int_total_strain) < 1e-8) {
 		total_strain = int_total_strain;
 	}
 	int int_shear_strain_x = roundf(shear_strain.x);
-	if (abs(shear_strain.x-int_shear_strain_x) < 1e-13) {
+	if (abs(shear_strain.x-int_shear_strain_x) < 1e-8) {
 		shear_strain.x = int_shear_strain_x;
 	}
 	while (abs(total_strain) >= 2) {
@@ -1240,10 +1240,10 @@ void Simulation::outputGSD()
 	//	}
 	float box[6] = {static_cast<float>(lx), static_cast<float>(lz), static_cast<float>(ly),
 		static_cast<float>(shear_strain.x), 0, 0};
-	
 	gsd_write_chunk(&gsdOut, "confix1guration/step", GSD_TYPE_UINT64, 1, 1, 0, &_ts);
 	gsd_write_chunk(&gsdOut, "configuration/dimensions", GSD_TYPE_UINT8, 1, 1, 0, &dim);
 	gsd_write_chunk(&gsdOut, "configuration/box", GSD_TYPE_FLOAT, 6, 1, 0, &box);
+
 	if (ts == 0) {
 		const int max_size = 63;
 		{

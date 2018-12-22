@@ -23,7 +23,7 @@ my $timeper=0;
 my $scale=0.5;
 my $axisrotation=1;
 my $pd_color = 0;
-my $draw_cross = 0;
+my $draw_cross = 1;
 my $flow_type = "shear";
 my $draw_trajectory = 0;
 my $phi6_data = 1;
@@ -145,7 +145,7 @@ sub readHeader {
 	$line = <IN_particle>; ($buf, $buf, $dataunit) = split(/\s+/, $line);
 
 	if ($Ly == 0) {
-		$number_of_header = 8;
+		$number_of_header = 9;
 	} else {
 		$number_of_header = 7;
 	}
@@ -204,7 +204,11 @@ sub InParticles {
 			# 3D
 			# ($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz) = split(/\s+/, $line);
 			# 2D
-			($ip, $a, $x, $z, $vx, $vy, $vz, $ox, $oy, $oz, $angle) = split(/\s+/, $line);
+			if ($dim eq 3) {
+				($ip, $a, $x, $y, $z, $vx, $vz, $vy, $ox, $oz, $oy, $connum) = split(/\s+/, $line);
+			} else {
+				($ip, $a, $x, $z, $vx, $vz, $vy, $ox, $oz, $oy, $angle, $connum) = split(/\s+/, $line);
+			}
             #
             $ang[$i] = $angle;
             $radius[$i] = $a;
@@ -227,7 +231,8 @@ sub InParticles {
             $omegax[$i] = $ox;
             $omegay[$i] = $oy;
             $omegaz[$i] = $oz;
-            
+			$contactnumber[$i] = $connum;
+
             if ($radius_max < $a) {
                 $radius_max = $a;
             }
@@ -367,6 +372,33 @@ sub OutYaplotData{
 		}
 	}
 	## visualize contact network
+#	if (1) {
+#		printf OUT "y 2\n";
+#		printf OUT "r 0.2\n";
+#		printf OUT "@ 6\n"; # static
+#		for ($k = 0; $k < $num_interaction; $k ++) {
+#			if ($contactstate[$k] >= 2) {
+#				$i = $int0[$k];
+#				$j = $int1[$k];
+#				if ($contactnumber[$i] >= 2 && $contactnumber[$j] >= 2) {
+#					&OutString2($int0[$k], $int1[$k]);
+#				}
+#			}
+#		}
+#		printf OUT "y 2\n";
+#		printf OUT "r 0.2\n";
+#		printf OUT "@ 2\n"; # static
+#		for ($k = 0; $k < $num_interaction; $k ++) {
+#			if ($contactstate[$k] == 1) {
+#				$i = $int0[$k];
+#				$j = $int1[$k];
+#				if ($contactnumber[$i] >= 2 && $contactnumber[$j] >= 2) {
+#					&OutString2($int0[$k], $int1[$k]);
+#				}
+#			}
+#		}
+#	}
+	
 	#	printf OUT "y 2\n";
 	#	printf OUT "r 0.2\n";
 	#	printf OUT "@ 0\n"; # static
