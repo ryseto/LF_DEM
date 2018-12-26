@@ -644,6 +644,7 @@
 		D9A9066E1BF331EF00BE8640 /* particleconfig.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = particleconfig.pl; path = tools/particleconfig.pl; sourceTree = SOURCE_ROOT; };
 		D9A9066F1BF331EF00BE8640 /* reduce_rheodata.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = reduce_rheodata.pl; path = tools/reduce_rheodata.pl; sourceTree = SOURCE_ROOT; };
 		D9A906701BF331EF00BE8640 /* trajectory.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = trajectory.pl; path = tools/trajectory.pl; sourceTree = SOURCE_ROOT; };
+		D9AB67A621D3CBB0003ECF50 /* anisotropy_analysis.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = anisotropy_analysis.pl; path = tools/anisotropy_analysis.pl; sourceTree = SOURCE_ROOT; };
 		D9AD32F11D8CAD3D00819471 /* SystemHelperFunctions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SystemHelperFunctions.h; sourceTree = "<group>"; };
 		D9B0FF381D1A810C00FFCBFD /* Timer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Timer.h; sourceTree = "<group>"; };
 		D9B16BDD21B1CB6800AD5939 /* gsd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gsd.c; sourceTree = "<group>"; };
@@ -1262,6 +1263,7 @@
 			children = (
 				D9A906691BF331EF00BE8640 /* generateYaplotFile_seto.pl */,
 				D9A9066A1BF331EF00BE8640 /* generateYaplotFile.pl */,
+				D9AB67A621D3CBB0003ECF50 /* anisotropy_analysis.pl */,
 				D96B068920969E4D00EC3A0C /* extractPositionData.pl */,
 				D95D5FC62148E9E6004953DA /* nsd_analysis.pl */,
 				D9632A401F3021A100741C43 /* averageConfigdata.pl */,

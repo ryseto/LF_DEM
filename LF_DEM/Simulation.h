@@ -153,6 +153,9 @@ public:
 	void outputPstFileTxt();
 	void outputConfigurationBinary(std::string);
 	void outputGSD();
+	void dataAdjustGSD(std::vector<vec3d> &pos,
+					   vec3d &shear_strain,
+					   double lx, double ly, double lz);
 	void checkpoint();
 	vec3d shiftUpCoordinate(double x, double y, double z);
 	void relativePositionView(std::vector<vec3d> &pos, std::vector<vec3d> &vel);

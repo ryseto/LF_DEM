@@ -188,7 +188,7 @@ sub InParticles {
         if ($i > 0) {
             $line = <IN_particle>;
         }
-        if ($output == 1) {
+        if (1) {
             # 1: number of the particle
             # 2: radius
             # 3, 4, 5: position
@@ -291,28 +291,33 @@ sub InInteractions{
 			$int0[$k] = $i;
 			$int1[$k] = $j;
 			$contactstate[$k] = $contact;
+			$F_lub[$k] = $f_lub_norm;
+			#$F_lub_tan = sqrt($f_lub_tan_x**2 + $f_lub_tan_y**2 + $f_lub_tan_z**2);
+			
+			$Fc_n[$k] = $fc_norm;
+			#$Fc_t[$k] = sqrt($fc_tan_x**2+$fc_tan_y**2+$fc_tan_z**2);
 			
 			if ($contact > 0) {
 				#$force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
-				$force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
+				$fn = $fc_norm + $f_lub_norm + $fr_norm;
 				#$force[$k] = $fc_norm;
 			} else {
-				$force[$k] = $f_lub_norm + $fr_norm;
+				$fn = $fc_norm + $f_lub_norm;
+				#$force[$k] = $f_lub_norm + $fr_norm;
 				#$force[$k] = 0;
 			}
-			
-			$F_lub[$k] = $f_lub_norm;
-			$F_lub_tan = sqrt($f_lub_tan_x**2 + $f_lub_tan_y**2 + $f_lub_tan_z**2);
-			
-			$Fc_n[$k] = $fc_norm;
-			$Fc_t[$k] = sqrt($fc_tan_x**2+$fc_tan_y**2+$fc_tan_z**2);
+			$ftx = $f_lub_tan_x + $fc_tan_x;
+			$fty = $f_lub_tan_y + $fc_tan_y;
+			$ftz = $f_lub_tan_z + $fc_tan_z;
+			$ft = sqrt($ftx*$ftx + $fty*$fty + $ftz*$ftz);
+			$force[$k] = sqrt($fn*$fn + $ft*$ft);
 			$S_bf[$k] =  $s_xF;
 			$nrvec_x[$k] = $nx;
 			$nrvec_y[$k] = $ny;
 			$nrvec_z[$k] = $nz;
 			$Gap[$k] = $gap;
-			$k++;
 		}
+		$k++;
 	}
 	$num_interaction = $k;
 }
@@ -425,7 +430,7 @@ sub OutYaplotData{
 		for ($k = 0; $k < $num_interaction; $k ++) {
 			$forcetmp = $force[$k];
 			#$forcetmp = $F_lub[$k];
-			if ($forcetmp > 0) {
+			if ($forcetmp > 0.1) {
 				$w = $force_factor*$forcetmp;
 				for ($ii = $ii_min; $ii <= $ii_max; $ii++) {
 					for ($jj = $jj_min; $jj <= $jj_max; $jj++) {

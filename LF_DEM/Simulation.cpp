@@ -1128,27 +1128,11 @@ void Simulation::outputFinalConfiguration(const string& filename_import_position
 	outputConfigurationBinary(filename_bin);
 }
 
-void Simulation::outputGSD()
+void Simulation::dataAdjustGSD(std::vector<vec3d> &pos,
+							   vec3d &shear_strain,
+							   double lx, double ly, double lz)
 {
-	static std::vector<float> vectorBuffer;    // DIM * bufferSize
-	static std::vector<float> scalarBuffer;    // bufferSize
-	static std::vector<float> quaternionBuffer;    // bufferSize
-	static std::vector<unsigned int> uintBuffer;    // bufferSize
-	static bool first_time = true;
-	static int ts = 0;
 	int np = sys.get_np();
-	if (first_time) {
-		first_time = false;
-		vectorBuffer.resize(3*np, 0);
-		quaternionBuffer.resize(4*np, 0);
-		scalarBuffer.resize(np, 0);
-		uintBuffer.resize(np, 0);
-	}
-	auto pos = sys.position;
-	double lx = sys.get_lx();
-	double ly = sys.get_ly();
-	double lz = sys.get_lz();
-	vec3d shear_strain;
 	if (sys.eventLookUp == NULL) {
 		/* modulate for 0 < strain < 1
 		 */
@@ -1166,7 +1150,7 @@ void Simulation::outputGSD()
 	 * The strain gamma is modulated between 0 and 1.
 	 * We need the follwoing treratment avoid discontinous jump of particle positions.
 	 */
-	double total_strain = sys.get_shear_strain().x;
+ 	double total_strain = sys.get_shear_strain().x;
 	int int_total_strain = roundf(total_strain);
 	if (abs(total_strain-int_total_strain) < 1e-8) {
 		total_strain = int_total_strain;
@@ -1202,6 +1186,32 @@ void Simulation::outputGSD()
 			pos[i].y -= ly/2;
 		}
 	}
+}
+
+void Simulation::outputGSD()
+{
+	static std::vector<float> vectorBuffer;    // DIM * bufferSize
+	static std::vector<float> scalarBuffer;    // bufferSize
+	static std::vector<float> quaternionBuffer;    // bufferSize
+	static std::vector<unsigned int> uintBuffer;    // bufferSize
+	static bool first_time = true;
+	static int ts = 0;
+	int np = sys.get_np();
+	if (first_time) {
+		first_time = false;
+		vectorBuffer.resize(3*np, 0);
+		quaternionBuffer.resize(4*np, 0);
+		scalarBuffer.resize(np, 0);
+		uintBuffer.resize(np, 0);
+	}
+	std::vector<vec3d> pos = sys.position;
+	double lx = sys.get_lx();
+	double ly = sys.get_ly();
+	double lz = sys.get_lz();
+	vec3d shear_strain;
+
+	dataAdjustGSD(pos, shear_strain, lx, ly, lz);
+	
 	vector<int> eff_contact;
 	for (int k=0; k<sys.interaction.size(); k++) {
 		unsigned int i, j;
@@ -1238,8 +1248,20 @@ void Simulation::outputGSD()
 	//		error_str  << " error: simulation box for gsd data"<< endl;
 	//		throw runtime_error(error_str.str());
 	//	}
+	double xybox, xzbox, yzbox;
+	if (!sys.ext_flow) {
+		xybox = shear_strain.x;
+		xzbox = 0;
+		yzbox = 0;
+	} else {
+		cerr << "GSD output is not supported for extentional flows." << endl;
+		exit(1);
+		xybox = 0;
+		xzbox = 0;
+		yzbox = 0;
+	}
 	float box[6] = {static_cast<float>(lx), static_cast<float>(lz), static_cast<float>(ly),
-		static_cast<float>(shear_strain.x), 0, 0};
+		static_cast<float>(xybox), static_cast<float>(xzbox), static_cast<float>(yzbox)};
 	gsd_write_chunk(&gsdOut, "confix1guration/step", GSD_TYPE_UINT64, 1, 1, 0, &_ts);
 	gsd_write_chunk(&gsdOut, "configuration/dimensions", GSD_TYPE_UINT8, 1, 1, 0, &dim);
 	gsd_write_chunk(&gsdOut, "configuration/box", GSD_TYPE_FLOAT, 6, 1, 0, &box);
