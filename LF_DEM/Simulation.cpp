@@ -1143,9 +1143,7 @@ void Simulation::dataAdjustGSD(std::vector<vec3d> &pos,
 		 */
 		shear_strain = sys.get_shear_strain();
 	}
-	if (sys.twodimension) {
-		ly = 2*sys.radius[np-1];
-	}
+
 	/* In OVITO, the origin is always the center of simulation cell ((lx+ gamma*lz)/2, lz/2).
 	 * The strain gamma is modulated between 0 and 1.
 	 * We need the follwoing treratment avoid discontinous jump of particle positions.
@@ -1208,6 +1206,9 @@ void Simulation::outputGSD()
 	double lx = sys.get_lx();
 	double ly = sys.get_ly();
 	double lz = sys.get_lz();
+	if (sys.twodimension) {
+		ly = 2*sys.radius[np-1];
+	}
 	vec3d shear_strain;
 
 	dataAdjustGSD(pos, shear_strain, lx, ly, lz);
@@ -1261,7 +1262,8 @@ void Simulation::outputGSD()
 		yzbox = 0;
 	}
 	float box[6] = {static_cast<float>(lx), static_cast<float>(lz), static_cast<float>(ly),
-		static_cast<float>(xybox), static_cast<float>(xzbox), static_cast<float>(yzbox)};
+		static_cast<float>(shear_strain.x), 0, 0};
+	
 	gsd_write_chunk(&gsdOut, "confix1guration/step", GSD_TYPE_UINT64, 1, 1, 0, &_ts);
 	gsd_write_chunk(&gsdOut, "configuration/dimensions", GSD_TYPE_UINT8, 1, 1, 0, &dim);
 	gsd_write_chunk(&gsdOut, "configuration/box", GSD_TYPE_FLOAT, 6, 1, 0, &box);
