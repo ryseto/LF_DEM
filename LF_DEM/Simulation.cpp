@@ -491,10 +491,14 @@ void Simulation::stressProgram()
 	}
 	cerr << " shear jamming stress program " << sj_program_stress.front() << endl;
 	if (sj_program_stress.front() == 0) {
-		double infinitesimal_stress = 1e-4;
-		sys.target_stress = infinitesimal_stress*stress_original;
-		sys.p.kn = kn_original*infinitesimal_stress;
-		sys.p.kt = kt_original*infinitesimal_stress;
+		if (false) {
+			double infinitesimal_stress = 1e-4;
+			sys.target_stress = infinitesimal_stress*stress_original;
+			sys.p.kn = kn_original*infinitesimal_stress;
+			sys.p.kt = kt_original*infinitesimal_stress;
+		} else {
+			sys.target_stress = 0;
+		}
 	} else if (sj_program_stress.front() == 1) {
 		sys.setShearDirection(0);
 		sys.target_stress = stress_original;
