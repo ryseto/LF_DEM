@@ -418,7 +418,7 @@ void Simulation::operateJammingStressReversal(std::set<std::string> &output_even
 		output_events.insert("config");
 	} else {
 		jamming_strain = 0;
-		if (sys.get_shear_rate() < 100*sys.p.sj_shear_rate) {
+		if (sys.get_shear_rate() < 0.001) {
 			if (sys.dt > sys.p.dt_jamming) {
 				sys.dt = sys.p.dt_jamming;
 			}
