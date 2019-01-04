@@ -183,6 +183,9 @@ void Simulation::handleEvents()
 void Simulation::generateOutput(const set<string> &output_events, int& binconf_counter)
 {
 	checkpoint(); // generic, for recovery if crash
+	if (sys.p.check_static_force_balance) {
+		sys.checkStaticForceBalance();
+	}
 	if (output_events.find("data") != output_events.end()) {
 		sys.calcStressPerParticle();
 		sys.calcStress();
@@ -755,6 +758,12 @@ void Simulation::outputData()
 	if (sys.p.event_handler == "jamming_stress_reversal") {
 		outdata.entryData("jamming strain", Dimensional::Dimension::none, 1, jamming_strain);
 	}
+	if (sys.p.check_static_force_balance) {
+		outdata.entryData("max contact force", Dimensional::Dimension::Force, 1, sys.max_contact_force);
+		outdata.entryData("max force balance", Dimensional::Dimension::Force, 1, sys.max_force_balance);
+		outdata.entryData("max torque balance", Dimensional::Dimension::Force, 1, sys.max_torque_balance);
+	}
+
 	outdata.writeToFile();
 	/****************************   Stress Tensor Output *****************/
 	outdata_st.setUnits(system_of_units, output_unit);

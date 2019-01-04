@@ -296,6 +296,9 @@ private:
 	double max_velocity_brownian;
 	double max_velocity_contact;
 	double max_sliding_velocity;
+	double max_contact_force;
+	double max_force_balance;
+	double max_torque_balance;
 	double target_stress;
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;
@@ -405,7 +408,8 @@ private:
 	void yaplotBoxing(std::ofstream &fout_boxing); // Extensional flow Periodic Boundary condition
 	void recordHistory();
 	void countContactNumber();
-	
+	void checkStaticForceBalance();
+
 	void setBoxSize(double lx_, double ly_, double lz_)
 	{
 		lx = lx_;

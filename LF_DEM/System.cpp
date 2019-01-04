@@ -912,6 +912,40 @@ void System::checkForceBalance()
 	forceResultantLubricationForce();
 }
 
+void System::checkStaticForceBalance()
+{
+	double f_contact_max = 0;
+	for (const auto &inter: interaction) {
+		double f_contact = inter.contact.getTotalForce().norm();
+		if (f_contact_max < f_contact) {
+			f_contact_max = f_contact;
+		}
+	}
+	forceResultantReset();
+	forceResultantInterpaticleForces();
+
+	double fb_check = 0;
+	for (int i=0; i<np; i++) {
+		double norm_forceresultant = forceResultant[i].norm();
+		if (fb_check < norm_forceresultant) {
+			fb_check = norm_forceresultant;
+		}
+	}
+	
+	double tb_check = 0;
+	if (friction) {
+		for (int i=0; i<np; i++) {
+			double norm_torqueresultant = torqueResultant[i].norm();
+			if (tb_check < norm_torqueresultant) {
+				tb_check = norm_torqueresultant;
+			}
+		}
+	}
+	max_contact_force = f_contact_max;
+	max_force_balance = fb_check;
+	max_torque_balance = tb_check;
+}
+
 void System::timeEvolutionEulersMethod(bool calc_stress,
 									   double time_end,
 									   double strain_end)
@@ -2365,7 +2399,6 @@ void System::computeVelocities(bool divided_velocities)
 			rescaleVelHydroStressControlled();
 		}
 		sumUpVelocityComponents();
-		// checkForceBalance();
 	} else {
 		computeUInf();
 		setFixedParticleVelocities();
