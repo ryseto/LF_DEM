@@ -1137,17 +1137,19 @@ void Simulation::dataAdjustGSD(std::vector<vec3d> &pos,
 							   double lx, double ly, double lz)
 {
 	int np = sys.get_np();
+	bool simple_shear_mod1;
 	if (sys.eventLookUp == NULL) {
 		/* modulate for 0 < strain < 1
 		 */
+		simple_shear_mod1 = true;
 		shear_strain = sys.shear_disp/lz;
 	} else {
 		/* no modulation for deformed simulation cell.
 		 * This is useful to visualize shear jamming.
 		 */
+		simple_shear_mod1 = false;
 		shear_strain = sys.get_shear_strain();
 	}
-
 	/* In OVITO, the origin is always the center of simulation cell ((lx+ gamma*lz)/2, lz/2).
 	 * The strain gamma is modulated between 0 and 1.
 	 * We need the follwoing treratment avoid discontinous jump of particle positions.
@@ -1169,7 +1171,7 @@ void Simulation::dataAdjustGSD(std::vector<vec3d> &pos,
 		}
 	}
 	bool half_shift = false;
-	if (abs(total_strain) >= 1) {
+	if (simple_shear_mod1 && abs(total_strain) >= 1) {
 		half_shift = true;
 	}
 	for (int i=0; i<np; i++) {
