@@ -205,6 +205,7 @@ namespace Parameters {
 		double strain_reversal;  ///< for test_simulation = 21 (rtest1)
 		bool keep_input_strain;  ///< Use as initial strain value the strain from initial Lees-Edwards displacement [false]
 		double brownian_relaxation_time; ///< Averaging time scale in the stress controlled simulation for Brownian [1]
+		bool check_static_force_balance;
 	};
 	
 } // namespace Parameters
