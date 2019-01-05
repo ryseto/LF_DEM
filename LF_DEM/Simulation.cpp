@@ -759,9 +759,7 @@ void Simulation::outputData()
 		outdata.entryData("jamming strain", Dimensional::Dimension::none, 1, jamming_strain);
 	}
 	if (sys.p.check_static_force_balance) {
-		outdata.entryData("max contact force", Dimensional::Dimension::Force, 1, sys.max_contact_force);
-		outdata.entryData("max force balance", Dimensional::Dimension::Force, 1, sys.max_force_balance);
-		outdata.entryData("max torque balance", Dimensional::Dimension::Force, 1, sys.max_torque_balance);
+		outdata.entryData("max force imbalance",  Dimensional::Dimension::none, 1, sys.max_force_imbalance);
 	}
 
 	outdata.writeToFile();

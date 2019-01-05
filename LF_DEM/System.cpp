@@ -914,36 +914,44 @@ void System::checkForceBalance()
 
 void System::checkStaticForceBalance()
 {
-	double f_contact_max = 0;
-	for (const auto &inter: interaction) {
-		double f_contact = inter.contact.getTotalForce().norm();
-		if (f_contact_max < f_contact) {
-			f_contact_max = f_contact;
-		}
-	}
-	forceResultantReset();
-	forceResultantInterpaticleForces();
-
-	double fb_check = 0;
-	for (int i=0; i<np; i++) {
-		double norm_forceresultant = forceResultant[i].norm();
-		if (fb_check < norm_forceresultant) {
-			fb_check = norm_forceresultant;
-		}
-	}
-	
-	double tb_check = 0;
-	if (friction) {
-		for (int i=0; i<np; i++) {
-			double norm_torqueresultant = torqueResultant[i].norm();
-			if (tb_check < norm_torqueresultant) {
-				tb_check = norm_torqueresultant;
+	vector< vector<vec3d> > contact_force;
+	contact_force.resize(np);
+	for (auto &inter: interaction) {
+		if (inter.contact.is_active()) {
+			unsigned int i = inter.get_p0();
+			unsigned int j = inter.get_p1();
+			if (n_contact[i] >= 2 && n_contact[j] >= 2) {
+				contact_force[i].push_back(inter.contact.getSpringForce());
+				contact_force[j].push_back(-inter.contact.getSpringForce());
 			}
 		}
 	}
-	max_contact_force = f_contact_max;
-	max_force_balance = fb_check;
-	max_torque_balance = tb_check;
+	double max_imbalance = 0;
+	vec3d total_force;
+	double total_imbalance = 0;
+	int cnt = 0;
+	for (auto &cf : contact_force) {
+		if (cf.size() >= 2) {
+			total_force.reset();
+			double abs_total_force = 0;
+			for (auto &ff : cf) {
+				total_force += ff;
+				abs_total_force += ff.norm();
+			}
+			if (abs_total_force > 0) {
+				double imbalance = total_force.norm()/abs_total_force;
+				if (imbalance > max_imbalance) {
+					max_imbalance = imbalance;
+				}
+				total_imbalance += imbalance;
+				cnt++;
+			}
+		}
+	}
+	if (cnt > 0) {
+		cerr << "imbalance = " << max_imbalance << ' ' << total_imbalance/cnt << endl;
+	}
+	max_force_imbalance = max_imbalance;
 }
 
 void System::timeEvolutionEulersMethod(bool calc_stress,
@@ -2870,8 +2878,8 @@ void System::yaplotBoxing(std::ofstream &fout_boxing)
 	if (/* DISABLES CODE */ (0)) {
 		fout_boxing << "@ 8" << endl;
 		for (unsigned int k=0; k<interaction.size(); k++) {
-			int p0 = interaction[k].get_p0();
-			int p1 = interaction[k].get_p1();
+			unsigned int p0 = interaction[k].get_p0();
+			unsigned int p1 = interaction[k].get_p1();
 			vec3d nvec = interaction[k].nvec;
 			fout_boxing << "l " << position[p0]-3*dy << ' ' << position[p0]-3*dy + nvec  << endl;
 			fout_boxing << "l " << position[p1]-3*dy << ' ' << position[p1]-3*dy - nvec  << endl;

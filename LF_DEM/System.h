@@ -296,9 +296,7 @@ private:
 	double max_velocity_brownian;
 	double max_velocity_contact;
 	double max_sliding_velocity;
-	double max_contact_force;
-	double max_force_balance;
-	double max_torque_balance;
+	double max_force_imbalance;
 	double target_stress;
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;

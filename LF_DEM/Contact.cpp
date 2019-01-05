@@ -256,6 +256,15 @@ vec3d Contact::getTotalForce() const
 	}
 }
 
+vec3d Contact::getSpringForce() const
+{
+	if (is_active()) {
+		return f_spring_total;
+	} else {
+		return vec3d();
+	}
+}
+
 void Contact::frictionlaw_standard()
 {
 	/**

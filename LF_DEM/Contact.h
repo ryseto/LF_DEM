@@ -139,6 +139,7 @@ public:
 	void addUpForce(std::vector<vec3d> &force_per_particle) const;
 	void calcContactSpringForce();
 	vec3d getTotalForce() const;
+	vec3d getSpringForce() const;
 	vec3d getNormalForce() const;
 	double getNormalForceValue() const;
 	vec3d getTangentialForce() const;
