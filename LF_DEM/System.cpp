@@ -731,7 +731,7 @@ void System::timeStepBoxing()
 	if (!zero_shear) {
 		double strain_increment = shear_rate*dt;
 		clk.cumulated_strain += strain_increment;
-		const double small_value = 0;
+		const double small_value = 1e-9;
 		if (!ext_flow) {
 			// simple shear flow
 			vec3d shear_strain_increment = 2*dot(E_infinity, {0, 0, 1})*dt;
