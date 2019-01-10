@@ -731,6 +731,7 @@ void System::timeStepBoxing()
 	if (!zero_shear) {
 		double strain_increment = shear_rate*dt;
 		clk.cumulated_strain += strain_increment;
+		const double small_value = 0;
 		if (!ext_flow) {
 			// simple shear flow
 			vec3d shear_strain_increment = 2*dot(E_infinity, {0, 0, 1})*dt;
@@ -738,29 +739,30 @@ void System::timeStepBoxing()
 			shear_disp += shear_strain_increment*lz;
 			{
 				int mx = 0;
-				if (abs(shear_disp.x-lx) < 1e-8) {
+				if (shear_disp.x >= lx-small_value) {
 					mx = 1;
-				} else if (abs(shear_disp.x+lx) < 1e-8) {
+				} else if (shear_disp.x <= -(lx-small_value)) {
 					mx = -1;
 				}
 				if (shear_disp.x < 0) {
 					mx --;
 				}
-				shear_disp.x = shear_disp.x-mx*lx;
+				shear_disp.x += -mx*lx;
 			}
 			if (!twodimension) {
 				int my = 0;
-				if (abs(shear_disp.y-ly) < 1e-8) {
+				if (shear_disp.y >= ly-small_value) {
 					my = 1;
-				} else if (abs(shear_disp.y+ly) < 1e-8) {
+				} else if (shear_disp.y <= -(ly-small_value)) {
 					my = -1;
 				}
 				if (shear_disp.y < 0) {
 					my--;
 				}
-				shear_disp.y = shear_disp.y-my*ly;
+				shear_disp.y += -my*ly;
 			}
 		}
+		
 	} else {
 		if (wall_rheology || p.simulation_mode == 31) {
 			vec3d strain_increment = 2*dot(E_infinity, {0, 0, 1})*dt;
