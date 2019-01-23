@@ -1,7 +1,6 @@
 #!/usr/bin/perl
 # Usage:
 # $ extractPositionData.pl par_[...].dat [strain]
-
 use Math::Trig;
 use IO::Handle;
 use Getopt::Long;
@@ -28,7 +27,6 @@ $configline2 = <IN_configdata>;
 close (IN_configdata);
 printf "$configline1";
 printf "$configline2";
-
 open (IN_particle, "< ${particle_data}");
 &readHeader;
 $outputnum = 1;
@@ -39,29 +37,23 @@ while (1) {
 		last;
 	}
 }
-
-$outputfilename = "${configname}_.dat";
-
+$outputfilename = "${configname}rlx.dat";
 open (OUT, "> ${outputfilename}");
-printf "$configline1";
-printf "$configline2";
-
-printf OUT "$configline1";
-printf OUT "$configline2";
+($buf, $np1, $np2, $vf, $lx, $ly, $lz, $vf1, $vf2, $dispx0, $dispy0) = split(/\s+/, $configline2);
+printf OUT "# np1 np2 vf lx ly lz vf1 vf2 dispx dispy\n";
+printf OUT "# $np1 $np2 $vf $lx $ly $lz $vf1 $vf2 $dispx 0\n";
 for ($i = 0; $i < $np; $i++) {
 	$xx = $posx[$i] + $Lx/2;
 	$yy = $posy[$i] + $Ly/2;
 	$zz = $posz[$i] + $Lz/2;
 	$rr = $radius[$i];
 	printf OUT "$xx $yy $zz $rr\n";
+	#	printf "$xx $yy $zz $rr\n";
 }
 close (OUT);
 $outputnum ++;
-
-
 close (IN_particle);
 close (IN_interaction);
-
 ##################################################################
 sub keepInitialConfig {
 	for ($i = 0; $i < $np; $i ++){
@@ -76,10 +68,14 @@ sub keepInitialConfig {
 sub readHeader {
 	$line = <IN_particle>;
 	$line = <IN_particle>; ($buf, $buf, $np) = split(/\s+/, $line);
+	printf "np = $np\n";
 	$line = <IN_particle>; ($buf, $buf, $VF) = split(/\s+/, $line);
+	printf "VF = $VF\n";
+
 	$line = <IN_particle>; ($buf, $buf, $Lx) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $Ly) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $Lz) = split(/\s+/, $line);
+	printf "Lx Ly Lz = $Lx $Ly $Lz\n";
 	$line = <IN_particle>; ($buf, $buf, $flwtyp) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $dataunit) = split(/\s+/, $line);
 	
@@ -116,24 +112,28 @@ sub InParticles {
 		if ($buf1 ne '#') {
 			last;
 		} else {
+			$val =~ s/(\n|\r)//g;
 			$ssHeader[$j++] = $val;
 		}
 	}
 	if ($end_of_file eq 0) {
 		$shear_strain = $ssHeader[0];
-		$shear_disp = $ssHeader[1];
+		$dispx = $ssHeader[1];
 		$shear_rate = $ssHeader[2];
 		$target_stress = $ssHeader[3];
 		for ($i = 0; $i < $np; $i ++){
 			if ($i > 0) {
 				$line = <IN_particle>;
 			}
-			($ip, $a, $x, $y, $z) = split(/\s+/, $line);
+			#($ip, $a, $x, $y, $z) = split(/\s+/, $line);
+			#			($ip, $a, $x, $y, $z) = split(/\s+/, $line);
+			($ip, $a, $x, $z) = split(/\s+/, $line);
+			$y = 0;
 			#($ip, $a, $x, $z, $vx, $vz, $vy, $ox, $oz, $oy, $angle) = split(/\s+/, $line);
 			$ang[$i] = $angle;
 			$radius[$i] = $a;
 			$posx[$i] = $x-$xo;
-			$posy[$i] = $y-$yo;
+			#	$posy[$i] = $y-$yo;
 			$posz[$i] = $z-$zo;
 
 		}

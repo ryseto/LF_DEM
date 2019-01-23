@@ -48,17 +48,17 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 		cerr << "generate flat walls" <<endl;
 		parallel_wall_config = true;
 	}
-
+	
 	Simulation simu;
 	setParameters(simu, volume_frac_gen_);
 	rand_seed = rand_seed_;
 	cerr << "rand_seed = " << rand_seed_ << endl;
-
+	
 	auto &sys = simu.getSys();
 	double contact_ratio = 0.05;
 	double min_gap = -0.01;
 	double inflate_ratio = 1-min_gap;
-
+	
 	if (circulargap_config) {
 		/* Note:
 		 * Wall particles are placed at
@@ -66,7 +66,7 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 		 *   r = radius_out + a;
 		 * Mobile partilces can be in radius_in < r < radius_out
 		 */
-
+		
 		np_wall1 = ((cg_radius_in-radius_wall_particle)*2*M_PI)/(2*radius_wall_particle);
 		np_wall2 = ((cg_radius_out+radius_wall_particle)*2*M_PI)/(2*radius_wall_particle);
 		cerr << "np_in = " << np_wall1 << endl;
@@ -89,7 +89,7 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 		 *   z = z_top + a;
 		 * Mobile partilces can be in radius_in < r < radius_out
 		 */
-
+		
 		np_wall1 = lx/(2*radius_wall_particle);
 		np_wall2 = lx/(2*radius_wall_particle);
 		np_movable = np;
@@ -103,7 +103,7 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 		c.radius_out = cg_radius_out;
 		sys.setupConfiguration(c, Parameters::ControlVariable::rate);
 	} else if (winding_wall_config) {
-
+		
 		np_wall1 = (cg_radius_out+cg_radius_in)*M_PI/2/1.5+1;
 		np_wall2 = (cg_radius_out+cg_radius_in)*M_PI/2/1.5+1;
 		np_movable = np;
@@ -122,7 +122,7 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 		baseSetup(c, sys.twodimension, inflate_ratio);
 		sys.setupConfiguration(c, Parameters::ControlVariable::rate);
 	}
-
+	
 	sys.checkNewInteraction();
 	sys.updateInteractions();
 	auto contact_nb = countNumberOfContact(sys);
@@ -137,7 +137,7 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 			break;
 		}
 	}
-
+	
 	for (int i=0; i<np_movable; i++) {
 		if (i < np1) {
 			sys.radius[i] = a1;
@@ -148,7 +148,7 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 	for (int i=np_movable; i<np; i++) {
 		sys.radius[i] = radius_wall_particle;
 	}
-
+	
 	outputPositionData(sys);
 	return 0;
 }
@@ -218,13 +218,14 @@ void GenerateInitConfig::outputPositionData(const System &sys)
 		fout << np_wall1 << ' ' << np_wall1 << ' ';
 		fout << z_bot << ' ' << z_top  << endl;
 	} else {
-		fout << "# np1 np2 vf lx ly lz vf1 vf2 disp" << endl;
+		fout << "# np1 np2 vf lx ly lz vf1 vf2 dispx dispy" << endl;
 		fout << std::setprecision(15);
 		fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
 		fout << lx << ' ' << ly << ' ' << lz << ' ';
-		fout << volume_fraction1 << ' ' << volume_fraction2 << ' ' << 0 << endl;
+		fout << volume_fraction1 << ' ' << volume_fraction2 << ' ';
+		fout << 0 << ' ' << 0 << endl; 
 	}
-
+	
 	for (int i = 0; i<np; i++) {
 		fout << std::setprecision(15);
 		fout << sys.position[i].x << ' ';
@@ -238,11 +239,11 @@ void GenerateInitConfig::outputPositionData(const System &sys)
 		fout_yap << sys.position[i].x << ' ';
 		fout_yap << sys.position[i].y << ' ';
 		fout_yap << sys.position[i].z << endl;
-//		fout_yap << "t ";
-//		fout_yap << position[i].x << ' ';
-//		fout_yap << position[i].y << ' ';
-//		fout_yap << position[i].z << ' ';
-//		fout_yap << i << endl;
+		//		fout_yap << "t ";
+		//		fout_yap << position[i].x << ' ';
+		//		fout_yap << position[i].y << ' ';
+		//		fout_yap << position[i].z << ' ';
+		//		fout_yap << i << endl;
 	}
 	fout_yap << "@ 4 \n";
 	fout_yap << "y 4 \n";
@@ -267,7 +268,7 @@ std::pair<std::vector<vec3d>, std::vector<double>> GenerateInitConfig::putRandom
 {
 	std::vector<vec3d> position (np);
 	std::vector<double> radius (np);
-
+	
 #ifndef USE_DSFMT
 	rand_gen.seed(rand_seed);
 #endif
@@ -358,10 +359,10 @@ std::pair<std::vector<vec3d>, std::vector<double>> GenerateInitConfig::putRandom
 				i++;
 			}
 		}
-
+		
 		double dl = (cg_radius_in+cg_radius_out)*M_PI/2/np_wall1;
 		double l;
-
+		
 		l = 0;
 		while (l + dl < cg_radius_in*M_PI/2) {
 			double theta = l/cg_radius_in;
@@ -377,7 +378,7 @@ std::pair<std::vector<vec3d>, std::vector<double>> GenerateInitConfig::putRandom
 		}
 		//l -= dl;
 		while (l + dl<= (cg_radius_out+cg_radius_in)*M_PI/2) {
-
+			
 			double l1 = cg_radius_in*M_PI/2;
 			double theta = (l-l1)/cg_radius_out;
 			double theta0 = 5*M_PI/4;
@@ -390,11 +391,11 @@ std::pair<std::vector<vec3d>, std::vector<double>> GenerateInitConfig::putRandom
 			l += dl;
 			i++;
 		}
-
-
+		
+		
 		l = 0;
 		while (l + dl < cg_radius_out*M_PI/2) {
-
+			
 			double theta = l/cg_radius_out;
 			double theta0 = 3*M_PI/4;
 			vec3d u_vec(cos(theta0-theta), 0, sin(theta0-theta));
@@ -408,7 +409,7 @@ std::pair<std::vector<vec3d>, std::vector<double>> GenerateInitConfig::putRandom
 		}
 		//l -= dl;
 		while (l + dl <= (cg_radius_out+cg_radius_in)*M_PI/2) {
-
+			
 			double l1 = cg_radius_out*M_PI/2;
 			double theta = (l-l1)/cg_radius_in;
 			double theta0 = 5*M_PI/4;
@@ -479,17 +480,17 @@ void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init
 	 *  Read parameters from standard input
 	 *
 	 */
-	Parameters::ParameterSetFactory PFactory;
+	Parameters::ParameterSetFactory PFactory(Dimensional::Unit::hydro);
 	simu.p = PFactory.getParameterSet();
-
+	
 	auto &sys = simu.getSys();
- 	sys.zero_shear = true;
- 	simu.p.kn = 1;
- 	simu.p.friction_model = 0;
- 	simu.p.integration_method = 0;
- 	simu.p.disp_max = 5e-3;
- 	simu.p.lubrication_model = "none";
- 	simu.p.contact_relaxation_time_tan = 1e-4;
+	sys.zero_shear = true;
+	simu.p.kn = 1;
+	simu.p.friction_model = 0;
+	simu.p.integration_method = 0;
+	simu.p.disp_max = 5e-3;
+	simu.p.lubrication_model = "none";
+	simu.p.contact_relaxation_time_tan = 1e-4;
 	np = readStdinDefault(500, "number of particle");
 	if (circulargap_config || parallel_wall_config) {
 		sys.twodimension = true;
@@ -501,7 +502,7 @@ void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init
 			sys.twodimension = false;
 		}
 	}
-
+	
 	if (volume_frac_init == 0) {
 		if (sys.twodimension) {
 			volume_fraction = readStdinDefault(0.78, "volume_fraction");
@@ -511,7 +512,7 @@ void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init
 	} else {
 		cerr << "volume_fraction is set to " << volume_frac_init << endl;
 		volume_fraction = volume_frac_init;
-	}    
+	}
 	if (circulargap_config || parallel_wall_config) {
 		lx_lz = 1.0;
 	} else if (winding_wall_config) {
@@ -537,12 +538,12 @@ void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init
 	} else {
 		vf_ratio = 1;
 	}
-
+	
 	//rand_seed = readStdinDefault(1, "random seed");
 	/*
 	 *  Calculate parameters
 	 */
-
+	
 	double total_volume;
 	double pvolume1, pvolume2;
 	if (sys.twodimension) {
@@ -552,7 +553,7 @@ void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init
 		pvolume1 = (4.0/3)*M_PI*a1*a1*a1;
 		pvolume2 = (4.0/3)*M_PI*a2*a2*a2;
 	}
-
+	
 	if (vf_ratio > 0) {
 		volume_fraction1 = volume_fraction*vf_ratio;
 		if (disperse_type == 'b') {
@@ -604,7 +605,7 @@ void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init
 			ly = lz*ly_lz;
 		}
 	}
-
+	
 	if (circulargap_config) {
 		double area_particle = np1*pvolume1+np2*pvolume2;
 		double area_gap = area_particle/volume_fraction;
@@ -640,17 +641,16 @@ void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init
 	} else if (parallel_wall_config) {
 		lz += 10;
 		radius_wall_particle = readStdinDefault(1.0, "wall particle size");
-
+		
 		z_bot = 5;
 		z_top = lz-5;
 	}
 	lx_half = lx/2;
 	ly_half = ly/2;
 	lz_half = lz/2;
-
+	
 	max_iteration = readStdinDefault(-1, "max iteration number");
-
-
+	
 	cerr << "np = " << np1+np2 << endl;
 	cerr << "np1 : np2 " << np1 << ":" << np2 << endl;
 	cerr << "vf1 = " << volume_fraction << endl;

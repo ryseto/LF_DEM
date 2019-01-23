@@ -119,9 +119,9 @@ void StokesSolver::addToDiagBlock(chol_int ii, const struct DBlock &b)
 }
 
 void StokesSolver::addResistanceBlocks(chol_int i,
-                                       chol_int j,
-                                       const std::pair<struct DBlock, struct DBlock> &DiagBlocks_i_and_j,
-                                       const struct ODBlock& ODBlock_ij)
+									   chol_int j,
+									   const std::pair<struct DBlock, struct DBlock> &DiagBlocks_i_and_j,
+									   const struct ODBlock& ODBlock_ij)
 {
 	addToDiagBlock(i, DiagBlocks_i_and_j.first);
 	addToDiagBlock(j, DiagBlocks_i_and_j.second);
@@ -646,14 +646,14 @@ void StokesSolver::compute_LTRHS(vector<vec3d> &F, vector<vec3d> &T)
 	CHOL_FUNC(sdmult) (chol_L_sparse, transpose, alpha, beta, chol_rhs, chol_Psolution, &chol_c); // chol_Psolution = Lc*Y
 	// chol_solution = P^T*chol_Psolution
 	CHOL_FUNC(solve2) (CHOLMOD_Pt,                // solve chol_res_mat*chol_solution = chol_rhs
-	                   chol_L,                   // Cholesky factor
-	                   chol_Psolution,           // RHS
-	                   NULL,                     // subpart of RHS, NULL means all
-	                   &chol_solution,           // solution stored here
-	                   NULL,                     // subpart of solution, NULL means all
-	                   &chol_solveY_workspace,   // reusable workspace
-	                   &chol_solveE_workspace,   // reusable workspace
-	                   &chol_c);
+					   chol_L,                   // Cholesky factor
+					   chol_Psolution,           // RHS
+					   NULL,                     // subpart of RHS, NULL means all
+					   &chol_solution,           // solution stored here
+					   NULL,                     // subpart of solution, NULL means all
+					   &chol_solveY_workspace,   // reusable workspace
+					   &chol_solveE_workspace,   // reusable workspace
+					   &chol_c);
 	auto size = chol_solution->nrow/6;
 	for (decltype(size) i=0; i<size; i++) {
 		auto i6 = 6*i;
@@ -671,14 +671,14 @@ void StokesSolver::compute_LTRHS(vector<vec3d> &F, vector<vec3d> &T)
 void StokesSolver::solve(vector<vec3d> &velocity, vector<vec3d> &ang_velocity)
 {
 	CHOL_FUNC(solve2) (CHOLMOD_A,                // solve chol_res_mat*chol_solution = chol_rhs
-	                   chol_L,                   // Cholesky factor
-	                   chol_rhs,                 // RHS
-	                   NULL,                     // subpart of RHS, NULL means all
-	                   &chol_solution,           // solution stored here
-	                   NULL,                     // subpart of solution, NULL means all
-	                   &chol_solveY_workspace,   // reusable workspace
-	                   &chol_solveE_workspace,   // reusable workspace
-	                   &chol_c);
+					   chol_L,                   // Cholesky factor
+					   chol_rhs,                 // RHS
+					   NULL,                     // subpart of RHS, NULL means all
+					   &chol_solution,           // solution stored here
+					   NULL,                     // subpart of solution, NULL means all
+					   &chol_solveY_workspace,   // reusable workspace
+					   &chol_solveE_workspace,   // reusable workspace
+					   &chol_c);
 	auto size = chol_solution->nrow/6;
 	if (size>velocity.size() || size>ang_velocity.size()) {
 		// we don't try to resize things here, left to the caller
@@ -809,9 +809,9 @@ void StokesSolver::multiply_by_RFU_ff(vector<double>& velocity, vector<double>& 
 }
 
 void StokesSolver::multiply_by_RFU_ff(vector<vec3d>& velocity,
-                                      vector<vec3d>& ang_velocity,
-                                      vector<vec3d>& force,
-                                      vector<vec3d>& torque)
+									  vector<vec3d>& ang_velocity,
+									  vector<vec3d>& force,
+									  vector<vec3d>& torque)
 {
 	double one[] = {1, 0};
 	double zero[] = {0, 0};
@@ -824,14 +824,14 @@ void StokesSolver::multiply_by_RFU_ff(vector<vec3d>& velocity,
 void StokesSolver::multiplySolutionByResMat(double* vec)
 {
 	CHOL_FUNC(solve2) (CHOLMOD_A,                // solve chol_res_mat*chol_solution = chol_rhs
-	               chol_L,                   // Cholesky factor
-	               chol_rhs,                 // RHS
-	               NULL,                     // subpart of RHS, NULL means all
-	               &chol_solution,           // solution stored here
-	               NULL,                     // subpart of solution, NULL means all
-	               &chol_solveY_workspace,   // reusable workspace
-	               &chol_solveE_workspace,   // reusable workspace
-								 &chol_c);
+					   chol_L,                   // Cholesky factor
+					   chol_rhs,                 // RHS
+					   NULL,                     // subpart of RHS, NULL means all
+					   &chol_solution,           // solution stored here
+					   NULL,                     // subpart of solution, NULL means all
+					   &chol_solveY_workspace,   // reusable workspace
+					   &chol_solveE_workspace,   // reusable workspace
+					   &chol_c);
 	cholmod_dense* r;
 	r = CHOL_FUNC(copy_dense) (chol_rhs, &chol_c);
 	double one[] = {1, 0};
@@ -889,13 +889,13 @@ void StokesSolver::allocateRessources()
 void StokesSolver::allocateResistanceMatrix()
 {
 	// CHOLMOD parameters
-	int stype = -1; // 1 is symmetric, stored upper triangular (UT), -1 is LT
+	int stype = -1;		// 1 is symmetric, stored upper triangular (UT), -1 is LT
 	int sorted = 1;		/* TRUE if columns sorted, FALSE otherwise */
 	int packed = 1;		/* TRUE if matrix packed, FALSE otherwise */
 	// allocate
 	auto size_mm = 6*dblocks.size();
-	auto nzmax = 18*dblocks.size(); // diagonal blocks
-	nzmax += 30*odblocks.size();   // off-diagonal
+	auto nzmax = 18*dblocks.size();	// diagonal blocks
+	nzmax += 30*odblocks.size();	// off-diagonal
 	if (!chol_res_matrix) {
 		chol_res_matrix = CHOL_FUNC(allocate_sparse) (size_mm, size_mm, nzmax, sorted, packed, stype, CHOLMOD_REAL, &chol_c);
 	}

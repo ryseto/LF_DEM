@@ -25,9 +25,7 @@ std::pair<std::vector <vec3d>, std::vector <double>> readPositionsBStream(std::i
 	return std::make_pair(position, radius);
 }
 
-
-std::string getMetaParameter(std::map<std::string,std::string> &meta_data,
-                                    std::string &key)
+std::string getMetaParameter(std::map<std::string,std::string> &meta_data, std::string &key)
 {
 	if (meta_data.find(key) != meta_data.end()) {
 		return meta_data[key];
@@ -39,8 +37,8 @@ std::string getMetaParameter(std::map<std::string,std::string> &meta_data,
 }
 
 std::string getMetaParameter(std::map<std::string,std::string> &meta_data,
-                                    std::string &key,
-                                    const std::string &default_val)
+							 std::string &key,
+							 const std::string &default_val)
 {
 	if (meta_data.find(key) != meta_data.end()) {
 		return meta_data[key];
@@ -66,7 +64,6 @@ std::map<std::string,std::string> getConfMetaData(const std::string &line1, cons
 template<typename T>
 inline void setMetadataBase(std::istream &input, T &conf)
 {
-
 	std::string header_imported_configulation[2];
 	getline(input, header_imported_configulation[0]);
 	getline(input, header_imported_configulation[1]);
@@ -107,7 +104,6 @@ ConfFileFormat getBinaryConfigurationFileFormat(const std::string& filename_impo
 	}
 }
 
-
 ConfFileFormat getTxtConfigurationFileFormat(const std::string& filename_import_positions)
 {
 	checkInFile(filename_import_positions);
@@ -140,7 +136,6 @@ void fillBaseConfiguration(T &vel_conf,  const struct base_configuration &base)
 	vel_conf.angle = base.angle;
 	vel_conf.contact_states = base.contact_states;
 }
-
 
 struct base_shear_configuration readBinaryBaseShearConfiguration_old(const std::string& filename)
 {
@@ -194,7 +189,6 @@ struct base_shear_configuration readBinaryBaseShearConfiguration(const std::stri
 	std::ifstream input(filename.c_str(), std::ios::binary | std::ios::in);
 	struct base_shear_configuration c;
 
-
 	int _switch;
 	typedef std::underlying_type<ConfFileFormat>::type format_type;
 	format_type fmt;
@@ -211,9 +205,9 @@ struct base_shear_configuration readBinaryBaseShearConfiguration(const std::stri
 	return c;
 }
 
-
 struct base_configuration readBinaryBaseConfiguration(std::ifstream &input)
 {
+	// When modifying this function, don't forget to make the equivalent modification for the writeBinaryBaseConfiguration function.
 	struct base_configuration c;
 	unsigned np;
 	input.read((char*)&np, sizeof(unsigned));
@@ -228,10 +222,12 @@ struct base_configuration readBinaryBaseConfiguration(std::ifstream &input)
 		input.read((char*)&y_, sizeof(double));
 		input.read((char*)&z_, sizeof(double));
 		input.read((char*)&r_, sizeof(double));
-		input.read((char*)&a_, sizeof(double));
 		c.position.push_back(vec3d(x_,y_,z_));
 		c.radius.push_back(r_);
-		c.angle.push_back(a_);
+		if (c.ly == 0) {
+			input.read((char*)&a_, sizeof(double)); // angle
+			c.angle.push_back(a_);
+		}
 	}
 	c.contact_states = Contact_ios::readStatesBStream(input, np);
 	return c;
@@ -239,7 +235,8 @@ struct base_configuration readBinaryBaseConfiguration(std::ifstream &input)
 
 void writeBinaryBaseConfiguration(std::ofstream &conf_export, const struct base_configuration &conf) 
 {
-	std::vector<std::vector<double> > pos(conf.position.size());
+	// When modifying this function, don't forget to make the equivalent modification for the readBinaryBaseConfiguration function.
+	std::vector<std::vector<double>> pos(conf.position.size());
 	unsigned dims = 4;
 	if (conf.ly == 0) {
 		dims = 5;
@@ -251,7 +248,7 @@ void writeBinaryBaseConfiguration(std::ofstream &conf_export, const struct base_
 		pos[i][2] = conf.position[i].z;
 		pos[i][3] = conf.radius[i];
 		if (conf.ly == 0) {
-			pos[i][4] = conf.angle[i]; ///@@@@
+			pos[i][4] = conf.angle[i];
 		}
 	}
 	unsigned np = conf.position.size();
@@ -278,10 +275,8 @@ std::vector<vec3d> readBinaryFixedVelocities(std::ifstream &input)
 		input.read((char*)&vz_, sizeof(double));
 		fixed_velocities.push_back(vec3d(vx_, vy_, vz_));
 	}
-
 	return fixed_velocities;
 }
-
 
 void writeBinaryFixedVelocities(std::ofstream &conf_export, const std::vector<vec3d> &fixed_velocities)
 {
@@ -299,7 +294,6 @@ void writeBinaryFixedVelocities(std::ofstream &conf_export, const std::vector<ve
 	}
 }
 
-
 struct delayed_adhesion_configuration readBinaryDelayedAdhesionConfiguration(std::string filename)
 {
 	checkInFile(filename);
@@ -313,7 +307,6 @@ struct delayed_adhesion_configuration readBinaryDelayedAdhesionConfiguration(std
 	}
 	std::ifstream input(filename.c_str(), std::ios::binary | std::ios::in);
 	struct delayed_adhesion_configuration c;
-
 
 	int _switch;
 	typedef std::underlying_type<ConfFileFormat>::type format_type;
@@ -329,9 +322,6 @@ struct delayed_adhesion_configuration readBinaryDelayedAdhesionConfiguration(std
 	
 	return c;
 }
-
-
-
 
 struct fixed_velo_configuration readBinaryFixedVeloConfigurationOld(const std::string& filename)
 {
@@ -412,14 +402,12 @@ void writeBinaryHeader(std::ofstream &conf_export, ConfFileFormat format)
 	conf_export.write((char*)&format, sizeof(format_type));
 }
 
-
 void outputBinaryConfiguration(const System &sys, 
-							   std::string conf_filename, 
+							   std::string conf_filename,
 							   ConfFileFormat format)
 {
 	/**
-		\brief Saves the current configuration of the system in a binary file.
-
+	 \brief Saves the current configuration of the system in a binary file.
 	 */
 	std::set<ConfFileFormat> allowed_formats = \
 	{
@@ -442,7 +430,7 @@ void outputBinaryConfiguration(const System &sys,
 	
 	if (format == ConfFileFormat::bin_delayed_adhesion) {
 		TActAdhesion::writeStatesBStream(conf_export,
-			    				         sys.interaction);
+										 sys.interaction);
 	}
 
 	conf_export.write((char*)&(sys.shear_disp.x), sizeof(double));
@@ -450,7 +438,6 @@ void outputBinaryConfiguration(const System &sys,
 
 	conf_export.close();
 }
-
 
 struct base_shear_configuration readTxtBaseConfiguration(const std::string& filename)
 {
@@ -573,7 +560,7 @@ struct circular_couette_configuration readTxtCircularCouetteConfiguration(const 
 	 */
 
 	checkInFile(filename);
- 	std::ifstream input(filename.c_str(), std::ios::in);
+	std::ifstream input(filename.c_str(), std::ios::in);
 
 	struct circular_couette_configuration c;
 	setMetadataCircularCouette(input, c);

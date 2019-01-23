@@ -38,7 +38,7 @@ void System::declareStressComponents()
 	// Brownian
 	if (brownian) { // Brownian is different than other GU, needs predictor data too
 		stress_components["brownian_predictor"] = StressComponent(BROWNIAN_STRESS,
-		                                                          np, RATE_INDEPENDENT, "brownian");// rate dependent for now --> @ WORKING NOW @
+																  np, RATE_INDEPENDENT, "brownian");// rate dependent for now --> @ WORKING NOW @
 	}
 
 	/****************  ME stress ********************/
@@ -79,8 +79,8 @@ void System::declareStressComponents()
 }
 
 void System::addUpInteractionStressGU(std::vector<Sym2Tensor> &stress_comp,
-                                      const std::vector<vec3d> &non_affine_vel,
-                                      const std::vector<vec3d> &non_affine_ang_vel)
+									  const std::vector<vec3d> &non_affine_vel,
+									  const std::vector<vec3d> &non_affine_ang_vel)
 {
 	if (!lubrication) {
 		return;
@@ -114,9 +114,9 @@ void System::addUpInteractionStressME(std::vector<Sym2Tensor> &stress_comp)
 }
 
 void System::gatherVelocitiesByRateDependencies(vector<vec3d> &rateprop_vel,
-                                                vector<vec3d> &rateprop_ang_vel,
-                                                vector<vec3d> &rateindep_vel,
-                                                vector<vec3d> &rateindep_ang_vel) const
+												vector<vec3d> &rateprop_ang_vel,
+												vector<vec3d> &rateindep_vel,
+												vector<vec3d> &rateindep_ang_vel) const
 {
 	/** Gather velocity components in rate proportional and rate independent parts.
 			If there is a rate dependent (but not proportional), it is left out.
@@ -162,7 +162,7 @@ void System::calcContactXFPerParticleStressControlled()
 	vector<vec3d> rateindep_vel (np);
 	vector<vec3d> rateindep_ang_vel (np);
 	gatherVelocitiesByRateDependencies(rateprop_vel, rateprop_ang_vel,
-	                                   rateindep_vel, rateindep_ang_vel);
+									   rateindep_vel, rateindep_ang_vel);
 
 	auto &rateprop_XF = stress_components.at("xF_contact_rateprop").particle_stress;
 	auto &rateindep_XF = stress_components.at("xF_contact_rateindep").particle_stress;
@@ -176,19 +176,19 @@ void System::calcContactXFPerParticleStressControlled()
 		if (inter.contact.dashpot.is_active()) {
 			// rate_prop_vel is a full velocity (not non affine)
 			Sym2Tensor rateprop_stress = outer_sym(inter.rvec,
-			                                       inter.contact.dashpot.getForceOnP0(rateprop_vel[i],
-			                                                                          rateprop_vel[j],
-			                                                                          rateprop_ang_vel[i],
-			                                                                          rateprop_ang_vel[j]));
+												   inter.contact.dashpot.getForceOnP0(rateprop_vel[i],
+																					  rateprop_vel[j],
+																					  rateprop_ang_vel[i],
+																					  rateprop_ang_vel[j]));
 			double r_ij = radius[i]+radius[j];
 			rateprop_XF[i] += (radius[i]/r_ij)*rateprop_stress;
 			rateprop_XF[j] += (radius[j]/r_ij)*rateprop_stress;
-
+	
 			Sym2Tensor rateindep_stress = outer_sym(inter.rvec,
 													inter.contact.dashpot.getForceOnP0_nonaffine(rateindep_vel[i],
 																								 rateindep_vel[j],
-			                                                                                     rateindep_ang_vel[i],
-			                                                                                     rateindep_ang_vel[j]));
+																								 rateindep_ang_vel[i],
+																								 rateindep_ang_vel[j]));
 			rateindep_XF[i] += (radius[i]/r_ij)*rateindep_stress;
 			rateindep_XF[j] += (radius[j]/r_ij)*rateindep_stress;
 		}
@@ -223,34 +223,34 @@ void System::calcStressPerParticle()
 	   should be careful when calling this method from outside of the
 	   System::timeEvolutionPredictorCorrectorMethod method.
 	*/
-    if (lubrication) {
-        for (auto &inter: interaction) {
-            if (!inter.lubrication.tangential) {
-                inter.lubrication.calcXFunctionsStress();
-            } else {
-                inter.lubrication.calcXYFunctionsStress();
-            }
-        }
-    }
+	if (lubrication) {
+		for (auto &inter: interaction) {
+			if (!inter.lubrication.tangential) {
+				inter.lubrication.calcXFunctionsStress();
+			} else {
+				inter.lubrication.calcXYFunctionsStress();
+			}
+		}
+	}
 
 	for (auto &sc: stress_components) {
 		sc.second.reset();
 	}
 
-    for (auto &sc: stress_components) {
-        auto type = sc.second.type;
-        const auto &component_name = sc.first;
-        if (type == VELOCITY_STRESS) {
-            addUpInteractionStressGU(sc.second.particle_stress,
-                                     na_velo_components[component_name].vel,
-                                     na_velo_components[component_name].ang_vel);
-        }
-        if (type == STRAIN_STRESS) {
-            addUpInteractionStressME(sc.second.particle_stress);
-        }
-    }
-    if (control == Parameters::ControlVariable::rate) {
-        auto &cstress_XF = stress_components.at("xF_contact").particle_stress;
+	for (auto &sc: stress_components) {
+		auto type = sc.second.type;
+		const auto &component_name = sc.first;
+		if (type == VELOCITY_STRESS) {
+			addUpInteractionStressGU(sc.second.particle_stress,
+									 na_velo_components[component_name].vel,
+									 na_velo_components[component_name].ang_vel);
+		}
+		if (type == STRAIN_STRESS) {
+			addUpInteractionStressME(sc.second.particle_stress);
+		}
+	}
+	if (control == Parameters::ControlVariable::rate) {
+		auto &cstress_XF = stress_components.at("xF_contact").particle_stress;
 		for (auto &inter: interaction) {
 			if (inter.contact.is_active()) {
 				unsigned int i, j;
@@ -331,7 +331,7 @@ void System::getStressCouette(int i,
 }
 
 void System::gatherStressesByRateDependencies(Sym2Tensor &rate_prop_stress,
-                                              Sym2Tensor &rate_indep_stress)
+											  Sym2Tensor &rate_indep_stress)
 {
 	rate_prop_stress.reset();
 	rate_indep_stress.reset();
@@ -379,19 +379,19 @@ void System::calcStress()
 		total_stress = stress_avg.get();
 	}
 
-    if (wall_rheology) {
-        if (z_top != -1) {
-            shearstress_wall1 = force_tang_wall1/lx;
-            shearstress_wall2 = force_tang_wall2/lx;
-            normalstress_wall1 = force_normal_wall1/lx;
-            normalstress_wall2 = force_normal_wall2/lx;
-        } else {
-            double wall_area_in = M_PI*2*(radius_in-radius_wall_particle);
-            double wall_area_out = M_PI*2*(radius_out+radius_wall_particle);
-            shearstress_wall1 = force_tang_wall1/wall_area_in;
-            shearstress_wall2 = force_tang_wall2/wall_area_out;
-            normalstress_wall1 = force_normal_wall1/wall_area_in;
-            normalstress_wall2 = force_normal_wall2/wall_area_out;
-        }
-    }
+	if (wall_rheology) {
+		if (z_top != -1) {
+			shearstress_wall1 = force_tang_wall1/lx;
+			shearstress_wall2 = force_tang_wall2/lx;
+			normalstress_wall1 = force_normal_wall1/lx;
+			normalstress_wall2 = force_normal_wall2/lx;
+		} else {
+			double wall_area_in = M_PI*2*(radius_in-radius_wall_particle);
+			double wall_area_out = M_PI*2*(radius_out+radius_wall_particle);
+			shearstress_wall1 = force_tang_wall1/wall_area_in;
+			shearstress_wall2 = force_tang_wall2/wall_area_out;
+			normalstress_wall1 = force_normal_wall1/wall_area_in;
+			normalstress_wall2 = force_normal_wall2/wall_area_out;
+		}
+	}
 }

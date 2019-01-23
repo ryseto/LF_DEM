@@ -21,19 +21,16 @@ void Str2KeyValue(const std::string& str_parameter,
 	return;
 }
 
-
-
-ParameterSetFactory::ParameterSetFactory() 
+ParameterSetFactory::ParameterSetFactory(Dimensional::Unit guarranted_unit) 
 {
-	setDefaultValues();
+	setDefaultValues(guarranted_unit);
 }
 
-void ParameterSetFactory::setDefaultValues() { 
+void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit) { 
 
 /*================================================
 =            DEFAULT PARAMETER VALUES            =
 =================================================*/
-
 
 	/*================================
 	=            BOOLEANS            =
@@ -44,17 +41,20 @@ void ParameterSetFactory::setDefaultValues() {
 		PARAM_INIT(keep_input_strain, false),
 		PARAM_INIT(monolayer, false),
 		PARAM_INIT(auto_determine_knkt, false),
-		PARAM_INIT(output.out_bond_order_parameter6, false),
-        PARAM_INIT(output.new_material_functions, false),
+		PARAM_INIT(output.new_material_functions, false),
 		PARAM_INIT(output.out_data_vel_components, false),
 		PARAM_INIT(output.out_binary_conf, false),
 		PARAM_INIT(output.out_data_interaction, true),
 		PARAM_INIT(output.out_data_particle, true),
+		PARAM_INIT(output.out_gsd, true),
 		PARAM_INIT(output.origin_zero_flow, true),
+		PARAM_INIT(output.relative_position_view, false),
 		PARAM_INIT(output.log_time_interval, false),
 		PARAM_INIT(output.out_na_vel, false),
 		PARAM_INIT(output.out_na_disp, false),
-		PARAM_INIT(output.recording_interaction_history, false)
+		PARAM_INIT(output.recording_interaction_history, false),
+		PARAM_INIT(output.effective_coordination_number, false),
+		PARAM_INIT(check_static_force_balance, false)
 	};
 
 	/*===========================================
@@ -74,9 +74,6 @@ void ParameterSetFactory::setDefaultValues() {
 		PARAM_INIT(memory_strain_k, 0.02),
 		PARAM_INIT(disp_tan_target, 0.05),
 		PARAM_INIT(overlap_target, 0.05),
-		PARAM_INIT(dt_min, -1),
-		PARAM_INIT(dt_max, -1),
-		PARAM_INIT(dt, 1e-4),
 		PARAM_INIT(disp_max, 2e-3),
 		PARAM_INIT(lub_max_gap, 0.5),
 		PARAM_INIT(lub_reduce_parameter, 1e-3),
@@ -91,7 +88,11 @@ void ParameterSetFactory::setDefaultValues() {
 		PARAM_INIT(mu_dynamic, -1),
 		PARAM_INIT(mu_rolling, 0),
 		PARAM_INIT(TA_adhesion.adhesion_range, 1e-2),
-		PARAM_INIT(output.recording_start, 1)
+		PARAM_INIT(output.recording_start, 1),
+		PARAM_INIT(sj_disp_max_shrink_factor, 1.1),
+		PARAM_INIT(sj_disp_max_goal, 1e-6),
+		PARAM_INIT(sj_shear_rate, 0),
+		PARAM_INIT(sj_velocity, 1e-3)
 	};
 
 	/*================================
@@ -104,7 +105,9 @@ void ParameterSetFactory::setDefaultValues() {
 		PARAM_INIT(integration_method, 1),
 		PARAM_INIT(friction_model, 1),
 		PARAM_INIT(np_fixed, 0),
-		PARAM_INIT(simulation_mode, 0)
+		PARAM_INIT(simulation_mode, 0),
+		PARAM_INIT(sj_check_count, 10),
+		PARAM_INIT(sj_reversal_repetition, 10)
 	};
 
 	/*===============================
@@ -115,7 +118,8 @@ void ParameterSetFactory::setDefaultValues() {
 		PARAM_INIT(flow_type, ""),
 		PARAM_INIT(event_handler, ""),
 		PARAM_INIT(output.out_particle_stress, ""),
-		PARAM_INIT(lubrication_model, "tangential")
+		PARAM_INIT(lubrication_model, "tangential"),
+		PARAM_INIT(sj_program_file, "")
 	};
 
 	/*====================================
@@ -123,7 +127,7 @@ void ParameterSetFactory::setDefaultValues() {
 	====================================*/
 	Dimensional::ForceScale default_val;
 
-	default_val = {Dimensional::Unit::kn, {Dimensional::Dimension::Force, 0, Dimensional::Unit::hydro}};
+	default_val = {Dimensional::Unit::kn, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(kn, default_val));
 
 	default_val = {Dimensional::Unit::kt, {Dimensional::Dimension::Force, 0, Dimensional::Unit::kn}};
@@ -132,22 +136,20 @@ void ParameterSetFactory::setDefaultValues() {
 	default_val = {Dimensional::Unit::kr, {Dimensional::Dimension::Force, 0, Dimensional::Unit::kn}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(kr, default_val));
 
-	default_val = {Dimensional::Unit::delayed_adhesion, {Dimensional::Dimension::Force, 0, Dimensional::Unit::hydro}};
+	default_val = {Dimensional::Unit::delayed_adhesion, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(TA_adhesion.adhesion_max_force, default_val));
 
-	default_val = {Dimensional::Unit::repulsion, {Dimensional::Dimension::Force, 0, Dimensional::Unit::hydro}};
+	default_val = {Dimensional::Unit::repulsion, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(repulsion, default_val));
 
-	default_val = {Dimensional::Unit::critical_load, {Dimensional::Dimension::Force, 0, Dimensional::Unit::hydro}};
+	default_val = {Dimensional::Unit::critical_load, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(critical_load, default_val));
 
-	default_val = {Dimensional::Unit::cohesion, {Dimensional::Dimension::Force, 0, Dimensional::Unit::hydro}};
+	default_val = {Dimensional::Unit::cohesion, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(cohesion, default_val));
 
-	default_val = {Dimensional::Unit::brownian, {Dimensional::Dimension::Force, 0, Dimensional::Unit::hydro}};
+	default_val = {Dimensional::Unit::brownian, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(brownian, default_val));
-
-
 
 	/*==============================================
 	=            Dimensional Quantities            =
@@ -157,12 +159,20 @@ void ParameterSetFactory::setDefaultValues() {
 
 	Dimensional::DimensionalQty<double> default_qty;
 
-	default_qty = {Dimensional::Dimension::Time, 1e-3, Dimensional::Unit::hydro};
+	default_qty = {Dimensional::Dimension::Time, 1e-4, guarranted_unit};
+	DimValDblParams.push_back(PARAM_INIT_DIMQTY(dt, default_qty));
+
+	default_qty = {Dimensional::Dimension::Time, -1, guarranted_unit};
+	DimValDblParams.push_back(PARAM_INIT_DIMQTY(dt_max, default_qty));
+	
+	default_qty = {Dimensional::Dimension::Time, -1, guarranted_unit};
+	DimValDblParams.push_back(PARAM_INIT_DIMQTY(dt_jamming, default_qty));
+	
+	default_qty = {Dimensional::Dimension::Time, 1e-3, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(contact_relaxation_time, default_qty));
 
-	default_qty = {Dimensional::Dimension::Time, 0, Dimensional::Unit::hydro};
+	default_qty = {Dimensional::Dimension::Time, 0, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(contact_relaxation_time_tan, default_qty));
-
 	
 	default_qty = {Dimensional::Dimension::Force, 0.1, Dimensional::Unit::kn};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(min_kn_auto_det, default_qty));
@@ -176,35 +186,36 @@ void ParameterSetFactory::setDefaultValues() {
 	default_qty = {Dimensional::Dimension::Force, 1e3, Dimensional::Unit::kt};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(max_kt_auto_det, default_qty));
 
-	default_qty = {Dimensional::Dimension::Time, 0, Dimensional::Unit::hydro};
+	default_qty = {Dimensional::Dimension::Time, 0, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(TA_adhesion.activation_time, default_qty));
 
 	/*----------  True dim vals  ----------*/
 	
-	default_qty = {Dimensional::Dimension::TimeOrStrain, 10, Dimensional::Unit::hydro};
+	default_qty = {Dimensional::Dimension::TimeOrStrain, 10, guarranted_unit};
 	TrueDimValDblParams.push_back(PARAM_INIT(time_end, default_qty));
 
-	default_qty = {Dimensional::Dimension::TimeOrStrain, 1e-2, Dimensional::Unit::hydro};
+	default_qty = {Dimensional::Dimension::TimeOrStrain, 1e-2, guarranted_unit};
 	TrueDimValDblParams.push_back(PARAM_INIT(output.time_interval_output_data, default_qty));
 
-	default_qty = {Dimensional::Dimension::TimeOrStrain, 1e-1, Dimensional::Unit::hydro};
+	default_qty = {Dimensional::Dimension::TimeOrStrain, 1e-1, guarranted_unit};
 	TrueDimValDblParams.push_back(PARAM_INIT(output.time_interval_output_config, default_qty));
 
-	default_qty = {Dimensional::Dimension::TimeOrStrain, 1e-3, Dimensional::Unit::hydro};
+	default_qty = {Dimensional::Dimension::TimeOrStrain, 1e-3, guarranted_unit};
 	TrueDimValDblParams.push_back(PARAM_INIT(output.initial_log_time, default_qty));
 }
-
 
 void ParameterSetFactory::setFromFile(const std::string& filename_parameters)
 {
 	/**
 	 \brief Read and parse the parameter file
 	 */
+	std::string indent = "  ParameterSetFactory::\t";
+	std::cout << indent << "setFromFile..." << std::endl;
 	std::ifstream fin;
 	fin.open(filename_parameters.c_str());
 	if (!fin) {
 		std::ostringstream error_str;
-		error_str  << " Parameter file '" << filename_parameters << "' not found." << std::endl;
+		error_str << " Parameter file '" << filename_parameters << "' not found." << std::endl;
 		throw std::runtime_error(error_str.str());
 	}
 	std::string keyword, value;
@@ -241,58 +252,58 @@ void ParameterSetFactory::setFromFile(const std::string& filename_parameters)
 		Str2KeyValue(str_parameter, keyword, value);
 		setParameterFromKeyValue(keyword, value);
 	}
+	std::cout << indent << "setFromFile...done" << std::endl;
 	fin.close();
 }
-
 
 void ParameterSetFactory::setParameterFromKeyValue(const std::string &keyword, 
 												   const std::string &value)
 {
 	for (auto &inp: BoolParams) {
-		if (inp.name_str==keyword) {
+		if (inp.name_str == keyword) {
 			inp.value = str2bool(value);
 			return;
 		}
 	}
 	for (auto &inp: DoubleParams) {
-		if (inp.name_str==keyword) {
+		if (inp.name_str == keyword) {
 			inp.value = stod(value);
 			return;
 		}
 	}
 	for (auto &inp: IntParams) {
-		if (inp.name_str==keyword) {
+		if (inp.name_str == keyword) {
 			inp.value = stoi(value);
 			return;
 		}
 	}
 	for (auto &inp: StrParams) {
-		if (inp.name_str==keyword) {
+		if (inp.name_str == keyword) {
 			inp.value = value;
 			inp.value.erase(remove(inp.value.begin(), inp.value.end(), '\"' ), inp.value.end());
 			return;
 		}
 	}
 	for (auto &inp: DimValDblParams) {
-		if (inp.name_str==keyword) {
+		if (inp.name_str == keyword) {
 			inp.value = value;
 			return;
 		}
 	}
 	for (auto &inp: TrueDimValDblParams) {
-		if (inp.name_str==keyword) {
+		if (inp.name_str == keyword) {
 			inp.value = value;
 			return;
 		}
 	}
 	for (auto &inp: ForceScaleParams) {
-		if (inp.name_str==keyword) {
+		if (inp.name_str == keyword) {
 			inp.value.dim_qty = value;
 			return;
 		}
 	}
 	std::ostringstream error_str;
-	error_str  << "keyword " << keyword << " is not associated with an parameter" << std::endl;
+	error_str << "keyword " << keyword << " is not associated with an parameter" << std::endl;
 	throw std::runtime_error(error_str.str());
 }
 
@@ -303,7 +314,7 @@ std::vector<Dimensional::ForceScale> ParameterSetFactory::getForceScales() const
 		fs.push_back(in_fs.value);
 	}
 	return fs;
-};
+}
 
 void ParameterSetFactory::convertParameterUnit(const Dimensional::UnitSystem &unit_system, 
 											   InputParameter<Dimensional::DimensionalQty<double>> &param)
@@ -317,7 +328,7 @@ void ParameterSetFactory::convertParameterUnit(const Dimensional::UnitSystem &un
 		}
 	}
 	if (param.value.value == 0) {
-	    param.value.unit = unit_system.getInternalUnit();
+		param.value.unit = unit_system.getInternalUnit();
 	} else {
 		unit_system.convertToInternalUnit(param.value);
 	}

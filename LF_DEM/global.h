@@ -71,7 +71,6 @@ inline void removeBlank(std::string& str)
 	str.erase(remove_if(str.begin(), str.end(), (int(*)(int))isspace), str.end());
 }
 
-
 inline bool str2bool(const std::string& value)
 {
 	if (value == "true") {
@@ -108,7 +107,6 @@ inline vec3d str2vec3d(const std::string& value)
 	return vec3d(vx,vy,vz);
 }
 
-
 inline std::vector<std::string> splitString(const std::string& str)
 {
 	std::string stripped_str = str;
@@ -136,11 +134,11 @@ inline std::vector<std::string> splitString(const std::string& str)
 }
 
 namespace Parameters {
-enum class ControlVariable : unsigned {
-	rate,
-	stress,
-	// viscnb
-};
+	enum class ControlVariable : unsigned {
+		rate,
+		stress,
+		// viscnb
+	};
 }
 
 inline void checkInFile(std::string filename)

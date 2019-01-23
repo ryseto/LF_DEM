@@ -83,6 +83,7 @@ private:
 	 * 1 Friction is not activated (critical load model)
 	 * 2 Static friction
 	 * 3 Sliding
+	 * 4 Infinite friction coeffient
 	 * -2 Switching dynamic to static
 	 */
 	void frictionlaw_criticalload();
@@ -90,6 +91,7 @@ private:
 	void frictionlaw_standard();
 	void frictionlaw_ft_max();
 	void frictionlaw_coulomb_max();
+	void frictionlaw_infinity();
 	inline void setTangentialForceNorm(double, double);
 	inline void setRollingForceNorm(double, double);
 
@@ -118,6 +120,7 @@ public:
 	ContactDashpot dashpot;
 	void setInteractionData();
 	void setSpringConstants();
+	void setDashpotConstants();
 	void activate();
 	void deactivate();
 	vec3d disp_tan; // tangential displacement
@@ -136,14 +139,11 @@ public:
 	void addUpForce(std::vector<vec3d> &force_per_particle) const;
 	void calcContactSpringForce();
 	vec3d getTotalForce() const;
+	vec3d getSpringForce() const;
 	vec3d getNormalForce() const;
 	double getNormalForceValue() const;
 	vec3d getTangentialForce() const;
 	double get_normal_load() const;
-	double get_spring_force() const
-	{
-		return f_spring_normal_norm;
-	}
 	void calcContactStress();
 	void addUpStress(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1);
 	void addUpStressSpring(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1) const;

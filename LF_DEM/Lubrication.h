@@ -127,11 +127,11 @@ private:
 		return dot(getTotalForce(), nvec);
 	}
 	void addMEStresslet(const Sym2Tensor& E_inf,
-	                    Sym2Tensor& stresslet_i,
-	                    Sym2Tensor& stresslet_j) const;
+						Sym2Tensor& stresslet_i,
+						Sym2Tensor& stresslet_j) const;
 	void addGUStresslet(const vec3d& vi, const vec3d& vj,
-	                    const vec3d& oi, const vec3d& oj,
-	                    Sym2Tensor& stresslet_i, Sym2Tensor& stresslet_j) const;
+						const vec3d& oi, const vec3d& oj,
+						Sym2Tensor& stresslet_i, Sym2Tensor& stresslet_j) const;
 	void updateResistanceCoeff();
 	void setResistanceCoeff(double normal_rc, double tangent_rc);
 	//void setResistanceCoeffTang(double tangent_rc);

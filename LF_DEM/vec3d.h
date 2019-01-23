@@ -27,25 +27,25 @@ public:
 	double x;
 	double y;
 	double z;
-
+	
 	/* constructor/destructor */
 	vec3d (): x(0), y(0), z(0){}
 	vec3d (double _x,
 		   double _y,
 		   double _z): x(_x), y(_y), z(_z) {}
-
+	
 	vec3d (double a): x(a), y(a), z(a) {}
-
+	
 	friend vec3d operator + (const vec3d& v)
 	{
 		return v;
 	}
-
+	
 	friend vec3d operator - (const vec3d& v)
 	{
 		return vec3d(-v.x, -v.y, -v.z);
 	}
-
+	
 	/* division */
 	template <typename T>
 	friend vec3d operator / (const vec3d& v,
@@ -53,49 +53,49 @@ public:
 	{
 		return vec3d(v.x/a, v.y/a, v.z/a);
 	}
-
+	
 	/* multiplication */
 	template <typename T>
 	friend vec3d operator * (const vec3d& v,
-	                         const T& a)
+							 const T& a)
 	{
 		return a*v;
 	}
-
+	
 	template <typename T>
 	friend vec3d operator * (const T& a,
-	                         const vec3d& v)
+							 const vec3d& v)
 	{
 		return vec3d(a*v.x, a*v.y, a*v.z);
 	}
-
+	
 	// assign operator
 	vec3d& operator += (const vec3d& v)
 	{
 		x += v.x, y += v.y, z += v.z;
 		return *this;
 	}
-
+	
 	vec3d& operator -= (const vec3d& v)
 	{
 		x -= v.x, y -= v.y, z -= v.z;
 		return *this;
 	}
-
+	
 	template <typename T>
 	vec3d& operator *= (const T& a)
 	{
 		x *= a, y *= a, z *= a;
 		return *this;
 	}
-
+	
 	template <typename T>
 	vec3d& operator /= (const T& a)
 	{
 		x /= a, y /= a, z /= a;
 		return 	*this;
 	}
-
+	
 	bool is_nonzero()
 	{
 		if (x != 0 || z != 0 || y != 0) {
@@ -104,51 +104,51 @@ public:
 			return false;
 		}
 	}
-
+	
 	void set(double elm_x, double elm_y, double elm_z)
 	{
 		x = elm_x, y = elm_y, z = elm_z;
 	}
-
+	
 	void reset()
 	{
 		x = 0, y = 0, z = 0;
 	}
-
+	
 	void unitvector()
 	{
 		(*this) = (*this)/norm();
 	}
-
+	
 	double sq_norm() const
 	{
 		return x*x+y*y+z*z;
 	}
-
+	
 	double sq_norm_xy() const
 	{
 		return x*x+y*y;
 	}
-
+	
 	double sq_norm_xz() const
 	{
 		return x*x+z*z;
 	}
-
+	
 	double norm() const
 	{
 		return sqrt(sq_norm());
 	}
-
+	
 	double norm_xz() const
 	{
 		return sqrt(sq_norm_xz());
 	}
-
+	
 	void rotateInfinitesimal(const vec3d& dphi);
-
+	
 	void vertical_projection(const vec3d& v);
-
+	
 	vec3d product_rate_of_strain(double* E)
 	{
 		vec3d product(E[0]*x+E[1]*y+E[2]*z,
@@ -156,12 +156,12 @@ public:
 					  E[2]*x+E[3]*y+(-E[0]-E[4])*z);
 		return product;
 	}
-
+	
 	inline double angle_elevation_xz()
 	{
 		return atan2(z, x);
 	}
-
+	
 	inline double angle_0_pi()
 	{
 		if (z > 0) {
@@ -191,12 +191,12 @@ public:
 			z -= lz;
 		}
 	}
-
+	
 	void cerr(std::string note)
 	{
 		std::cerr << note << ' ' << x << ' '<< y << ' ' << z << std::endl;
 	}
-
+	
 	void cerr()
 	{
 		std::cerr << x << ' '<< y << ' ' << z << std::endl;
@@ -207,7 +207,7 @@ public:
 
 /*** Symmetric binary operators ***/
 inline bool operator == (const vec3d &v1,
-                         const vec3d &v2)
+						 const vec3d &v2)
 {
 	if (v1.x == v2.x && v1.y == v2.y && v1.z == v2.z) {
 		return true;
@@ -216,7 +216,7 @@ inline bool operator == (const vec3d &v1,
 }
 
 inline bool operator != (const vec3d& v1,
-                         const vec3d& v2)
+						 const vec3d& v2)
 {
 	if (v1.x != v2.x || v1.y != v2.y || v1.z != v2.z) {
 		return true;
@@ -225,21 +225,21 @@ inline bool operator != (const vec3d& v1,
 }
 
 inline vec3d operator + (const vec3d& a1,
-                         const vec3d& a2)
+						 const vec3d& a2)
 {
 	return vec3d(a1.x+a2.x, a1.y+a2.y, a1.z+a2.z);
 }
 
 /* subtraction */
 inline vec3d operator - (const vec3d& a1,
-                         const vec3d& a2)
+						 const vec3d& a2)
 {
 	return vec3d(a1.x-a2.x, a1.y-a2.y, a1.z-a2.z);
 }
 
 // output stream operator
 inline std::ostream& operator << (std::ostream& out,
-                                  const vec3d& v)
+								  const vec3d& v)
 {
 	out << v.x << " " << v.y << " " << v.z;
 	return out;
@@ -258,25 +258,25 @@ inline double sq_dist(const vec3d& a1, const vec3d& a2)
 
 /* scalar product */
 inline double dot(const vec3d& a1,
-                  const vec3d& a2)
+				  const vec3d& a2)
 {
 	return a1.x*a2.x+a1.y*a2.y+a1.z*a2.z;
 }
 
 inline double dot(const vec3d* a1,
-                  const vec3d& a2)
+				  const vec3d& a2)
 {
 	return a1->x*a2.x+a1->y*a2.y+a1->z*a2.z;
 }
 
 inline double dot(const vec3d* a1,
-                  const vec3d* a2)
+				  const vec3d* a2)
 {
 	return a1->x*a2->x+a1->y*a2->y+a1->z*a2->z;
 }
 
 inline double dot(const vec3d& a1,
-                  const vec3d* a2)
+				  const vec3d* a2)
 {
 	return a1.x*a2->x+a1.y*a2->y+a1.z*a2->z;
 }
@@ -284,7 +284,7 @@ inline double dot(const vec3d& a1,
 
 /* vector product */
 inline vec3d cross(const vec3d& v1,
-                   const vec3d& v2)
+				   const vec3d& v2)
 {
 	return vec3d(v1.y*v2.z - v1.z*v2.y,
 				 v1.z*v2.x - v1.x*v2.z,
@@ -292,7 +292,7 @@ inline vec3d cross(const vec3d& v1,
 }
 
 inline vec3d cross(const vec3d* v1,
-                   const vec3d& v2)
+				   const vec3d& v2)
 {
 	return vec3d(v1->y*v2.z - v1->z*v2.y,
 				 v1->z*v2.x - v1->x*v2.z,
@@ -300,7 +300,7 @@ inline vec3d cross(const vec3d* v1,
 }
 
 inline vec3d cross(const vec3d& v1,
-                   const vec3d* v2)
+				   const vec3d* v2)
 {
 	return vec3d(v1.y*v2->z - v1.z*v2->y,
 				 v1.z*v2->x - v1.x*v2->z,
@@ -309,7 +309,7 @@ inline vec3d cross(const vec3d& v1,
 
 /* vector product */
 inline vec3d cross_vec_array(const vec3d& v1,
-                             const double* v2p)
+							 const double* v2p)
 {
 	return vec3d(v1.y*(*(v2p+2))-v1.z*(*(v2p+1)),
 				 v1.z*(*v2p)-v1.x*(*(v2p+2)),

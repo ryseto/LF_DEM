@@ -13,6 +13,7 @@ install_dir = ~/bin/
 
 # C++ compiler
 CXX = g++
+CC = gcc
 
 CUDA_HOME=/usr/
 

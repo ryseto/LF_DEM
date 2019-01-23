@@ -9,63 +9,63 @@ void BoxSet::init(double interaction_dist, System* sys_)
 	string indent = "  BoxSet::\t";
 	cout << indent << "Setting up Cell List System ... ";
 	sys = sys_;
-    boxMap.resize(sys->get_np());
-    for (int i=0; i<sys->get_np(); i++) {
-        boxMap[i] = NULL;
-    }
-    origin_ext_flow.reset();
-    x_box_nb = (unsigned int)(sys->get_lx()/interaction_dist);
-    y_box_nb = (unsigned int)(sys->get_ly()/interaction_dist);
-    z_box_nb = (unsigned int)(sys->get_lz()/interaction_dist);
-    if (x_box_nb == 0) {
-        x_box_nb = 1;
-    }
-    if (y_box_nb == 0) {
-        y_box_nb = 1;
-    }
-    if (z_box_nb == 0) {
-        z_box_nb = 1;
-    }
-    yz_box_nb = y_box_nb*z_box_nb;
-    if (x_box_nb < 4 && y_box_nb < 4 && z_box_nb < 4) { // boxing useless: a neighborhood is the whole system
-        _is_boxed = false;
-        box_xsize = sys->get_lx();
-        box_ysize = sys->get_ly();
-        box_zsize = sys->get_lz();
-        box_nb = 1;
-        auto it = Boxes.insert(new Box());
-        Box* const b = (*it.first);
-        b->setPosition({0, 0, 0});
-        TopBottomBoxes.insert(b);
-        box_labels.push_back(b);
-        b->type = 1;
-    } else {
-        _is_boxed = true;
-        box_xsize = sys->get_lx()/x_box_nb;
-        box_ysize = sys->get_ly()/y_box_nb;
-        box_zsize = sys->get_lz()/z_box_nb;
-        int m1p1[] = {-1, 1};
-        for (int a : m1p1) {
-            for (int b : m1p1) {
-                auto far_corner = 1.4999999*vec3d(a*box_xsize, b*box_ysize, box_zsize);
-                top_probing_positions.push_back(far_corner);
-                top_probing_positions.push_back(far_corner-vec3d(a*box_xsize, 0, 0));
-                top_probing_positions.push_back(far_corner-vec3d(a*box_xsize, b*box_ysize, 0));
-                top_probing_positions.push_back(far_corner-vec3d(0, b*box_ysize, 0));
-                far_corner = 1.4999999*vec3d(a*box_xsize, b*box_ysize, -box_zsize);
-                bottom_probing_positions.push_back(far_corner);
-                bottom_probing_positions.push_back(far_corner-vec3d(a*box_xsize, 0, 0));
-                bottom_probing_positions.push_back(far_corner-vec3d(a*box_xsize, b*box_ysize, 0));
-                bottom_probing_positions.push_back(far_corner-vec3d(0, b*box_ysize, 0));
-            }
-        }
-        box_nb = x_box_nb*yz_box_nb;
-        allocateBoxes();
-        // give them their position
-        positionBoxes();
-        // tell them their neighbors
-        assignNeighbors();
-    }
+	boxMap.resize(sys->get_np());
+	for (int i=0; i<sys->get_np(); i++) {
+		boxMap[i] = NULL;
+	}
+	origin_ext_flow.reset();
+	x_box_nb = (unsigned int)(sys->get_lx()/interaction_dist);
+	y_box_nb = (unsigned int)(sys->get_ly()/interaction_dist);
+	z_box_nb = (unsigned int)(sys->get_lz()/interaction_dist);
+	if (x_box_nb == 0) {
+		x_box_nb = 1;
+	}
+	if (y_box_nb == 0) {
+		y_box_nb = 1;
+	}
+	if (z_box_nb == 0) {
+		z_box_nb = 1;
+	}
+	yz_box_nb = y_box_nb*z_box_nb;
+	if (x_box_nb < 4 && y_box_nb < 4 && z_box_nb < 4) { // boxing useless: a neighborhood is the whole system
+		_is_boxed = false;
+		box_xsize = sys->get_lx();
+		box_ysize = sys->get_ly();
+		box_zsize = sys->get_lz();
+		box_nb = 1;
+		auto it = Boxes.insert(new Box());
+		Box* const b = (*it.first);
+		b->setPosition({0, 0, 0});
+		TopBottomBoxes.insert(b);
+		box_labels.push_back(b);
+		b->type = 1;
+	} else {
+		_is_boxed = true;
+		box_xsize = sys->get_lx()/x_box_nb;
+		box_ysize = sys->get_ly()/y_box_nb;
+		box_zsize = sys->get_lz()/z_box_nb;
+		int m1p1[] = {-1, 1};
+		for (int a : m1p1) {
+			for (int b : m1p1) {
+				auto far_corner = 1.4999999*vec3d(a*box_xsize, b*box_ysize, box_zsize);
+				top_probing_positions.push_back(far_corner);
+				top_probing_positions.push_back(far_corner-vec3d(a*box_xsize, 0, 0));
+				top_probing_positions.push_back(far_corner-vec3d(a*box_xsize, b*box_ysize, 0));
+				top_probing_positions.push_back(far_corner-vec3d(0, b*box_ysize, 0));
+				far_corner = 1.4999999*vec3d(a*box_xsize, b*box_ysize, -box_zsize);
+				bottom_probing_positions.push_back(far_corner);
+				bottom_probing_positions.push_back(far_corner-vec3d(a*box_xsize, 0, 0));
+				bottom_probing_positions.push_back(far_corner-vec3d(a*box_xsize, b*box_ysize, 0));
+				bottom_probing_positions.push_back(far_corner-vec3d(0, b*box_ysize, 0));
+			}
+		}
+		box_nb = x_box_nb*yz_box_nb;
+		allocateBoxes();
+		// give them their position
+		positionBoxes();
+		// tell them their neighbors
+		assignNeighbors();
+	}
 	cout << " [ok]" << endl;
 }
 
@@ -119,7 +119,7 @@ void BoxSet::initExtFlow(double interaction_dist,
 	box_corners[1] = vec3d( 0.5*box_xsize, 0, -0.5*box_zsize);
 	box_corners[2] = vec3d( 0.5*box_xsize, 0,  0.5*box_zsize);
 	box_corners[3] = vec3d(-0.5*box_xsize, 0,  0.5*box_zsize);
-
+	
 	next_of_periodicimage.resize(4);
 	if (sys->twodimension) {
 		nb_movingneighbor_part = 3;
@@ -401,7 +401,7 @@ BoxSet::~BoxSet()
 
 /*****
  UpdateNeighbors()
-
+ 
  At each time step, we need to check if neighborhood on top and bottom boxes have changed.
  Bulk boxes do not need to be updated.
  *****/
@@ -409,10 +409,10 @@ void BoxSet::updateNeighbors()
 {
 	/**
 	 \brief Update the neighbors of top and bottom boxes have changed.
-
-		To be called when the boundary conditions have changed.
+	 
+	 To be called when the boundary conditions have changed.
 	 **/
-
+	
 	for (auto& bx : TopBoxes) {
 		bx->resetMovingNeighbors();
 		auto pos = bx->getPosition();
@@ -420,7 +420,7 @@ void BoxSet::updateNeighbors()
 			bx->addMovingNeighbor(whichBox(sys->periodized(pos+delta_prob)));
 		}
 	}
-
+	
 	for (auto& bx : BottomBoxes) {
 		bx->resetMovingNeighbors();
 		auto pos = bx->getPosition();
@@ -428,7 +428,7 @@ void BoxSet::updateNeighbors()
 			bx->addMovingNeighbor(whichBox(sys->periodized(pos+delta_prob)));
 		}
 	}
-
+	
 	for (auto& bx : TopBottomBoxes) {
 		bx->resetMovingNeighbors();
 		auto pos = bx->getPosition();
@@ -810,7 +810,7 @@ Box* BoxSet::whichBox(const vec3d &pos)
 
 void BoxSet::box(int i)
 {
-//	Box* b = whichBox(sys->position[i]);
+	//	Box* b = whichBox(sys->position[i]);
 	Box* b = whichBox(sys->position[i]+origin_ext_flow);
 	if (b != boxMap[i]) {
 		b->add(i);

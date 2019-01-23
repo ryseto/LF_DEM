@@ -84,9 +84,7 @@ private:
 	vec3d omegahat_inf;  // omega/shear_rate: "shape" of the flow
 	Sym2Tensor E_infinity;
 	vec3d omega_inf;
-
 	double particle_volume;
-
 	std::vector <vec3d> u_inf;
 	std::vector <vec3d> na_disp;
 	double sq_cos_ma; // magic angle @@@@
@@ -98,11 +96,11 @@ private:
 	bool keepRunning(const std::string& time_or_strain, const double& value_end);
 	void (System::*timeEvolutionDt)(bool, double, double);
 	void timeEvolutionEulersMethod(bool calc_stress,
-	                               double time_end,
-	                               double strain_end);
+								   double time_end,
+								   double strain_end);
 	void timeEvolutionPredictorCorrectorMethod(bool calc_stress,
-	                                           double time_end,
-	                                           double strain_end);
+											   double time_end,
+											   double strain_end);
 	void timeStepMove(double time_end, double strain_end);
 	void timeStepMoveCorrector();
 	void timeStepMovePredictor(double time_end, double strain_end);
@@ -150,6 +148,7 @@ private:
 	void checkForceBalance();
 	void wallForces();
 	bool hasNeighbor(int i, int j);
+	void smoothStressTransition();
 #ifndef USE_DSFMT
 	MTRand *r_gen;
 #endif
@@ -184,7 +183,8 @@ private:
 	void setupParametersIntegrator();
 	void setupSystemPostConfiguration();
 	void setConfiguration(const std::vector <vec3d>& initial_positions,
-	                      const std::vector <double>& radii);
+						  const std::vector <double>& radii,
+						  const std::vector <double>& angles);
  protected:
  public:
 	System(Parameters::ParameterSet& ps, std::list <Event>& ev, struct State::BasicCheckpoint = State::zero_time_basicchkp);
@@ -201,7 +201,7 @@ private:
 	bool repulsiveforce;
 	bool delayed_adhesion;
 	bool cohesion;
-	bool critical_load;
+	bool critical_load_model;
 	bool brownian_dominated;
 	bool lubrication;
 	bool pairwise_resistance;
@@ -238,6 +238,7 @@ private:
 	std::vector<Sym2Tensor> total_stress_pp; // per particle
 	std::vector<std::complex<double>> phi6;
 	Sym2Tensor total_stress;
+	std::vector<int> n_contact;
 
 	/**************** Interaction machinery ***************************/
 	/* We hold the Interaction instances in a std::vector */
@@ -261,7 +262,6 @@ private:
 	 * That's the purpose of the custom comparator compare_interaction.
 	 */
 	std::vector < std::set <Interaction*, compare_interaction> > interaction_list;
-
 	 /*
 	 * These pointers are pointers to
 	 * elements of std::vector<Interaction> interaction defined above.
@@ -280,7 +280,6 @@ private:
 	std::vector < std::vector<int> > interaction_partners;
 	void gatherStressesByRateDependencies(Sym2Tensor &rate_prop_stress,
 										  Sym2Tensor &rate_indep_stress);
-
 	std::map<std::string, ForceComponent> force_components;
 	std::map<std::string, Sym2Tensor> total_stress_groups;
 	std::map<std::string, StressComponent> stress_components;
@@ -292,12 +291,12 @@ private:
 	double avg_dt;
 	int avg_dt_nb;
 	double system_volume;
-
 	vec3d shear_disp; // lees-edwards shift between top and bottom. only shear_disp.x, shear_disp.y is used
 	double max_velocity;
 	double max_velocity_brownian;
 	double max_velocity_contact;
 	double max_sliding_velocity;
+	double max_force_imbalance;
 	double target_stress;
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;
@@ -327,7 +326,8 @@ private:
 	double normalstress_wall2;
 	vec3d force_upwall;
 	vec3d force_downwall;
-
+	double effective_coordination_number;
+	double stress_transition_target;
 	/****************************************************************************************************
 	 * Extensional flow using Kraynik-Reinelt Method was originally implemented                         *
 	 * by Antonio Martiniello and Giulio Giuseppe Giusteri from Auguest to November 2016 at OIST.       *
@@ -375,6 +375,7 @@ private:
 	void declareResistance(int p0, int p1);
 	void eraseResistance(int p0, int p1);
 	void updateInteractions();
+	void calculateForces(); //
 	int periodize(vec3d& pos);
 	void periodizeExtFlow(const int &i, bool &pd_transport);
 	vec3d periodized(const vec3d& pos_diff);
@@ -384,9 +385,9 @@ private:
 	void calcStressPerParticle();
 	void calcContactXFPerParticleStressControlled();
 	void gatherVelocitiesByRateDependencies(std::vector<vec3d> &rateprop_vel,
-	                                        std::vector<vec3d> &rateprop_ang_vel,
-	                                        std::vector<vec3d> &rateindep_vel,
-	                                        std::vector<vec3d> &rateindep_ang_vel) const;
+											std::vector<vec3d> &rateprop_ang_vel,
+											std::vector<vec3d> &rateindep_vel,
+											std::vector<vec3d> &rateindep_ang_vel) const;
 	void calcTotalStressPerParticle();
 	void getStressCouette(int i,
 						  double &stress_rr,
@@ -403,8 +404,9 @@ private:
 	void retrim(vec3d&); // Extensional flow Periodic Boundary condition
 	void updateH(); // Extensional flow Periodic Boundary condition
 	void yaplotBoxing(std::ofstream &fout_boxing); // Extensional flow Periodic Boundary condition
-	void calcOrderParameter();
 	void recordHistory();
+	void countContactNumber();
+	void checkStaticForceBalance();
 
 	void setBoxSize(double lx_, double ly_, double lz_)
 	{
@@ -491,6 +493,11 @@ private:
 	double get_cumulated_strain() const
 	{
 		return clk.cumulated_strain;
+	}
+	
+	void reset_cumulated_strain()
+	{
+		clk.cumulated_strain = 0;
 	}
 
 	double get_angle_wheel()

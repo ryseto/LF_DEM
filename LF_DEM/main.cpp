@@ -85,7 +85,7 @@ int main(int argc, char **argv)
 
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hn8efds:t:r:g::p:a:k:i:v:c:N:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hn80efds:t:r:g::p:a:k:i:v:c:N:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
 				rheology_control = Parameters::ControlVariable::stress;
@@ -99,6 +99,11 @@ int main(int argc, char **argv)
 				rheology_control = Parameters::ControlVariable::rate;
 				control_value = {Dimensional::Dimension::Force, 1, Dimensional::Unit::hydro};
 				cout << "Rate control, infinite shear rate (hydro + hard contacts only)" << endl;
+				break;
+			case '0':
+				rheology_control = Parameters::ControlVariable::rate;
+				control_value = {Dimensional::Dimension::Force, 0, Dimensional::Unit::kn};
+				cout << "Rate control, zero shear rate (hydro + hard contacts only)" << endl;
 				break;
 			case 'e':
 				flow_type = "extension";
