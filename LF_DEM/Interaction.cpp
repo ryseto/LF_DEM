@@ -216,8 +216,8 @@ void Interaction::deactivate()
 void Interaction::outputHisotry()
 {
 	if (record) {
-		int dk = 20;
-		for (int k=0; k< strain_history.size(); k += dk) {
+		unsigned dk = 20;
+		for (unsigned k=0; k < strain_history.size(); k += dk) {
 			double ang = angle_history[k];
 			if (sys->ext_flow) {
 				ang += sys->p.magic_angle;

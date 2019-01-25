@@ -796,7 +796,8 @@ unsigned int BoxSet::whichBoxLabel(const vec3d &pos)
 		if (label >= box_labels.size()) {
 			ostringstream error_str;
 			error_str << " BoxSet: trying to box position out of boundaries \"" << pos	<< "\"" << endl;
-			error_str << pos - origin_ext_flow << endl;
+			error_str << " pos - origin " << pos - origin_ext_flow << endl;
+			error_str << " box size " << x_box_nb*box_xsize << " " << y_box_nb*box_ysize << " " << z_box_nb*box_zsize << endl;
 			throw runtime_error(error_str.str());
 		}
 	}

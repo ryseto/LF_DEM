@@ -56,7 +56,7 @@ void writeStatesBStream(std::ostream &conf_export, const std::vector <struct con
 {
 	unsigned ncont = cs.size();
 	conf_export.write((char*)&ncont, sizeof(unsigned int));
-	for (int i=0; i<ncont; i++) {
+	for (unsigned i=0; i<ncont; i++) {
 		conf_export.write((char*)&(cs[i].p0), sizeof(unsigned int));
 		conf_export.write((char*)&(cs[i].p1), sizeof(unsigned int));
 		conf_export.write((char*)&(cs[i].disp_tan.x), sizeof(double));
