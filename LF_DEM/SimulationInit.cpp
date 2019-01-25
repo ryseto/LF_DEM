@@ -82,7 +82,6 @@ void Simulation::contactForceParameterBrownian(string filename)
 		}
 	}
 	fin_knktdt.close();
-
 	if (found) {
 		p.kn = kn_, p.kt = kt_, p.dt = dt_;
 		string indent = "  Simulation::\t";
@@ -91,24 +90,6 @@ void Simulation::contactForceParameterBrownian(string filename)
 		ostringstream error_str;
 		error_str  << " Error: file " << filename.c_str() << " contains no data for vf = " << conf.volume_or_area_fraction << " and Pe = " << peclet << endl;
 		throw runtime_error(error_str.str());
-	}
-}
-
-void Simulation::importPreSimulationData(string filename)
-{
-	// @@@ DEPRECATED?
-	ifstream fin_PreSimulationData;
-	fin_PreSimulationData.open(filename.c_str());
-	if (!fin_PreSimulationData) {
-		ostringstream error_str;
-		error_str  << " Pre-simulation data file '" << filename << "' not found." << endl;
-		throw runtime_error(error_str.str());
-	}
-	double stress_, shear_rate_;
-	while (fin_PreSimulationData >> stress_ >> shear_rate_) {
-		if (stress_ == target_stress_input) {
-			break;
-		}
 	}
 }
 
@@ -184,16 +165,19 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 				cout << indent << "non-Brownain at rate = 0 " << endl;
 				internal_unit = Dimensional::Unit::repulsion;
 				sys.zero_shear = true;
+			} else {
+				cout << indent << "non-Brownain at rate = 0 " << endl;
+				internal_unit = Dimensional::Unit::kn;
+				sys.zero_shear = true;
 			}
 		}
-	}
-	if (control_var == Parameters::ControlVariable::stress) {
+	} else if (control_var == Parameters::ControlVariable::stress) {
 		system_of_units.add(Dimensional::Unit::stress, control_value);
 		internal_unit = control_value.unit;
 		//		internal_unit = Dimensional::Unit::stress;
 	}
 
-	// set the internal unit to actually determine force and parameter non-dimensionalized values 
+	// set the internal unit to actually determine force and parameter non-dimensionalized values
 	system_of_units.setInternalUnit(internal_unit);
 	PFact.setSystemOfUnits(system_of_units);
 	cout << indent << "internal units = " << Dimensional::unit2suffix(internal_unit) << endl;
@@ -205,7 +189,9 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 	// when there is a hydro force, its value is the non-dimensionalized shear rate.
 	auto forces = system_of_units.getForceScales();
 	if (control_var == Parameters::ControlVariable::rate) {
-		sys.set_shear_rate(forces.at(Dimensional::Unit::hydro).value);
+		if (!sys.zero_shear) {
+			sys.set_shear_rate(forces.at(Dimensional::Unit::hydro).value);
+		}
 	}
 	if (control_var == Parameters::ControlVariable::stress) {
 		sys.target_stress = forces.at(Dimensional::Unit::stress).value;
@@ -379,18 +365,13 @@ void Simulation::setupSimulation(string in_args,
 	cout << indent << "Simulation setup starting... " << endl;
 	string filename_import_positions = input_files[0];
 	string filename_parameters = input_files[1];
-	/*
-	 * @@@@ This way to prepare relaxed initial configuration should be changed.
-	 */
-	if (filename_parameters.find("init_relax", 0) != string::npos) {
-		cout << "init_relax" << endl;
-		sys.zero_shear = true;
-	} else {
-		sys.zero_shear = false;
-	}
 	Dimensional::Unit guarranted_unit; // a unit we're sure will mean something, for ParameterSetFactory to set default dimensional qties.
 	if (control_var == Parameters::ControlVariable::rate) {
-		guarranted_unit = Dimensional::Unit::hydro;
+		if (control_value.value != 0) {
+			guarranted_unit = Dimensional::Unit::hydro;
+		} else {
+			guarranted_unit = control_value.unit;
+		}
 	} else if (control_var == Parameters::ControlVariable::stress) {
 		guarranted_unit = control_value.unit;
 	} else {
@@ -402,7 +383,7 @@ void Simulation::setupSimulation(string in_args,
 	Parameters::ParameterSetFactory PFactory(guarranted_unit);
 	PFactory.setFromFile(filename_parameters);
 	setupNonDimensionalization(control_value, PFactory);
-	
+
 	if (control_var == Parameters::ControlVariable::stress) {
 		target_stress_input = control_value.value; //@@@ Where should we set the target stress???
 		sys.target_stress = target_stress_input/6/M_PI; //@@@
@@ -460,6 +441,7 @@ void Simulation::setupSimulation(string in_args,
 	//	}
 	
 	echoInputFiles(in_args, input_files);
+	checkDispersionType();
 	cout << indent << "Simulation setup [ok]" << endl;
 }
 
@@ -498,6 +480,11 @@ void Simulation::openOutputFiles()
 	if (p.output.out_data_interaction) {
 		outdata_int.setFile("int_"+simu_name+".dat",
 							data_header.str(), force_to_run, restart_from_chkp);
+	}
+	if (sys.p.output.out_gsd) {
+		string gsd_filename = simu_name+".gsd";
+		gsd_create(gsd_filename.c_str(), "CIL", "hoomd", gsd_make_version(1, 1));
+		gsd_open(&gsdOut, gsd_filename.c_str() , GSD_OPEN_APPEND);
 	}
 	//string box_name = "box_"+simu_name+".dat";
 	//fout_boxing.open(box_name);
@@ -575,3 +562,23 @@ TimeKeeper Simulation::initTimeKeeper()
 	}
 	return tk;
 }
+
+void Simulation::checkDispersionType()
+{
+	int cnt_type = 0;
+	np1 = sys.get_np();
+	for (int i=0; i<sys.get_np()-1; i++) {
+		if (sys.radius[i+1] != sys.radius[i]) {
+			cnt_type ++;
+			np1 = i+1;
+		}
+	}
+	if (cnt_type == 0) {
+		dispersion_type = DispersionType::mono;
+	} else if (cnt_type == 1) {
+		dispersion_type = DispersionType::bi;
+	} else {
+		dispersion_type = DispersionType::poly;
+	}
+}
+

@@ -41,18 +41,20 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit) {
 		PARAM_INIT(keep_input_strain, false),
 		PARAM_INIT(monolayer, false),
 		PARAM_INIT(auto_determine_knkt, false),
-		PARAM_INIT(output.out_bond_order_parameter6, false),
-        PARAM_INIT(output.new_material_functions, false),
+		PARAM_INIT(output.new_material_functions, false),
 		PARAM_INIT(output.out_data_vel_components, false),
 		PARAM_INIT(output.out_binary_conf, false),
 		PARAM_INIT(output.out_data_interaction, true),
 		PARAM_INIT(output.out_data_particle, true),
+		PARAM_INIT(output.out_gsd, true),
 		PARAM_INIT(output.origin_zero_flow, true),
 		PARAM_INIT(output.relative_position_view, false),
 		PARAM_INIT(output.log_time_interval, false),
 		PARAM_INIT(output.out_na_vel, false),
 		PARAM_INIT(output.out_na_disp, false),
-		PARAM_INIT(output.recording_interaction_history, false)
+		PARAM_INIT(output.recording_interaction_history, false),
+		PARAM_INIT(output.effective_coordination_number, false),
+		PARAM_INIT(check_static_force_balance, false)
 	};
 
 	/*===========================================
@@ -87,7 +89,10 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit) {
 		PARAM_INIT(mu_rolling, 0),
 		PARAM_INIT(TA_adhesion.adhesion_range, 1e-2),
 		PARAM_INIT(output.recording_start, 1),
-		PARAM_INIT(shear_jamming_rate, 1e-6)
+		PARAM_INIT(sj_disp_max_shrink_factor, 1.1),
+		PARAM_INIT(sj_disp_max_goal, 1e-6),
+		PARAM_INIT(sj_shear_rate, 0),
+		PARAM_INIT(sj_velocity, 1e-3)
 	};
 
 	/*================================
@@ -101,7 +106,8 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit) {
 		PARAM_INIT(friction_model, 1),
 		PARAM_INIT(np_fixed, 0),
 		PARAM_INIT(simulation_mode, 0),
-		PARAM_INIT(shear_jamming_max_count, 30)
+		PARAM_INIT(sj_check_count, 10),
+		PARAM_INIT(sj_reversal_repetition, 10)
 	};
 
 	/*===============================
@@ -112,7 +118,8 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit) {
 		PARAM_INIT(flow_type, ""),
 		PARAM_INIT(event_handler, ""),
 		PARAM_INIT(output.out_particle_stress, ""),
-		PARAM_INIT(lubrication_model, "tangential")
+		PARAM_INIT(lubrication_model, "tangential"),
+		PARAM_INIT(sj_program_file, "")
 	};
 
 	/*====================================
@@ -154,6 +161,12 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit) {
 
 	default_qty = {Dimensional::Dimension::Time, 1e-4, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(dt, default_qty));
+
+	default_qty = {Dimensional::Dimension::Time, -1, guarranted_unit};
+	DimValDblParams.push_back(PARAM_INIT_DIMQTY(dt_max, default_qty));
+	
+	default_qty = {Dimensional::Dimension::Time, -1, guarranted_unit};
+	DimValDblParams.push_back(PARAM_INIT_DIMQTY(dt_jamming, default_qty));
 	
 	default_qty = {Dimensional::Dimension::Time, 1e-3, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(contact_relaxation_time, default_qty));
@@ -196,6 +209,8 @@ void ParameterSetFactory::setFromFile(const std::string& filename_parameters)
 	/**
 	 \brief Read and parse the parameter file
 	 */
+	std::string indent = "  ParameterSetFactory::\t";
+	std::cout << indent << "setFromFile..." << std::endl;
 	std::ifstream fin;
 	fin.open(filename_parameters.c_str());
 	if (!fin) {
@@ -237,6 +252,7 @@ void ParameterSetFactory::setFromFile(const std::string& filename_parameters)
 		Str2KeyValue(str_parameter, keyword, value);
 		setParameterFromKeyValue(keyword, value);
 	}
+	std::cout << indent << "setFromFile...done" << std::endl;
 	fin.close();
 }
 

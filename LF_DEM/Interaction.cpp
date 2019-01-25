@@ -258,9 +258,7 @@ void Interaction::updateState(bool& deactivated)
 		return;
 	}
 	updateContactState();
-	if (contact.is_active()) {
-		contact.calcContactSpringForce();
-	}
+	contact.calcContactSpringForce();
 	if (sys->lubrication) {
 		lubrication.updateActivationState();
 		if (lubrication.is_active()) {
@@ -401,7 +399,7 @@ void Interaction::recordHistory()
 	if (record) {
 		double total_normal_force = 0;
 		if (contact.is_active()) {
-			total_normal_force += contact.get_spring_force();
+			total_normal_force += contact.getNormalForceValue();
 		}
 		if (sys->lubrication) {
 			if (lubrication.is_active()) {

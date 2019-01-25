@@ -1,44 +1,14 @@
 #!/usr/bin/perl
 
 # Usage:
-# $ generateYaplotFile.pl par_[...].dat [output_interval] [xz_shift]
-#
-# force_factor: To change the widths of strings to exhibit forces.
-# y_section: Visualize the trimed range of the y coordinates.
+# $ ....
 use Math::Trig;
 use IO::Handle;
 use Getopt::Long;
 my $particle_data = $ARGV[0];
-my $yap_radius = 1;
-#my $force_factor = 0.003;
-my $force_factor = 1;
-my $xz_shift = 0;
-my $axis = 0;
-my $reversibility_test = 0;
-my $monodisperse = 0;
 my $twodim = 0;
 my $pi = atan2(1, 1) * 4;
-#my $confout = 206; ## vf = 0.7/mu = 1
-#my $confout = 287; ## 107; ## vf = 0.8/mu = 1
-my $confout = 99999999999999; ## vf = 0.7/mu = 1
-GetOptions(
-'forcefactor=f' => \$force_factor,
-'interval=i' => \$output_interval,
-'shift=f' => \$xz_shift,
-'axis' => \$axis,
-'reversibility' => \$reversibility_test,
-'monodisperse' => \$monodisperse);
-my $printinfo = 1;
-if ($printinfo) {
-	printf "force_factor = $force_factor\n";
-	printf "output_interval = $output_interval\n";
-	printf "xz_shift = $xz_shift\n";
-	printf "axis = $axis\n";
-	printf "reversibility = $reversibility_test\n";
-	printf "monodisperse = $monodisperse\n";
-}
-
-# Create output file name
+$printinfo = 1;
 if ($printinfo) {
 	printf "$particle_data\n";
 }

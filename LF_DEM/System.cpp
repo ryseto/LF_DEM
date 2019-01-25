@@ -165,6 +165,7 @@ void System::allocateRessources()
 	declareStressComponents();
 	total_stress_pp.resize(np);
 	phi6.resize(np);
+	n_contact.resize(np);
 }
 
 void System::declareForceComponents()
@@ -384,6 +385,9 @@ void System::setupParametersContacts()
 		friction = true;
 	} else if (p.friction_model == 2 || p.friction_model == 3) {
 		cout << indent+"friction model: Coulomb + Critical Load" << endl;
+		friction = true;
+	} else if (p.friction_model == 4) {
+		cout << indent+"friction model: Static friction (mu = infinity)" << endl;
 		friction = true;
 	} else if (p.friction_model == 5) {
 		cout << indent+"friction_model: Max tangential force" << endl;
@@ -727,24 +731,38 @@ void System::timeStepBoxing()
 	if (!zero_shear) {
 		double strain_increment = shear_rate*dt;
 		clk.cumulated_strain += strain_increment;
+		const double small_value = 1e-9;
 		if (!ext_flow) {
 			// simple shear flow
 			vec3d shear_strain_increment = 2*dot(E_infinity, {0, 0, 1})*dt;
 			shear_strain += shear_strain_increment;
 			shear_disp += shear_strain_increment*lz;
-			int m = (int)(shear_disp.x/lx);
-			if (shear_disp.x < 0) {
-				m--;
-			}
-			shear_disp.x = shear_disp.x-m*lx;
-			if (!twodimension) {
-				m = (int)(shear_disp.y/ly);
-				if (shear_disp.y < 0) {
-					m--;
+			{
+				int mx = 0;
+				if (shear_disp.x >= lx-small_value) {
+					mx = 1;
+				} else if (shear_disp.x <= -(lx-small_value)) {
+					mx = -1;
 				}
-				shear_disp.y = shear_disp.y-m*ly;
+				if (shear_disp.x < 0) {
+					mx --;
+				}
+				shear_disp.x += -mx*lx;
+			}
+			if (!twodimension) {
+				int my = 0;
+				if (shear_disp.y >= ly-small_value) {
+					my = 1;
+				} else if (shear_disp.y <= -(ly-small_value)) {
+					my = -1;
+				}
+				if (shear_disp.y < 0) {
+					my--;
+				}
+				shear_disp.y += -my*ly;
 			}
 		}
+		
 	} else {
 		if (wall_rheology || p.simulation_mode == 31) {
 			vec3d strain_increment = 2*dot(E_infinity, {0, 0, 1})*dt;
@@ -769,11 +787,11 @@ void System::timeStepBoxing()
 void System::eventShearJamming()
 {
 	/**
-	 \brief Create an event when the shear rate is negative
+	 \brief Create an event when the shear rate is less than p.sj_shear_rate
 	*/
-	if (shear_rate < 0) {
+	if (abs(shear_rate) < p.sj_shear_rate && max_velocity < p.sj_velocity) {
 		Event ev;
-		ev.type = "negative_shear_rate";
+		ev.type = "jammed_shear_rate";
 		events.push_back(Event(ev));
 	}
 }
@@ -896,6 +914,48 @@ void System::checkForceBalance()
 	forceResultantLubricationForce();
 }
 
+void System::checkStaticForceBalance()
+{
+	vector< vector<vec3d> > contact_force;
+	contact_force.resize(np);
+	for (auto &inter: interaction) {
+		if (inter.contact.is_active()) {
+			unsigned int i = inter.get_p0();
+			unsigned int j = inter.get_p1();
+			if (n_contact[i] >= 2 && n_contact[j] >= 2) {
+				contact_force[i].push_back(inter.contact.getSpringForce());
+				contact_force[j].push_back(-inter.contact.getSpringForce());
+			}
+		}
+	}
+	double max_imbalance = 0;
+	vec3d total_force;
+	double total_imbalance = 0;
+	int cnt = 0;
+	for (auto &cf : contact_force) {
+		if (cf.size() >= 2) {
+			total_force.reset();
+			double abs_total_force = 0;
+			for (auto &ff : cf) {
+				total_force += ff;
+				abs_total_force += ff.norm();
+			}
+			if (abs_total_force > 0) {
+				double imbalance = total_force.norm()/abs_total_force;
+				if (imbalance > max_imbalance) {
+					max_imbalance = imbalance;
+				}
+				total_imbalance += imbalance;
+				cnt++;
+			}
+		}
+	}
+	if (cnt > 0) {
+		cerr << "imbalance = " << max_imbalance << ' ' << total_imbalance/cnt << endl;
+	}
+	max_force_imbalance = max_imbalance;
+}
+
 void System::timeEvolutionEulersMethod(bool calc_stress,
 									   double time_end,
 									   double strain_end)
@@ -924,7 +984,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		if (wall_rheology) {
 			calcStress();
 		}
-		if (!p.output.out_particle_stress.empty() || couette_stress) {
+		if (!p.output.out_particle_stress.empty() || couette_stress || p.output.out_gsd) {
 			calcTotalStressPerParticle();
 		}
 		if (p.output.recording_interaction_history) {
@@ -1039,33 +1099,8 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	for (int i=0; i<np; i++) {
 		na_disp[i] += na_velocity[i]*dt;
 	}
-}
-
-void System::calcOrderParameter()
-{
-	if (twodimension == false) {
-		cerr << "The bond-orientation order parameter can be calculated only 2D simulation." << endl;
-		throw runtime_error("  The bond-orientation order parameter is only for 2D simulation. out_bond_order_parameter6 must be false for 3D simulation\n");
-	}
-	for (auto phi6_ : phi6) {
-		phi6_.real(0);
-		phi6_.imag(0);
-	}
-	vector<int> n_neighobr(np, 0);
-	for (auto &inter: interaction) {
-		double phase = inter.nvec.angle_elevation_xz()+M_PI; // nvec = p1 - p0
-		complex<double> bond_phase1(cos(6*phase), sin(6*phase));
-		/*
-		 complex<double> bond_phase2(cos(6*(phase+M_PI)), sin(6*(phase+M_PI)));
-		 bond_phase2 = bond_phase1
-		 */
-		phi6[inter.get_p0()] += bond_phase1;
-		phi6[inter.get_p1()] += bond_phase1;
-		n_neighobr[inter.get_p0()] ++;
-		n_neighobr[inter.get_p1()] ++;
-	}
-	for (int i=0; i<np; i++) {
-		phi6[i] *= 1.0/n_neighobr[i];
+	if (eventLookUp != NULL) {
+		(this->*eventLookUp)();
 	}
 }
 
@@ -1085,6 +1120,11 @@ void System::adaptTimeStep()
 	}
 	if (dt*shear_rate > p.disp_max) { // cases where na_velocity < \dotgamma*radius
 		dt = p.disp_max/shear_rate;
+	}
+	if (p.dt_max > 0) {
+		if (dt > p.dt_max) {
+			dt = p.dt_max;
+		}
 	}
 }
 
@@ -1118,7 +1158,7 @@ void System::retrimProcess()
 		boxset.box(i);
 		velocity[i] -= u_inf[i];
 		u_inf[i] = grad_u*position[i];
-		velocity[i] +=  u_inf[i];
+		velocity[i] += u_inf[i];
 	}
 	boxset.updateExtFlow();
 }
@@ -1234,6 +1274,17 @@ bool System::keepRunning(double time_end, double strain_end)
 	return true;
 }
 
+void System::calculateForces()
+{
+	double dt_bak = dt; // to avoid stretching contact spring
+	dt = 0;
+	checkNewInteraction();
+	in_predictor = true;
+	updateInteractions();
+	in_predictor = false;
+	dt = dt_bak;
+}
+
 void System::timeEvolution(double time_end, double strain_end)
 {
 	/**
@@ -1258,13 +1309,7 @@ void System::timeEvolution(double time_end, double strain_end)
 	}
 
 	if (firsttime) {
-		double dt_bak = dt; // to avoid stretching contact spring
-		dt = 0;
-		checkNewInteraction();
-		in_predictor = true;
-		updateInteractions();
-		in_predictor = false;
-		dt = dt_bak;
+		calculateForces();
 		firsttime = false;
 	}
 	bool calc_stress = false;
@@ -2078,7 +2123,22 @@ void System::setShearDirection(double theta_shear) // will probably be deprecate
 		p.theta_shear = theta_shear;
 		double costheta_shear = cos(theta_shear);
 		double sintheta_shear = sin(theta_shear);
-		setImposedFlow({0, 0, costheta_shear/2, sintheta_shear/2, 0, 0},
+		if (abs(sintheta_shear) < 1e-15) {
+			sintheta_shear = 0;
+			if (costheta_shear > 0) {
+				costheta_shear = 1;
+			} else {
+				costheta_shear = -1;
+			}
+		} else if (abs(costheta_shear) < 1e-15) {
+			costheta_shear = 0;
+			if (sintheta_shear > 0) {
+				sintheta_shear = 1;
+			} else {
+				sintheta_shear = -1;
+			}
+		}
+		setImposedFlow({0, 0, 0.5*costheta_shear, 0.5*sintheta_shear, 0, 0},
 					   {-0.5*sintheta_shear, 0.5*costheta_shear, 0});
 	}
 }
@@ -2187,23 +2247,6 @@ void System::tmpMixedProblemSetVelocities()
 			na_ang_velocity[i].reset();
 		}
 		na_velocity[np_mobile].x = direction;
-	} else if (p.simulation_mode == 2) {
-		/* ????, yeah what happened here and below?? Haha. I guess whoever created simulation_mode 2/3 does not use it often :)
-		 */
-		for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
-			na_velocity[i].reset();
-			na_ang_velocity[i].reset();
-		}
-		na_ang_velocity[np_mobile].y = 2*shear_rate;
-	} else if (p.simulation_mode == 3) {
-		/* ????
-		 */
-
-		for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
-			na_velocity[i].reset();
-			na_ang_velocity[i].reset();
-		}
-		na_velocity[np_mobile].x = 1;
 	} else if (p.simulation_mode == 4) {
 		static double time_next = 10;
 		if (get_time() > time_next) {
@@ -2366,7 +2409,6 @@ void System::computeVelocities(bool divided_velocities)
 			rescaleVelHydroStressControlled();
 		}
 		sumUpVelocityComponents();
-		// checkForceBalance();
 	} else {
 		computeUInf();
 		setFixedParticleVelocities();
@@ -2376,8 +2418,10 @@ void System::computeVelocities(bool divided_velocities)
 	 * The max velocity is used to find dt from max displacement
 	 * at each time step.
 	 */
-	if (!p.fixed_dt && in_predictor) {
-		computeMaxNAVelocity();
+	if (in_predictor){
+		if (!p.fixed_dt || eventLookUp != NULL) {
+			computeMaxNAVelocity();
+		}
 	}
 	adjustVelocityPeriodicBoundary();
 	if (divided_velocities && wall_rheology) {
@@ -2724,6 +2768,7 @@ void System::resetContactModelParameer()
 {
 	for (auto &inter: interaction) {
 		inter.contact.setSpringConstants();
+		inter.contact.setDashpotConstants();
 	}
 }
 
@@ -2835,8 +2880,8 @@ void System::yaplotBoxing(std::ofstream &fout_boxing)
 	if (/* DISABLES CODE */ (0)) {
 		fout_boxing << "@ 8" << endl;
 		for (unsigned int k=0; k<interaction.size(); k++) {
-			int p0 = interaction[k].get_p0();
-			int p1 = interaction[k].get_p1();
+			unsigned int p0 = interaction[k].get_p0();
+			unsigned int p1 = interaction[k].get_p1();
 			vec3d nvec = interaction[k].nvec;
 			fout_boxing << "l " << position[p0]-3*dy << ' ' << position[p0]-3*dy + nvec  << endl;
 			fout_boxing << "l " << position[p1]-3*dy << ' ' << position[p1]-3*dy - nvec  << endl;
@@ -2856,6 +2901,62 @@ void System::recordHistory()
 		}
 		interaction[k].recordHistory();
 	}
+}
+
+void System::countContactNumber()
+{
+	/*
+	 * This counts effective contact number per particle.
+	 * It considers only contacts to effective particles in the force balance.
+	 * Coordination number after excluding such particles is relevent for isostatic conditions.
+	 */
+	n_contact.clear();
+	n_contact.resize(np, 0);
+	for (auto &inter: interaction) {
+		if (inter.contact.is_active()) {
+			n_contact[inter.get_p0()] ++;
+			n_contact[inter.get_p1()] ++;
+		}
+	}
+	bool cn_change;
+	do {
+		cn_change = false;
+		for (auto &inter: interaction) {
+			if (inter.contact.is_active()) {
+				if (n_contact[inter.get_p0()] == 1
+					&& n_contact[inter.get_p1()] == 1) {
+					/* If two particles are in contact with one bond,
+					 * these particles are isolated.
+					 * The contact will disappear.
+					 * Residual overlaps can be considered as numerical artifact.
+					 */
+					n_contact[inter.get_p0()] = 0;
+					n_contact[inter.get_p1()] = 0;
+					cn_change = true;
+				} else if (n_contact[inter.get_p0()] == 1
+						   || n_contact[inter.get_p1()] == 1) {
+					/*
+					 * If one particle has only one contacting neighbor,
+					 * the particle is a dead-end branch.
+					 * Removing them.
+					 * This iteration algortim removes them from the tip one by one.
+					 */
+					n_contact[inter.get_p0()] --;
+					n_contact[inter.get_p1()] --;
+					cn_change = true;
+				}
+			}
+		}
+	} while (cn_change);
+	int num_node_contact_network = 0;
+	int num_bond_contact_network = 0;
+	for (int i = 0; i < np; i++) {
+		if (n_contact[i] >= 2) {
+			num_node_contact_network ++;
+			num_bond_contact_network += n_contact[i];
+		}
+	}
+	effective_coordination_number = num_bond_contact_network*(1.0/num_node_contact_network);
 }
 
 //void System::openHisotryFile(std::string &filename)

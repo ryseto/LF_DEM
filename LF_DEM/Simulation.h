@@ -30,6 +30,7 @@
 #include "OutputData.h"
 #include "Events.h"
 #include "Timer.h"
+#include "gsd.h"
 
 class Simulation
 {
@@ -51,6 +52,10 @@ private:
 	double normal_stress_diff1;
 	double normal_stress_diff2;
 	bool restart_from_chkp;
+	double jamming_strain; // Strain stroke to get jamming
+	bool stress_reversal;
+	double time_last_sj_program;
+	double sj_duration_min;
 	time_t time_strain_0;
 	time_t time_strain_1;
 	time_t time_strain_end;
@@ -60,6 +65,8 @@ private:
 	Sym2Tensor stress_basis_3;
 	Sym2Tensor Einf_base; // This original Einf is kept and can be used when flow is stopped.
 	vec3d Omegainf_base; // Same as Einf_base.
+	std::deque<double> sj_program_stress;
+	std::deque<double> sj_program_duration;
 	/*
 	 * For output data.
 	 */
@@ -71,12 +78,18 @@ private:
 	OutputData outdata_par;
 	OutputData outdata_int;
 	std::ofstream fout_boxing;
+	gsd_handle gsdOut;
 	/*
 	 * For inputs
 	 */
 	void setupOptionalSimulation(std::string indent);
 	std::vector<Sym2Tensor> getParticleStressGroup(std::string group);
-
+	void checkDispersionType();
+	/*********** shear jamming  ************/
+	void operateJammingStressReversal(std::set<std::string> &output_events);
+	enum class DispersionType { mono, bi, poly };
+	DispersionType dispersion_type;
+	int np1;
 public:
 	/* For DEMsystem*/
 	Simulation(State::BasicCheckpoint chkp = State::zero_time_basicchkp);
@@ -98,7 +111,7 @@ public:
 	void setupFlow(Dimensional::DimensionalQty<double> control_value);
 	void setConfigToSystem(bool binary_conf, const std::string &filename);
 	TimeKeeper initTimeKeeper();
-	Parameters::ParameterSet p;
+	Parameters::ParameterSet p; // @@@@ We should distinguish p and sys.p more carefully.
 	bool keepRunning();
 	// void timeEvolution(double& next_output_data);
 	void generateOutput(const std::set<std::string> &output_events, int& binconf_counter);
@@ -122,11 +135,11 @@ public:
 						std::vector<std::string>& input_files);
 	void contactForceParameter(std::string filename);
 	void contactForceParameterBrownian(std::string filename);
-	void importPreSimulationData(std::string filename);
 	void setupNonDimensionalization(Dimensional::DimensionalQty<double> control_value, 
 									Parameters::ParameterSetFactory &PFact);
 	void stopShearing(TimeKeeper &tk); //simulation mode 22
-
+	void stressReversal();
+	void stressProgram();
 	/*
 	 * For outputs
 	 */
@@ -139,6 +152,10 @@ public:
 	void outputParFileTxt();
 	void outputPstFileTxt();
 	void outputConfigurationBinary(std::string);
+	void outputGSD();
+	void dataAdjustGSD(std::vector<vec3d> &pos,
+					   vec3d &shear_strain,
+					   double lx, double ly, double lz);
 	void checkpoint();
 	vec3d shiftUpCoordinate(double x, double y, double z);
 	void relativePositionView(std::vector<vec3d> &pos, std::vector<vec3d> &vel);
@@ -149,6 +166,7 @@ public:
 	/*********** Events  ************/
 	void handleEventsShearJamming();
 	void handleEventsFragility();
+	void handleEventsJammingStressReversal();
 	std::string gitVersion();
 	std::string simu_name;
 	void timeEvolutionUntilNextOutput(const TimeKeeper &tk);

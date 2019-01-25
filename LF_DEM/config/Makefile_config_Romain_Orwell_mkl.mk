@@ -4,7 +4,7 @@
 
 
 # Use DSFMT instead of MT as a RNG ( yes / no )
-DSFMT_RNG = no
+DSFMT_RNG = yes
 # Enable use of Metis library ( yes / no )
 UseMetis = no
 
@@ -12,14 +12,13 @@ UseMetis = no
 install_dir = ~/usr/bin/
 
 # C++ compiler
-CXX = g++
+CXX = clang++
+CC = clang
 
 # Libraries
 #
 # SuiteSparse library install folder
-override_default_cholmod = true
-Cholmod_path = -I /usr/include/suitesparse
-Cholmod_Linking_Flags = -lcholmod
+SUITESPARSE_ROOT = /usr/local
 
 # Extra flags to the compiler, if needed (e.g. optimization flags)
 CXXFLAGS_EXTRA =
@@ -34,7 +33,7 @@ Blas_Linking_Flags = -Wl,--no-as-needed -L${MKLROOT}/lib/intel64 \
                $(MKLROOT)/lib/intel64/libmkl_intel_lp64.so \
                $(MKLROOT)/lib/intel64/libmkl_core.so \
                $(MKLROOT)/lib/intel64/libmkl_gnu_thread.so \
-               -Wl,--end-group -fopenmp -lpthread -lm -ldl
+               -Wl,--end-group -fopenmp=libomp -lpthread -lm -ldl
 Lapack_Linking_Flags =
 
 # Extra linking here, if needed

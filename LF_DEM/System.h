@@ -148,6 +148,7 @@ private:
 	void checkForceBalance();
 	void wallForces();
 	bool hasNeighbor(int i, int j);
+	void smoothStressTransition();
 #ifndef USE_DSFMT
 	MTRand *r_gen;
 #endif
@@ -237,6 +238,7 @@ private:
 	std::vector<Sym2Tensor> total_stress_pp; // per particle
 	std::vector<std::complex<double>> phi6;
 	Sym2Tensor total_stress;
+	std::vector<int> n_contact;
 
 	/**************** Interaction machinery ***************************/
 	/* We hold the Interaction instances in a std::vector */
@@ -294,6 +296,7 @@ private:
 	double max_velocity_brownian;
 	double max_velocity_contact;
 	double max_sliding_velocity;
+	double max_force_imbalance;
 	double target_stress;
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;
@@ -323,7 +326,8 @@ private:
 	double normalstress_wall2;
 	vec3d force_upwall;
 	vec3d force_downwall;
-
+	double effective_coordination_number;
+	double stress_transition_target;
 	/****************************************************************************************************
 	 * Extensional flow using Kraynik-Reinelt Method was originally implemented                         *
 	 * by Antonio Martiniello and Giulio Giuseppe Giusteri from Auguest to November 2016 at OIST.       *
@@ -371,6 +375,7 @@ private:
 	void declareResistance(int p0, int p1);
 	void eraseResistance(int p0, int p1);
 	void updateInteractions();
+	void calculateForces(); //
 	int periodize(vec3d& pos);
 	void periodizeExtFlow(const int &i, bool &pd_transport);
 	vec3d periodized(const vec3d& pos_diff);
@@ -399,8 +404,9 @@ private:
 	void retrim(vec3d&); // Extensional flow Periodic Boundary condition
 	void updateH(); // Extensional flow Periodic Boundary condition
 	void yaplotBoxing(std::ofstream &fout_boxing); // Extensional flow Periodic Boundary condition
-	void calcOrderParameter();
 	void recordHistory();
+	void countContactNumber();
+	void checkStaticForceBalance();
 
 	void setBoxSize(double lx_, double ly_, double lz_)
 	{
@@ -487,6 +493,11 @@ private:
 	double get_cumulated_strain() const
 	{
 		return clk.cumulated_strain;
+	}
+	
+	void reset_cumulated_strain()
+	{
+		clk.cumulated_strain = 0;
 	}
 
 	double get_angle_wheel()

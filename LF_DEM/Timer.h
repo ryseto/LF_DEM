@@ -31,10 +31,12 @@ public:
 	Clock(bool strain):
 	_strain(strain) {};
 
-	double nextTime() {
+	double nextTime()
+	{
 		return next_time;
 	}
-	bool is_strain(){
+	bool is_strain()
+	{
 		return _strain;
 	}
 	virtual void tick() {};
@@ -151,7 +153,6 @@ public:
 		}
 		return elapsed_clocks;
 	}
-
 	// TimeKeeper();
 	// ~TimeKeeper();
 };

@@ -23,7 +23,7 @@ my $timeper=0;
 my $scale=0.5;
 my $axisrotation=1;
 my $pd_color = 0;
-my $draw_cross = 0;
+my $draw_cross = 1;
 my $flow_type = "shear";
 my $draw_trajectory = 0;
 my $phi6_data = 1;
@@ -145,7 +145,7 @@ sub readHeader {
 	$line = <IN_particle>; ($buf, $buf, $dataunit) = split(/\s+/, $line);
 
 	if ($Ly == 0) {
-		$number_of_header = 8;
+		$number_of_header = 9;
 	} else {
 		$number_of_header = 7;
 	}
@@ -188,7 +188,7 @@ sub InParticles {
         if ($i > 0) {
             $line = <IN_particle>;
         }
-        if ($output == 1) {
+        if (1) {
             # 1: number of the particle
             # 2: radius
             # 3, 4, 5: position
@@ -204,7 +204,11 @@ sub InParticles {
 			# 3D
 			# ($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz) = split(/\s+/, $line);
 			# 2D
-			($ip, $a, $x, $z, $vx, $vy, $vz, $ox, $oy, $oz, $angle) = split(/\s+/, $line);
+			if ($dim eq 3) {
+				($ip, $a, $x, $y, $z, $vx, $vz, $vy, $ox, $oz, $oy, $connum) = split(/\s+/, $line);
+			} else {
+				($ip, $a, $x, $z, $vx, $vz, $vy, $ox, $oz, $oy, $angle, $connum) = split(/\s+/, $line);
+			}
             #
             $ang[$i] = $angle;
             $radius[$i] = $a;
@@ -227,7 +231,8 @@ sub InParticles {
             $omegax[$i] = $ox;
             $omegay[$i] = $oy;
             $omegaz[$i] = $oz;
-            
+			$contactnumber[$i] = $connum;
+
             if ($radius_max < $a) {
                 $radius_max = $a;
             }
@@ -286,28 +291,33 @@ sub InInteractions{
 			$int0[$k] = $i;
 			$int1[$k] = $j;
 			$contactstate[$k] = $contact;
+			$F_lub[$k] = $f_lub_norm;
+			#$F_lub_tan = sqrt($f_lub_tan_x**2 + $f_lub_tan_y**2 + $f_lub_tan_z**2);
+			
+			$Fc_n[$k] = $fc_norm;
+			#$Fc_t[$k] = sqrt($fc_tan_x**2+$fc_tan_y**2+$fc_tan_z**2);
 			
 			if ($contact > 0) {
 				#$force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
-				$force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
+				$fn = $fc_norm + $f_lub_norm + $fr_norm;
 				#$force[$k] = $fc_norm;
 			} else {
-				$force[$k] = $f_lub_norm + $fr_norm;
+				$fn = $fc_norm + $f_lub_norm;
+				#$force[$k] = $f_lub_norm + $fr_norm;
 				#$force[$k] = 0;
 			}
-			
-			$F_lub[$k] = $f_lub_norm;
-			$F_lub_tan = sqrt($f_lub_tan_x**2 + $f_lub_tan_y**2 + $f_lub_tan_z**2);
-			
-			$Fc_n[$k] = $fc_norm;
-			$Fc_t[$k] = sqrt($fc_tan_x**2+$fc_tan_y**2+$fc_tan_z**2);
+			$ftx = $f_lub_tan_x + $fc_tan_x;
+			$fty = $f_lub_tan_y + $fc_tan_y;
+			$ftz = $f_lub_tan_z + $fc_tan_z;
+			$ft = sqrt($ftx*$ftx + $fty*$fty + $ftz*$ftz);
+			$force[$k] = sqrt($fn*$fn + $ft*$ft);
 			$S_bf[$k] =  $s_xF;
 			$nrvec_x[$k] = $nx;
 			$nrvec_y[$k] = $ny;
 			$nrvec_z[$k] = $nz;
 			$Gap[$k] = $gap;
-			$k++;
 		}
+		$k++;
 	}
 	$num_interaction = $k;
 }
@@ -367,6 +377,33 @@ sub OutYaplotData{
 		}
 	}
 	## visualize contact network
+#	if (1) {
+#		printf OUT "y 2\n";
+#		printf OUT "r 0.2\n";
+#		printf OUT "@ 6\n"; # static
+#		for ($k = 0; $k < $num_interaction; $k ++) {
+#			if ($contactstate[$k] >= 2) {
+#				$i = $int0[$k];
+#				$j = $int1[$k];
+#				if ($contactnumber[$i] >= 2 && $contactnumber[$j] >= 2) {
+#					&OutString2($int0[$k], $int1[$k]);
+#				}
+#			}
+#		}
+#		printf OUT "y 2\n";
+#		printf OUT "r 0.2\n";
+#		printf OUT "@ 2\n"; # static
+#		for ($k = 0; $k < $num_interaction; $k ++) {
+#			if ($contactstate[$k] == 1) {
+#				$i = $int0[$k];
+#				$j = $int1[$k];
+#				if ($contactnumber[$i] >= 2 && $contactnumber[$j] >= 2) {
+#					&OutString2($int0[$k], $int1[$k]);
+#				}
+#			}
+#		}
+#	}
+	
 	#	printf OUT "y 2\n";
 	#	printf OUT "r 0.2\n";
 	#	printf OUT "@ 0\n"; # static
@@ -393,7 +430,7 @@ sub OutYaplotData{
 		for ($k = 0; $k < $num_interaction; $k ++) {
 			$forcetmp = $force[$k];
 			#$forcetmp = $F_lub[$k];
-			if ($forcetmp > 0) {
+			if ($forcetmp > 0.1) {
 				$w = $force_factor*$forcetmp;
 				for ($ii = $ii_min; $ii <= $ii_max; $ii++) {
 					for ($jj = $jj_min; $jj <= $jj_max; $jj++) {

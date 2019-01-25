@@ -46,6 +46,8 @@ ifeq ($(DSFMT_RNG),yes)
 	DSFMT_SRC = dSFMT-src-2.2.3/dSFMT.c
 endif
 
+GSD_SRC = gsd.c
+
 ifeq ($(UseMetis),yes)
 	CXXFLAGS_optimized += -DUSE_METIS
 	CXXFLAGS_debug += -DUSE_METIS
@@ -82,6 +84,7 @@ SRC=$(shell ls *.cpp)
 LIB=$(shell ls *.h)
 OBJ=$(SRC:.cpp=.o)
 DSFMT_OBJ += $(DSFMT_SRC:.c=.o)
+GSD_OBJ = $(GSD_SRC:.c=.o)
 DATE=$(shell date +%D | sed "s./..g")
 
 all:	CXXFLAGS= $(CXXFLAGS_optimized) -std=c++11
@@ -104,11 +107,14 @@ hasconfig:
 		echo "\n no config/Makefile_config.mk \n \n";\
 	fi)
 
-$(OUT_CODE): $(OBJ) $(DSFMT_OBJ) hasconfig
-	$(CXX) $(CXXFLAGS) -o $@ $(OBJ) $(DSFMT_OBJ)  $(Cholmod_Linking_Flags) $(Cholmod_GPU) $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Extra_Linking_Flags) -lstdc++ -lm
+$(OUT_CODE): $(OBJ) $(DSFMT_OBJ) $(GSD_OBJ) hasconfig
+	$(CXX) $(CXXFLAGS) -o $@ $(OBJ) $(DSFMT_OBJ) $(GSD_OBJ) $(Cholmod_Linking_Flags) $(Cholmod_GPU) $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Extra_Linking_Flags) -lstdc++ -lm
 
 $(OBJ): $(SRC)
 	$(CXX) $(CXXFLAGS) $(Includes) -c $(@:.o=.cpp)
+
+$(GSD_OBJ): $(GSD_SRC)
+	$(CC) $(CFLAGS) -o $@ -c $(@:.o=.c)
 
 $(DSFMT_OBJ): $(DSFMT_SRC)
 	$(CXX) $(CFLAGS) -o $@ -c $(@:.o=.c)
@@ -118,7 +124,7 @@ tar:
 	tar -czvf LF_DEM_sources_$(DATE).tar.gz $(SRC) $(LIB) VersionInfo.h Makefile
 
 clean:
-	rm -f  $(OBJ)
+	rm -f $(OBJ) $(DSFMT_OBJ) gsd.o
 
 doc:
 	doxygen Doxyfile

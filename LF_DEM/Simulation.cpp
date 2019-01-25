@@ -16,15 +16,16 @@
 #include <complex>
 #include "Simulation.h"
 #include "SystemHelperFunctions.h"
-
 using namespace std;
 
 Simulation::Simulation(State::BasicCheckpoint chkp):
 sys(System(p, events, chkp)),
 target_stress_input(0),
 restart_from_chkp(false),
+stress_reversal(false),
 timestep_1(0),
-diminish_output(false)
+diminish_output(false),
+jamming_strain(0)
 {
 	kill = false;
 	restart_from_chkp = !isZeroTimeChkp(chkp);
@@ -41,10 +42,10 @@ bool Simulation::keepRunning()
 
 		Returns true when ParameterSet::time_end is reached or if an event handler threw a kill signal.
 	 */
-	if (p.time_end.dimension == Dimensional::Dimension::Strain) {
-		return (sys.get_cumulated_strain() < p.time_end.value-1e-8) && !kill;
+	if (sys.p.time_end.dimension == Dimensional::Dimension::Strain) {
+		return (sys.get_cumulated_strain() < sys.p.time_end.value-1e-8) && !kill;
 	} else {
-		return (sys.get_time() < p.time_end.value-1e-8) && !kill;
+		return (sys.get_time() < sys.p.time_end.value-1e-8) && !kill;
 	}
 }
 
@@ -54,55 +55,71 @@ void Simulation::setupEvents()
 
 		Links System::eventLookUp to a specialized function according to the value of ParameterSet::event_handler .
 	 */
-	if (p.event_handler == "shear_jamming") {
+	if (sys.p.event_handler == "shear_jamming") {
 		sys.eventLookUp = &System::eventShearJamming;
-		return;
-	}
-	if (p.event_handler == "fragility") {
+	} else if (sys.p.event_handler == "fragility") {
 		sys.eventLookUp = &System::eventShearJamming;
-		return;
+	} else if (sys.p.event_handler == "jamming_stress_reversal") {
+		sys.eventLookUp = &System::eventShearJamming;
+		ifstream sj_program_file;
+		sj_program_file.open(sys.p.sj_program_file.c_str());
+		int sj_stress;
+		double sj_duration;
+		while(sj_program_file >> sj_stress >> sj_duration) {
+			cerr << "stress program, sj_duration : ";
+			cerr << sj_stress << " , " << sj_duration << endl;
+			sj_program_stress.push_back(sj_stress);
+			sj_program_duration.push_back(sj_duration);
+		}
+		sj_program_file.close();
+	} else {
+		sys.eventLookUp = NULL;
 	}
-	sys.eventLookUp = NULL;
 }
 
 void Simulation::handleEventsShearJamming()
 {
 	/** \brief Event handler to test for shear jamming
-
+	 
 		When a negative_shear_rate event is thrown, p.disp_max is decreased.
 	 If p.disp_max is below a minimal value, the shear direction is switched to y-shear.
 	 */
-	if (p.fixed_dt == false) {
+	bool ending_simulation = false;
+	if (sys.p.fixed_dt == false) {
 		for (const auto& ev : events) {
-			if (ev.type == "negative_shear_rate") {
-				cout << " negative rate " << endl;
-				p.disp_max /= 1.1;
+			if (ev.type == "jammed_shear_rate") {
+				cout << " jammed rate " << endl;
+				sys.p.disp_max /= sys.p.sj_disp_max_shrink_factor;
 			}
 		}
-		if (p.disp_max < 1e-6) {
-			cout << "jammed" << endl;
-			sys.calcStress();
-			outputData();
-			outputConfigurationData();
-			checkpoint();
-			kill = true;
+		if (sys.p.disp_max < sys.p.sj_disp_max_goal) {
+			ending_simulation = true;
 		}
 	} else {
-		double sr = sqrt(2*sys.getEinfty().selfdoubledot()); // shear rate for simple shear.
 		static int shear_jam_counter = 0;
-		if (abs(sr) < sys.p.shear_jamming_rate) {
+		bool jammed = false;
+		for (const auto& ev : events) {
+			if (ev.type == "jammed_shear_rate") {
+				jammed = true;
+			}
+		}
+		if (jammed) {
 			shear_jam_counter ++;
-			cerr << "shear_jam_counter = " << shear_jam_counter << endl;
+			cout << " jammed " << shear_jam_counter << endl;
 		} else {
 			shear_jam_counter = 0;
 		}
-		if (shear_jam_counter == sys.p.shear_jamming_max_count) {
-			sys.calcStress();
-			outputData();
-			outputConfigurationData();
-			checkpoint();
-			kill = true;
+		if (shear_jam_counter == sys.p.sj_check_count) {
+			ending_simulation = true;
 		}
+	}
+	if (ending_simulation == true) {
+		cout << "jammed" << endl;
+		sys.calcStress();
+		outputData();
+		outputConfigurationData();
+		checkpoint();
+		kill = true;
 	}
 }
 
@@ -110,18 +127,38 @@ void Simulation::handleEventsFragility()
 {
 	/** \brief Event handler to test for shear jamming
 
-		When a negative_shear_rate event is thrown, p.disp_max is decreased.
+		When a jammed_shear_rate event is thrown, p.disp_max is decreased.
 	 If p.disp_max is below a minimal value, the shear direction is switched to y-shear.
 	 */
 	for (const auto& ev : events) {
-		if (ev.type == "negative_shear_rate") {
-			cout << " negative rate " << endl;
-			p.disp_max /= 1.1;
+		if (ev.type == "jammed_shear_rate") {
+			cout << " jammed rate " << endl;
+			sys.p.disp_max /= sys.p.sj_disp_max_shrink_factor;
 		}
 	}
-	if (p.disp_max < 1e-6 || sys.get_cumulated_strain() > 3.) {
-		p.disp_max = p_initial.disp_max;
+	if (sys.p.disp_max < sys.p.sj_disp_max_goal || sys.get_cumulated_strain() > 3.) {
+		sys.p.disp_max = p_initial.disp_max;
 		cout << "Event Fragility : starting cross shear" << endl;
+	}
+}
+
+void Simulation::handleEventsJammingStressReversal()
+{
+	//	double sr = sqrt(2*sys.getEinfty().selfdoubledot()); // shear rate for simple shear.
+	stress_reversal = false;
+	for (const auto& ev : events) {
+		if (ev.type == "jammed_shear_rate") {
+			if (sys.p.fixed_dt) {
+				stress_reversal = true;
+			} else {
+				/* @@ I think this is not effective way to handle jamming.
+				 */
+				sys.p.disp_max /= sys.p.sj_disp_max_shrink_factor;
+				if (sys.p.disp_max < sys.p.sj_disp_max_goal) {
+					stress_reversal = true;
+				}
+			}
+		}
 	}
 }
 
@@ -131,11 +168,14 @@ void Simulation::handleEvents()
 
 		This function dispatches to specialized handlers according to the value of ParameterSet::event_handler .
 	 */
-	if (p.event_handler == "shear_jamming") {
+	if (sys.p.event_handler == "shear_jamming") {
 		handleEventsShearJamming();
 	}
-	if (p.event_handler == "fragility") {
+	if (sys.p.event_handler == "fragility") {
 		handleEventsFragility();
+	}
+	if (sys.p.event_handler == "jamming_stress_reversal") {
+		handleEventsJammingStressReversal();
 	}
 	events.clear();
 }
@@ -143,20 +183,24 @@ void Simulation::handleEvents()
 void Simulation::generateOutput(const set<string> &output_events, int& binconf_counter)
 {
 	checkpoint(); // generic, for recovery if crash
+	if (sys.p.check_static_force_balance) {
+		sys.checkStaticForceBalance();
+	}
 	if (output_events.find("data") != output_events.end()) {
+		sys.calcStressPerParticle();
 		sys.calcStress();
 		outputData();
 	}
-	if (p.output.out_bond_order_parameter6) {
-		sys.calcOrderParameter();
-	}
 	if (output_events.find("config") != output_events.end()) {
-		if (p.output.out_binary_conf) {
+		if (sys.p.output.out_binary_conf) {
 			string binconf_filename = "conf_" + simu_name + "_" + to_string(++binconf_counter) + ".bin";
 			outputConfigurationBinary(binconf_filename);
 			outputConfigurationData();
 		} else {
 			outputConfigurationData();
+		}
+		if (sys.p.output.out_gsd) {
+			outputGSD();
 		}
 	}
 }
@@ -174,14 +218,8 @@ void Simulation::setupOptionalSimulation(string indent)
 			sys.mobile_fixed = true;
 			break;
 		case 2:
-			cout << indent << "Test simulation for a mixed problem" << endl;
-			sys.zero_shear = true;
-			sys.mobile_fixed = true;
-			break;
-		case 3:
-			cout << indent << "Test simulation for a mixed problem" << endl;
-			sys.zero_shear = true;
-			sys.mobile_fixed = true;
+			cout << indent << "Stress reversal test (fragility of shear jamming)" << endl;
+			cout << indent << "stress is reversed once jammed" << endl;
 			break;
 		case 4:
 			cout << indent << "Test simulation for relax" << endl;
@@ -271,12 +309,14 @@ void Simulation::printProgress()
 {
 	Dimensional::DimensionalQty<double> current_time = {Dimensional::Dimension::Time, sys.get_time(), system_of_units.getInternalUnit()};
 	system_of_units.convertFromInternalUnit(current_time, output_unit);
-	if (p.time_end.dimension == Dimensional::Dimension::Time) {
-		cout << "time: " << current_time.value << " / " << p.time_end.value\
-		     << " , strain: " << sys.get_cumulated_strain() << endl;
+	if (sys.p.time_end.dimension == Dimensional::Dimension::Time) {
+		cout << "time: " << current_time.value << " / " << sys.p.time_end.value << " , strain: " << sys.get_cumulated_strain() << endl;
 	} else {
-		cout << "time: " << current_time.value\
-		     << " , strain: " << sys.get_cumulated_strain() << " / " << p.time_end.value << endl;
+		cout << "time: " << current_time.value << " , strain: " << sys.get_cumulated_strain() << " / " << sys.p.time_end.value << ' ';
+		if (sys.p.sj_program_file != "") {
+			cout << "sjp " << sj_program_stress.front();
+		}
+		cout << endl;
 	}
 }
 
@@ -317,8 +357,11 @@ void Simulation::simulationSteadyShear(string in_args,
 		while (!elapsed.empty()); // flush tk to not output on first time step
 	}
 	int binconf_counter = 0;
+	if (sys.p.sj_program_file != "") {
+		stressProgram();
+	}
 	while (keepRunning()) {
-		if (p.simulation_mode == 22) {
+		if (sys.p.simulation_mode == 22) {
 			stopShearing(tk);
 			if (sys.get_time() > 20) {
 				break;
@@ -329,6 +372,9 @@ void Simulation::simulationSteadyShear(string in_args,
 		if (sys.retrim_ext_flow) {
 			output_events.insert("data");
 			output_events.insert("config");
+		}
+		if (sys.p.event_handler == "jamming_stress_reversal") {
+			operateJammingStressReversal(output_events);
 		}
 		generateOutput(output_events, binconf_counter);
 		printProgress();
@@ -352,6 +398,39 @@ void Simulation::simulationSteadyShear(string in_args,
 		outputFinalConfiguration(filename_configuration);
 	}
 	cout << indent << "Time evolution done" << endl << endl;
+}
+
+void Simulation::operateJammingStressReversal(std::set<std::string> &output_events)
+{
+	if (stress_reversal && sys.get_time()-time_last_sj_program > sj_duration_min) {
+		if (sys.p.sj_program_file == "") {
+			jamming_strain = sys.get_cumulated_strain();
+			static int cnt_shear_jamming_repetation = 0;
+			cnt_shear_jamming_repetation ++;
+			if (cnt_shear_jamming_repetation > sys.p.sj_reversal_repetition) {
+				kill = true;
+			}
+			stressReversal();
+			sys.p.disp_max = p_initial.disp_max;
+			sys.dt = sys.p.dt;
+		} else {
+			stressProgram();
+			jamming_strain = sys.get_cumulated_strain();
+		}
+		output_events.insert("data");
+		output_events.insert("config");
+	} else {
+		jamming_strain = 0;
+		if (sys.get_shear_rate() < 0.001) {
+			if (sys.dt > sys.p.dt_jamming) {
+				sys.dt = sys.p.dt_jamming;
+			}
+		} else {
+			if (sys.p.sj_program_file == "") {
+				sys.dt = sys.p.dt;
+			}
+		}
+	}
 }
 
 void Simulation::stopShearing(TimeKeeper &tk)
@@ -387,6 +466,71 @@ void Simulation::stopShearing(TimeKeeper &tk)
 	}
 }
 
+void Simulation::stressReversal()
+{
+	jamming_strain = sys.get_cumulated_strain();
+	static int shear_direction = 0;
+	double theta_shear = (shear_direction % 2) ? 0 : M_PI;
+	sys.setShearDirection(theta_shear);
+	shear_direction ++;
+	sys.reset_cumulated_strain();
+}
+
+void Simulation::stressProgram()
+{
+	/* Return true when the program is accepted.
+	 */
+	static bool first_time = true;
+	static double stress_original;
+	static double sj_rate_original;
+	static double kn_original;
+	static double kt_original;
+	if (first_time) {
+		first_time = false;
+		stress_original = sys.target_stress;
+		sj_rate_original = sys.p.sj_shear_rate;
+		kn_original = sys.p.kn;
+		kt_original = sys.p.kt;
+	}
+	cerr << " shear jamming stress program " << sj_program_stress.front() << endl;
+	if (sj_program_stress.front() == 0) {
+		if (false) {
+			double infinitesimal_stress = 1e-4;
+			sys.target_stress = infinitesimal_stress*stress_original;
+			sys.p.kn = kn_original*infinitesimal_stress;
+			sys.p.kt = kt_original*infinitesimal_stress;
+		} else {
+			sys.target_stress = 0;
+		}
+	} else if (sj_program_stress.front() == 1) {
+		sys.setShearDirection(0);
+		sys.target_stress = stress_original;
+		sys.p.kn = kn_original;
+		sys.p.kt = kt_original;
+	} else if (sj_program_stress.front() == -1) {
+		sys.setShearDirection(M_PI);
+		sys.target_stress = stress_original;
+		sys.p.kn = kn_original;
+		sys.p.kt = kt_original;
+	} else if (sj_program_stress.front() == 2) {
+		sys.setShearDirection(M_PI/2);
+		sys.target_stress = stress_original;
+		sys.p.kn = kn_original;
+		sys.p.kt = kt_original;
+	} else if (sj_program_stress.front() == 999) {
+		kill = true;
+	} else {
+		cerr << "Only 1, 0, -1, 999 in the program file\n";
+		exit(1);
+	}
+	sj_duration_min = sj_program_duration.front();
+	sys.resetContactModelParameer();
+	sys.calculateForces();
+	time_last_sj_program = sys.get_time();
+	sj_program_stress.pop_front();
+	sj_program_duration.pop_front();
+}
+
 void Simulation::outputComputationTime()
 {
 	time_t time_from_1 = time_strain_end-time_strain_1;
@@ -408,7 +552,7 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 	 */
 
 	ConfFileFormat binary_conf_format = ConfFileFormat::bin_format_base_shear; // v2 as default. v1 deprecated.
-	if (p.simulation_mode == 31) {
+	if (sys.p.simulation_mode == 31) {
 		binary_conf_format = ConfFileFormat::bin_format_fixed_vel_shear;
 	}
 	if (sys.delayed_adhesion) {
@@ -455,8 +599,11 @@ void Simulation::outputData()
 	 */
 	outdata.setUnits(system_of_units, output_unit);
 	double sr = sqrt(2*sys.getEinfty().selfdoubledot()); // shear rate for simple shear.
+	if (sys.p.output.effective_coordination_number) {
+		sys.countContactNumber();
+	}
 	outdata.entryData("time", Dimensional::Dimension::Time, 1, sys.get_time());
-	if (sys.get_omega_wheel() == 0 || sys.wall_rheology == false) {
+	if (sys.wall_rheology == false || sys.get_omega_wheel() == 0) {
 		// Simple shear geometry
 		outdata.entryData("cumulated shear strain", Dimensional::Dimension::none, 1, sys.get_cumulated_strain());
 		/* Note: shear rate
@@ -584,9 +731,9 @@ void Simulation::outputData()
 	/* simulation parameter
 	 */
 	outdata.entryData("dt", Dimensional::Dimension::Time, 1, sys.avg_dt);
-	outdata.entryData("kn", Dimensional::Dimension::none, 1, p.kn);
-	outdata.entryData("kt", Dimensional::Dimension::none, 1, p.kt);
-	outdata.entryData("kr", Dimensional::Dimension::none, 1, p.kr);
+	outdata.entryData("kn", Dimensional::Dimension::none, 1, sys.p.kn);
+	outdata.entryData("kt", Dimensional::Dimension::none, 1, sys.p.kt);
+	outdata.entryData("kr", Dimensional::Dimension::none, 1, sys.p.kr);
 	vec3d shear_strain = sys.get_shear_strain();
 	outdata.entryData("shear strain", Dimensional::Dimension::none, 3, shear_strain);
 	if (sys.wall_rheology) {
@@ -603,6 +750,18 @@ void Simulation::outputData()
 		outdata.entryData("max_velocity_brownian", Dimensional::Dimension::Velocity, 1, sys.max_velocity_brownian);
 		outdata.entryData("max_velocity_contact", Dimensional::Dimension::Velocity, 1, sys.max_velocity_contact);
 	}
+	if (sys.p.output.effective_coordination_number) {
+		outdata.entryData("eff_coordination_number", Dimensional::Dimension::none, 1, sys.effective_coordination_number);
+	}
+	outdata.entryData("shear stress", Dimensional::Dimension::Stress, 1, sys.target_stress);
+	outdata.entryData("theta shear", Dimensional::Dimension::none, 1, sys.p.theta_shear);
+	if (sys.p.event_handler == "jamming_stress_reversal") {
+		outdata.entryData("jamming strain", Dimensional::Dimension::none, 1, jamming_strain);
+	}
+	if (sys.p.check_static_force_balance) {
+		outdata.entryData("max force imbalance",  Dimensional::Dimension::none, 1, sys.max_force_imbalance);
+	}
+
 	outdata.writeToFile();
 	/****************************   Stress Tensor Output *****************/
 	outdata_st.setUnits(system_of_units, output_unit);
@@ -624,10 +783,14 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 	snapshot_header << "# shear disp" << sep << sys.shear_disp.x << endl;
 	Dimensional::DimensionalQty<double> rate = {Dimensional::Dimension::Rate, sys.get_shear_rate(), system_of_units.getInternalUnit()};
 	system_of_units.convertFromInternalUnit(rate, output_unit);
+	Dimensional::DimensionalQty<double> stress = {Dimensional::Dimension::Stress, sys.target_stress, system_of_units.getInternalUnit()};
+	system_of_units.convertFromInternalUnit(stress, output_unit);
 	snapshot_header << "# shear rate" << sep << rate.value << endl;
-
 	if (control_var == Parameters::ControlVariable::stress) {
-		snapshot_header << "# target stress" << sep << target_stress_input << endl;
+		Dimensional::DimensionalQty<double> time = {Dimensional::Dimension::Time, sys.get_time(), system_of_units.getInternalUnit()};
+		snapshot_header << "# target stress" << sep << stress.value << endl;
+		snapshot_header << "# time" << sep << time.value << endl;
+		snapshot_header << "# theta" << sep << sys.p.theta_shear << endl;
 	}
 	if (sys.ext_flow) {
 		/* The following snapshot data is required to
@@ -642,8 +805,8 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 			snapshot_header << "# retrim ext flow " << sep << 0 << endl;
 		}
 	}
-	snapshot_header << "# viscosity" << sep << viscosity << endl;
-	snapshot_header << "# n1" << sep << normal_stress_diff1 << endl;
+	//snapshot_header << "# viscosity" << sep << viscosity << endl;
+	//snapshot_header << "# n1" << sep << normal_stress_diff1 << endl;
 }
 
 vec3d Simulation::shiftUpCoordinate(double x, double y, double z)
@@ -673,7 +836,7 @@ void Simulation::createDataHeader(stringstream& data_header)
 		data_header << "# Lx " << conf.lx << endl;
 		data_header << "# Ly " << conf.ly << endl;
 		data_header << "# Lz " << conf.lz << endl;
-		data_header << "# flow_type " << p.flow_type << endl;
+		data_header << "# flow_type " << sys.p.flow_type << endl;
 	}
 }
 
@@ -689,7 +852,7 @@ void Simulation::outputPstFileTxt()
 	group_shorts["d"] = "dashpot";
 	group_shorts["t"] = "total";
 	map<string, vector<Sym2Tensor>> particle_stress;
-	for (auto &type: p.output.out_particle_stress) {
+	for (auto &type: sys.p.output.out_particle_stress) {
 		auto group_name = group_shorts[string(1, type)];
 		particle_stress[group_name] = getParticleStressGroup(group_name);
 	}
@@ -706,7 +869,6 @@ void Simulation::outputPstFileTxt()
 void Simulation::outputParFileTxt()
 {
 	int np = sys.get_np();
-
 	int output_precision = 6;
 	if (diminish_output) {
 		output_precision = 4;
@@ -715,7 +877,7 @@ void Simulation::outputParFileTxt()
 	outdata_int.setDefaultPrecision(output_precision);
 	auto pos = sys.position;
 	auto vel = sys.velocity;
-	if (p.output.origin_zero_flow) {
+	if (sys.p.output.origin_zero_flow) {
 		if (!sys.ext_flow) {
 			for (int i=0; i<np; i++) {
 				pos[i] = shiftUpCoordinate(sys.position[i].x-0.5*sys.get_lx(),
@@ -737,7 +899,7 @@ void Simulation::outputParFileTxt()
 				vel[i] -= sys.vel_difference;
 			}
 		}
-	} else if (p.output.relative_position_view) {
+	} else if (sys.p.output.relative_position_view) {
 		relativePositionView(pos, vel);
 	} else {
 		for (int i=0; i<np; i++) {
@@ -773,7 +935,7 @@ void Simulation::outputParFileTxt()
 		//			outdata_par.entryData("stress_thetatheta", Dimensional::Dimension::Viscosity, 1, stress_thetatheta/sr);
 		//			outdata_par.entryData("stress_rtheta", Dimensional::Dimension::Viscosity, 1, stress_rtheta/sr);
 		//		}
-		if (p.output.out_na_vel) {
+		if (sys.p.output.out_na_vel) {
 			if (sys.twodimension) {
 				outdata_par.entryData("non-affine velocity x", Dimensional::Dimension::Velocity, 1, sys.na_velocity[i].x);
 				outdata_par.entryData("non-affine velocity z", Dimensional::Dimension::Velocity, 1, sys.na_velocity[i].z);
@@ -781,10 +943,10 @@ void Simulation::outputParFileTxt()
 				outdata_par.entryData("non-affine velocity (x, y, z)", Dimensional::Dimension::Velocity, 3, sys.na_velocity[i]);
 			}
 		}
-		if (p.output.out_na_disp) {
+		if (sys.p.output.out_na_disp) {
 			outdata_par.entryData("non affine displacement (x, y, z)", Dimensional::Dimension::none, 3, sys.getNonAffineDisp()[i]);
 		}
-		if (p.output.out_data_vel_components) {
+		if (sys.p.output.out_data_vel_components) {
 			for (const auto &vc: sys.na_velo_components) {
 				string entry_name_vel = "non-affine "+vc.first+" velocity (x, y, z)";
 				string entry_name_ang_vel = "non-affine angular "+vc.first+" velocity (x, y, z)";
@@ -792,10 +954,10 @@ void Simulation::outputParFileTxt()
 				outdata_par.entryData(entry_name_ang_vel, Dimensional::Dimension::Velocity, 3, vc.second.ang_vel[i]);
 			}
 		}
-		if (p.output.out_bond_order_parameter6) {
-			outdata_par.entryData("abs_phi6", Dimensional::Dimension::none, 1, abs(sys.phi6[i]));
-			outdata_par.entryData("arg_phi6", Dimensional::Dimension::none, 1, arg(sys.phi6[i]));
+		if (sys.p.output.effective_coordination_number) {
+			outdata_par.entryData("contact_number", Dimensional::Dimension::none, 1, sys.n_contact[i]);
 		}
+		
 	}
 	sys.resetNonAffineDispData();
 	stringstream snapshot_header;
@@ -820,9 +982,9 @@ void Simulation::relativePositionView(std::vector<vec3d> &pos, std::vector<vec3d
 				pos[i].y += sys.get_ly();
 			}
 			pos[i].z -= sys.get_lz();
-			for (int i=0; i<np; i++) {
-				if (pos[i].z < 0) {
-					vel[i] -= sys.vel_difference;
+			for (int ii=0; i<np; i++) {
+				if (pos[ii].z < 0) {
+					vel[ii] -= sys.vel_difference;
 				}
 			}
 		} else if (pos[i].z < -0.5*sys.get_lz()) {
@@ -835,9 +997,9 @@ void Simulation::relativePositionView(std::vector<vec3d> &pos, std::vector<vec3d
 				pos[i].y -= sys.get_ly();
 			}
 			pos[i].z += sys.get_lz();
-			for (int i=0; i<np; i++) {
-				if (pos[i].z < 0) {
-					vel[i] += sys.vel_difference;
+			for (int ii=0; i<np; i++) {
+				if (pos[ii].z < 0) {
+					vel[ii] += sys.vel_difference;
 				}
 			}
 		}
@@ -903,10 +1065,11 @@ void Simulation::outputIntFileTxt()
 			}
 		}
 		/*
-		 * Contact forces include only spring forces.
+		 * Contact forces are the sums of spring forces and dashpot forces.
+		 * (It can be negative even repulsive contact force).
 		 */
 		outdata_int.entryData("norm of the normal part of the contact force", Dimensional::Dimension::Force, 1, \
-							  inter.contact.getNormalForce().norm());
+							  -inter.contact.getNormalForceValue());
 		
 		if (diminish_output == false) {
 			outdata_int.entryData("tangential part of the contact force", Dimensional::Dimension::Force, 3, \
@@ -936,13 +1099,13 @@ void Simulation::outputIntFileTxt()
 
 void Simulation::outputConfigurationData()
 {
-	if (p.output.out_data_particle) {
+	if (sys.p.output.out_data_particle) {
 		outputParFileTxt();
 	}
-	if (p.output.out_data_interaction) {
+	if (sys.p.output.out_data_interaction) {
 		outputIntFileTxt();
 	}
-	if (!p.output.out_particle_stress.empty()) {
+	if (!sys.p.output.out_particle_stress.empty()) {
 		outputPstFileTxt();
 	}
 	//if (sys.ext_flow) {
@@ -974,4 +1137,295 @@ void Simulation::outputFinalConfiguration(const string& filename_import_position
 	}
 	filename_bin.replace(start_pos, ext.length(), ".bin");
 	outputConfigurationBinary(filename_bin);
+}
+
+void Simulation::dataAdjustGSD(std::vector<vec3d> &pos,
+							   vec3d &shear_strain,
+							   double lx, double ly, double lz)
+{
+	int np = sys.get_np();
+	bool simple_shear_mod1;
+	if (sys.eventLookUp == NULL) {
+		/* modulate for 0 < strain < 1
+		 */
+		simple_shear_mod1 = true;
+		shear_strain = sys.shear_disp/lz;
+	} else {
+		/* no modulation for deformed simulation cell.
+		 * This is useful to visualize shear jamming.
+		 */
+		simple_shear_mod1 = false;
+		shear_strain = sys.get_shear_strain();
+	}
+	/* In OVITO, the origin is always the center of simulation cell ((lx+ gamma*lz)/2, lz/2).
+	 * The strain gamma is modulated between 0 and 1.
+	 * We need the follwoing treratment avoid discontinous jump of particle positions.
+	 */
+ 	double total_strain = sys.get_shear_strain().x;
+	int int_total_strain = roundf(total_strain);
+	if (abs(total_strain-int_total_strain) < 1e-8) {
+		total_strain = int_total_strain;
+	}
+	int int_shear_strain_x = roundf(shear_strain.x);
+	if (abs(shear_strain.x-int_shear_strain_x) < 1e-8) {
+		shear_strain.x = int_shear_strain_x;
+	}
+	while (abs(total_strain) >= 2) {
+		if (total_strain > 0) {
+			total_strain -= 2;
+		} else {
+			total_strain += 2;
+		}
+	}
+	bool half_shift = false;
+	if (simple_shear_mod1 && abs(total_strain) >= 1) {
+		half_shift = true;
+	}
+	for (int i=0; i<np; i++) {
+		if (half_shift) {
+			pos[i].x += lx/2;
+		}
+		if (-(pos[i].x)+(shear_strain.x)*(pos[i].z) > 0) {
+			pos[i].x += lx;
+		}
+		if (-(pos[i].x-lx)+(shear_strain.x)*(pos[i].z) < 0) {
+			pos[i].x -= lx;
+		}
+		pos[i].x -= (lx+shear_strain.x*lz)/2;
+		pos[i].z -= lz/2;
+		if (!sys.twodimension) {
+			pos[i].y -= ly/2;
+		}
+	}
+}
+
+void Simulation::outputGSD()
+{
+	static std::vector<float> vectorBuffer;    // DIM * bufferSize
+	static std::vector<float> scalarBuffer;    // bufferSize
+	static std::vector<float> quaternionBuffer;    // bufferSize
+	static std::vector<unsigned int> uintBuffer;    // bufferSize
+	static bool first_time = true;
+	static int ts = 0;
+	int np = sys.get_np();
+	if (first_time) {
+		first_time = false;
+		vectorBuffer.resize(3*np, 0);
+		quaternionBuffer.resize(4*np, 0);
+		scalarBuffer.resize(np, 0);
+		uintBuffer.resize(np, 0);
+	}
+	std::vector<vec3d> pos = sys.position;
+	double lx = sys.get_lx();
+	double ly = sys.get_ly();
+	double lz = sys.get_lz();
+	if (sys.twodimension) {
+		ly = 2*sys.radius[np-1];
+	}
+	vec3d shear_strain;
+
+	dataAdjustGSD(pos, shear_strain, lx, ly, lz);
+	
+	vector<int> eff_contact;
+	for (int k=0; k<sys.interaction.size(); k++) {
+		unsigned int i, j;
+		std::tie(i, j) = sys.interaction[k].get_par_num();
+		if (sys.interaction[k].contact.is_active()) {
+			if (sys.n_contact[i] >= 2 && sys.n_contact[j] >= 2) {
+				eff_contact.push_back(k);
+			}
+		}
+	}
+	uint64_t _ts = ts;
+	uint8_t dim = 3;
+	/*
+	 * Simulation box. Each array element defines a different box property. See the hoomd documentation for a full description on how these box parameters map to a triclinic geometry.
+	 * box[0:3]: (lx,ly,lz)
+	 * the box length in each direction, in length units
+	 * box[3:]: (xy,xz,yz)
+	 * the tilt factors, unitless values
+	 */
+	/*
+	 * https://hoomd-blue.readthedocs.io/en/stable/box.html
+	double sy_ly = shear_strain.y*ly;
+	double Lxbox = lx;
+	double Lybox = sqrt(lz*lz + sy_ly*sy_ly);
+	double Lzbox = lz*ly/sqrt(sy_ly*sy_ly+lz*lz);
+	double xybox = shear_strain.x*lz/sqrt(lz*lz + sy_ly*sy_ly);
+	double xzbox = 0;
+	double yzbox = sy_ly/lz;
+	float box[6] = {static_cast<float>(Lxbox), static_cast<float>(Lybox), static_cast<float>(Lzbox),
+		static_cast<float>(xybox), static_cast<float>(xzbox), static_cast<float>(yzbox)};
+	 */
+	//	if (shear_strain.y != 0 || shear_strain.z != 0) {
+	//		ostringstream error_str;
+	//		error_str  << " error: simulation box for gsd data"<< endl;
+	//		throw runtime_error(error_str.str());
+	//	}
+	double xybox, xzbox, yzbox;
+	if (!sys.ext_flow) {
+		xybox = shear_strain.x;
+		xzbox = 0;
+		yzbox = 0;
+	} else {
+		cerr << "GSD output is not supported for extentional flows." << endl;
+		exit(1);
+		xybox = 0;
+		xzbox = 0;
+		yzbox = 0;
+	}
+	float box[6] = {static_cast<float>(lx), static_cast<float>(lz), static_cast<float>(ly),
+		static_cast<float>(shear_strain.x), 0, 0};
+	
+	gsd_write_chunk(&gsdOut, "confix1guration/step", GSD_TYPE_UINT64, 1, 1, 0, &_ts);
+	gsd_write_chunk(&gsdOut, "configuration/dimensions", GSD_TYPE_UINT8, 1, 1, 0, &dim);
+	gsd_write_chunk(&gsdOut, "configuration/box", GSD_TYPE_FLOAT, 6, 1, 0, &box);
+
+	if (ts == 0) {
+		const int max_size = 63;
+		{
+			// Prticle type names
+			int  n_types;
+			char *types;
+			if (dispersion_type == DispersionType::mono) {
+				n_types = 1;
+				types = new char [n_types*max_size];
+				snprintf(types, max_size, "colloid");
+			} else if (dispersion_type == DispersionType::bi) {
+				n_types = 2;
+				types = new char [n_types*max_size];
+				snprintf(types, max_size, "colloid1");
+				snprintf(types+max_size, max_size, "colloid2");
+			} else {
+				exit(1);
+			}
+			gsd_write_chunk(&gsdOut, "particles/types", GSD_TYPE_INT8, n_types, max_size, 0, types);
+			delete[] types;
+		}
+		{
+			// Bond type names
+			int  n_types = 1;
+			char types[n_types*max_size];
+			snprintf(types, max_size, "effective contact");
+			gsd_write_chunk(&gsdOut, "bonds/types", GSD_TYPE_INT8, n_types, max_size, 0, types);
+		}
+	}
+
+	// Total number of particles
+	uint32_t n = np;
+	gsd_write_chunk(&gsdOut, "particles/N", GSD_TYPE_UINT32, 1, 1, 0, &n);
+	// particle IDs
+	// particle diameters
+	{
+		unsigned int* uptr = uintBuffer.data();
+		float* fptr = scalarBuffer.data();
+		// particle radius
+		for (int i=0; i<np; i++) {
+			if (i < np1) {
+				uptr[i] = 0;
+			} else {
+				uptr[i] = 1;
+			}
+			fptr[i] = 2*sys.radius[i];
+		}
+		gsd_write_chunk(&gsdOut, "particles/typeid", GSD_TYPE_UINT32, np, 1, 0, uptr);
+		gsd_write_chunk(&gsdOut, "particles/diameter", GSD_TYPE_FLOAT, np, 1, 0, fptr);
+	}
+	
+	// particle positions
+	{
+		float* fptr = vectorBuffer.data();
+		for (int i=0; i<np; i++) {
+			int i3 = i*3;
+			fptr[i3  ] = pos[i].x;
+			fptr[i3+1] = pos[i].z;
+			fptr[i3+2] = pos[i].y;
+		}
+		gsd_write_chunk(&gsdOut, "particles/position", GSD_TYPE_FLOAT, np, 3, 0, fptr);
+	}
+
+	// particle velocities
+	{
+		float* fptr = vectorBuffer.data();
+		for (int i=0; i<np; i++) {
+			int i3= i*3;
+			fptr[i3  ] = sys.na_velocity[i].x;
+			fptr[i3+1] = sys.na_velocity[i].z;
+			fptr[i3+2] = sys.na_velocity[i].y;
+		}
+		gsd_write_chunk(&gsdOut, "particles/velocity", GSD_TYPE_FLOAT, np, 3, 0, fptr);
+	}
+	
+	{
+		//particles/charge
+		// ---> We use this for particle pressure
+		float* fptr = scalarBuffer.data();
+		for (int i=0; i<np; i++) {
+			fptr[i] = -sys.total_stress_pp[i].trace()/3;
+		}
+		gsd_write_chunk(&gsdOut, "particles/charge", GSD_TYPE_FLOAT, np, 1, 0, fptr);
+	}
+	{
+		//particles/mass
+		// ---> We use this for the effective coordination number
+		float* fptr = scalarBuffer.data();
+		for (int i=0; i<np; i++) {
+			fptr[i] = sys.n_contact[i];
+		}
+		gsd_write_chunk(&gsdOut, "particles/mass", GSD_TYPE_FLOAT, np, 1, 0, fptr);
+	}
+	//	particles/orientation
+	{
+		if (sys.twodimension) {
+			float* fptr = quaternionBuffer.data();
+			/* q = cos(theta/2) + rot_vec * sin(theta/2)
+			 *   = (cos(theta/2), 0, 0 , sin(theta/2)
+			 */
+			for (int i=0; i<np; i++) {
+				int i4 = 4*i;
+				fptr[i4  ] = cos(sys.angle[i]/2);
+				fptr[i4+1] = 0;
+				fptr[i4+2] = 0;
+				fptr[i4+3] = sin(sys.angle[i]/2);
+			}
+			gsd_write_chunk(&gsdOut, "particles/orientation", GSD_TYPE_FLOAT, np, 4, 0, fptr);
+		}
+	}
+
+	{
+		//particles/charge
+		float* fptr = scalarBuffer.data();
+		//float* fptr = scalarBuffer.data();
+		for (int i=0; i<np; i++) {
+			fptr[i] = -sys.total_stress_pp[i].trace()/3;
+		}
+		gsd_write_chunk(&gsdOut, "particles/charge", GSD_TYPE_FLOAT, np, 1, 0, fptr);
+	}
+
+	{
+		uint32_t nb = eff_contact.size();
+		gsd_write_chunk(&gsdOut, "bonds/N", GSD_TYPE_UINT32, 1, 1, 0, &nb);
+		{
+			unsigned int* uptr = new unsigned int [nb];
+			for (int k=0; k<nb; k++) {
+				uptr[k] = 0;
+			}
+			gsd_write_chunk(&gsdOut, "bonds/typeid", GSD_TYPE_UINT32, nb, 1, 0, uptr);
+			delete[] uptr;
+		}
+		{
+			unsigned int* uptr = new unsigned int [nb*2];
+			unsigned int i, j;
+			for (int k=0; k<nb; k++) {
+				int k2 = 2*k;
+				std::tie(i, j) = sys.interaction[eff_contact[k]].get_par_num();
+				uptr[k2] = i;
+				uptr[k2+1] = j;
+			}
+			gsd_write_chunk(&gsdOut, "bonds/group", GSD_TYPE_UINT32, nb, 2, 0, uptr);
+			delete [] uptr;
+		}
+	}
+	gsd_end_frame(&gsdOut);
+	ts++;
 }

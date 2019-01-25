@@ -218,11 +218,12 @@ void GenerateInitConfig::outputPositionData(const System &sys)
 		fout << np_wall1 << ' ' << np_wall1 << ' ';
 		fout << z_bot << ' ' << z_top  << endl;
 	} else {
-		fout << "# np1 np2 vf lx ly lz vf1 vf2 disp" << endl;
+		fout << "# np1 np2 vf lx ly lz vf1 vf2 dispx dispy" << endl;
 		fout << std::setprecision(15);
 		fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
 		fout << lx << ' ' << ly << ' ' << lz << ' ';
-		fout << volume_fraction1 << ' ' << volume_fraction2 << ' ' << 0 << endl;
+		fout << volume_fraction1 << ' ' << volume_fraction2 << ' ';
+		fout << 0 << ' ' << 0 << endl; 
 	}
 	
 	for (int i = 0; i<np; i++) {

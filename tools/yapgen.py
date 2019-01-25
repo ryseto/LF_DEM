@@ -166,19 +166,14 @@ def snaps2yap(pos_fname,
 
     is2d = float(par_f.meta_data()['Ly']) == 0
     i = 0
-    for frame_par, frame_int in zip(par_f, int_f):
-        yap_out, f_factor =\
-            interactions_bonds_yaparray(frame_int[1], frame_par[1],
-                                        icols, pcols,
-                                        f_factor=f_factor,
-                                        f_chain_thresh=f_chain_thresh,
-                                        layer_contacts=1,
-                                        layer_noncontacts=2,
-                                        color_contacts=4,
-                                        color_noncontacts=5)
+    frame_int = int_f.__next__()
+    strain_int = du.matching_uniq(frame_int[0], ["cu".encode('utf8'), "strain".encode('utf8')])
+    for frame_par in par_f:
+        # *cu*rvilinear or *cu*mulated strain depending on LF_DEM version
+        strain = du.matching_uniq(frame_par[0], ["cu".encode('utf8'), "strain".encode('utf8')])
 
         # display a circle for every particle
-        yap_out = pyp.add_layer_switch(yap_out, 3)
+        yap_out = pyp.layer_switch(3)
         yap_out = pyp.add_color_switch(yap_out, 3)
 
         if 'position (x, y, z)' in pcols:
@@ -211,11 +206,29 @@ def snaps2yap(pos_fname,
         # display strain
         yap_out = pyp.add_layer_switch(yap_out, 5)
         yap_out = pyp.add_color_switch(yap_out, 1)
-        # *cu*rvilinear or *cu*mulated strain depending on LF_DEM version
-        strain = du.matching_uniq(frame_par[0], ["cu".encode('utf8'), "strain".encode('utf8')])
         yap_out = np.row_stack((yap_out,
                                 ['t', 1.1*lx2, str(0.), 1.1*lz2,
                                     'strain='+str(strain[1]), '', '']))
+
+        # display interactions, if any
+        while strain_int < strain:
+            try:
+                frame_int = int_f.__next__()
+                strain_int = du.matching_uniq(frame_int[0], ["cu".encode('utf8'), "strain".encode('utf8')])
+            except StopIteration:
+                break
+        if strain_int == strain:
+            interaction_bonds, f_factor =\
+            interactions_bonds_yaparray(frame_int[1], frame_par[1],
+                                        icols, pcols,
+                                        f_factor=f_factor,
+                                        f_chain_thresh=f_chain_thresh,
+                                        layer_contacts=1,
+                                        layer_noncontacts=2,
+                                        color_contacts=4,
+                                        color_noncontacts=5)
+            yap_out = np.row_stack((yap_out, interaction_bonds))
+
 
         # output
         np.savetxt(yap_file, yap_out, fmt="%s "*7)
