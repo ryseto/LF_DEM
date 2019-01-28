@@ -726,7 +726,7 @@ void Simulation::outputData()
 	}
 	/* maximum velocity
 	 */
-	outdata.entryData("max velocity", Dimensional::Dimension::Velocity, 1, sys.max_velocity);
+	outdata.entryData("max velocity", Dimensional::Dimension::Velocity, 1, sys.max_na_velocity);
 	outdata.entryData("max angular velocity", Dimensional::Dimension::Velocity, 1, evaluateMaxAngVelocity(sys));
 	/* simulation parameter
 	 */
@@ -747,8 +747,8 @@ void Simulation::outputData()
 		outdata.entryData("force bottom wall", Dimensional::Dimension::Force, 3, sys.force_downwall);
 	}
 	if (sys.brownian) {
-		outdata.entryData("max_velocity_brownian", Dimensional::Dimension::Velocity, 1, sys.max_velocity_brownian);
-		outdata.entryData("max_velocity_contact", Dimensional::Dimension::Velocity, 1, sys.max_velocity_contact);
+		outdata.entryData("max_velocity_brownian", Dimensional::Dimension::Velocity, 1, evaluateMaxNAVelocityComponent(sys, "brownian"));
+		outdata.entryData("max_velocity_contact", Dimensional::Dimension::Velocity, 1, evaluateMaxNAVelocityComponent(sys, "contact"));
 	}
 	if (sys.p.output.effective_coordination_number) {
 		outdata.entryData("eff_coordination_number", Dimensional::Dimension::none, 1, sys.effective_coordination_number);
@@ -1227,7 +1227,7 @@ void Simulation::outputGSD()
 	dataAdjustGSD(pos, shear_strain, lx, ly, lz);
 	
 	vector<int> eff_contact;
-	for (int k=0; k<sys.interaction.size(); k++) {
+	for (unsigned k=0; k<sys.interaction.size(); k++) {
 		unsigned int i, j;
 		std::tie(i, j) = sys.interaction[k].get_par_num();
 		if (sys.interaction[k].contact.is_active()) {
@@ -1407,7 +1407,7 @@ void Simulation::outputGSD()
 		gsd_write_chunk(&gsdOut, "bonds/N", GSD_TYPE_UINT32, 1, 1, 0, &nb);
 		{
 			unsigned int* uptr = new unsigned int [nb];
-			for (int k=0; k<nb; k++) {
+			for (unsigned k=0; k<nb; k++) {
 				uptr[k] = 0;
 			}
 			gsd_write_chunk(&gsdOut, "bonds/typeid", GSD_TYPE_UINT32, nb, 1, 0, uptr);
@@ -1416,7 +1416,7 @@ void Simulation::outputGSD()
 		{
 			unsigned int* uptr = new unsigned int [nb*2];
 			unsigned int i, j;
-			for (int k=0; k<nb; k++) {
+			for (unsigned k=0; k<nb; k++) {
 				int k2 = 2*k;
 				std::tie(i, j) = sys.interaction[eff_contact[k]].get_par_num();
 				uptr[k2] = i;

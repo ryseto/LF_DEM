@@ -387,7 +387,7 @@ std::pair<struct DBlock, struct DBlock> Interaction::RFU_DBlocks()
 }
 
 /* observation */
-double Interaction::getNormalVelocity()
+double Interaction::getNormalVelocity() const
 {
 	vec3d vel_offset = z_offset*sys->get_vel_difference();
 	vec3d d_velocity = sys->velocity[p1]-sys->velocity[p0]+vel_offset;

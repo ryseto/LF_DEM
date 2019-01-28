@@ -65,6 +65,11 @@ inline double evaluateMaxVelocity(const System &sys)
 	return sqrt(sq_max_velocity);
 }
 
+double evaluateMaxInterNormalVelocity(const System & sys);
+double evaluateMaxContactSlidingVelocity(const System & sys);
+double evaluateMaxContactRollingVelocity(const System & sys);
+double evaluateMaxNAVelocityComponent(const System & sys, std::string component);
+
 inline double evaluateMaxDispTan(const System &sys)
 {
 	double _max_disp_tan = 0;

@@ -91,11 +91,11 @@ shear_disp(0),
 target_stress(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
+max_na_velocity(0),
 vel_difference(0),
 z_top(-1),
 eventLookUp(NULL)
 {
-	max_sliding_velocity = 0;
 	lx = 0;
 	ly = 0;
 	lz = 0;
@@ -789,7 +789,7 @@ void System::eventShearJamming()
 	/**
 	 \brief Create an event when the shear rate is less than p.sj_shear_rate
 	*/
-	if (abs(shear_rate) < p.sj_shear_rate && max_velocity < p.sj_velocity) {
+	if (abs(shear_rate) < p.sj_shear_rate && max_na_velocity < p.sj_velocity) {
 		Event ev;
 		ev.type = "jammed_shear_rate";
 		events.push_back(Event(ev));
@@ -1109,11 +1109,35 @@ void System::adaptTimeStep()
 	/**
 	 \brief Adapt the time step so that the maximum relative displacement is p.disp_max .
 	 */
-	if (max_velocity > 0 || max_sliding_velocity > 0) { // small density system can have na_velocity=0
-		if (max_velocity > max_sliding_velocity) {
-			dt = p.disp_max/max_velocity;
+
+	/*
+	 * The max velocity is used to find dt from max displacement
+	 * at each time step.
+	 */
+	if (in_predictor){
+		if (!p.fixed_dt || eventLookUp != NULL) {
+			computeMaxNAVelocity();
+		}
+	}
+
+	double max_interaction_vel = evaluateMaxInterNormalVelocity(*this);
+	if (friction) {
+		auto max_sliding_velocity = evaluateMaxContactSlidingVelocity(*this);
+		if (max_sliding_velocity > max_interaction_vel) {
+			max_interaction_vel = max_sliding_velocity;
+		}
+	}
+	if (rolling_friction) {
+		auto max_rolling_velocity = evaluateMaxContactRollingVelocity(*this);
+		if (max_rolling_velocity > max_interaction_vel) {
+			max_interaction_vel = max_rolling_velocity;
+		}	
+	}
+	if (max_na_velocity > 0 || max_interaction_vel > 0) { // small density system can have na_velocity=0
+		if (max_na_velocity > max_interaction_vel) {
+			dt = p.disp_max/max_na_velocity;
 		} else {
-			dt = p.disp_max/max_sliding_velocity;
+			dt = p.disp_max/max_interaction_vel;
 		}
 	} else {
 		dt = p.disp_max/shear_rate;
@@ -1470,16 +1494,9 @@ void System::updateInteractions()
 	 It however desactivate interactions removes interactions that became inactive (ie when the distance between particles gets larger than the interaction range).
 
 	 */
-	double sq_max_sliding_velocity = 0;
 	for (unsigned int k=0; k<interaction.size(); k++) {
 		bool deactivated = false;
 		interaction[k].updateState(deactivated);
-		if (friction && interaction[k].contact.is_active()) {
-			double sq_sliding_velocity = interaction[k].contact.relative_surface_velocity_sqnorm;
-			if (sq_sliding_velocity > sq_max_sliding_velocity) {
-				sq_max_sliding_velocity = sq_sliding_velocity;
-			}
-		}
 		if (deactivated) {
 			auto ij = interaction[k].get_par_num();
 			removeNeighbors(ij.first, ij.second);
@@ -1487,7 +1504,6 @@ void System::updateInteractions()
 			interaction.pop_back();
 		}
 	}
-	max_sliding_velocity = sqrt(sq_max_sliding_velocity);
 }
 
 void System::declareResistance(int p0, int p1)
@@ -2006,41 +2022,13 @@ void System::computeMaxNAVelocity()
 	 Note: it does \b not compute the velocities, just takes the maximum.
 	 */
 	double sq_max_na_velocity = 0;
-	double sq_na_velocity;
 	for (int i=0; i<np; i++) {
-		sq_na_velocity = na_velocity[i].sq_norm();
+		auto sq_na_velocity = na_velocity[i].sq_norm();
 		if (sq_na_velocity > sq_max_na_velocity) {
 			sq_max_na_velocity = sq_na_velocity;
 		}
 	}
-	max_velocity = sqrt(sq_max_na_velocity);
-	if (brownian) {
-		double sq_max_na_velocity_br = 0;
-		double sq_na_velocity_br;
-		for (int i=0; i<np; i++) {
-			sq_na_velocity_br = na_velo_components["brownian"].vel[i].sq_norm();
-			if (sq_na_velocity_br > sq_max_na_velocity_br) {
-				sq_max_na_velocity_br = sq_na_velocity_br;
-			}
-		}
-		max_velocity_brownian = sqrt(sq_max_na_velocity_br);
-		double sq_max_na_velocity_con = 0;
-		double sq_na_velocity_con;
-		for (int i=0; i<np; i++) {
-			sq_na_velocity_con = na_velo_components["contact"].vel[i].sq_norm();
-			if (sq_na_velocity_con > sq_max_na_velocity_con) {
-				sq_max_na_velocity_con = sq_na_velocity_con;
-			}
-		}
-		max_velocity_contact = sqrt(sq_max_na_velocity_con);
-	}
-	//	double sq_na_ang_velocity;
-	//	for (int i=0; i<np; i++) {
-	//		sq_na_ang_velocity = na_ang_velocity[i].sq_norm()*radius_squared[i];
-	//		if (sq_max_na_velocity < sq_na_ang_velocity) {
-	//			sq_max_na_velocity = sq_na_ang_velocity;
-	//		}
-	//	}
+	max_na_velocity = sqrt(sq_max_na_velocity);
 }
 
 void System::computeVelocityWithoutComponents()
@@ -2413,15 +2401,6 @@ void System::computeVelocities(bool divided_velocities)
 		computeUInf();
 		setFixedParticleVelocities();
 		computeVelocityWithoutComponents();
-	}
-	/*
-	 * The max velocity is used to find dt from max displacement
-	 * at each time step.
-	 */
-	if (in_predictor){
-		if (!p.fixed_dt || eventLookUp != NULL) {
-			computeMaxNAVelocity();
-		}
 	}
 	adjustVelocityPeriodicBoundary();
 	if (divided_velocities && wall_rheology) {

@@ -111,9 +111,7 @@ public:
 	f_spring_tan(0),
 	f_spring_total(0),
 	f_rolling(0),
-	ft_max(0),
-	rolling_velocity(0),
-	relative_surface_velocity_sqnorm(0)
+	ft_max(0)
 	{};
 
 	void init(System* sys_, Interaction* int_);
@@ -127,12 +125,14 @@ public:
 	vec3d disp_rolling;
 	vec3d prev_disp_tan; // useful for predictor-corrector method: disp_tan in the previous time step
 	vec3d prev_disp_rolling;
-	double relative_surface_velocity_sqnorm;
 	void incrementDisplacements();
 	double get_rcontact() const
 	{
 		return a0 + a1;
 	}
+	vec3d getSlidingVelocity() const;
+	vec3d getRollingVelocity() const;
+
 	//===== forces/stresses  ========================== //
 	void addUpForceTorque(std::vector<vec3d> &force_per_particle,
 						  std::vector<vec3d> &torque_per_particle) const;

@@ -116,10 +116,10 @@ public:
 	std::pair<unsigned int, unsigned int>	get_par_num() const {return std::make_pair(p0, p1);}
 	double get_reduced_gap() const {return reduced_gap;}
 	double get_gap() const {return r-ro;}
-	unsigned int get_p0() {return p0;}
-	unsigned int get_p1() {return p1;}
+	unsigned int get_p0() const {return p0;}
+	unsigned int get_p1() const {return p1;}
 	bool hasPairwiseResistance();
-	double getNormalVelocity();
+	double getNormalVelocity() const;
 	struct ODBlock RFU_ODBlock();
 	std::pair<struct DBlock, struct DBlock> RFU_DBlocks();
 

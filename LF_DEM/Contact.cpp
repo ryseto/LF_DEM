@@ -131,6 +131,25 @@ void Contact::deactivate()
  *	   Contact Forces Methods     *
  *                                *
  *********************************/
+vec3d Contact::getSlidingVelocity() const
+{
+	vec3d vel_offset;
+	if (!sys->ext_flow) {
+		// simple shear
+		vel_offset = interaction->z_offset*sys->get_vel_difference();
+	} else {
+		// extensional flow
+		vel_offset = sys->get_vel_difference_extension(interaction->pd_shift);
+	}
+	
+	vec3d translational_deltav = sys->velocity[p1]-sys->velocity[p0]+vel_offset;
+	vec3d rotational_deltav = -cross(a0*sys->ang_velocity[p0]+a1*sys->ang_velocity[p1], interaction->nvec);
+
+	vec3d sliding_velocity = translational_deltav+rotational_deltav;
+ 	sliding_velocity -= dot(sliding_velocity, interaction->nvec)*interaction->nvec;
+
+	return sliding_velocity;
+}
 
 void Contact::incrementTangentialDisplacement()
 {
@@ -145,20 +164,7 @@ void Contact::incrementTangentialDisplacement()
 	 zshift = -1; //  p1 (z ~ lz), p0 (z ~ 0)
 
 	******************************************************/
-	vec3d vel_offset;
-	if (!sys->ext_flow) {
-		// simple shear
-		vel_offset = interaction->z_offset*sys->get_vel_difference();
-	} else {
-		// extensional flow
-		vel_offset = sys->get_vel_difference_extension(interaction->pd_shift);
-	}
-	vec3d translational_deltav = sys->velocity[p1]-sys->velocity[p0]+vel_offset;
-	vec3d rotational_deltav = -cross(a0*sys->ang_velocity[p0]+a1*sys->ang_velocity[p1], interaction->nvec);
-
-	vec3d relative_surface_velocity = translational_deltav+rotational_deltav;
- 	relative_surface_velocity -= dot(relative_surface_velocity, interaction->nvec)*interaction->nvec;
-	relative_surface_velocity_sqnorm = relative_surface_velocity.sq_norm();
+	vec3d relative_surface_velocity = getSlidingVelocity();
 	if (sys->in_predictor) {
 		/*
 		 * relative_surface_velocity is true velocity in predictor and corrector.
@@ -167,6 +173,11 @@ void Contact::incrementTangentialDisplacement()
 		prev_disp_tan = disp_tan;
 	}
 	disp_tan = prev_disp_tan+relative_surface_velocity*sys->dt; // always disp(t+1) = disp(t) + v*dt, no predictor-corrector headache :)
+}
+
+vec3d Contact::getRollingVelocity() const
+{
+	return 2*a_reduced*cross(sys->ang_velocity[p1]-sys->ang_velocity[p0], interaction->nvec);
 }
 
 void Contact::incrementRollingDisplacement()
@@ -178,11 +189,10 @@ void Contact::incrementRollingDisplacement()
 	 cf. Book by Marshall and Li
 	 equation 3.6.13 ??
 	 */
-	rolling_velocity = 2*a_reduced*cross(sys->ang_velocity[p1]-sys->ang_velocity[p0], interaction->nvec);
 	if (sys->in_predictor) {
 		prev_disp_rolling = disp_rolling;
 	}
-	disp_rolling = prev_disp_rolling+rolling_velocity*sys->dt; // always disp(t+1) = disp(t) + v*dt, no predictor-corrector headache :)
+	disp_rolling = prev_disp_rolling+getRollingVelocity()*sys->dt; // always disp(t+1) = disp(t) + v*dt, no predictor-corrector headache :)
 }
 
 void Contact::incrementDisplacements()
