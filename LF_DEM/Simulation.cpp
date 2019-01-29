@@ -1145,10 +1145,6 @@ void Simulation::dataAdjustGSD(std::vector<vec3d> &pos,
 							   double lx, double ly, double lz)
 {
 	int np = sys.get_np();
-	bool simple_shear_mod1;
-	if (sys.eventLookUp != NULL) {
-		simple_shear_mod1 = false;
-	}
 	shear_strain = sys.get_shear_strain();
 	static int cnt_strain = 0;
 	shear_strain.x -= cnt_strain;
@@ -1168,6 +1164,7 @@ void Simulation::dataAdjustGSD(std::vector<vec3d> &pos,
 									   sys.position[i].z-0.5*lz);
 		}
 	} else {
+		// @@ not yet checked
 		for (int i=0; i<np; i++) {
 			pos[i] = shiftUpCoordinate(sys.position[i].x,
 									   sys.position[i].y,
@@ -1188,9 +1185,6 @@ void Simulation::dataAdjustGSD(std::vector<vec3d> &pos,
 		}
 		while (-(pos[i].x-lx/2)+(shear_strain.x)*(pos[i].z) < 0) {
 			pos[i].x -= lx;
-		}
-		if (!sys.twodimension) {
-			pos[i].y -= ly/2;
 		}
 	}
 }
@@ -1277,7 +1271,6 @@ void Simulation::outputGSD()
 	gsd_write_chunk(&gsdOut, "confix1guration/step", GSD_TYPE_UINT64, 1, 1, 0, &_ts);
 	gsd_write_chunk(&gsdOut, "configuration/dimensions", GSD_TYPE_UINT8, 1, 1, 0, &dim);
 	gsd_write_chunk(&gsdOut, "configuration/box", GSD_TYPE_FLOAT, 6, 1, 0, &box);
-	cerr << "ss = " << shear_strain.x << endl;
 	if (ts == 0) {
 		const int max_size = 63;
 		{
