@@ -154,6 +154,7 @@ public:
 	void outputConfigurationBinary(std::string);
 	void outputGSD();
 	void dataAdjustGSD(std::vector<vec3d> &pos,
+					   std::vector<vec3d> &vel,
 					   vec3d &shear_strain,
 					   double lx, double ly, double lz);
 	void checkpoint();

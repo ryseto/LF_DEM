@@ -1140,59 +1140,55 @@ void Simulation::outputFinalConfiguration(const string& filename_import_position
 }
 
 void Simulation::dataAdjustGSD(std::vector<vec3d> &pos,
+							   std::vector<vec3d> &vel,
 							   vec3d &shear_strain,
 							   double lx, double ly, double lz)
 {
 	int np = sys.get_np();
 	bool simple_shear_mod1;
-	if (sys.eventLookUp == NULL) {
-		/* modulate for 0 < strain < 1
-		 */
-		simple_shear_mod1 = true;
-		shear_strain = sys.shear_disp/lz;
-	} else {
-		/* no modulation for deformed simulation cell.
-		 * This is useful to visualize shear jamming.
-		 */
+	if (sys.eventLookUp != NULL) {
 		simple_shear_mod1 = false;
-		shear_strain = sys.get_shear_strain();
 	}
-	/* In OVITO, the origin is always the center of simulation cell ((lx+ gamma*lz)/2, lz/2).
-	 * The strain gamma is modulated between 0 and 1.
-	 * We need the follwoing treratment avoid discontinous jump of particle positions.
-	 */
- 	double total_strain = sys.get_shear_strain().x;
-	int int_total_strain = roundf(total_strain);
-	if (abs(total_strain-int_total_strain) < 1e-8) {
-		total_strain = int_total_strain;
+	shear_strain = sys.get_shear_strain();
+	static int cnt_strain = 0;
+	shear_strain.x -= cnt_strain;
+	if (shear_strain.x > 0.5) {
+		shear_strain.x -= 1;
+		cnt_strain += 1;
 	}
-	int int_shear_strain_x = roundf(shear_strain.x);
-	if (abs(shear_strain.x-int_shear_strain_x) < 1e-8) {
-		shear_strain.x = int_shear_strain_x;
+	if (shear_strain.x < -0.5) {
+		shear_strain.x += 1;
+		cnt_strain -= 1;
 	}
-	while (abs(total_strain) >= 2) {
-		if (total_strain > 0) {
-			total_strain -= 2;
-		} else {
-			total_strain += 2;
+	pos.resize(sys.position.size());
+	if (!sys.ext_flow) {
+		for (int i=0; i<np; i++) {
+			pos[i] = shiftUpCoordinate(sys.position[i].x-0.5*lx,
+									   sys.position[i].y-0.5*ly,
+									   sys.position[i].z-0.5*lz);
+		}
+	} else {
+		for (int i=0; i<np; i++) {
+			pos[i] = shiftUpCoordinate(sys.position[i].x,
+									   sys.position[i].y,
+									   sys.position[i].z);
 		}
 	}
-	bool half_shift = false;
-	if (simple_shear_mod1 && abs(total_strain) >= 1) {
-		half_shift = true;
+	/* If the origin is shifted,
+	 * we need to change the velocities of particles as well.
+	 */
+	for (int i=0; i<np; i++) {
+		if (pos[i].z < 0) {
+			vel[i] -= sys.vel_difference;
+		}
 	}
 	for (int i=0; i<np; i++) {
-		if (half_shift) {
-			pos[i].x += lx/2;
-		}
-		if (-(pos[i].x)+(shear_strain.x)*(pos[i].z) > 0) {
+		while (-(pos[i].x+lx/2)+(shear_strain.x)*(pos[i].z) > 0) {
 			pos[i].x += lx;
 		}
-		if (-(pos[i].x-lx)+(shear_strain.x)*(pos[i].z) < 0) {
+		while (-(pos[i].x-lx/2)+(shear_strain.x)*(pos[i].z) < 0) {
 			pos[i].x -= lx;
 		}
-		pos[i].x -= (lx+shear_strain.x*lz)/2;
-		pos[i].z -= lz/2;
 		if (!sys.twodimension) {
 			pos[i].y -= ly/2;
 		}
@@ -1215,7 +1211,8 @@ void Simulation::outputGSD()
 		scalarBuffer.resize(np, 0);
 		uintBuffer.resize(np, 0);
 	}
-	std::vector<vec3d> pos = sys.position;
+	std::vector<vec3d> pos;
+	std::vector<vec3d> vel = sys.velocity;
 	double lx = sys.get_lx();
 	double ly = sys.get_ly();
 	double lz = sys.get_lz();
@@ -1224,7 +1221,7 @@ void Simulation::outputGSD()
 	}
 	vec3d shear_strain;
 
-	dataAdjustGSD(pos, shear_strain, lx, ly, lz);
+	dataAdjustGSD(pos, vel, shear_strain, lx, ly, lz);
 	
 	vector<int> eff_contact;
 	for (unsigned k=0; k<sys.interaction.size(); k++) {
@@ -1280,7 +1277,7 @@ void Simulation::outputGSD()
 	gsd_write_chunk(&gsdOut, "confix1guration/step", GSD_TYPE_UINT64, 1, 1, 0, &_ts);
 	gsd_write_chunk(&gsdOut, "configuration/dimensions", GSD_TYPE_UINT8, 1, 1, 0, &dim);
 	gsd_write_chunk(&gsdOut, "configuration/box", GSD_TYPE_FLOAT, 6, 1, 0, &box);
-
+	cerr << "ss = " << shear_strain.x << endl;
 	if (ts == 0) {
 		const int max_size = 63;
 		{
