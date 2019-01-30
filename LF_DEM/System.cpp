@@ -1091,7 +1091,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 		if (wall_rheology || brownian_dominated) {
 			calcStress();
 		}
-		if (!p.output.out_particle_stress.empty() || couette_stress) {
+		if (!p.output.out_particle_stress.empty() || couette_stress || p.output.out_gsd) {
 			calcTotalStressPerParticle();
 		}
 	}
