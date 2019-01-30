@@ -1114,7 +1114,7 @@ void System::adaptTimeStep()
 	 * The max velocity is used to find dt from max displacement
 	 * at each time step.
 	 */
-	if (in_predictor){
+	if (in_predictor) {
 		if (!p.fixed_dt || eventLookUp != NULL) {
 			computeMaxNAVelocity();
 		}
@@ -2401,6 +2401,11 @@ void System::computeVelocities(bool divided_velocities)
 		computeUInf();
 		setFixedParticleVelocities();
 		computeVelocityWithoutComponents();
+	}
+	if (in_predictor){
+		if (eventLookUp != NULL) {
+			computeMaxNAVelocity();
+		}
 	}
 	adjustVelocityPeriodicBoundary();
 	if (divided_velocities && wall_rheology) {
