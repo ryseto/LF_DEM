@@ -198,7 +198,7 @@ namespace Parameters {
 		double sj_disp_max_shrink_factor;	///< rescaling factor for negative shear rate for shear jamming [1.1]
 		double sj_shear_rate;		///< Shear rate to judge shear jamming [0]
 		double sj_velocity;         ///< Velocity to judge shear jamming [1e-3]
-		int sj_check_count;			///< Jamming is judeged after counting this number [10]
+		int sj_check_count;			///< Jamming is judeged after counting this number [500] 
 		int sj_reversal_repetition;			///< Repetition number for shear reversal [2]
 		std::string sj_program_file;        ///< [""]
 		double theta_shear;  ///< Shear direction, in degress, 0 is shear along x, 90 is shear along y [0]

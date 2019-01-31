@@ -103,15 +103,7 @@ void Simulation::handleEventsShearJamming()
 				jammed = true;
 			}
 		}
-		if (jammed) {
-			shear_jam_counter ++;
-			cout << " jammed " << shear_jam_counter << endl;
-		} else {
-			shear_jam_counter = 0;
-		}
-		if (shear_jam_counter == sys.p.sj_check_count) {
-			ending_simulation = true;
-		}
+		ending_simulation = true;
 	}
 	if (ending_simulation == true) {
 		cout << "jammed" << endl;
