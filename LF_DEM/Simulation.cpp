@@ -726,8 +726,17 @@ void Simulation::outputData()
 	}
 	/* maximum velocity
 	 */
-	outdata.entryData("max velocity", Dimensional::Dimension::Velocity, 1, sys.max_na_velocity);
-	outdata.entryData("max angular velocity", Dimensional::Dimension::Velocity, 1, evaluateMaxAngVelocity(sys));
+	outdata.entryData("max non-affine velocity", Dimensional::Dimension::Velocity, 1, sys.max_na_velocity);
+	outdata.entryData("max non-affine angular velocity", Dimensional::Dimension::Velocity, 1, evaluateMaxAngVelocity(sys));
+	outdata.entryData("max normal relative velocity (among interacting pairs)", Dimensional::Dimension::Velocity, 1, evaluateMaxInterNormalVelocity(sys));
+
+	if (sys.friction) {
+		outdata.entryData("max contact sliding velocity", Dimensional::Dimension::Velocity, 1, evaluateMaxContactSlidingVelocity(sys));
+	}
+	if (sys.rolling_friction) {
+		outdata.entryData("max contact rolling velocity", Dimensional::Dimension::Velocity, 1, evaluateMaxContactRollingVelocity(sys));
+	}
+
 	/* simulation parameter
 	 */
 	outdata.entryData("dt", Dimensional::Dimension::Time, 1, sys.avg_dt);
