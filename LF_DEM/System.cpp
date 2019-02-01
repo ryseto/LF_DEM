@@ -792,10 +792,11 @@ void System::eventShearJamming()
 	static int cnt_jamming = 0;
 	if (abs(shear_rate) < p.sj_shear_rate && max_na_velocity < p.sj_velocity) {
 		cnt_jamming ++;
-		if (cnt_jamming == p.sj_check_count) {
+		if (cnt_jamming > p.sj_check_count) {
 			Event ev;
 			ev.type = "jammed_shear_rate";
 			events.push_back(Event(ev));
+			cnt_jamming = 0;
 		}
 	} else {
 		cnt_jamming = 0;
