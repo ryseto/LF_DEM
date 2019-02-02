@@ -796,7 +796,6 @@ void System::eventShearJamming()
 			Event ev;
 			ev.type = "jammed_shear_rate";
 			events.push_back(Event(ev));
-			cnt_jamming = 0;
 		}
 	} else {
 		cnt_jamming = 0;
