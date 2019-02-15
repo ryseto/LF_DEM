@@ -1290,7 +1290,7 @@ void Simulation::outputGSD()
 		}
 		{
 			// Bond type names
-			int  n_types = 1;
+			int n_types = 1;
 			char types[n_types*max_size];
 			snprintf(types, max_size, "effective contact");
 			gsd_write_chunk(&gsdOut, "bonds/types", GSD_TYPE_INT8, n_types, max_size, 0, types);

@@ -145,7 +145,8 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 				if (fs.dim_qty.value > largest_force_val &&
 					fs.type != Dimensional::Unit::kn &&
 					fs.type != Dimensional::Unit::kt &&
-					fs.type != Dimensional::Unit::kr) {
+					fs.type != Dimensional::Unit::kr &&
+					fs.type != Dimensional::Unit::adhesion) {
 					largest_force_val = fs.dim_qty.value;
 					internal_unit = fs.type;
 				}
