@@ -145,8 +145,8 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit) {
 	default_val = {Dimensional::Unit::critical_load, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(critical_load, default_val));
 
-	default_val = {Dimensional::Unit::cohesion, {Dimensional::Dimension::Force, 0, guarranted_unit}};
-	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(cohesion, default_val));
+	default_val = {Dimensional::Unit::adhesion, {Dimensional::Dimension::Force, 0, guarranted_unit}};
+	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(adhesion, default_val));
 
 	default_val = {Dimensional::Unit::brownian, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(brownian, default_val));

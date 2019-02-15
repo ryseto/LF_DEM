@@ -76,7 +76,7 @@ friction(false),
 rolling_friction(false),
 repulsiveforce(false),
 delayed_adhesion(false),
-cohesion(false),
+adhesion(false),
 critical_load_model(false),
 brownian_dominated(false),
 twodimension(false),
@@ -463,8 +463,8 @@ void System::setupParameters()
 	if (p.simulation_mode == 31) {
 		p.sd_coeff = 1e-6;
 	}
-	if (p.cohesion > 0) {
-		cohesion = true;
+	if (p.adhesion > 0) {
+		adhesion = true;
 	}
 	if (p.TA_adhesion.adhesion_max_force > 0) {
 		delayed_adhesion = true;

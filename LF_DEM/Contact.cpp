@@ -285,8 +285,8 @@ void Contact::frictionlaw_standard()
 	double sq_f_tan;
 	double sq_f_rolling;
 	normal_load = f_spring_normal_norm;
-	if (sys->cohesion) {
-		normal_load += sys->p.cohesion;
+	if (sys->adhesion) {
+		normal_load += sys->p.adhesion;
 	}
 	if (normal_load > 0) {
 		if (state == 2) {

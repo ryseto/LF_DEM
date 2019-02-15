@@ -691,8 +691,8 @@ void Simulation::outputData()
 	/* maximum deformation of contact bond
 	 */
 	outdata.entryData("min gap", Dimensional::Dimension::none, 1, evaluateMinGap(sys));
-	if (sys.cohesion) {
-		outdata.entryData("max gap(cohesion)", Dimensional::Dimension::none, 1, evaluateMaxContactGap(sys));
+	if (sys.adhesion) {
+		outdata.entryData("max gap", Dimensional::Dimension::none, 1, evaluateMaxContactGap(sys));
 	}
 	if (sys.friction) {
 		outdata.entryData("max tangential displacement", Dimensional::Dimension::none, 1, evaluateMaxDispTan(sys));
@@ -1214,7 +1214,11 @@ void Simulation::outputGSD()
 		unsigned int i, j;
 		std::tie(i, j) = sys.interaction[k].get_par_num();
 		if (sys.interaction[k].contact.is_active()) {
-			if (sys.n_contact[i] >= 2 && sys.n_contact[j] >= 2) {
+			if (sys.p.output.effective_coordination_number) {
+				if (sys.n_contact[i] >= 2 && sys.n_contact[j] >= 2) {
+					eff_contact.push_back(k);
+				}
+			} else {
 				eff_contact.push_back(k);
 			}
 		}

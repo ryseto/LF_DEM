@@ -84,7 +84,7 @@ namespace Parameters {
 		 ********************************************************/
 		double repulsion;				///< Amplitude of the repulsive force [0]
 		double critical_load;			///< Amplitude of the critical load [0]
-		double cohesion;				///< Amplitude of the cohesion [0 guarranted_unit]
+		double adhesion;				///< Amplitude of the adhesion [0 guarranted_unit]
 		double brownian;				///< Amplitude of the Brownian force [0]
 		double repulsive_length;		///< "Debye" screering length for the repulsive force [0.05]
 		double repulsive_max_length;	///< Maximum length until which the repulsive force can reach. If -1, no limit. (e.g. length of polymer brush) [-1]
