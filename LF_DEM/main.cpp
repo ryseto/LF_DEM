@@ -37,9 +37,39 @@ std::string prepareSimulationNameFromChkp(const std::string& filename_chkp)
 	return filename_chkp.substr(chkp_name_start, chkp_name_end-chkp_name_start);
 }
 
+void mainConventional(int argc, char **argv);
+void mainLammpsLike(int argc, char **argv);
+
 int main(int argc, char **argv)
 {
+	cerr << "argc " << argc << endl;
+	if (argc > 1) {
+		mainConventional(argc, argv);
+	} else {
+		mainLammpsLike(argc, argv);
+	}
+	return 0;
+}
 
+void mainLammpsLike(int argc, char **argv)
+{
+	/*
+	 * $ LF_DEM < in.test_simulation1
+	 * goals:
+	 *  - single file to set parameters and run simulations for given periods.
+	 *  - allow to change parameters any time.
+	 *  - Running simulation with a line of "run 10h"
+	 */
+	cerr << "Let's try to implement a LAMMPS-like interface" << endl;
+	string line;
+	while (cin >> line) {
+		cerr << line << endl;
+	}
+	return;
+}
+
+void mainConventional(int argc, char **argv)
+{
 	cout << endl << "LF_DEM version " << GIT_VERSION << endl << endl;
 	string usage = "(1) Simulation\n $ LF_DEM [-r Rate] [-s Stress] [-R Rate_Sequence] [-S Stress_Sequence]\
 	[-e] [-m ?] [-k kn_kt_File] [-v Simulation_Identifier] [-i Provisional_Data] [-n]\
@@ -61,7 +91,7 @@ int main(int argc, char **argv)
 	string stress_rate_filename = "not_given";
 	string chkp_filename = "";
 	string simu_name;
-
+	
 	Dimensional::DimensionalQty<double> control_value;
 	Parameters::ControlVariable rheology_control = Parameters::ControlVariable::rate;
 	string simu_identifier = "";
@@ -82,7 +112,7 @@ int main(int argc, char **argv)
 		{"help",              no_argument,       0, 'h'},
 		{0, 0, 0, 0},
 	};
-
+	
 	int index;
 	int c;
 	while ((c = getopt_long(argc, argv, "hn80efds:t:r:g::p:a:k:i:v:c:N:", longopts, &index)) != -1) {
@@ -169,7 +199,7 @@ int main(int argc, char **argv)
 		generate_init_config.generate(random_seed, volume_frac_gen, generate_init);
 	} else {
 #ifdef SIGINT_CATCH
-		std::signal(SIGINT, sigint_handler);	
+		std::signal(SIGINT, sigint_handler);
 #endif
 		if (optind == argc-2) {
 			config_filename = argv[optind++];
@@ -183,9 +213,9 @@ int main(int argc, char **argv)
 		input_files[1] = param_filename;
 		input_files[2] = knkt_filename;
 		input_files[3] = stress_rate_filename;
-
+		
 		State::BasicCheckpoint state = State::zero_time_basicchkp;
-
+		
 		if (!chkp_filename.empty()) {
 			state = State::readBasicCheckpoint(chkp_filename);
 		}
@@ -209,5 +239,5 @@ int main(int argc, char **argv)
 		}
 	}
 	cerr << " Job done ok" << endl;
-	return 0;
+	return;
 }
