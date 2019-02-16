@@ -93,6 +93,7 @@ private:
 public:
 	/* For DEMsystem*/
 	Simulation(State::BasicCheckpoint chkp = State::zero_time_basicchkp);
+	void simulationMain();
 	void simulationSteadyShear(std::string in_args,
 							   std::vector<std::string>& input_files,
 							   bool binary_conf,

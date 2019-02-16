@@ -31,6 +31,24 @@ jamming_strain(0)
 	restart_from_chkp = !isZeroTimeChkp(chkp);
 };
 
+void Simulation::simulationMain()
+{
+	/*
+	 * $ LF_DEM < in.test_simulation1
+	 * goals:
+	 *  - single file to set parameters and run simulations for given periods.
+	 *  - allow to change parameters any time.
+	 *  - Running simulation with a line of "run 10h"
+	 */
+	cerr << "Let's try to implement a LAMMPS-like interface" << endl;
+	string line;
+	while (cin >> line) {
+		cerr << line << endl;
+	}	
+	cerr << "simulationMain" << endl;
+	return;
+}
+
 string Simulation::gitVersion()
 {
 	return GIT_VERSION;

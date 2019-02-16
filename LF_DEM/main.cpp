@@ -26,6 +26,9 @@ using namespace std;
 volatile sig_atomic_t sig_caught = 0;
 #endif
 
+void mainConventional(int argc, char **argv);
+void mainLammpsLike(int argc, char **argv);
+
 std::string prepareSimulationNameFromChkp(const std::string& filename_chkp)
 {
 	/**
@@ -37,34 +40,39 @@ std::string prepareSimulationNameFromChkp(const std::string& filename_chkp)
 	return filename_chkp.substr(chkp_name_start, chkp_name_end-chkp_name_start);
 }
 
-void mainConventional(int argc, char **argv);
-void mainLammpsLike(int argc, char **argv);
-
 int main(int argc, char **argv)
 {
-	cerr << "argc " << argc << endl;
-	if (argc > 1) {
-		mainConventional(argc, argv);
-	} else {
+	if (argc == 1) {
 		mainLammpsLike(argc, argv);
+	} else {
+		mainConventional(argc, argv);
 	}
 	return 0;
 }
 
 void mainLammpsLike(int argc, char **argv)
 {
-	/*
-	 * $ LF_DEM < in.test_simulation1
-	 * goals:
-	 *  - single file to set parameters and run simulations for given periods.
-	 *  - allow to change parameters any time.
-	 *  - Running simulation with a line of "run 10h"
-	 */
-	cerr << "Let's try to implement a LAMMPS-like interface" << endl;
-	string line;
-	while (cin >> line) {
-		cerr << line << endl;
+	string chkp_filename = "";
+	const struct option longopts[] = {
+		{"checkpoint-file", no_argument, 0, 'c'}
+	};
+	int index;
+	int c;
+	while ((c = getopt_long(argc, argv, "c:", longopts, &index)) != -1) {
+		switch (c) {
+			case 'c':
+				chkp_filename = optarg;
+				break;
+			default:
+				abort();
+		}
 	}
+	State::BasicCheckpoint state = State::zero_time_basicchkp;
+	if (!chkp_filename.empty()) {
+		state = State::readBasicCheckpoint(chkp_filename);
+	}
+	Simulation simulation(state);
+	simulation.simulationMain();
 	return;
 }
 
