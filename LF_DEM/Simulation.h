@@ -35,7 +35,6 @@
 class Simulation
 {
 private:
-	System sys;
 	Parameters::ParameterSet p_initial;
 	std::string header_imported_configulation[2];
 	Parameters::ControlVariable control_var;
@@ -91,6 +90,7 @@ private:
 	DispersionType dispersion_type;
 	int np1;
 public:
+	System sys;
 	/* For DEMsystem*/
 	Simulation(State::BasicCheckpoint chkp = State::zero_time_basicchkp);
 	void simulationMain();
@@ -112,7 +112,6 @@ public:
 	void setupFlow(Dimensional::DimensionalQty<double> control_value);
 	void setConfigToSystem(bool binary_conf, const std::string &filename);
 	TimeKeeper initTimeKeeper();
-	Parameters::ParameterSet p; // @@@@ We should distinguish p and sys.p more carefully.
 	bool keepRunning();
 	// void timeEvolution(double& next_output_data);
 	void generateOutput(const std::set<std::string> &output_events, int& binconf_counter);
@@ -134,8 +133,8 @@ public:
 									  Dimensional::DimensionalQty<double> control_value);
 	void echoInputFiles(std::string in_args,
 						std::vector<std::string>& input_files);
-	void contactForceParameter(std::string filename);
-	void contactForceParameterBrownian(std::string filename);
+//	void contactForceParameter(std::string filename); // @@@ Do we use this?
+//	void contactForceParameterBrownian(std::string filename); // @@@ Do we use this?
 	void setupNonDimensionalization(Dimensional::DimensionalQty<double> control_value, 
 									Parameters::ParameterSetFactory &PFact);
 	void stopShearing(TimeKeeper &tk); //simulation mode 22

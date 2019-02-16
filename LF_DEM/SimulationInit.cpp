@@ -15,84 +15,6 @@
 
 using namespace std;
 
-void Simulation::contactForceParameter(string filename)
-{
-	/**
-	 \brief Load a file containing spring constants and time steps as functions of the volume fraction.
-
-	 Input file must be formatted as:
-	 phi kn kt dt
-	 */
-	auto conf = sys.getBaseConfiguration();
-	ifstream fin_knktdt;
-	fin_knktdt.open(filename.c_str());
-	if (!fin_knktdt) {
-		ostringstream error_str;
-		error_str  << " Contact parameter file '" << filename << "' not found." << endl;
-		throw runtime_error(error_str.str());
-	}
-	// temporal variables to keep imported values.
-	double phi_, kn_, kt_, dt_;
-	// To find parameters for considered volume fraction phi.
-	bool found = false;
-	while (fin_knktdt >> phi_ >> kn_ >> kt_ >> dt_) {
-		if (abs(phi_-conf.volume_or_area_fraction) < 1e-10) {
-			found = true;
-			break;
-		}
-	}
-	fin_knktdt.close();
-	if (found) {
-		// Set the parameter object
-		p.kn = kn_, p.kt = kt_, p.dt = dt_;
-		string indent = "  Simulation::\t";
-		cout << indent << "Input for kn, kt, dt = " << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_ << endl;
-	} else {
-		ostringstream error_str;
-		error_str  << " Error: file " << filename.c_str() << " contains no data for vf = " << conf.volume_or_area_fraction << endl;
-		throw runtime_error(error_str.str());
-	}
-}
-
-void Simulation::contactForceParameterBrownian(string filename)
-{
-	/**
-	 \brief Load a file containing spring constants and time steps as functions of the volume fraction and Peclet number.
-
-	 Input file must be formatted as:
-	 phi peclet kn kt dt
-	 */
-	auto conf = sys.getBaseConfiguration();
-	ifstream fin_knktdt;
-	fin_knktdt.open(filename.c_str());
-	if (!fin_knktdt) {
-		ostringstream error_str;
-		error_str  << " Contact parameter file '" << filename << "' not found." << endl;
-		throw runtime_error(error_str.str());
-	}
-	// temporal variables to keep imported values.
-	double phi_, peclet_, kn_, kt_, dt_;
-	bool found = false;
-	auto forces = system_of_units.getForceScales();
-	auto peclet = 1./forces.at(Dimensional::Unit::brownian).value;
-	while (fin_knktdt >> phi_ >> peclet_ >> kn_ >> kt_ >> dt_) {
-		if (abs(phi_-conf.volume_or_area_fraction) < 1e-10 && peclet_ == peclet) {
-			found = true;
-			break;
-		}
-	}
-	fin_knktdt.close();
-	if (found) {
-		p.kn = kn_, p.kt = kt_, p.dt = dt_;
-		string indent = "  Simulation::\t";
-		cout << indent << "Input for vf = " << phi_ << " and Pe = " << peclet_ << " : kn = " << kn_ << ", kt = " << kt_ << " and dt = " << dt_ << endl;
-	} else {
-		ostringstream error_str;
-		error_str  << " Error: file " << filename.c_str() << " contains no data for vf = " << conf.volume_or_area_fraction << " and Pe = " << peclet << endl;
-		throw runtime_error(error_str.str());
-	}
-}
-
 void Simulation::echoInputFiles(string in_args,
 								vector<string>& input_files)
 {
@@ -203,7 +125,7 @@ void Simulation::assertParameterCompatibility()
 {
 	// test for incompatibilities
 	if (sys.brownian == true) {
-		if (sys.pairwise_resistance && p.integration_method != 1) {
+		if (sys.pairwise_resistance && sys.p.integration_method != 1) {
 			 // @@@@ This test is broken as System has not yet set pairwise resistance. For now test is duplicated later on in System
 			ostringstream error_str;
 			error_str << "Brownian simulation needs to use the Predictor-Corrector method." << endl;
@@ -212,18 +134,18 @@ void Simulation::assertParameterCompatibility()
 		}
 	}
 	if (control_var == Parameters::ControlVariable::stress) {
-		if (p.integration_method != 0) {
+		if (sys.p.integration_method != 0) {
 			cerr << "Warning : use of the Predictor-Corrector method for the stress controlled simulation is experimental." << endl;
 		}
 		//p.integration_method = 0;
 	}
 	if (sys.critical_load_model) {
-		p.friction_model = 2;
+		sys.p.friction_model = 2;
 		cerr << "Warning : critical load simulation -> switched to friction_model=2" << endl;
 	}
-	if (p.output.recording_interaction_history) {
+	if (sys.p.output.recording_interaction_history) {
 		cerr << "Interaction history recording needs to use the Euler's Method." << endl;
-		p.integration_method = 0;
+		sys.p.integration_method = 0;
 	}
 }
 
@@ -316,13 +238,13 @@ void Simulation::setupFlow(Dimensional::DimensionalQty<double> control_value)
 			/* extensional flow
 			 *
 			 */
-			p.magic_angle = atan(0.5*(sqrt(5)-1)); // simulation box needs to be tilted in this angle.
+			sys.p.magic_angle = atan(0.5*(sqrt(5)-1)); // simulation box needs to be tilted in this angle.
 			matrix grad_u_orig(dimensionless_deformation_rate, 0, 0,
 							   0, 0, 0,
 							   0, 0, -dimensionless_deformation_rate);
 			matrix rotation, rotation_inv;
-			rotation.set_rotation(-p.magic_angle, 'y');
-			rotation_inv.set_rotation(p.magic_angle, 'y');
+			rotation.set_rotation(-sys.p.magic_angle, 'y');
+			rotation_inv.set_rotation(sys.p.magic_angle, 'y');
 			sys.grad_u_hat = rotation_inv*grad_u_orig*rotation;
 			sys.grad_u = rotation_inv*grad_u_orig*rotation;
 			Einf_base.setSymmetrize(sys.grad_u);
@@ -390,17 +312,17 @@ void Simulation::setupSimulation(string in_args,
 		sys.target_stress = target_stress_input/6/M_PI; //@@@
 	}
 		
-	p = PFactory.getParameterSet();
+	sys.p = PFactory.getParameterSet();
 
 	setupFlow(control_value); // Including parameter p setting.
 	
-	p.flow_type = flow_type; // shear or extension or mix (not implemented yet)
+	sys.p.flow_type = flow_type; // shear or extension or mix (not implemented yet)
 
 	if (sys.ext_flow) {
-		p.output.origin_zero_flow = false;
+		sys.p.output.origin_zero_flow = false;
 	}
 	if (sys.p.output.relative_position_view) {
-		p.output.origin_zero_flow = false;
+		sys.p.output.origin_zero_flow = false;
 	}
 	setupOptionalSimulation(indent);
 
@@ -411,16 +333,9 @@ void Simulation::setupSimulation(string in_args,
 	}
 
 	setConfigToSystem(binary_conf, filename_import_positions);
-	//@@@@ temporary repair
-	if (input_files[2] != "not_given") {
-		if (sys.brownian && !p.auto_determine_knkt) {
-			contactForceParameterBrownian(input_files[2]);
-		} else {
-			contactForceParameter(input_files[2]);
-		}
-	}
 
-	p_initial = p;
+	p_initial = sys.p;
+	
 	sys.resetContactModelParameer(); //@@@@ temporary repair
 
 	if (!sys.ext_flow) {
@@ -461,7 +376,7 @@ void Simulation::openOutputFiles()
 	outdata_st.setFile("st_"+simu_name+".dat",
 					   data_header.str(), force_to_run, restart_from_chkp);
 
-	if (!p.output.out_particle_stress.empty()) {
+	if (!sys.p.output.out_particle_stress.empty()) {
 		outdata_pst.setFile("pst_"+simu_name+".dat",
 							data_header.str(), force_to_run, restart_from_chkp);
 
@@ -474,11 +389,11 @@ void Simulation::openOutputFiles()
 	} else {
 		fout_input.open(input_filename.c_str(), fstream::out | fstream::app);
 	}
-	if (p.output.out_data_particle) {
+	if (sys.p.output.out_data_particle) {
 		outdata_par.setFile("par_"+simu_name+".dat",
 							data_header.str(), force_to_run, restart_from_chkp);
 	}
-	if (p.output.out_data_interaction) {
+	if (sys.p.output.out_data_interaction) {
 		outdata_int.setFile("int_"+simu_name+".dat",
 							data_header.str(), force_to_run, restart_from_chkp);
 	}
@@ -529,7 +444,7 @@ string Simulation::prepareSimulationName(bool binary_conf,
 	// }
 	string_control_parameters << control_value.value << Dimensional::unit2suffix(control_value.unit);
 	ss_simu_name << string_control_parameters.str();
-	ss_simu_name << "_" << p.flow_type;
+	ss_simu_name << "_" << sys.p.flow_type;
 	if (simu_identifier != "") {
 		ss_simu_name << "_";
 		ss_simu_name << simu_identifier;
@@ -543,23 +458,23 @@ string Simulation::prepareSimulationName(bool binary_conf,
 TimeKeeper Simulation::initTimeKeeper()
 {
 	TimeKeeper tk;
-	if (p.output.log_time_interval) {
-		tk.addClock("data", LogClock(p.output.initial_log_time.value,
-									 p.time_end.value,
-									 p.output.nb_output_data_log_time,
-									 p.time_end.dimension == Dimensional::Dimension::Strain));
+	if (sys.p.output.log_time_interval) {
+		tk.addClock("data", LogClock(sys.p.output.initial_log_time.value,
+									 sys.p.time_end.value,
+									 sys.p.output.nb_output_data_log_time,
+									 sys.p.time_end.dimension == Dimensional::Dimension::Strain));
 	} else {
-		tk.addClock("data", LinearClock(p.output.time_interval_output_data.value,
-										p.output.time_interval_output_data.dimension == Dimensional::Dimension::Strain));
+		tk.addClock("data", LinearClock(sys.p.output.time_interval_output_data.value,
+										sys.p.output.time_interval_output_data.dimension == Dimensional::Dimension::Strain));
 	}
-	if (p.output.log_time_interval) {
-		tk.addClock("config", LogClock(p.output.initial_log_time.value,
-									   p.time_end.value,
-									   p.output.nb_output_config_log_time,
-									   p.time_end.dimension == Dimensional::Dimension::Strain));
+	if (sys.p.output.log_time_interval) {
+		tk.addClock("config", LogClock(sys.p.output.initial_log_time.value,
+									   sys.p.time_end.value,
+									   sys.p.output.nb_output_config_log_time,
+									   sys.p.time_end.dimension == Dimensional::Dimension::Strain));
 	} else {
-		tk.addClock("config", LinearClock(p.output.time_interval_output_config.value,
-										  p.output.time_interval_output_config.dimension == Dimensional::Dimension::Strain));
+		tk.addClock("config", LinearClock(sys.p.output.time_interval_output_config.value,
+										  sys.p.output.time_interval_output_config.dimension == Dimensional::Dimension::Strain));
 	}
 	return tk;
 }

@@ -19,7 +19,7 @@
 using namespace std;
 
 Simulation::Simulation(State::BasicCheckpoint chkp):
-sys(System(p, events, chkp)),
+sys(System(events, chkp)),
 target_stress_input(0),
 restart_from_chkp(false),
 stress_reversal(false),
@@ -44,7 +44,7 @@ void Simulation::simulationMain()
 	string line;
 	while (cin >> line) {
 		cerr << line << endl;
-	}	
+	}
 	cerr << "simulationMain" << endl;
 	return;
 }

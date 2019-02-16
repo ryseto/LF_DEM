@@ -481,16 +481,16 @@ void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init
 	 *
 	 */
 	Parameters::ParameterSetFactory PFactory(Dimensional::Unit::hydro);
-	simu.p = PFactory.getParameterSet();
+	simu.sys.p = PFactory.getParameterSet();
 	
 	auto &sys = simu.getSys();
 	sys.zero_shear = true;
-	simu.p.kn = 1;
-	simu.p.friction_model = 0;
-	simu.p.integration_method = 0;
-	simu.p.disp_max = 5e-3;
-	simu.p.lubrication_model = "none";
-	simu.p.contact_relaxation_time_tan = 1e-4;
+	simu.sys.p.kn = 1;
+	simu.sys.p.friction_model = 0;
+	simu.sys.p.integration_method = 0;
+	simu.sys.p.disp_max = 5e-3;
+	simu.sys.p.lubrication_model = "none";
+	simu.sys.p.contact_relaxation_time_tan = 1e-4;
 	np = readStdinDefault(500, "number of particle");
 	if (circulargap_config || parallel_wall_config) {
 		sys.twodimension = true;

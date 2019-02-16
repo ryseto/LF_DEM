@@ -187,10 +187,10 @@ private:
 						  const std::vector <double>& angles);
  protected:
  public:
-	System(Parameters::ParameterSet& ps, std::list <Event>& ev, struct State::BasicCheckpoint = State::zero_time_basicchkp);
+	System(std::list <Event>& ev, struct State::BasicCheckpoint = State::zero_time_basicchkp);
 	~System();
 
-	Parameters::ParameterSet& p;
+	Parameters::ParameterSet p;
 	
 	int np_mobile; ///< number of mobile particles
 	bool ext_flow;

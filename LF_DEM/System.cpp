@@ -62,15 +62,13 @@ wagnerhash(time_t t, clock_t c)
 }
 #endif
 
-System::System(Parameters::ParameterSet& ps,
-			   list <Event>& ev,
+System::System(list <Event>& ev,
 			   State::BasicCheckpoint chkp):
 pairwise_resistance_changed(true),
 clk(chkp.clock),
 shear_rate(0),
 omega_inf(0),
 events(ev),
-p(ps),
 brownian(false),
 friction(false),
 rolling_friction(false),
