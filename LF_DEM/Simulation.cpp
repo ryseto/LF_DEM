@@ -19,13 +19,12 @@
 using namespace std;
 
 Simulation::Simulation(State::BasicCheckpoint chkp):
-sys(System(events, chkp)),
 target_stress_input(0),
 restart_from_chkp(false),
+jamming_strain(0),
 stress_reversal(false),
 timestep_1(0),
-diminish_output(false),
-jamming_strain(0)
+sys(System(events, chkp))
 {
 	kill = false;
 	restart_from_chkp = !isZeroTimeChkp(chkp);
@@ -880,9 +879,6 @@ void Simulation::outputParFileTxt()
 {
 	int np = sys.get_np();
 	int output_precision = 6;
-	if (diminish_output) {
-		output_precision = 4;
-	}
 	outdata_par.setDefaultPrecision(output_precision);
 	outdata_int.setDefaultPrecision(output_precision);
 	auto pos = sys.position;
@@ -930,13 +926,13 @@ void Simulation::outputParFileTxt()
 			outdata_par.entryData("position x", Dimensional::Dimension::none, 1, pos[i].x, 6);
 			outdata_par.entryData("position z", Dimensional::Dimension::none, 1, pos[i].z, 6);
 		}
-		if (diminish_output == false) {
-			outdata_par.entryData("velocity (x, y, z)", Dimensional::Dimension::Velocity, 3, vel[i]);
-			outdata_par.entryData("angular velocity (x, y, z)", Dimensional::Dimension::none, 3, sys.ang_velocity[i]);
-			if (sys.twodimension) {
-				outdata_par.entryData("angle", Dimensional::Dimension::none, 1, sys.angle[i]);
-			}
+
+		outdata_par.entryData("velocity (x, y, z)", Dimensional::Dimension::Velocity, 3, vel[i]);
+		outdata_par.entryData("angular velocity (x, y, z)", Dimensional::Dimension::none, 3, sys.ang_velocity[i]);
+		if (sys.twodimension) {
+			outdata_par.entryData("angle", Dimensional::Dimension::none, 1, sys.angle[i]);
 		}
+
 		//		if (sys.couette_stress) {
 		//			double stress_rr, stress_thetatheta, stress_rtheta;
 		//			sys.getStressCouette(i, stress_rr, stress_thetatheta, stress_rtheta);
@@ -1040,18 +1036,18 @@ void Simulation::outputIntFileTxt()
 		Sym2Tensor stress_contact = inter.contact.getContactStressXF();
 		outdata_int.entryData("particle 1 label", Dimensional::Dimension::none, 1, i);
 		outdata_int.entryData("particle 2 label", Dimensional::Dimension::none, 1, j);
-		if (diminish_output == false) {
-			outdata_int.entryData("contact state "
-								  "(0 = no contact, "
-								  "1 = frictionless contact, "
-								  "2 = non-sliding frictional, "
-								  "3 = sliding frictional)",
-								  Dimensional::Dimension::none, 1, inter.contact.getFrictionState());
-			outdata_int.entryData("normal vector, oriented from particle 1 to particle 2", \
-								  Dimensional::Dimension::none, 3, inter.nvec);
-			outdata_int.entryData("dimensionless gap = s-2, s = 2r/(a1+a2)", \
-								  Dimensional::Dimension::none, 1,  inter.get_reduced_gap());
-		}
+
+		outdata_int.entryData("contact state "
+							  "(0 = no contact, "
+							  "1 = frictionless contact, "
+							  "2 = non-sliding frictional, "
+							  "3 = sliding frictional)",
+							  Dimensional::Dimension::none, 1, inter.contact.getFrictionState());
+		outdata_int.entryData("normal vector, oriented from particle 1 to particle 2", \
+							  Dimensional::Dimension::none, 3, inter.nvec);
+		outdata_int.entryData("dimensionless gap = s-2, s = 2r/(a1+a2)", \
+							  Dimensional::Dimension::none, 1,  inter.get_reduced_gap());
+		
 		/* [NOTE]
 		 * Lubrication forces are reference values
 		 * in the Brownian case. The force balancing
@@ -1060,20 +1056,20 @@ void Simulation::outputIntFileTxt()
 		 * It seems there is no better way to visualize
 		 * the lubrication forces.
 		 */
-		if (diminish_output == false) {
-			if (sys.lubrication) {
-				if (inter.get_reduced_gap() > 0) {
-					double normal_part = -dot(inter.lubrication.getTotalForce(), inter.nvec);
-					outdata_int.entryData("normal part of the lubrication force (positive for compression)", Dimensional::Dimension::Force, 1, \
-										  normal_part);
-					outdata_int.entryData("tangential part of the lubrication force", Dimensional::Dimension::Force, 3, \
-										  inter.lubrication.getTangentialForce());
-				} else {
-					outdata_int.entryData("normal part of the lubrication force (positive for compression)", Dimensional::Dimension::Force, 1, 0);
-					outdata_int.entryData("tangential part of the lubrication force", Dimensional::Dimension::Force, 3, vec3d(0,0,0));
-				}
+
+		if (sys.lubrication) {
+			if (inter.get_reduced_gap() > 0) {
+				double normal_part = -dot(inter.lubrication.getTotalForce(), inter.nvec);
+				outdata_int.entryData("normal part of the lubrication force (positive for compression)", Dimensional::Dimension::Force, 1, \
+									  normal_part);
+				outdata_int.entryData("tangential part of the lubrication force", Dimensional::Dimension::Force, 3, \
+									  inter.lubrication.getTangentialForce());
+			} else {
+				outdata_int.entryData("normal part of the lubrication force (positive for compression)", Dimensional::Dimension::Force, 1, 0);
+				outdata_int.entryData("tangential part of the lubrication force", Dimensional::Dimension::Force, 3, vec3d(0,0,0));
 			}
 		}
+
 		/*
 		 * Contact forces are the sums of spring forces and dashpot forces.
 		 * (It can be negative even repulsive contact force).
@@ -1081,25 +1077,23 @@ void Simulation::outputIntFileTxt()
 		outdata_int.entryData("norm of the normal part of the contact force", Dimensional::Dimension::Force, 1, \
 							  -inter.contact.getNormalForceValue());
 		
-		if (diminish_output == false) {
-			outdata_int.entryData("tangential part of the contact force", Dimensional::Dimension::Force, 3, \
-								  inter.contact.getTangentialForce());
-		}
+
+		outdata_int.entryData("tangential part of the contact force", Dimensional::Dimension::Force, 3, \
+							  inter.contact.getTangentialForce());
 		if (sys.repulsiveforce) {
 			outdata_int.entryData("norm of the normal repulsive force", Dimensional::Dimension::Force, 1, \
 								  inter.repulsion.getForceNorm());
 		}
-		if (diminish_output == false) {
-			outdata_int.entryData("Viscosity contribution of contact xF", Dimensional::Dimension::Stress, 1, \
-								  doubledot(stress_contact, sys.getEinfty()/sr)/sr);
-		}
+
+		outdata_int.entryData("Viscosity contribution of contact xF", Dimensional::Dimension::Stress, 1, \
+							  doubledot(stress_contact, sys.getEinfty()/sr)/sr);
 		if (sys.delayed_adhesion) {
 			outdata_int.entryData("norm of the normal adhesion force", Dimensional::Dimension::Force, 1, \
 								  inter.delayed_adhesion->getForceNorm());
-			if (diminish_output == false) {
-				outdata_int.entryData("adhesion ratio uptime to activation time", Dimensional::Dimension::none, 1, \
-									  inter.delayed_adhesion->ratioUptimeToActivation());
-			}
+			
+			outdata_int.entryData("adhesion ratio uptime to activation time", Dimensional::Dimension::none, 1, \
+								  inter.delayed_adhesion->ratioUptimeToActivation());
+			
 		}
 	}
 	if (sys.interaction.size() > 0) {

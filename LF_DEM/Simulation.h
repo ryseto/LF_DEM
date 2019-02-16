@@ -163,7 +163,6 @@ public:
 	void outputComputationTime();
 	bool kill;
 	bool force_to_run;
-	bool diminish_output;
 	/*********** Events  ************/
 	void handleEventsShearJamming();
 	void handleEventsFragility();

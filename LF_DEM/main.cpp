@@ -91,7 +91,6 @@ void mainConventional(int argc, char **argv)
 	double volume_frac_gen = 0;
 	bool binary_conf = false;
 	bool force_to_run = false;
-	bool diminish_output = false;
 	string flow_type = "shear";
 	string config_filename = "not_given";
 	string param_filename = "not_given";
@@ -182,9 +181,6 @@ void mainConventional(int argc, char **argv)
 			case 'f':
 				force_to_run = true;
 				break;
-			case 'd':
-				diminish_output = true;
-				break;
 			case 'N':
 				simu_name = optarg;
 				break;
@@ -235,7 +231,6 @@ void mainConventional(int argc, char **argv)
 		}
 
 		simulation.force_to_run = force_to_run;
-		simulation.diminish_output = diminish_output;
 
 		try {
 			simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
