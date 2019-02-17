@@ -42,7 +42,7 @@ std::string prepareSimulationNameFromChkp(const std::string& filename_chkp)
 
 int main(int argc, char **argv)
 {
-	if (argc == 1) {
+	if (argc <= 3) {
 		mainLammpsLike(argc, argv);
 	} else {
 		mainConventional(argc, argv);
@@ -52,16 +52,26 @@ int main(int argc, char **argv)
 
 void mainLammpsLike(int argc, char **argv)
 {
+	bool binary_conf = false;
+	bool force_to_run = false;
 	string chkp_filename = "";
 	const struct option longopts[] = {
+		{"binary",          no_argument, 0, 'n'},
+		{"force-to-run",    no_argument, 0, 'f'},
 		{"checkpoint-file", no_argument, 0, 'c'}
 	};
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "c:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "nfc", longopts, &index)) != -1) {
 		switch (c) {
+			case 'n':
+				binary_conf = true;
+				break;
 			case 'c':
 				chkp_filename = optarg;
+				break;
+			case 'f':
+				force_to_run = true;
 				break;
 			default:
 				abort();
@@ -72,7 +82,8 @@ void mainLammpsLike(int argc, char **argv)
 		state = State::readBasicCheckpoint(chkp_filename);
 	}
 	Simulation simulation(state);
-	simulation.simulationMain();
+	simulation.force_to_run = force_to_run;
+	simulation.simulationMain(argv[optind], binary_conf);
 	return;
 }
 
@@ -91,7 +102,6 @@ void mainConventional(int argc, char **argv)
 	double volume_frac_gen = 0;
 	bool binary_conf = false;
 	bool force_to_run = false;
-	string flow_type = "shear";
 	string config_filename = "not_given";
 	string param_filename = "not_given";
 	string knkt_filename = "not_given";
@@ -100,7 +110,7 @@ void mainConventional(int argc, char **argv)
 	string simu_name;
 	
 	Dimensional::DimensionalQty<double> control_value;
-	Parameters::ControlVariable rheology_control = Parameters::ControlVariable::rate;
+	Parameters::ControlVariable control_variable = Parameters::ControlVariable::rate;
 	string simu_identifier = "";
 	const struct option longopts[] = {
 		{"rate-controlled",   required_argument, 0, 'r'},
@@ -122,28 +132,25 @@ void mainConventional(int argc, char **argv)
 	
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hn80efds:t:r:g::p:a:k:i:v:c:N:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hn80fds:t:r:g::p:a:k:i:v:c:N:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
-				rheology_control = Parameters::ControlVariable::stress;
+				control_variable = Parameters::ControlVariable::stress;
 				control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Stress, optarg, "shear stress");
 				break;
 			case 'r':
-				rheology_control = Parameters::ControlVariable::rate;
+				control_variable = Parameters::ControlVariable::rate;
 				control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, optarg, "shear rate");
 				break;
 			case '8':
-				rheology_control = Parameters::ControlVariable::rate;
+				control_variable = Parameters::ControlVariable::rate;
 				control_value = {Dimensional::Dimension::Force, 1, Dimensional::Unit::hydro};
 				cout << "Rate control, infinite shear rate (hydro + hard contacts only)" << endl;
 				break;
 			case '0':
-				rheology_control = Parameters::ControlVariable::rate;
+				control_variable = Parameters::ControlVariable::rate;
 				control_value = {Dimensional::Dimension::Force, 0, Dimensional::Unit::kn};
 				cout << "Rate control, zero shear rate (hydro + hard contacts only)" << endl;
-				break;
-			case 'e':
-				flow_type = "extension";
 				break;
 			case 'k':
 				knkt_filename = optarg;
@@ -234,8 +241,8 @@ void mainConventional(int argc, char **argv)
 
 		try {
 			simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
-											 rheology_control, control_value,
-											 flow_type, simu_identifier);
+											 control_variable, control_value,
+											 simu_identifier);
 		} catch (runtime_error& e) {
 			cerr << e.what() << endl;
 			return 1;

@@ -30,7 +30,8 @@ sys(System(events, chkp))
 	restart_from_chkp = !isZeroTimeChkp(chkp);
 };
 
-void Simulation::simulationMain()
+void Simulation::simulationMain(const string &filename_import_positions,
+								bool binary_conf)
 {
 	/*
 	 * $ LF_DEM < in.test_simulation1
@@ -39,12 +40,163 @@ void Simulation::simulationMain()
 	 *  - allow to change parameters any time.
 	 *  - Running simulation with a line of "run 10h"
 	 */
-	cerr << "Let's try to implement a LAMMPS-like interface" << endl;
+	cerr << "Implementing LAMMPS-like interface..." << endl;
+	string indent = "  Simulation::\t";
+	cout << indent << "Simulation setup starting... " << endl;
+	Dimensional::DimensionalQty<double> control_value;
+	control_var = Parameters::ControlVariable::rate;
+	string filename_parameters("tmp");
+	string simu_identifier("");
+	/////////////////////////////////////////////
+	vector <string> read_lines;
 	string line;
-	while (cin >> line) {
-		cerr << line << endl;
+	while (getline(cin, line)) {
+		read_lines.push_back(line);
 	}
-	cerr << "simulationMain" << endl;
+	stringstream initial_setup;
+	for (const auto line : read_lines) {
+		if (line.find("run") != string::npos) {
+			stringstream ss{line};
+			vector<string> string_buff;
+			string buf;
+			while (std::getline(ss, buf, ' ')) {
+				string_buff.push_back(buf);
+			}
+			if (string_buff[1] == "rate") {
+				control_var = Parameters::ControlVariable::rate;
+				control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, string_buff[2], "shear rate");
+			} else if (string_buff[1] == "stress") {
+				control_var = Parameters::ControlVariable::stress;
+				control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Stress, string_buff[2], "shear stress");
+			}
+			break;
+		} else {
+			initial_setup << line;
+		}
+	}
+	Dimensional::Unit guarranted_unit; // a unit we're sure will mean something, for ParameterSetFactory to set default dimensional qties.
+	if (control_var == Parameters::ControlVariable::rate) {
+		if (control_value.value != 0) {
+			guarranted_unit = Dimensional::Unit::hydro;
+		} else {
+			guarranted_unit = control_value.unit;
+		}
+	} else if (control_var == Parameters::ControlVariable::stress) {
+		guarranted_unit = control_value.unit;
+	} else {
+		ostringstream error_str;
+		error_str  << "control_var is not set properly." << endl;
+		throw runtime_error(error_str.str());
+	}
+	
+	//	cout << indent << "Import position... " << endl;
+	//	setConfigToSystem(binary_conf, filename_import_positions);
+	
+	Parameters::ParameterSetFactory PFactory(guarranted_unit);
+	PFactory.setFromStringStream(initial_setup);
+	setupNonDimensionalization(control_value, PFactory);
+	
+	if (control_var == Parameters::ControlVariable::stress) {
+		target_stress_input = control_value.value; //@@@ Where should we set the target stress???
+		sys.target_stress = target_stress_input/6/M_PI; //@@@
+	}
+	
+	sys.p = PFactory.getParameterSet();
+	
+	setupFlow(control_value); // Including parameter p setting.
+	
+	if (sys.ext_flow) {
+		sys.p.output.origin_zero_flow = false;
+	}
+	if (sys.p.output.relative_position_view) {
+		sys.p.output.origin_zero_flow = false;
+	}
+	setupOptionalSimulation(indent);
+	
+	assertParameterCompatibility();
+	
+	setConfigToSystem(binary_conf, filename_import_positions);
+	
+	p_initial = sys.p;
+	
+	sys.resetContactModelParameer(); //@@@@ temporary repair
+	
+	if (!sys.ext_flow) {
+		// simple shear
+		sys.setVelocityDifference();
+	} else {
+		// extensional flow
+		sys.vel_difference.reset();
+	}
+	if (simu_name.empty()) {
+		simu_name = prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
+										  simu_identifier, control_value);
+	}
+	openOutputFiles();
+	checkDispersionType();
+
+	///////////////////////////////////////////////////////
+	time_t now;
+	time_strain_1 = 0;
+	now = time(NULL);
+	time_strain_0 = now;
+	setupEvents();
+	cout << indent << "Time evolution started" << endl << endl;
+	TimeKeeper tk = initTimeKeeper();
+	if (restart_from_chkp) {
+		std::set<std::string> elapsed;
+		do {
+			elapsed = tk.getElapsedClocks(sys.get_time(), sys.get_cumulated_strain());
+		}
+		while (!elapsed.empty()); // flush tk to not output on first time step
+	}
+	int binconf_counter = 0;
+	if (sys.p.sj_program_file != "") {
+		stressProgram();
+	}
+	while (keepRunning()) {
+		if (sys.p.simulation_mode == 22) {
+			stopShearing(tk);
+			if (sys.get_time() > 20) {
+				break;
+			}
+		}
+		timeEvolutionUntilNextOutput(tk);
+		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_cumulated_strain());
+		if (sys.retrim_ext_flow) {
+			output_events.insert("data");
+			output_events.insert("config");
+		}
+		if (sys.p.event_handler == "jamming_stress_reversal") {
+			operateJammingStressReversal(output_events);
+		}
+		generateOutput(output_events, binconf_counter);
+		printProgress();
+		if (time_strain_1 == 0 && sys.get_cumulated_strain() > 1) {
+			now = time(NULL);
+			time_strain_1 = now;
+			timestep_1 = sys.get_total_num_timesteps();
+		}
+	}
+	now = time(NULL);
+	time_strain_end = now;
+	timestep_end = sys.get_total_num_timesteps();
+	outputComputationTime();
+	cout << indent << "Time evolution done" << endl << endl;
+
+//	while (getline(cin, line, '\n')) {
+//		if (line.find("=") != string::npos) {
+//			cerr << line << endl;
+//			PFactory.setFromLine(line);
+//			sys.p = PFactory.getParameterSet();
+//			cerr << "sys.dt = " << sys.dt << endl;
+//		} else {
+//			cerr << " no " << endl;
+//		}
+//	}
+//	cerr << "sys.dt = " << sys.dt << endl;
+//
+//	cerr << "simulationMain" << endl;
 	return;
 }
 
@@ -339,18 +491,16 @@ void Simulation::simulationSteadyShear(string in_args,
 									   bool binary_conf,
 									   Parameters::ControlVariable control_variable,
 									   Dimensional::DimensionalQty<double> control_value,
-									   string flow_type,
 									   string simu_identifier)
 {
 	string indent = "  Simulation::\t";
-	if (flow_type == "extension") {
+	control_var = control_variable;
+	setupSimulation(in_args, input_files, binary_conf, control_value, simu_identifier);
+	if (sys.p.flow_type == "extension") {
 		sys.ext_flow = true;
 	} else {
 		sys.ext_flow = false;
 	}
-	control_var = control_variable;
-	setupSimulation(in_args, input_files, binary_conf, control_value,
-	                flow_type, simu_identifier);
 	time_t now;
 	time_strain_1 = 0;
 	now = time(NULL);

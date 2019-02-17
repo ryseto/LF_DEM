@@ -332,7 +332,6 @@ std::pair<std::vector<vec3d>, std::vector<double>> GenerateInitConfig::putRandom
 			position[i+np_movable+np_wall1] = pos;
 			radius[i+np_movable+np_wall1] = radius_wall_particle;
 		}
-		cerr << "*" << endl;
 		cerr << np_wall1 << ' ' << np_wall2 << endl;
 	} else if (winding_wall_config) {
 		int i = 0;

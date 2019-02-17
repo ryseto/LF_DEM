@@ -276,7 +276,6 @@ void Simulation::setupSimulation(string in_args,
 								 vector<string>& input_files,
 								 bool binary_conf,
 								 Dimensional::DimensionalQty<double> control_value,
-								 string flow_type,
 								 string simu_identifier)
 {
 	/**
@@ -315,9 +314,7 @@ void Simulation::setupSimulation(string in_args,
 	sys.p = PFactory.getParameterSet();
 
 	setupFlow(control_value); // Including parameter p setting.
-	
-	sys.p.flow_type = flow_type; // shear or extension or mix (not implemented yet)
-
+		
 	if (sys.ext_flow) {
 		sys.p.output.origin_zero_flow = false;
 	}

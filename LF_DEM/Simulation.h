@@ -93,21 +93,18 @@ public:
 	System sys;
 	/* For DEMsystem*/
 	Simulation(State::BasicCheckpoint chkp = State::zero_time_basicchkp);
-	void simulationMain();
+	void simulationMain(const std::string &filename_import_positions,
+						bool binary_conf);
 	void simulationSteadyShear(std::string in_args,
 							   std::vector<std::string>& input_files,
 							   bool binary_conf,
 							   Parameters::ControlVariable control_variable,
 							   Dimensional::DimensionalQty<double> control_value,
-							   std::string flow_type,
 							   std::string simu_identifier);
-
-
 	void setupSimulation(std::string in_args,
 						 std::vector<std::string>& input_files,
 						 bool binary_conf,
 						 Dimensional::DimensionalQty<double> control_value,
-						 std::string flow_type,
 						 std::string simu_identifier);
 	void setupFlow(Dimensional::DimensionalQty<double> control_value);
 	void setConfigToSystem(bool binary_conf, const std::string &filename);

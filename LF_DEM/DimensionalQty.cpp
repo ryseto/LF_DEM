@@ -137,7 +137,6 @@ namespace Dimensional {
 			flipDependency(unit);
 		}
 		unit_nodes[unit] = {Dimension::Force, 1, unit};
-
 		for (auto &node: unit_nodes) {
 			convertNodeUnit(node.second, unit);
 		}
