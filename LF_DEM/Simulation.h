@@ -78,6 +78,7 @@ private:
 	OutputData outdata_int;
 	std::ofstream fout_boxing;
 	gsd_handle gsdOut;
+	int np1;
 	/*
 	 * For inputs
 	 */
@@ -88,7 +89,13 @@ private:
 	void operateJammingStressReversal(std::set<std::string> &output_events);
 	enum class DispersionType { mono, bi, poly };
 	DispersionType dispersion_type;
-	int np1;
+	/*
+	 * script running
+	 */
+	void runSimulation();
+	void runRead(Dimensional::DimensionalQty<double> &control_value,
+				 std::string &run_time,
+				 std::string &line);
 public:
 	System sys;
 	/* For DEMsystem*/

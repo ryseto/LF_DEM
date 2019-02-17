@@ -30,6 +30,30 @@ sys(System(events, chkp))
 	restart_from_chkp = !isZeroTimeChkp(chkp);
 };
 
+void Simulation::runRead(Dimensional::DimensionalQty<double> &control_value,
+						 std::string &run_time,
+						 std::string &line)
+{
+	stringstream ss{line};
+	vector<string> string_buff;
+	string buf;
+	while (std::getline(ss, buf, ' ')) {
+		string_buff.push_back(buf);
+	}
+	if (string_buff[1] == "rate") {
+		control_var = Parameters::ControlVariable::rate;
+		control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, string_buff[2], "shear rate");
+	} else if (string_buff[1] == "stress") {
+		control_var = Parameters::ControlVariable::stress;
+		control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Stress, string_buff[2], "shear stress");
+	} else {
+		ostringstream error_str;
+		error_str  << "run with rate or stress" << endl;
+		throw runtime_error(error_str.str());
+	}
+	run_time = string_buff[3];
+}
+
 void Simulation::simulationMain(const string &filename_import_positions,
 								bool binary_conf)
 {
@@ -45,6 +69,7 @@ void Simulation::simulationMain(const string &filename_import_positions,
 	cout << indent << "Simulation setup starting... " << endl;
 	Dimensional::DimensionalQty<double> control_value;
 	control_var = Parameters::ControlVariable::rate;
+	control_value = {Dimensional::Dimension::Force, 1, Dimensional::Unit::hydro};
 	string filename_parameters("tmp");
 	string simu_identifier("");
 	/////////////////////////////////////////////
@@ -54,21 +79,13 @@ void Simulation::simulationMain(const string &filename_import_positions,
 		read_lines.push_back(line);
 	}
 	stringstream initial_setup;
-	for (const auto line : read_lines) {
+	int cnt_read_line = 0;
+	//for (const auto line : read_lines) {
+	while (1) {
+		line = read_lines[cnt_read_line++];
 		if (line.find("run") != string::npos) {
-			stringstream ss{line};
-			vector<string> string_buff;
-			string buf;
-			while (std::getline(ss, buf, ' ')) {
-				string_buff.push_back(buf);
-			}
-			if (string_buff[1] == "rate") {
-				control_var = Parameters::ControlVariable::rate;
-				control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, string_buff[2], "shear rate");
-			} else if (string_buff[1] == "stress") {
-				control_var = Parameters::ControlVariable::stress;
-				control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Stress, string_buff[2], "shear stress");
-			}
+			string run_time;
+			runRead(control_value, run_time, line);
 			break;
 		} else {
 			initial_setup << line;
@@ -136,31 +153,72 @@ void Simulation::simulationMain(const string &filename_import_positions,
 	checkDispersionType();
 
 	///////////////////////////////////////////////////////
+	cnt_read_line--;
+	//string run_time;
+	while (read_lines.size() > cnt_read_line) {
+		line = read_lines[cnt_read_line++];
+		cerr << "line = " << line << endl;
+		if (line.find("run") != string::npos) {
+			string run_time;
+			runRead(control_value, run_time, line);
+			cerr << "control_value = " << control_value.value << endl;
+			cerr << "run_time = " << run_time << endl;
+			PFactory.setParameterFromKeyValue("time_end", run_time);
+			//system_of_units.setInternalUnit(internal_unit);
+			PFactory.setSystemOfUnits(system_of_units);
+			//			output_unit = control_value.unit;
+			auto forces = system_of_units.getForceScales();
+			if (control_var == Parameters::ControlVariable::rate) {
+				if (!sys.zero_shear) {
+					cerr << "force " << forces.at(Dimensional::Unit::hydro).value << endl;
+					sys.set_shear_rate(forces.at(Dimensional::Unit::hydro).value);
+				}
+			}
+			if (control_var == Parameters::ControlVariable::stress) {
+				sys.target_stress = forces.at(Dimensional::Unit::stress).value;
+			}
+			// setupNonDimensionalization(control_value, PFactory);
+			sys.p = PFactory.getParameterSet();
+			runSimulation();
+		}
+	}
+
+	outputComputationTime();
+	cout << indent << "Time evolution done" << endl << endl;
+	
+//	while (getline(cin, line, '\n')) {
+//		if (line.find("=") != string::npos) {
+//			cerr << line << endl;
+//			PFactory.setFromLine(line);
+//			sys.p = PFactory.getParameterSet();
+//			cerr << "sys.dt = " << sys.dt << endl;
+//		} else {
+//			cerr << " no " << endl;
+//		}
+//	}
+//	cerr << "sys.dt = " << sys.dt << endl;
+//
+//	cerr << "simulationMain" << endl;
+	return;
+}
+
+void Simulation::runSimulation()
+{
 	time_t now;
 	time_strain_1 = 0;
 	now = time(NULL);
 	time_strain_0 = now;
 	setupEvents();
-	cout << indent << "Time evolution started" << endl << endl;
+
 	TimeKeeper tk = initTimeKeeper();
-	if (restart_from_chkp) {
-		std::set<std::string> elapsed;
-		do {
-			elapsed = tk.getElapsedClocks(sys.get_time(), sys.get_cumulated_strain());
-		}
-		while (!elapsed.empty()); // flush tk to not output on first time step
+	std::set<std::string> elapsed;
+	do {
+		elapsed = tk.getElapsedClocks(sys.get_time(), sys.get_cumulated_strain());
 	}
+	while (!elapsed.empty()); // flush tk to not output on first time step
 	int binconf_counter = 0;
-	if (sys.p.sj_program_file != "") {
-		stressProgram();
-	}
+	
 	while (keepRunning()) {
-		if (sys.p.simulation_mode == 22) {
-			stopShearing(tk);
-			if (sys.get_time() > 20) {
-				break;
-			}
-		}
 		timeEvolutionUntilNextOutput(tk);
 		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_cumulated_strain());
 		if (sys.retrim_ext_flow) {
@@ -181,23 +239,6 @@ void Simulation::simulationMain(const string &filename_import_positions,
 	now = time(NULL);
 	time_strain_end = now;
 	timestep_end = sys.get_total_num_timesteps();
-	outputComputationTime();
-	cout << indent << "Time evolution done" << endl << endl;
-
-//	while (getline(cin, line, '\n')) {
-//		if (line.find("=") != string::npos) {
-//			cerr << line << endl;
-//			PFactory.setFromLine(line);
-//			sys.p = PFactory.getParameterSet();
-//			cerr << "sys.dt = " << sys.dt << endl;
-//		} else {
-//			cerr << " no " << endl;
-//		}
-//	}
-//	cerr << "sys.dt = " << sys.dt << endl;
-//
-//	cerr << "simulationMain" << endl;
-	return;
 }
 
 string Simulation::gitVersion()
