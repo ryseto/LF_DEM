@@ -40,21 +40,13 @@ void Simulation::echoInputFiles(string in_args,
 	fout_input.close();
 }
 
-void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> control_value, 
-											Parameters::ParameterSetFactory &PFact)
+Dimensional::Unit Simulation::determineUnit(Parameters::ParameterSetFactory &PFact)
 {
-	/**
-	 \brief Non-dimensionalize the simulation.
-	 
-	 This function determines the most appropriate unit scales to use in the System class depending on the input parameters (Brownian/non-Brownian, shear rate, stress/rate controlled), and converts all the input values in these units.
-	 */
 	string indent = "  Simulation::\t";
-	
 	// feed in the force scales to the UnitSystem solver
 	for (auto &fs: PFact.getForceScales()) {
 		system_of_units.add(fs.type, fs.dim_qty);
 	}
-	
 	// determine the internal unit to be used
 	Dimensional::Unit internal_unit = Dimensional::Unit::hydro;
 	if (control_var == Parameters::ControlVariable::rate) {// || control_var == Parameters::ControlVariable::viscnb) {
@@ -99,26 +91,47 @@ void Simulation::setupNonDimensionalization(Dimensional::DimensionalQty<double> 
 		internal_unit = control_value.unit;
 		//		internal_unit = Dimensional::Unit::stress;
 	}
+	return internal_unit;
+}
 
+void Simulation::convertForces(Dimensional::Unit &internal_unit,
+							   Parameters::ParameterSetFactory &PFact)
+{
 	// set the internal unit to actually determine force and parameter non-dimensionalized values
 	system_of_units.setInternalUnit(internal_unit);
 	PFact.setSystemOfUnits(system_of_units);
-	cout << indent << "internal units = " << Dimensional::unit2suffix(internal_unit) << endl;
-
+	//	cout << indent << "internal units = " << Dimensional::unit2suffix(internal_unit) << endl;
+	
 	// set the output unit
 	output_unit = control_value.unit;
-	cout << indent << "output units = " << Dimensional::unit2suffix(output_unit) << endl;
-
+	//cout << indent << "output units = " << Dimensional::unit2suffix(output_unit) << endl;
 	// when there is a hydro force, its value is the non-dimensionalized shear rate.
 	auto forces = system_of_units.getForceScales();
 	if (control_var == Parameters::ControlVariable::rate) {
 		if (!sys.zero_shear) {
+			cerr << "* " << forces.at(Dimensional::Unit::hydro).value << endl;
 			sys.set_shear_rate(forces.at(Dimensional::Unit::hydro).value);
 		}
 	}
 	if (control_var == Parameters::ControlVariable::stress) {
 		sys.target_stress = forces.at(Dimensional::Unit::stress).value;
 	}
+}
+
+void Simulation::setupNonDimensionalization(Parameters::ParameterSetFactory &PFact)
+{
+	/**
+	 \brief Non-dimensionalize the simulation.
+	 
+	 This function
+	 (1) determines the most appropriate unit scales to use in the System class depending on the input parameters (Brownian/non-Brownian, shear rate, stress/rate controlled)
+	 and
+	 (2) converts all the input values in these units.
+	 */
+	string indent = "  Simulation::\t";
+	Dimensional::Unit internal_unit = Dimensional::Unit::hydro;
+	internal_unit = determineUnit(PFact);
+	convertForces(internal_unit, PFact);
 }
 
 void Simulation::assertParameterCompatibility()
@@ -209,7 +222,7 @@ void Simulation::setConfigToSystem(bool binary_conf, const std::string &filename
 	}
 }
 
-void Simulation::setupFlow(Dimensional::DimensionalQty<double> control_value)
+void Simulation::setupFlow()
 {
 	// @@@ This function is quite messy, should be fixed 
 	// when we rewrite shear and extensional in a consistent manner
@@ -272,10 +285,25 @@ void Simulation::setupFlow(Dimensional::DimensionalQty<double> control_value)
 	}
 }
 
+void Simulation::setupRun(Parameters::ParameterSetFactory &PFact)
+{
+	sys.p = PFact.getParameterSet();
+	setupFlow(); // Including parameter p setting.
+	
+	if (!sys.ext_flow) {
+		// simple shear
+		sys.setVelocityDifference();
+	} else {
+		// extensional flow
+		sys.vel_difference.reset();
+	}
+
+	assertParameterCompatibility();
+}
+
 void Simulation::setupSimulation(string in_args,
 								 vector<string>& input_files,
 								 bool binary_conf,
-								 Dimensional::DimensionalQty<double> control_value,
 								 string simu_identifier)
 {
 	/**
@@ -304,47 +332,30 @@ void Simulation::setupSimulation(string in_args,
 
 	Parameters::ParameterSetFactory PFactory(guarranted_unit);
 	PFactory.setFromFile(filename_parameters);
-	setupNonDimensionalization(control_value, PFactory);
+	setupNonDimensionalization(PFactory);
 
 	if (control_var == Parameters::ControlVariable::stress) {
 		target_stress_input = control_value.value; //@@@ Where should we set the target stress???
 		sys.target_stress = target_stress_input/6/M_PI; //@@@
 	}
-		
-	sys.p = PFactory.getParameterSet();
-
-	setupFlow(control_value); // Including parameter p setting.
-		
 	if (sys.ext_flow) {
 		sys.p.output.origin_zero_flow = false;
 	}
 	if (sys.p.output.relative_position_view) {
 		sys.p.output.origin_zero_flow = false;
 	}
-	setupOptionalSimulation(indent);
+	setupOptionalSimulation(indent); // @@@ To be removed
 
-	assertParameterCompatibility();
-
-	if (input_files[3] != "not_given") {
-		throw runtime_error("pre-simulation data deprecated?");
-	}
+	setupRun(PFactory);
 
 	setConfigToSystem(binary_conf, filename_import_positions);
-
 	p_initial = sys.p;
 	
 	sys.resetContactModelParameer(); //@@@@ temporary repair
 
-	if (!sys.ext_flow) {
-		// simple shear
-		sys.setVelocityDifference();
-	} else {
-		// extensional flow
-		sys.vel_difference.reset();
-	}
 	if (simu_name.empty()) {
 		simu_name = prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
-										  simu_identifier, control_value);
+										  simu_identifier);
 	}
 	openOutputFiles();
 
@@ -407,8 +418,7 @@ void Simulation::openOutputFiles()
 string Simulation::prepareSimulationName(bool binary_conf,
 										 const std::string& filename_import_positions,
 										 const std::string& filename_parameters,
-										 const std::string& simu_identifier,
-										 Dimensional::DimensionalQty<double> control_value)
+										 const std::string& simu_identifier)
 {
 	/**
 	 \brief Determine simulation name.

@@ -152,6 +152,7 @@ namespace Dimensional {
 		std::set<Unit> visited;
 		for (auto node: unit_nodes) {
 			auto force = node.first;
+			//std::cerr << "force = " << node.first << std::endl;
 			auto value = node.second;
 			do {
 				visited.insert(force);

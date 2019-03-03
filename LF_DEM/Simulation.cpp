@@ -30,8 +30,7 @@ sys(System(events, chkp))
 	restart_from_chkp = !isZeroTimeChkp(chkp);
 };
 
-void Simulation::runRead(Dimensional::DimensionalQty<double> &control_value,
-						 std::string &run_time,
+void Simulation::readRun(std::string &run_time,
 						 std::string &line)
 {
 	stringstream ss{line};
@@ -67,7 +66,7 @@ void Simulation::simulationMain(const string &filename_import_positions,
 	cerr << "Implementing LAMMPS-like interface..." << endl;
 	string indent = "  Simulation::\t";
 	cout << indent << "Simulation setup starting... " << endl;
-	Dimensional::DimensionalQty<double> control_value;
+//	Dimensional::DimensionalQty<double> control_value;
 	control_var = Parameters::ControlVariable::rate;
 	control_value = {Dimensional::Dimension::Force, 1, Dimensional::Unit::hydro};
 	string filename_parameters("tmp");
@@ -85,7 +84,7 @@ void Simulation::simulationMain(const string &filename_import_positions,
 		line = read_lines[cnt_read_line++];
 		if (line.find("run") != string::npos) {
 			string run_time;
-			runRead(control_value, run_time, line);
+			readRun(run_time, line);
 			break;
 		} else {
 			initial_setup << line;
@@ -111,7 +110,7 @@ void Simulation::simulationMain(const string &filename_import_positions,
 	
 	Parameters::ParameterSetFactory PFactory(guarranted_unit);
 	PFactory.setFromStringStream(initial_setup);
-	setupNonDimensionalization(control_value, PFactory);
+	setupNonDimensionalization(PFactory);
 	
 	if (control_var == Parameters::ControlVariable::stress) {
 		target_stress_input = control_value.value; //@@@ Where should we set the target stress???
@@ -120,7 +119,7 @@ void Simulation::simulationMain(const string &filename_import_positions,
 	
 	sys.p = PFactory.getParameterSet();
 	
-	setupFlow(control_value); // Including parameter p setting.
+	setupFlow(); // Including parameter p setting.
 	
 	if (sys.ext_flow) {
 		sys.p.output.origin_zero_flow = false;
@@ -147,7 +146,7 @@ void Simulation::simulationMain(const string &filename_import_positions,
 	}
 	if (simu_name.empty()) {
 		simu_name = prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
-										  simu_identifier, control_value);
+										  simu_identifier);
 	}
 	openOutputFiles();
 	checkDispersionType();
@@ -160,29 +159,23 @@ void Simulation::simulationMain(const string &filename_import_positions,
 		cerr << "line = " << line << endl;
 		if (line.find("run") != string::npos) {
 			string run_time;
-			runRead(control_value, run_time, line);
+			readRun(run_time, line);
 			cerr << "control_value = " << control_value.value << endl;
 			cerr << "run_time = " << run_time << endl;
 			PFactory.setParameterFromKeyValue("time_end", run_time);
 			//system_of_units.setInternalUnit(internal_unit);
-			PFactory.setSystemOfUnits(system_of_units);
-			//			output_unit = control_value.unit;
-			auto forces = system_of_units.getForceScales();
-			if (control_var == Parameters::ControlVariable::rate) {
-				if (!sys.zero_shear) {
-					cerr << "force " << forces.at(Dimensional::Unit::hydro).value << endl;
-					sys.set_shear_rate(forces.at(Dimensional::Unit::hydro).value);
-				}
-			}
-			if (control_var == Parameters::ControlVariable::stress) {
-				sys.target_stress = forces.at(Dimensional::Unit::stress).value;
-			}
-			// setupNonDimensionalization(control_value, PFactory);
+			//Dimensional::Unit internal_unit = control_value.unit;
+			//convertForces(internal_unit, control_value, PFactory);
+			//setupNonDimensionalization(control_value, PFactory);
 			sys.p = PFactory.getParameterSet();
+			
 			runSimulation();
+		} else {
+			PFactory.setFromLine(line);
+			sys.p = PFactory.getParameterSet();
 		}
 	}
-
+	
 	outputComputationTime();
 	cout << indent << "Time evolution done" << endl << endl;
 	
@@ -530,13 +523,14 @@ void Simulation::printProgress()
 void Simulation::simulationSteadyShear(string in_args,
 									   vector<string>& input_files,
 									   bool binary_conf,
-									   Parameters::ControlVariable control_variable,
-									   Dimensional::DimensionalQty<double> control_value,
+									   Parameters::ControlVariable control_variable_,
+									   Dimensional::DimensionalQty<double> control_value_,
 									   string simu_identifier)
 {
 	string indent = "  Simulation::\t";
-	control_var = control_variable;
-	setupSimulation(in_args, input_files, binary_conf, control_value, simu_identifier);
+	control_var = control_variable_;
+	control_value = control_value_;
+	setupSimulation(in_args, input_files, binary_conf, simu_identifier);
 	if (sys.p.flow_type == "extension") {
 		sys.ext_flow = true;
 	} else {

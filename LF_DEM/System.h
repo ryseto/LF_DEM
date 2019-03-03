@@ -527,7 +527,7 @@ private:
 		return Ehat_infinity;
 	}
 
-	void setShearDirection(double theta_shear);
+	void setShearDirection(double theta_shear); // @@@@@ This function should be removed in future
 
 	void setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty);
 

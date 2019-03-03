@@ -38,12 +38,14 @@ private:
 	Parameters::ParameterSet p_initial;
 	std::string header_imported_configulation[2];
 	Parameters::ControlVariable control_var;
+	Dimensional::DimensionalQty<double> control_value;
 	/*
 	 * Resultant data
 	 */
 	Dimensional::Unit output_unit;
 	Dimensional::UnitSystem system_of_units;
 
+	
 	double target_stress_input;
 	double input_rate;
 	double dimensionless_rate;
@@ -79,6 +81,10 @@ private:
 	std::ofstream fout_boxing;
 	gsd_handle gsdOut;
 	int np1;
+	Dimensional::Unit determineUnit(Parameters::ParameterSetFactory &PFact);
+	void convertForces(Dimensional::Unit &internal_unit,
+					   Parameters::ParameterSetFactory &PFact);
+
 	/*
 	 * For inputs
 	 */
@@ -92,9 +98,9 @@ private:
 	/*
 	 * script running
 	 */
+	void setupRun(Parameters::ParameterSetFactory &PFact);
 	void runSimulation();
-	void runRead(Dimensional::DimensionalQty<double> &control_value,
-				 std::string &run_time,
+	void readRun(std::string &run_time,
 				 std::string &line);
 public:
 	System sys;
@@ -105,15 +111,14 @@ public:
 	void simulationSteadyShear(std::string in_args,
 							   std::vector<std::string>& input_files,
 							   bool binary_conf,
-							   Parameters::ControlVariable control_variable,
-							   Dimensional::DimensionalQty<double> control_value,
+							   Parameters::ControlVariable control_variable_,
+							   Dimensional::DimensionalQty<double> control_value_,
 							   std::string simu_identifier);
 	void setupSimulation(std::string in_args,
 						 std::vector<std::string>& input_files,
 						 bool binary_conf,
-						 Dimensional::DimensionalQty<double> control_value,
 						 std::string simu_identifier);
-	void setupFlow(Dimensional::DimensionalQty<double> control_value);
+	void setupFlow();
 	void setConfigToSystem(bool binary_conf, const std::string &filename);
 	TimeKeeper initTimeKeeper();
 	bool keepRunning();
@@ -133,14 +138,12 @@ public:
 	std::string prepareSimulationName(bool binary_conf,
 									  const std::string& filename_import_positions,
 									  const std::string& filename_parameters,
-									  const std::string& simu_identifier,
-									  Dimensional::DimensionalQty<double> control_value);
+									  const std::string& simu_identifier);
 	void echoInputFiles(std::string in_args,
 						std::vector<std::string>& input_files);
 //	void contactForceParameter(std::string filename); // @@@ Do we use this?
 //	void contactForceParameterBrownian(std::string filename); // @@@ Do we use this?
-	void setupNonDimensionalization(Dimensional::DimensionalQty<double> control_value, 
-									Parameters::ParameterSetFactory &PFact);
+	void setupNonDimensionalization(Parameters::ParameterSetFactory &PFact);
 	void stopShearing(TimeKeeper &tk); //simulation mode 22
 	void stressReversal();
 	void stressProgram();

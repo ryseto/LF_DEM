@@ -292,6 +292,18 @@ void ParameterSetFactory::setFromStringStream(std::stringstream& ss_initial_setu
 	std::cout << indent << "setFromStringStream...done" << std::endl;
 }
 
+void ParameterSetFactory::setFromLine(std::string& line)
+{
+	std::string indent = "  ParameterSetFactory::\t";
+	std::cout << indent << "setFromStringStream..." << std::endl;
+	removeBlank(line);
+	std::string keyword, value;
+	Str2KeyValue(line, keyword, value);
+	std::cerr << keyword << ' ' << value << std::endl;
+	setParameterFromKeyValue(keyword, value);
+	std::cout << indent << "setFromStringStream...done" << std::endl;
+}
+
 void ParameterSetFactory::setParameterFromKeyValue(const std::string &keyword, 
 												   const std::string &value)
 {
