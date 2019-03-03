@@ -42,7 +42,7 @@ std::string prepareSimulationNameFromChkp(const std::string& filename_chkp)
 
 int main(int argc, char **argv)
 {
-	if (argc <= 3) {
+	if (false) {
 		mainLammpsLike(argc, argv);
 	} else {
 		mainConventional(argc, argv);
