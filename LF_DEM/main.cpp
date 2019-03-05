@@ -26,8 +26,8 @@ using namespace std;
 volatile sig_atomic_t sig_caught = 0;
 #endif
 
-void mainConventional(int argc, char **argv);
-void mainLammpsLike(int argc, char **argv);
+int mainConventional(int argc, char **argv);
+int mainLammpsLike(int argc, char **argv);
 
 std::string prepareSimulationNameFromChkp(const std::string& filename_chkp)
 {
@@ -43,14 +43,18 @@ std::string prepareSimulationNameFromChkp(const std::string& filename_chkp)
 int main(int argc, char **argv)
 {
 	if (false) {
-		mainLammpsLike(argc, argv);
+		/* @@@ under construction @@@ 
+		 * This is for introducing an experimental interface.
+		 * I'm considering to introduce a programmable parameter file to include simulation protocol.
+		 */
+		return mainLammpsLike(argc, argv);
 	} else {
-		mainConventional(argc, argv);
+		return mainConventional(argc, argv);
 	}
 	return 0;
 }
 
-void mainLammpsLike(int argc, char **argv)
+int mainLammpsLike(int argc, char **argv)
 {
 	bool binary_conf = false;
 	bool force_to_run = false;
@@ -84,10 +88,10 @@ void mainLammpsLike(int argc, char **argv)
 	Simulation simulation(state);
 	simulation.force_to_run = force_to_run;
 	simulation.simulationMain(argv[optind], binary_conf);
-	return;
+	return 0;
 }
 
-void mainConventional(int argc, char **argv)
+int mainConventional(int argc, char **argv)
 {
 	cout << endl << "LF_DEM version " << GIT_VERSION << endl << endl;
 	string usage = "(1) Simulation\n $ LF_DEM [-r Rate] [-s Stress] [-R Rate_Sequence] [-S Stress_Sequence]\
