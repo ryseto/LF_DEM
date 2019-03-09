@@ -109,7 +109,6 @@ void Simulation::convertForces(Dimensional::Unit &internal_unit,
 	auto forces = system_of_units.getForceScales();
 	if (control_var == Parameters::ControlVariable::rate) {
 		if (!sys.zero_shear) {
-			cerr << "* " << forces.at(Dimensional::Unit::hydro).value << endl;
 			sys.set_shear_rate(forces.at(Dimensional::Unit::hydro).value);
 		}
 	}
@@ -287,6 +286,7 @@ void Simulation::setupFlow()
 
 void Simulation::setupRun(Parameters::ParameterSetFactory &PFact)
 {
+	exit(1);
 	sys.p = PFact.getParameterSet();
 	setupFlow(); // Including parameter p setting.
 	
@@ -333,11 +333,12 @@ void Simulation::setupSimulation(string in_args,
 	Parameters::ParameterSetFactory PFactory(guarranted_unit);
 	PFactory.setFromFile(filename_parameters);
 	setupNonDimensionalization(PFactory);
-
 	if (control_var == Parameters::ControlVariable::stress) {
 		target_stress_input = control_value.value; //@@@ Where should we set the target stress???
 		sys.target_stress = target_stress_input/6/M_PI; //@@@
 	}
+	sys.p = PFactory.getParameterSet();
+	setupFlow(); // Including parameter p setting.
 	if (sys.ext_flow) {
 		sys.p.output.origin_zero_flow = false;
 	}
@@ -346,13 +347,21 @@ void Simulation::setupSimulation(string in_args,
 	}
 	setupOptionalSimulation(indent); // @@@ To be removed
 
-	setupRun(PFactory);
+	assertParameterCompatibility();
 
 	setConfigToSystem(binary_conf, filename_import_positions);
+
 	p_initial = sys.p;
 	
 	sys.resetContactModelParameer(); //@@@@ temporary repair
 
+	if (!sys.ext_flow) {
+		// simple shear
+		sys.setVelocityDifference();
+	} else {
+		// extensional flow
+		sys.vel_difference.reset();
+	}
 	if (simu_name.empty()) {
 		simu_name = prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
 										  simu_identifier);

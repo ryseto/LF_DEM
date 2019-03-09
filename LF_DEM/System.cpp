@@ -729,38 +729,24 @@ void System::timeStepBoxing()
 	if (!zero_shear) {
 		double strain_increment = shear_rate*dt;
 		clk.cumulated_strain += strain_increment;
-		const double small_value = 1e-9;
 		if (!ext_flow) {
 			// simple shear flow
 			vec3d shear_strain_increment = 2*dot(E_infinity, {0, 0, 1})*dt;
 			shear_strain += shear_strain_increment;
 			shear_disp += shear_strain_increment*lz;
-			{
-				int mx = 0;
-				if (shear_disp.x >= lx-small_value) {
-					mx = 1;
-				} else if (shear_disp.x <= -(lx-small_value)) {
-					mx = -1;
-				}
-				if (shear_disp.x < 0) {
-					mx --;
-				}
-				shear_disp.x += -mx*lx;
+			int m = (int)(shear_disp.x/lx);
+			if (shear_disp.x < 0) {
+				m--;
 			}
+			shear_disp.x = shear_disp.x-m*lx;
 			if (!twodimension) {
-				int my = 0;
-				if (shear_disp.y >= ly-small_value) {
-					my = 1;
-				} else if (shear_disp.y <= -(ly-small_value)) {
-					my = -1;
-				}
+				m = (int)(shear_disp.y/ly);
 				if (shear_disp.y < 0) {
-					my--;
+					m--;
 				}
-				shear_disp.y += -my*ly;
+				shear_disp.y = shear_disp.y-m*ly;
 			}
 		}
-		
 	} else {
 		if (wall_rheology || p.simulation_mode == 31) {
 			vec3d strain_increment = 2*dot(E_infinity, {0, 0, 1})*dt;
@@ -2080,6 +2066,7 @@ void System::set_shear_rate(double shear_rate_)
 	shear_rate = shear_rate_;
 	omega_inf = omegahat_inf*shear_rate;
 	E_infinity = Ehat_infinity*shear_rate;
+	//@@@ I think use of "vel_difference" is dangerous.
 	if (!ext_flow) {
 		setVelocityDifference();
 	} else {
