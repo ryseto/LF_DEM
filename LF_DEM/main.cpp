@@ -42,57 +42,6 @@ std::string prepareSimulationNameFromChkp(const std::string& filename_chkp)
 
 int main(int argc, char **argv)
 {
-	if (false) {
-		/* @@@ under construction @@@ 
-		 * This is for introducing an experimental interface.
-		 * I'm considering to introduce a programmable parameter file to include simulation protocol.
-		 */
-		return mainLammpsLike(argc, argv);
-	} else {
-		return mainConventional(argc, argv);
-	}
-	return 0;
-}
-
-int mainLammpsLike(int argc, char **argv)
-{
-	bool binary_conf = false;
-	bool force_to_run = false;
-	string chkp_filename = "";
-	const struct option longopts[] = {
-		{"binary",          no_argument, 0, 'n'},
-		{"force-to-run",    no_argument, 0, 'f'},
-		{"checkpoint-file", no_argument, 0, 'c'}
-	};
-	int index;
-	int c;
-	while ((c = getopt_long(argc, argv, "nfc", longopts, &index)) != -1) {
-		switch (c) {
-			case 'n':
-				binary_conf = true;
-				break;
-			case 'c':
-				chkp_filename = optarg;
-				break;
-			case 'f':
-				force_to_run = true;
-				break;
-			default:
-				abort();
-		}
-	}
-	State::BasicCheckpoint state = State::zero_time_basicchkp;
-	if (!chkp_filename.empty()) {
-		state = State::readBasicCheckpoint(chkp_filename);
-	}
-	Simulation simulation(state);
-	simulation.force_to_run = force_to_run;
-	simulation.simulationMain(argv[optind], binary_conf);
-	return 0;
-}
-
-int mainConventional(int argc, char **argv)
-{
 	cout << endl << "LF_DEM version " << GIT_VERSION << endl << endl;
 	string usage = "(1) Simulation\n $ LF_DEM [-r Rate] [-s Stress] [-R Rate_Sequence] [-S Stress_Sequence]\
 	[-e] [-m ?] [-k kn_kt_File] [-v Simulation_Identifier] [-i Provisional_Data] [-n]\
@@ -253,5 +202,5 @@ int mainConventional(int argc, char **argv)
 		}
 	}
 	cerr << " Job done ok" << endl;
-	return;
+	return 0;
 }

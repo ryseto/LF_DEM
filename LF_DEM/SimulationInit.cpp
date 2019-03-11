@@ -284,23 +284,6 @@ void Simulation::setupFlow()
 	}
 }
 
-void Simulation::setupRun(Parameters::ParameterSetFactory &PFact)
-{
-	exit(1);
-	sys.p = PFact.getParameterSet();
-	setupFlow(); // Including parameter p setting.
-	
-	if (!sys.ext_flow) {
-		// simple shear
-		sys.setVelocityDifference();
-	} else {
-		// extensional flow
-		sys.vel_difference.reset();
-	}
-
-	assertParameterCompatibility();
-}
-
 void Simulation::setupSimulation(string in_args,
 								 vector<string>& input_files,
 								 bool binary_conf,

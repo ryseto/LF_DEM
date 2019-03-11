@@ -45,7 +45,6 @@ private:
 	Dimensional::Unit output_unit;
 	Dimensional::UnitSystem system_of_units;
 
-	
 	double target_stress_input;
 	double input_rate;
 	double dimensionless_rate;
@@ -95,19 +94,10 @@ private:
 	void operateJammingStressReversal(std::set<std::string> &output_events);
 	enum class DispersionType { mono, bi, poly };
 	DispersionType dispersion_type;
-	/*
-	 * script running
-	 */
-	void setupRun(Parameters::ParameterSetFactory &PFact);
-	void runSimulation();
-	void readRun(std::string &run_time,
-				 std::string &line);
 public:
 	System sys;
 	/* For DEMsystem*/
 	Simulation(State::BasicCheckpoint chkp = State::zero_time_basicchkp);
-	void simulationMain(const std::string &filename_import_positions,
-						bool binary_conf);
 	void simulationSteadyShear(std::string in_args,
 							   std::vector<std::string>& input_files,
 							   bool binary_conf,
