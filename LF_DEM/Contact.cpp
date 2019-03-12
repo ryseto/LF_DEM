@@ -539,6 +539,16 @@ double Contact::getNormalForceValue() const
 	return dot(interaction->nvec, getTotalForce());
 }
 
+double Contact::getNormalSpringForce() const
+{
+	/* h < 0
+	 * f_spring_normal_norm > 0 ..... repulsive force
+	 * h > 0
+	 * f_spring_normal_norm < 0 ..... attractive force
+	 */
+	return f_spring_normal_norm;
+}
+
 double Contact::get_normal_load() const
 {
 	return normal_load;

@@ -173,6 +173,7 @@ void System::calcContactXFPerParticleStressControlled()
 		if (inter.contact.is_active()) {
 			inter.contact.addUpStressSpring(rateindep_XF[i], rateindep_XF[j]); // - rF_cont
 		}
+
 		if (inter.contact.dashpot.is_active()) {
 			// rate_prop_vel is a full velocity (not non affine)
 			Sym2Tensor rateprop_stress = outer_sym(inter.rvec,
@@ -183,7 +184,7 @@ void System::calcContactXFPerParticleStressControlled()
 			double r_ij = radius[i]+radius[j];
 			rateprop_XF[i] += (radius[i]/r_ij)*rateprop_stress;
 			rateprop_XF[j] += (radius[j]/r_ij)*rateprop_stress;
-	
+			
 			Sym2Tensor rateindep_stress = outer_sym(inter.rvec,
 													inter.contact.dashpot.getForceOnP0_nonaffine(rateindep_vel[i],
 																								 rateindep_vel[j],
@@ -192,6 +193,7 @@ void System::calcContactXFPerParticleStressControlled()
 			rateindep_XF[i] += (radius[i]/r_ij)*rateindep_stress;
 			rateindep_XF[j] += (radius[j]/r_ij)*rateindep_stress;
 		}
+		
 	}
 }
 

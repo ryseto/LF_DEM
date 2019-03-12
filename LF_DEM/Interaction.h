@@ -113,7 +113,7 @@ public:
 
 	//======= particles data  ====================//
 	int partner(unsigned int i) const {return (i == p0 ? p1 : p0);}
-	std::pair<unsigned int, unsigned int>	get_par_num() const {return std::make_pair(p0, p1);}
+	std::pair<unsigned int, unsigned int> get_par_num() const {return std::make_pair(p0, p1);}
 	double get_reduced_gap() const {return reduced_gap;}
 	double get_gap() const {return r-ro;}
 	unsigned int get_p0() const {return p0;}

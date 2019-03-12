@@ -2133,7 +2133,7 @@ void System::computeShearRate()
 	Sym2Tensor rate_indep_stress;
 	gatherStressesByRateDependencies(rate_prop_stress, rate_indep_stress);
 	/*
-	 *  target_stress = rate_indep_stress_ + rate * rate_prop_stress_at_1
+	 *  target_stress = rate_indep_stress + rate * rate_prop_stress_at_1
 	 *  rate = (target_stress - rate_indep_stress)/rate_prop_stress_at_1
 	 *
 	 *  kappa = (Sigma.E)/(E.E)
@@ -2154,6 +2154,9 @@ void System::computeShearRate()
 	if (rate_prop_shearstress_rate1 != 0) {
 		double rate = (target_stress-rate_indep_shearstress)/rate_prop_shearstress_rate1;
 		set_shear_rate(rate);
+	} else {
+		cerr << "rate_prop_shearstress_rate1 = 0 ???" << endl;
+		exit (1);
 	}
 	if (clk.cumulated_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {

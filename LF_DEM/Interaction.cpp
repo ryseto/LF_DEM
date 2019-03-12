@@ -275,7 +275,7 @@ void Interaction::updateState(bool& deactivated)
 
 void Interaction::updateContactState()
 {
-	contact_state_changed_after_predictor = false;
+a	contact_state_changed_after_predictor = false;
 	if (contact.is_active()) {
 		// contacting in previous step
 		bool breakup_contact_bond = false;
@@ -289,7 +289,7 @@ void Interaction::updateContactState()
 			 * Checking cohesive bond breaking.
 			 * breakup based on force
 			 */
-			if (contact.get_normal_load() < 0) {
+			if (-contact.getNormalSpringForce() > sys->p.adhesion) {
 				breakup_contact_bond = true;
 			}
 		}
