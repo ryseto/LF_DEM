@@ -87,13 +87,14 @@ private:
 	/*
 	 * For inputs
 	 */
-	void setupOptionalSimulation(std::string indent);
+	void setupOptionalSimulation();
 	std::vector<Sym2Tensor> getParticleStressGroup(std::string group);
 	void checkDispersionType();
 	/*********** shear jamming  ************/
 	void operateJammingStressReversal(std::set<std::string> &output_events);
 	enum class DispersionType { mono, bi, poly };
 	DispersionType dispersion_type;
+	std::string indent;
 public:
 	System sys;
 	/* For DEMsystem*/

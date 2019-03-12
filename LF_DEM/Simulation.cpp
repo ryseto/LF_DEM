@@ -196,7 +196,7 @@ void Simulation::generateOutput(const set<string> &output_events, int& binconf_c
 	}
 }
 
-void Simulation::setupOptionalSimulation(string indent)
+void Simulation::setupOptionalSimulation()
 {
 	cout << indent << "simulation_mode = " << sys.p.simulation_mode << endl;
 	switch (sys.p.simulation_mode) {
@@ -323,15 +323,10 @@ void Simulation::simulationSteadyShear(string in_args,
 									   Dimensional::DimensionalQty<double> control_value_,
 									   string simu_identifier)
 {
-	string indent = "  Simulation::\t";
+	indent = "  Simulation::\t";
 	control_var = control_variable_;
 	control_value = control_value_;
-	setupSimulation(in_args, input_files, binary_conf, simu_identifier);
-	if (sys.p.flow_type == "extension") {
-		sys.ext_flow = true;
-	} else {
-		sys.ext_flow = false;
-	}
+	setupSimulation(in_args, input_files, binary_conf, simu_identifier);	
 	time_t now;
 	time_strain_1 = 0;
 	now = time(NULL);

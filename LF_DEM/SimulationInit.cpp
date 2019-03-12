@@ -40,9 +40,24 @@ void Simulation::echoInputFiles(string in_args,
 	fout_input.close();
 }
 
+void Simulation::setupNonDimensionalization(Parameters::ParameterSetFactory &PFact)
+{
+	/**
+	 \brief Non-dimensionalize the simulation.
+	 
+	 This function
+	 (1) determines the most appropriate unit scales to use in the System class depending on the input parameters (Brownian/non-Brownian, shear rate, stress/rate controlled)
+	 and
+	 (2) converts all the input values in these units.
+	 */
+	indent = "  Simulation::\t";
+	Dimensional::Unit internal_unit = Dimensional::Unit::hydro;
+	internal_unit = determineUnit(PFact);
+	convertForces(internal_unit, PFact);
+}
+
 Dimensional::Unit Simulation::determineUnit(Parameters::ParameterSetFactory &PFact)
 {
-	string indent = "  Simulation::\t";
 	// feed in the force scales to the UnitSystem solver
 	for (auto &fs: PFact.getForceScales()) {
 		system_of_units.add(fs.type, fs.dim_qty);
@@ -100,11 +115,12 @@ void Simulation::convertForces(Dimensional::Unit &internal_unit,
 	// set the internal unit to actually determine force and parameter non-dimensionalized values
 	system_of_units.setInternalUnit(internal_unit);
 	PFact.setSystemOfUnits(system_of_units);
-	//	cout << indent << "internal units = " << Dimensional::unit2suffix(internal_unit) << endl;
-	
+	cout << indent << "internal units = " << Dimensional::unit2suffix(internal_unit) << endl;
+
 	// set the output unit
 	output_unit = control_value.unit;
-	//cout << indent << "output units = " << Dimensional::unit2suffix(output_unit) << endl;
+	cout << indent << "output units = " << Dimensional::unit2suffix(output_unit) << endl;
+
 	// when there is a hydro force, its value is the non-dimensionalized shear rate.
 	auto forces = system_of_units.getForceScales();
 	if (control_var == Parameters::ControlVariable::rate) {
@@ -115,22 +131,6 @@ void Simulation::convertForces(Dimensional::Unit &internal_unit,
 	if (control_var == Parameters::ControlVariable::stress) {
 		sys.target_stress = forces.at(Dimensional::Unit::stress).value;
 	}
-}
-
-void Simulation::setupNonDimensionalization(Parameters::ParameterSetFactory &PFact)
-{
-	/**
-	 \brief Non-dimensionalize the simulation.
-	 
-	 This function
-	 (1) determines the most appropriate unit scales to use in the System class depending on the input parameters (Brownian/non-Brownian, shear rate, stress/rate controlled)
-	 and
-	 (2) converts all the input values in these units.
-	 */
-	string indent = "  Simulation::\t";
-	Dimensional::Unit internal_unit = Dimensional::Unit::hydro;
-	internal_unit = determineUnit(PFact);
-	convertForces(internal_unit, PFact);
 }
 
 void Simulation::assertParameterCompatibility()
@@ -228,6 +228,11 @@ void Simulation::setupFlow()
 	/* dot_gamma = 1 --> dot_epsilon = 0;
 	 *
 	 */
+	if (sys.p.flow_type == "extension") {
+		sys.ext_flow = true;
+	} else {
+		sys.ext_flow = false;
+	}
 	if (control_value.value != 0) {
 		double dimensionless_deformation_rate = 0.5;
 		if (!sys.ext_flow) {
@@ -294,7 +299,6 @@ void Simulation::setupSimulation(string in_args,
 
 		This function is intended to be generically used to set up the simulation. It processes the input parameters, non-dimensionalizes the system and starts up a System class with the relevant parameters.
 	 */
-	string indent = "  Simulation::\t";
 	cout << indent << "Simulation setup starting... " << endl;
 	string filename_import_positions = input_files[0];
 	string filename_parameters = input_files[1];
@@ -328,7 +332,7 @@ void Simulation::setupSimulation(string in_args,
 	if (sys.p.output.relative_position_view) {
 		sys.p.output.origin_zero_flow = false;
 	}
-	setupOptionalSimulation(indent); // @@@ To be removed
+	setupOptionalSimulation(); // @@@ To be removed
 
 	assertParameterCompatibility();
 
@@ -340,9 +344,11 @@ void Simulation::setupSimulation(string in_args,
 
 	if (!sys.ext_flow) {
 		// simple shear
+		cerr << "simple shear " << endl;
 		sys.setVelocityDifference();
 	} else {
 		// extensional flow
+		cerr << "extensional flow " << endl;
 		sys.vel_difference.reset();
 	}
 	if (simu_name.empty()) {
@@ -350,12 +356,6 @@ void Simulation::setupSimulation(string in_args,
 										  simu_identifier);
 	}
 	openOutputFiles();
-
-	//	if (p.output.recording_interaction_history) {
-	//		string ihist_filename = "ihist_"+simu_name+".dat";
-	//		sys.openHisotryFile(ihist_filename);
-	//	}
-	
 	echoInputFiles(in_args, input_files);
 	checkDispersionType();
 	cout << indent << "Simulation setup [ok]" << endl;
