@@ -183,7 +183,7 @@ void Interaction::activateForceMembers()
 	
 	if (sys->lubrication) {
 		lubrication.setParticleData();
-		lubrication.updateActivationState();
+		lubrication.updateActivationState(contact.is_active());
 		if (lubrication.is_active()) {
 			lubrication.updateResistanceCoeff();
 		}
@@ -260,7 +260,7 @@ void Interaction::updateState(bool& deactivated)
 	updateContactState();
 	contact.calcContactSpringForce();
 	if (sys->lubrication) {
-		lubrication.updateActivationState();
+		lubrication.updateActivationState(contact.is_active());
 		if (lubrication.is_active()) {
 			lubrication.updateResistanceCoeff();
 		}
@@ -275,7 +275,7 @@ void Interaction::updateState(bool& deactivated)
 
 void Interaction::updateContactState()
 {
-a	contact_state_changed_after_predictor = false;
+	contact_state_changed_after_predictor = false;
 	if (contact.is_active()) {
 		// contacting in previous step
 		bool breakup_contact_bond = false;

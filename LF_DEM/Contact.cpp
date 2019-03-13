@@ -88,7 +88,6 @@ void Contact::activate()
 	active = true;
 	f_spring_normal_norm = 0;
 	f_spring_normal.reset();
-	normal_load = 0;
 	f_spring_total.reset();
 	if (sys->friction) {
 		if (sys->p.friction_model == 2 || sys->p.friction_model == 3) {

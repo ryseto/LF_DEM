@@ -112,7 +112,7 @@ private:
 	inline bool is_active() const {return _active;};
 	void activate();
 	void deactivate();
-	void updateActivationState();
+	void updateActivationState(const bool contact_active);
 	void setParticleData();
 	void calcLubConstants();
 	//===== forces/stresses  ========================== //

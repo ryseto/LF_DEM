@@ -134,9 +134,9 @@ void Lubrication::deactivate()
 	sys->eraseResistance(p0, p1);
 }
 
-void Lubrication::updateActivationState()
+void Lubrication::updateActivationState(const bool contact_active)
 {
-	bool in_range = interaction->separation_distance() < range && interaction->separation_distance() > ro;
+	bool in_range = interaction->separation_distance() < range && !contact_active;
 	if (!is_active() && in_range) {
 		activate();
 	}
