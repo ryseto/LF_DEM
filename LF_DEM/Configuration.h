@@ -54,7 +54,10 @@ struct fixed_velo_configuration {
 	double lx, ly, lz;
 	double volume_or_area_fraction;
 	vec3d lees_edwards_disp;
-
+	int np_wall1;
+	int np_wall2;
+	double z_bot;
+	double z_top;
 	std::vector <vec3d> position;
 	std::vector <double> radius;
 	std::vector <double> angle;

@@ -556,7 +556,12 @@ void System::setupConfiguration(struct base_shear_configuration conf, Parameters
 
 void System::setupConfiguration(struct fixed_velo_configuration conf, Parameters::ControlVariable control_)
 {
-	p.np_fixed = conf.fixed_velocities.size();
+	np_wall1 = conf.np_wall1;
+	np_wall2 = conf.np_wall2;
+	//p.np_fixed = conf.fixed_velocities.size();
+	p.np_fixed = np_wall1+np_wall2;
+	z_bot = conf.z_bot;
+	z_top = conf.z_top;
 	setupGenericConfiguration(conf, control_);
 	setFixedVelocities(conf.fixed_velocities);
 }
@@ -789,24 +794,25 @@ void System::eventShearJamming()
 void System::forceResultantInterpaticleForces()
 {
 	auto &contact_force = force_components["contact"].force;
-	for (int i=0; i<np; i++) {
+	int np_tmp = np_mobile;
+	for (int i=0; i<np_tmp; i++) {
 		forceResultant[i] += contact_force[i];
 	}
 	if (friction) {
 		auto &contact_torque = force_components["contact"].torque;
-		for (int i=0; i<np; i++) {
+		for (int i=0; i<np_tmp; i++) {
 			torqueResultant[i] += contact_torque[i];
 		}
 	}
 	if (repulsiveforce) {
 		auto &repulsive_force = force_components["repulsion"].force;
-		for (int i=0; i<np; i++) {
+		for (int i=0; i<np_tmp; i++) {
 			forceResultant[i] += repulsive_force[i];
 		}
 	}
 	if (delayed_adhesion) {
 		auto &adhesion_force = force_components["repulsion"].force;
-		for (int i=0; i<np; i++) {
+		for (int i=0; i<np_tmp; i++) {
 			forceResultant[i] += adhesion_force[i];
 		}
 	}
@@ -862,8 +868,8 @@ void System::wallForces()
 			force_tang_wall1 = 0;
 			force_normal_wall1 = 0;
 			for (int i=np_mobile; i<i_np_1; i++) { // bottom
-					force_tang_wall1   += forceResultant[i].x;
-					force_normal_wall1 += forceResultant[i].z;
+				force_tang_wall1   += forceResultant[i].x;
+				force_normal_wall1 += forceResultant[i].z;
 			}
 			// top wall
 			force_tang_wall2 = 0;
@@ -962,7 +968,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	} else {
 		computeVelocities(calc_stress);
 	}
-	if (wall_rheology && calc_stress) {
+	if (wall_rheology) {
 		forceResultantReset();
 		forceResultantInterpaticleForces();
 	}
@@ -1383,6 +1389,9 @@ void System::timeEvolution(double time_end, double strain_end)
 void System::createNewInteraction(int i, int j, double scaled_interaction_range)
 {
 	// new interaction
+	if (i >= np_mobile && j >= np_mobile) {
+		return;
+	}
 	Interaction inter(this, i, j, scaled_interaction_range);
 	interaction.push_back(inter); // could emplace_back if Interaction gets a move ctor
 	// tell i and j their new partner
@@ -2175,7 +2184,7 @@ void System::computeShearRateWalls()
 
 	double total_rate_dep_wall_shear_stress = 0;
 	double total_rate_indep_wall_shear_stress = 0;
-
+	cerr << "np_fixed =" << p.np_fixed << endl;
 	for (int i=0; i<p.np_fixed; i++) {
 		total_rate_dep_wall_shear_stress += dot(fixed_velocities[i], rate_proportional_wall_force[i]);
 		total_rate_indep_wall_shear_stress += dot(fixed_velocities[i], non_rate_proportional_wall_force[i]);

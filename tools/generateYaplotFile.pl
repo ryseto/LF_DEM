@@ -277,7 +277,7 @@ sub yaplotColor {
 	printf OUT "\@7 255 255 0 \n"; # yellow
 	#printf OUT "\@7 255 0 0 \n"; # red
 	#printf OUT "\@8 255 255 255\n";
-	printf OUT "\@8 0 0 0\n";
+	printf OUT "\@8 200 200 200\n"; # particle color
 	printf OUT "\@9 50 50 50\n";
 	#printf OUT "\@8 224 143 0 \n";
 	#printf OUT "\@9 67 163 230 \n";
@@ -539,7 +539,7 @@ sub OutYaplotData{
 	} else {
 		for ($i = 0; $i < $np; $i++) {
 			$rr = $yap_radius*$radius[$i];
-			if (1) {
+			if (0) {
 				#if ($mark[$i] == 1) {
 				if ($contactnumber[$i] >= 2) {
 					printf OUT "@ 8 \n";
@@ -625,7 +625,7 @@ sub OutYaplotData{
 				#if ($contactnumber[$i] >= 2 && $contactnumber[$j] >= 2) {
 					#$force = $F_lub[$k] + $Fc_n[$k];
 					$force = sqrt($Fc_n[$k]**2 + $Fc_t[$k]**2);
-					&OutString_width($int0[$k], $int1[$k], $force_factor*abs($force), -0.01);
+					&OutString_width($int0[$k], $int1[$k], $force_factor*abs($force), 0.01);
 			#	}
 				#&OutString_width($int0[$k], $int1[$k], $force_factor*abs($force)/$target_stress, 0.01);
 			#}
@@ -636,7 +636,7 @@ sub OutYaplotData{
 		for ($k = 0; $k < $num_interaction; $k ++) {
 			$force = $F_lub[$k] + $Fc_n[$k];
 			if ($force < 0) {
-				&OutString_width($int0[$k], $int1[$k], $force_factor*abs($force), 0.05);
+				&OutString_width($int0[$k], $int1[$k], $force_factor*abs($force), 0.02);
 			}
 		}
 	}
@@ -706,7 +706,7 @@ sub OutYaplotData{
 	}
 	## visualize rotation in 2D
 	if ($Ly == 0) {
-		if (1) {
+		if (0) {
 			printf OUT "y 6\n";
 			printf OUT "@ 8\n";
 			for ($i = 0; $i < $np; $i++) {

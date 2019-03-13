@@ -251,24 +251,21 @@ void Simulation::setupOptionalSimulation()
 			cout << indent << "Test simulation (wtest1), simple shear with walls" << endl;
 			sys.zero_shear = true;
 			sys.mobile_fixed = true;
+			sys.p.output.origin_zero_flow = false;
 			break;
 		case 41:
 			cout << indent << "Test simulation (wtestA), simple shear with walls" << endl;
 			sys.wall_rheology = true;
 			sys.zero_shear = true;
 			sys.mobile_fixed = true;
+			sys.p.output.origin_zero_flow = false;
 			break;
 		case 42:
 			cout << indent << "Test simulation (wtestB), simple shear with walls" << endl;
 			sys.wall_rheology = true;
 			sys.zero_shear = true;
 			sys.mobile_fixed = true;
-			break;
-		case 51:
-			cout << indent << "Test simulation (wtestB), simple shear with walls" << endl;
-			sys.wall_rheology = true;
-			sys.zero_shear = true;
-			sys.mobile_fixed = true;
+			sys.p.output.origin_zero_flow = false;
 			break;
 		default:
 			break;
@@ -1271,6 +1268,7 @@ void Simulation::outputGSD()
 				snprintf(types, max_size, "colloid1");
 				snprintf(types+max_size, max_size, "colloid2");
 			} else {
+				cerr << "not mono or bi ..." << endl;
 				exit(1);
 			}
 			gsd_write_chunk(&gsdOut, "particles/types", GSD_TYPE_INT8, n_types, max_size, 0, types);

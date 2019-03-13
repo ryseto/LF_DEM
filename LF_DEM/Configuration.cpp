@@ -119,6 +119,8 @@ ConfFileFormat getTxtConfigurationFileFormat(const std::string& filename_import_
 		return static_cast<ConfFileFormat>(atoi(meta_data["format"].c_str()));
 	} else if (meta_data.find("radius_in") != meta_data.end()) {
 		return ConfFileFormat::txt_format_circular_couette;
+	} else if (meta_data.find("z_bot") != meta_data.end()) {
+		return ConfFileFormat::txt_format_fixed_vel;
 	} else {
 		return ConfFileFormat::txt_format_base_old;
 	}
@@ -467,6 +469,36 @@ struct base_shear_configuration readTxtBaseConfiguration(const std::string& file
 	return c;
 }
 
+void setMetadataFixedVelo(std::istream &file_import, struct fixed_velo_configuration &conf)
+{
+	std::string header_imported_configulation[2];
+	getline(file_import, header_imported_configulation[0]);
+	getline(file_import, header_imported_configulation[1]);
+	
+	auto meta_data = getConfMetaData(header_imported_configulation[0], header_imported_configulation[1]);
+	std::string key, def;
+	key = "lx";
+	conf.lx = atof(getMetaParameter(meta_data, key).c_str());
+	key = "ly";
+	conf.ly = atof(getMetaParameter(meta_data, key).c_str());
+	key = "lz";
+	conf.lz = atof(getMetaParameter(meta_data, key).c_str());
+	key = "vf";
+	conf.volume_or_area_fraction = atof(getMetaParameter(meta_data, key).c_str());
+	key = "np_wall1";
+	def = "-1";
+	conf.np_wall1 = atof(getMetaParameter(meta_data, key, def).c_str());
+	key = "np_wall2";
+	def = "-1";
+	conf.np_wall2 = atof(getMetaParameter(meta_data, key, def).c_str());
+	key = "z_bot";
+	key = "0";
+	conf.z_bot = atof(getMetaParameter(meta_data, key, def).c_str());
+	key = "z_top";
+	key = "0";
+	conf.z_top = atof(getMetaParameter(meta_data, key, def).c_str());
+}
+
 struct fixed_velo_configuration readTxtFixedVeloConfiguration(const std::string& filename)
 {
 	/**
@@ -486,7 +518,7 @@ struct fixed_velo_configuration readTxtFixedVeloConfiguration(const std::string&
 	std::ifstream input(filename.c_str(), std::ios::in);
 
 	struct fixed_velo_configuration c;
-	setMetadataBase(input, c);
+	setMetadataFixedVelo(input, c);
 
 	double x_, y_, z_, a_, vx_, vy_, vz_;
 	std::string line;
@@ -498,10 +530,12 @@ struct fixed_velo_configuration readTxtFixedVeloConfiguration(const std::string&
 			is >> x_ >> y_ >> z_ >> a_;
 			c.position.push_back(vec3d(x_, y_, z_));
 			c.radius.push_back(a_);
+			std::cerr << x_ << ' ' << y_ << ' ' << z_ << std::endl;
 		} else {
 			c.position.push_back(vec3d(x_, y_, z_));
 			c.radius.push_back(a_);
 			c.fixed_velocities.push_back(vec3d(vx_, vy_, vz_));
+			std::cerr << vx_ << ' ' <<  vy_ << ' ' <<  vz_ << std::endl;
 		}
 	}
 	if (c.ly == 0) { //2d

@@ -493,7 +493,7 @@ void Simulation::checkDispersionType()
 	} else if (cnt_type == 1) {
 		dispersion_type = DispersionType::bi;
 	} else {
-		dispersion_type = DispersionType::poly;
+		dispersion_type = DispersionType::bi;
 	}
 }
 

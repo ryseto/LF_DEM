@@ -137,18 +137,7 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 			break;
 		}
 	}
-	
-	for (int i=0; i<np_movable; i++) {
-		if (i < np1) {
-			sys.radius[i] = a1;
-		} else {
-			sys.radius[i] = a2;
-		}
-	}
-	for (int i=np_movable; i<np; i++) {
-		sys.radius[i] = radius_wall_particle;
-	}
-	
+
 	outputPositionData(sys);
 	return 0;
 }
@@ -295,13 +284,21 @@ std::pair<std::vector<vec3d>, std::vector<double>> GenerateInitConfig::putRandom
 			double t = i*(2*M_PI/np_wall1);
 			vec3d pos = r_center+(cg_radius_in-radius_wall_particle)*vec3d(cos(t), 0, sin(t));
 			position[i+np_movable] = pos;
-			radius[i+np_movable] = radius_wall_particle;
+			if (i%2 == 0) {
+				radius[i+np_movable] = radius_wall_particle;
+			} else {
+				radius[i+np_movable] = 1.4*radius_wall_particle;
+			}
 		}
 		for (i=0; i<np_wall2; i++){
 			double t = i*(2*M_PI/np_wall2);
 			vec3d pos = r_center + (cg_radius_out+radius_wall_particle)*vec3d(cos(t), 0, sin(t));
 			position[i+np_movable+np_wall1] = pos;
-			radius[i+np_movable+np_wall1] = radius_wall_particle;
+			if (i%2 == 0) {
+				radius[i+np_movable+np_wall1] = radius_wall_particle;
+			} else {
+				radius[i+np_movable+np_wall1] = 1.4*radius_wall_particle;
+			}
 		}
 		cerr << np_wall1 << ' ' << np_wall2 << endl;
 	} else if (parallel_wall_config) {
@@ -325,12 +322,20 @@ std::pair<std::vector<vec3d>, std::vector<double>> GenerateInitConfig::putRandom
 		for (i=0; i<np_wall1; i++){
 			vec3d pos(1+delta_x*i, 0, z_bot-radius_wall_particle);
 			position[i+np_movable] = pos;
-			radius[i+np_movable] = radius_wall_particle;
+			if (i%2 == 0) {
+				radius[i+np_movable] = radius_wall_particle;
+			} else {
+				radius[i+np_movable] = 1.4*radius_wall_particle;
+			}
 		}
 		for (i=0; i<np_wall2; i++){
 			vec3d pos(1+delta_x*i, 0, z_top+radius_wall_particle);
 			position[i+np_movable+np_wall1] = pos;
-			radius[i+np_movable+np_wall1] = radius_wall_particle;
+			if (i%2 == 0) {
+				radius[i+np_movable+np_wall1] = radius_wall_particle;
+			} else {
+				radius[i+np_movable+np_wall1] = 1.4*radius_wall_particle;
+			}
 		}
 		cerr << np_wall1 << ' ' << np_wall2 << endl;
 	} else if (winding_wall_config) {

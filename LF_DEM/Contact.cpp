@@ -435,7 +435,7 @@ void Contact::frictionlaw_coulomb_max()
 		// dynamic friction in previous step
 		supportable_tanforce = mu_dynamic*normal_load;
 	} else {
-	  std::cerr << "contact state" << state << std::endl;
+		std::cerr << "contact state" << state << std::endl;
 		exit(1);
 	}
 	if (supportable_tanforce > ft_max) {
