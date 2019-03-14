@@ -130,10 +130,10 @@ void Contact::deactivate()
 vec3d Contact::getSlidingVelocity() const
 {
 	vec3d vel_offset;
-	if (!sys->ext_flow) {
+	if (sys->simple_shear == sys->SimulationType::simple_shear) {
 		// simple shear
 		vel_offset = interaction->z_offset*sys->get_vel_difference();
-	} else {
+	} else if (sys->simple_shear == sys->SimulationType::extensional_flow) {
 		// extensional flow
 		vel_offset = sys->get_vel_difference_extension(interaction->pd_shift);
 	}

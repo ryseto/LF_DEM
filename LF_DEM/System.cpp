@@ -530,7 +530,7 @@ void System::setupGenericConfiguration(T conf, Parameters::ControlVariable contr
 	}
 
 	setConfiguration(conf.position, conf.radius, conf.angle);
-	if (ext_flow) {
+	if (simu_type == extensional_flow) {
 		// extensional flow
 		// @@@ Some variables need to be set before initializeBoxing() @@@
 		// @@@ This part is very messy. Needs to be rewritten careffuly.
@@ -685,8 +685,7 @@ void System::initializeBoxing()
 			}
 		}
 	}
-	if (!ext_flow) {
-		// simple shear
+	if (simu_type != extensional_flow) {
 		boxset.init(max_range, this);
 		for (int i=0; i<np; i++) {
 			boxset.box(i);
@@ -734,8 +733,7 @@ void System::timeStepBoxing()
 	if (!zero_shear) {
 		double strain_increment = shear_rate*dt;
 		clk.cumulated_strain += strain_increment;
-		if (!ext_flow) {
-			// simple shear flow
+		if (simu_type == simple_shear) {
 			vec3d shear_strain_increment = 2*dot(E_infinity, {0, 0, 1})*dt;
 			shear_strain += shear_strain_increment;
 			shear_disp += shear_strain_increment*lz;
@@ -760,15 +758,10 @@ void System::timeStepBoxing()
 			angle_wheel += dt*(omega_wheel_in-omega_wheel_out);
 		}
 	}
-	if (ext_flow) {
-		updateH(); // update cell axes
-	}
-
-	if (!ext_flow) {
-		/**** simple shear flow ****/
+	if (simu_type != extensional_flow) {
 		boxset.update();
 	} else {
-		/**** extensional flow ****/
+		updateH(); // update cell axes
 		boxset.updateExtFlow();
 	}
 }
@@ -1349,7 +1342,7 @@ void System::timeEvolution(double time_end, double strain_end)
 		if (!brownian && !p.fixed_dt) { // adaptative time-step for non-Brownian cases
 			adaptTimeStep(time_end, strain_end);
 		}
-		if (ext_flow) {
+		if (simu_type == extensional_flow) {
 			if (clk.cumulated_strain+shear_rate*dt > strain_retrim) {
 				cerr << "strain_retrim = " << strain_retrim << endl;
 				dt_bak = dt;
@@ -1445,7 +1438,7 @@ void System::checkNewInteraction()
 	 */
 	vec3d pos_diff;
 	double sq_dist;
-	if (!ext_flow) {
+	if (simu_type != extensional_flow) {
 		for (int i=0; i<np-1; i++) {
 			for (auto j : boxset.neighborhood(i)) {
 				if (j > i) {
@@ -2076,9 +2069,9 @@ void System::set_shear_rate(double shear_rate_)
 	omega_inf = omegahat_inf*shear_rate;
 	E_infinity = Ehat_infinity*shear_rate;
 	//@@@ I think use of "vel_difference" is dangerous.
-	if (!ext_flow) {
+	if (simu_type == simple_shear) {
 		setVelocityDifference();
-	} else {
+	} else if (simu_type == extensional_flow) {
 		grad_u = shear_rate*grad_u_hat;
 	}
 }
@@ -2107,7 +2100,7 @@ void System::setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty)
 
 void System::setShearDirection(double theta_shear) // will probably be deprecated soon
 {
-	if (!ext_flow) {
+	if (simu_type == simple_shear) {
 		p.theta_shear = theta_shear;
 		double costheta_shear = cos(theta_shear);
 		double sintheta_shear = sin(theta_shear);
@@ -2477,14 +2470,12 @@ void System::adjustVelocityPeriodicBoundary()
 		ang_velocity[i] = na_ang_velocity[i];
 	}
 	if (!zero_shear) {
-		if (!ext_flow) {
-			/**** simple shear flow ****/
+		if (simu_type == simple_shear) {
 			for (int i=0; i<np; i++) {
 				velocity[i] += u_inf[i];
 				ang_velocity[i] += omega_inf;
 			}
-		} else {
-			/**** extensional flow ****/
+		} else if (simu_type == extensional_flow) {
 			for (int i=0; i<np; i++) {
 				velocity[i] += u_inf[i];
 			}
@@ -2524,13 +2515,13 @@ void System::displacement(int i, const vec3d& dr)
 	 * we need to modify the velocity, which was already evaluated.
 	 * The position and velocity will be used to calculate the contact forces.
 	 */
-	if (!ext_flow) {
+	if (simu_type == simple_shear) {
 		/**** simple shear flow ****/
 		int z_shift = periodize(position[i]);
 		if (z_shift != 0) {
 			velocity[i] += z_shift*vel_difference;
 		}
-	} else {
+	} else if (simu_type == extensional_flow) {
 		/**** extensional flow ****/
 		bool pd_transport = false;
 		periodizeExtFlow(i, pd_transport);

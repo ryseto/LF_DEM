@@ -285,7 +285,7 @@ sub yaplotColor {
 	#printf OUT "\@9 109 109 109 \n";
 	printf OUT "\@10 224 240 253 \n";
 	printf OUT "\@11 250 50 50 \n";
-	printf OUT "\@12 0 0 255 \n";
+	printf OUT "\@12 0 0 0 \n";
 	printf OUT "\@13 220 220 220 \n";
 	printf OUT "\@14 210 210 210 \n";
 	printf OUT "\@15 200 200 200 \n";
@@ -531,7 +531,6 @@ sub OutYaplotData{
 	printf OUT "@ 8\n";
 	## visualize particles
 	if ($monodisperse) {
-		
 		printf OUT "r $radius[0]\n";
 		for ($i = 0; $i < $np; $i++) {
 			printf OUT "c $posx[$i] $posy[$i] $posz[$i]  \n";
@@ -546,6 +545,9 @@ sub OutYaplotData{
 				} else {
 					printf OUT "@ 1 \n";
 				}
+			}
+			if ($radius[$i] < 0.8) {
+				printf OUT "@ 12 \n";
 			}
 			printf OUT "r $rr\n";
 			printf OUT "c $posx[$i] $posy[$i] $posz[$i]  \n";

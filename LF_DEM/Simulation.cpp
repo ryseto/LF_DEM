@@ -19,6 +19,7 @@
 using namespace std;
 
 Simulation::Simulation(State::BasicCheckpoint chkp):
+shear_rheology(true),
 target_stress_input(0),
 restart_from_chkp(false),
 jamming_strain(0),
@@ -321,9 +322,10 @@ void Simulation::simulationSteadyShear(string in_args,
 									   string simu_identifier)
 {
 	indent = "  Simulation::\t";
+	shear_rheology = true;
 	control_var = control_variable_;
 	control_value = control_value_;
-	setupSimulation(in_args, input_files, binary_conf, simu_identifier);	
+	setupSimulation(in_args, input_files, binary_conf, simu_identifier);
 	time_t now;
 	time_strain_1 = 0;
 	now = time(NULL);
@@ -382,6 +384,64 @@ void Simulation::simulationSteadyShear(string in_args,
 	cout << indent << "Time evolution done" << endl << endl;
 }
 
+void Simulation::simulationPipeFlow(std::string in_args,
+									std::vector<std::string>& input_files,
+									bool binary_conf,
+									Parameters::ControlVariable control_variable_,
+									Dimensional::DimensionalQty<double> control_value_,
+									std::string simu_identifier)
+{
+	indent = "  Simulation::\t";
+	shear_rheology = false;
+	control_var = control_variable_;
+	control_value = control_value_;
+	setupSimulation(in_args, input_files, binary_conf, simu_identifier);
+	time_t now;
+	time_strain_1 = 0; //@@@
+	now = time(NULL);
+	time_strain_0 = now; //@@@
+	cout << indent << "Time evolution started" << endl << endl;
+	TimeKeeper tk = initTimeKeeper();
+	if (restart_from_chkp) {
+		std::set<std::string> elapsed;
+		do {
+			elapsed = tk.getElapsedClocks(sys.get_time(), sys.get_cumulated_strain());
+		}
+		while (!elapsed.empty()); // flush tk to not output on first time step
+	}
+	int binconf_counter = 0;
+	while (keepRunning()) {
+		timeEvolutionUntilNextOutput(tk);
+		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_cumulated_strain());
+		if (sys.retrim_ext_flow) {
+			output_events.insert("data");
+			output_events.insert("config");
+		}
+		generateOutput(output_events, binconf_counter);
+		printProgress();
+		if (time_strain_1 == 0 && sys.get_cumulated_strain() > 1) {
+			now = time(NULL);
+			time_strain_1 = now;
+			timestep_1 = sys.get_total_num_timesteps();
+		}
+	}
+	now = time(NULL);
+	time_strain_end = now;
+	timestep_end = sys.get_total_num_timesteps();
+	outputComputationTime();
+	string filename_parameters = input_files[1];
+	if (filename_parameters.find("init_relax", 0) != string::npos) {
+		/* To prepare relaxed initial configuration,
+		 * we can use Brownian simulation for a short interval.
+		 * Here is just to export the position data.
+		 */
+		string filename_configuration = input_files[0];
+		outputFinalConfiguration(filename_configuration);
+	}
+	cout << indent << "Time evolution done" << endl << endl;
+}
+
+
 void Simulation::operateJammingStressReversal(std::set<std::string> &output_events)
 {
 	if (stress_reversal && sys.get_time()-time_last_sj_program > sj_duration_min) {
@@ -418,22 +478,22 @@ void Simulation::operateJammingStressReversal(std::set<std::string> &output_even
 void Simulation::stopShearing(TimeKeeper &tk)
 {
 	static bool initial_shearing = true;
-	double strain_to_stop;
-	if (!sys.ext_flow) {
+	double strain_to_stop = 0;
+	if (sys.simu_type == sys.SimulationType::simple_shear) {
 		strain_to_stop = 2;
-	} else {
+	} else if (sys.simu_type == sys.SimulationType::extensional_flow) {
 		strain_to_stop = sys.strain_retrim_interval;
 	}
 	if (sys.get_cumulated_strain() >= strain_to_stop-1e-8) {
 		sys.zero_shear = true;
 		sys.set_shear_rate(0);
-		if (!sys.ext_flow) {
+		if (sys.simu_type == sys.SimulationType::simple_shear) {
 			// simple shear
 			Sym2Tensor Einf_common = {0, 0, 0, 0, 0, 0};
 			vec3d Omegainf(0, 0, 0);
 			sys.setImposedFlow(Einf_common, Omegainf);
 			sys.setVelocityDifference();
-		} else {
+		} else if (sys.simu_type == sys.SimulationType::extensional_flow) {
 			// extensional flow
 			sys.vel_difference.reset();
 			sys.grad_u.set_zero();
@@ -774,7 +834,7 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 		snapshot_header << "# time" << sep << time.value << endl;
 		snapshot_header << "# theta" << sep << sys.p.theta_shear << endl;
 	}
-	if (sys.ext_flow) {
+	if (sys.simu_type == sys.SimulationType::extensional_flow) {
 		/* The following snapshot data is required to
 		 * construct visualization file for extensional flow simulation in the script
 		 * generateYaplotFile_extflow.pl
@@ -857,7 +917,7 @@ void Simulation::outputParFileTxt()
 	auto pos = sys.position;
 	auto vel = sys.velocity;
 	if (sys.p.output.origin_zero_flow) {
-		if (!sys.ext_flow) {
+		if (sys.simu_type != sys.SimulationType::extensional_flow) {
 			for (int i=0; i<np; i++) {
 				pos[i] = shiftUpCoordinate(sys.position[i].x-0.5*sys.get_lx(),
 										   sys.position[i].y-0.5*sys.get_ly(),
@@ -1134,7 +1194,7 @@ void Simulation::dataAdjustGSD(std::vector<vec3d> &pos,
 		cnt_strain -= 1;
 	}
 	pos.resize(sys.position.size());
-	if (!sys.ext_flow) {
+	if (sys.simu_type != sys.SimulationType::extensional_flow) {
 		for (int i=0; i<np; i++) {
 			pos[i] = shiftUpCoordinate(sys.position[i].x-0.5*lx,
 									   sys.position[i].y-0.5*ly,
@@ -1235,7 +1295,7 @@ void Simulation::outputGSD()
 	//		throw runtime_error(error_str.str());
 	//	}
 	double xybox, xzbox, yzbox;
-	if (!sys.ext_flow) {
+	if (sys.simu_type != sys.SimulationType::extensional_flow) {
 		xybox = shear_strain.x;
 		xzbox = 0;
 		yzbox = 0;

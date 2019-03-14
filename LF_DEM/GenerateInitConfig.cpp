@@ -90,8 +90,11 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 		 * Mobile partilces can be in radius_in < r < radius_out
 		 */
 		
-		np_wall1 = lx/(2*radius_wall_particle);
-		np_wall2 = lx/(2*radius_wall_particle);
+		int np_wall = lx/(2*radius_wall_particle);
+		if (wall_pin_interval != -1) {
+			np_wall1 = np_wall + (wall_pin_interval-np_wall % wall_pin_interval);
+			np_wall2 = np_wall + (wall_pin_interval-np_wall % wall_pin_interval);
+		}
 		np_movable = np;
 		np_fix = np_wall1+np_wall2;
 		np += np_fix;
@@ -312,30 +315,31 @@ std::pair<std::vector<vec3d>, std::vector<double>> GenerateInitConfig::putRandom
 				a = a2;
 			}
 			if (pos.z > z_bot+a && pos.z < z_top-a) {
-				pos.cerr();
 				position[i] = pos;
 				radius[i] = a;
 				i++;
 			}
 		}
 		double delta_x = lx/np_wall1;
+		vec3d del(0, 0, 2*radius_wall_particle);
 		for (i=0; i<np_wall1; i++){
 			vec3d pos(1+delta_x*i, 0, z_bot-radius_wall_particle);
-			position[i+np_movable] = pos;
-			if (i%2 == 0) {
-				radius[i+np_movable] = radius_wall_particle;
-			} else {
-				radius[i+np_movable] = 1.4*radius_wall_particle;
+			if (wall_pin_interval > 0
+				&& i%wall_pin_interval == 0) {
+				pos += del;
 			}
+			position[i+np_movable] = pos;
+			radius[i+np_movable] = radius_wall_particle;
+
 		}
 		for (i=0; i<np_wall2; i++){
 			vec3d pos(1+delta_x*i, 0, z_top+radius_wall_particle);
-			position[i+np_movable+np_wall1] = pos;
-			if (i%2 == 0) {
-				radius[i+np_movable+np_wall1] = radius_wall_particle;
-			} else {
-				radius[i+np_movable+np_wall1] = 1.4*radius_wall_particle;
+			if (wall_pin_interval > 0
+				&& i%wall_pin_interval == 0) {
+				pos -= del;
 			}
+			position[i+np_movable+np_wall1] = pos;
+			radius[i+np_movable+np_wall1] = radius_wall_particle;
 		}
 		cerr << np_wall1 << ' ' << np_wall2 << endl;
 	} else if (winding_wall_config) {
@@ -645,7 +649,7 @@ void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init
 	} else if (parallel_wall_config) {
 		lz += 10;
 		radius_wall_particle = readStdinDefault(1.0, "wall particle size");
-		
+		wall_pin_interval = readStdinDefault(-1, "wall pin interval");
 		z_bot = 5;
 		z_top = lz-5;
 	}

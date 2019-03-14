@@ -530,12 +530,12 @@ struct fixed_velo_configuration readTxtFixedVeloConfiguration(const std::string&
 			is >> x_ >> y_ >> z_ >> a_;
 			c.position.push_back(vec3d(x_, y_, z_));
 			c.radius.push_back(a_);
-			std::cerr << x_ << ' ' << y_ << ' ' << z_ << std::endl;
+			//std::cerr << x_ << ' ' << y_ << ' ' << z_ << std::endl;
 		} else {
 			c.position.push_back(vec3d(x_, y_, z_));
 			c.radius.push_back(a_);
 			c.fixed_velocities.push_back(vec3d(vx_, vy_, vz_));
-			std::cerr << vx_ << ' ' <<  vy_ << ' ' <<  vz_ << std::endl;
+			//std::cerr << vx_ << ' ' <<  vy_ << ' ' <<  vz_ << std::endl;
 		}
 	}
 	if (c.ly == 0) { //2d

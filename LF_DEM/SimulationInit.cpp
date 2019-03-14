@@ -228,14 +228,9 @@ void Simulation::setupFlow()
 	/* dot_gamma = 1 --> dot_epsilon = 0;
 	 *
 	 */
-	if (sys.p.flow_type == "extension") {
-		sys.ext_flow = true;
-	} else {
-		sys.ext_flow = false;
-	}
 	if (control_value.value != 0) {
 		double dimensionless_deformation_rate = 0.5;
-		if (!sys.ext_flow) {
+		if (sys.simu_type == sys.SimulationType::simple_shear) {
 			/* simple shear flow
 			 * shear_rate = 2*dot_epsilon
 			 *
@@ -251,7 +246,7 @@ void Simulation::setupFlow()
 			stress_basis_0 = {-dimensionless_deformation_rate/2, 0, 0, 0,
 				dimensionless_deformation_rate, -dimensionless_deformation_rate/2}; // = E
 			stress_basis_3 = {-dimensionless_deformation_rate, 0, 0, 0, 0, dimensionless_deformation_rate}; // = G
-		} else {
+		} else if (sys.simu_type == sys.SimulationType::extensional_flow) {
 			/* extensional flow
 			 *
 			 */
@@ -325,8 +320,17 @@ void Simulation::setupSimulation(string in_args,
 		sys.target_stress = target_stress_input/6/M_PI; //@@@
 	}
 	sys.p = PFactory.getParameterSet();
+	if (shear_rheology) {
+		if (sys.p.flow_type == "extension") {
+			sys.simu_type = sys.SimulationType::extensional_flow;
+		} else {
+			sys.simu_type = sys.SimulationType::simple_shear;
+		}
+	} else {
+		sys.simu_type = sys.SimulationType::pipe_flow;
+	}
 	setupFlow(); // Including parameter p setting.
-	if (sys.ext_flow) {
+	if (sys.simu_type == sys.SimulationType::extensional_flow) {
 		sys.p.output.origin_zero_flow = false;
 	}
 	if (sys.p.output.relative_position_view) {
@@ -342,11 +346,11 @@ void Simulation::setupSimulation(string in_args,
 	
 	sys.resetContactModelParameer(); //@@@@ temporary repair
 
-	if (!sys.ext_flow) {
+	if (sys.simu_type == sys.SimulationType::simple_shear) {
 		// simple shear
 		cerr << "simple shear " << endl;
 		sys.setVelocityDifference();
-	} else {
+	} else if (sys.simu_type == sys.SimulationType::extensional_flow) {
 		// extensional flow
 		cerr << "extensional flow " << endl;
 		sys.vel_difference.reset();

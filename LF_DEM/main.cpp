@@ -55,6 +55,7 @@ int main(int argc, char **argv)
 	double volume_frac_gen = 0;
 	bool binary_conf = false;
 	bool force_to_run = false;
+	string simulation_type = "shear rheology";
 	string config_filename = "not_given";
 	string param_filename = "not_given";
 	string knkt_filename = "not_given";
@@ -69,6 +70,7 @@ int main(int argc, char **argv)
 		{"rate-controlled",   required_argument, 0, 'r'},
 		{"rate-infty",        required_argument, 0, '8'},
 		{"stress-controlled", required_argument, 0, 's'},
+		{"Pipe-flow",         required_argument, 0, 'P'},
 		{"generate",          optional_argument, 0, 'g'},
 		{"random-seed",       required_argument, 0, 'a'},
 		{"volume-fraction",   required_argument, 0, 'p'},
@@ -85,7 +87,7 @@ int main(int argc, char **argv)
 	
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hn80fds:t:r:g::p:a:k:i:v:c:N:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hn80fds:t:r:g::P:p:a:k:i:v:c:N:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
 				control_variable = Parameters::ControlVariable::stress;
@@ -99,6 +101,11 @@ int main(int argc, char **argv)
 				control_variable = Parameters::ControlVariable::rate;
 				control_value = {Dimensional::Dimension::Force, 1, Dimensional::Unit::hydro};
 				cout << "Rate control, infinite shear rate (hydro + hard contacts only)" << endl;
+				break;
+			case 'P':
+				simulation_type = "pipe flow";
+				control_variable = Parameters::ControlVariable::stress;
+				control_value = {Dimensional::Dimension::Force, 1, Dimensional::Unit::hydro};
 				break;
 			case '0':
 				control_variable = Parameters::ControlVariable::rate;
@@ -193,9 +200,16 @@ int main(int argc, char **argv)
 		simulation.force_to_run = force_to_run;
 
 		try {
-			simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
-											 control_variable, control_value,
-											 simu_identifier);
+			if (simulation_type == "shear rheology") {
+				simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
+												 control_variable, control_value,
+												 simu_identifier);
+			} else if (simulation_type == "pipe flow") {
+				simulation.simulationPipeFlow(in_args.str(), input_files, binary_conf,
+											  control_variable, control_value,
+											  simu_identifier);
+				
+			}
 		} catch (runtime_error& e) {
 			cerr << e.what() << endl;
 			return 1;

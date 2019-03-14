@@ -157,9 +157,9 @@ void Interaction::init()
 void Interaction::calcNormalVectorDistanceGap()
 {
 	rvec = sys->position[p1]-sys->position[p0];
-	if (!sys->ext_flow) {
+	if (sys->simu_type == sys->SimulationType::simple_shear) {
 		z_offset = sys->periodizeDiff(rvec);
-	} else {
+	} else if (sys->simu_type == sys->SimulationType::extensional_flow) {
 		sys->periodizeDiffExtFlow(rvec, pd_shift, p0, p1);
 	}
 	r = rvec.norm();
@@ -219,7 +219,7 @@ void Interaction::outputHisotry()
 		unsigned dk = 20;
 		for (unsigned k=0; k < strain_history.size(); k += dk) {
 			double ang = angle_history[k];
-			if (sys->ext_flow) {
+			if (sys->simu_type == sys->SimulationType::extensional_flow) {
 				ang += sys->p.magic_angle;
 			} else {
 				ang -= M_PI/4;
