@@ -114,6 +114,7 @@ private:
 	void setDashpotForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setHydroForceToParticle_squeeze(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setHydroForceToParticle_squeeze_tangential(std::vector<vec3d> &force, std::vector<vec3d> &torque);
+	void setBodyForce(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void buildResistanceMatrix();
 	void setBrownianForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setSolverRHS(const ForceComponent &fc);
@@ -326,6 +327,8 @@ private:
 	vec3d force_downwall;
 	double effective_coordination_number;
 	double stress_transition_target;
+	/**** pipe flow setup ***********/
+	double force_pipe_flow;
 	/****************************************************************************************************
 	 * Extensional flow using Kraynik-Reinelt Method was originally implemented                         *
 	 * by Antonio Martiniello and Giulio Giuseppe Giusteri from Auguest to November 2016 at OIST.       *

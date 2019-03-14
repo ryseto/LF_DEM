@@ -179,9 +179,11 @@ void Simulation::generateOutput(const set<string> &output_events, int& binconf_c
 		sys.checkStaticForceBalance();
 	}
 	if (output_events.find("data") != output_events.end()) {
-		sys.calcStressPerParticle();
-		sys.calcStress();
-		outputData();
+		if (shear_rheology) {
+			sys.calcStressPerParticle();
+			sys.calcStress();
+			outputData();
+		}
 	}
 	if (output_events.find("config") != output_events.end()) {
 		if (sys.p.output.out_binary_conf) {
@@ -263,6 +265,12 @@ void Simulation::setupOptionalSimulation()
 			break;
 		case 42:
 			cout << indent << "Test simulation (wtestB), simple shear with walls" << endl;
+			sys.wall_rheology = true;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			sys.p.output.origin_zero_flow = false;
+			break;
+		case 60:
 			sys.wall_rheology = true;
 			sys.zero_shear = true;
 			sys.mobile_fixed = true;
@@ -391,7 +399,7 @@ void Simulation::simulationPipeFlow(std::string in_args,
 									Dimensional::DimensionalQty<double> control_value_,
 									std::string simu_identifier)
 {
-	indent = "  Simulation::\t";
+	indent = "  Simulation::PipeFlow\t";
 	shear_rheology = false;
 	control_var = control_variable_;
 	control_value = control_value_;
@@ -1182,46 +1190,48 @@ void Simulation::dataAdjustGSD(std::vector<vec3d> &pos,
 							   double lx, double ly, double lz)
 {
 	int np = sys.get_np();
-	shear_strain = sys.get_shear_strain();
-	static int cnt_strain = 0;
-	shear_strain.x -= cnt_strain;
-	if (shear_strain.x > 0.5) {
-		shear_strain.x -= 1;
-		cnt_strain += 1;
-	}
-	if (shear_strain.x < -0.5) {
-		shear_strain.x += 1;
-		cnt_strain -= 1;
+	if (sys.simu_type == sys.SimulationType::simple_shear) {
+		shear_strain = sys.get_shear_strain();
+		static int cnt_strain = 0;
+		shear_strain.x -= cnt_strain;
+		if (shear_strain.x > 0.5) {
+			shear_strain.x -= 1;
+			cnt_strain += 1;
+		}
+		if (shear_strain.x < -0.5) {
+			shear_strain.x += 1;
+			cnt_strain -= 1;
+		}
 	}
 	pos.resize(sys.position.size());
-	if (sys.simu_type != sys.SimulationType::extensional_flow) {
+	if (sys.simu_type == sys.SimulationType::simple_shear) {
 		for (int i=0; i<np; i++) {
 			pos[i] = shiftUpCoordinate(sys.position[i].x-0.5*lx,
 									   sys.position[i].y-0.5*ly,
 									   sys.position[i].z-0.5*lz);
 		}
 	} else {
-		// @@ not yet checked
+		vec3d pos_shift(0.5*lx, 0.5*ly, 0.5*lz);
 		for (int i=0; i<np; i++) {
-			pos[i] = shiftUpCoordinate(sys.position[i].x,
-									   sys.position[i].y,
-									   sys.position[i].z);
+			pos[i] = sys.position[i]-pos_shift;
 		}
 	}
 	/* If the origin is shifted,
 	 * we need to change the velocities of particles as well.
 	 */
-	for (int i=0; i<np; i++) {
-		if (pos[i].z < 0) {
-			vel[i] -= sys.vel_difference;
+	if (sys.simu_type == sys.SimulationType::simple_shear) {
+		for (int i=0; i<np; i++) {
+			if (pos[i].z < 0) {
+				vel[i] -= sys.vel_difference;
+			}
 		}
-	}
-	for (int i=0; i<np; i++) {
-		while (-(pos[i].x+lx/2)+(shear_strain.x)*(pos[i].z) > 0) {
-			pos[i].x += lx;
-		}
-		while (-(pos[i].x-lx/2)+(shear_strain.x)*(pos[i].z) < 0) {
-			pos[i].x -= lx;
+		for (int i=0; i<np; i++) {
+			while (-(pos[i].x+lx/2)+(shear_strain.x)*(pos[i].z) > 0) {
+				pos[i].x += lx;
+			}
+			while (-(pos[i].x-lx/2)+(shear_strain.x)*(pos[i].z) < 0) {
+				pos[i].x -= lx;
+			}
 		}
 	}
 }

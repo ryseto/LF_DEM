@@ -91,10 +91,12 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 		 */
 		
 		int np_wall = lx/(2*radius_wall_particle);
+		int np_wall_adjust = 0;
 		if (wall_pin_interval != -1) {
-			np_wall1 = np_wall + (wall_pin_interval-np_wall % wall_pin_interval);
-			np_wall2 = np_wall + (wall_pin_interval-np_wall % wall_pin_interval);
+			np_wall_adjust = (wall_pin_interval-np_wall % wall_pin_interval);
 		}
+		np_wall1 = np_wall + np_wall_adjust;
+		np_wall2 = np_wall + np_wall_adjust;
 		np_movable = np;
 		np_fix = np_wall1+np_wall2;
 		np += np_fix;
@@ -106,7 +108,6 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 		c.radius_out = cg_radius_out;
 		sys.setupConfiguration(c, Parameters::ControlVariable::rate);
 	} else if (winding_wall_config) {
-		
 		np_wall1 = (cg_radius_out+cg_radius_in)*M_PI/2/1.5+1;
 		np_wall2 = (cg_radius_out+cg_radius_in)*M_PI/2/1.5+1;
 		np_movable = np;
@@ -140,7 +141,6 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 			break;
 		}
 	}
-
 	outputPositionData(sys);
 	return 0;
 }
@@ -323,7 +323,7 @@ std::pair<std::vector<vec3d>, std::vector<double>> GenerateInitConfig::putRandom
 		double delta_x = lx/np_wall1;
 		vec3d del(0, 0, 2*radius_wall_particle);
 		for (i=0; i<np_wall1; i++){
-			vec3d pos(1+delta_x*i, 0, z_bot-radius_wall_particle);
+			vec3d pos(radius_wall_particle+delta_x*i, 0, z_bot-radius_wall_particle);
 			if (wall_pin_interval > 0
 				&& i%wall_pin_interval == 0) {
 				pos += del;
@@ -333,7 +333,7 @@ std::pair<std::vector<vec3d>, std::vector<double>> GenerateInitConfig::putRandom
 
 		}
 		for (i=0; i<np_wall2; i++){
-			vec3d pos(1+delta_x*i, 0, z_top+radius_wall_particle);
+			vec3d pos(radius_wall_particle+delta_x*i, 0, z_top+radius_wall_particle);
 			if (wall_pin_interval > 0
 				&& i%wall_pin_interval == 0) {
 				pos -= del;

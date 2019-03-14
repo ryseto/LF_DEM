@@ -104,8 +104,8 @@ int main(int argc, char **argv)
 				break;
 			case 'P':
 				simulation_type = "pipe flow";
-				control_variable = Parameters::ControlVariable::stress;
-				control_value = {Dimensional::Dimension::Force, 1, Dimensional::Unit::hydro};
+				control_variable = Parameters::ControlVariable::pressure;
+				control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Stress, optarg, "pressure");
 				break;
 			case '0':
 				control_variable = Parameters::ControlVariable::rate;

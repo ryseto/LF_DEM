@@ -157,9 +157,9 @@ void Interaction::init()
 void Interaction::calcNormalVectorDistanceGap()
 {
 	rvec = sys->position[p1]-sys->position[p0];
-	if (sys->simu_type == sys->SimulationType::simple_shear) {
+	if (sys->simu_type != sys->SimulationType::extensional_flow) {
 		z_offset = sys->periodizeDiff(rvec);
-	} else if (sys->simu_type == sys->SimulationType::extensional_flow) {
+	} else {
 		sys->periodizeDiffExtFlow(rvec, pd_shift, p0, p1);
 	}
 	r = rvec.norm();

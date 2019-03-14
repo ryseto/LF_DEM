@@ -64,6 +64,7 @@ wagnerhash(time_t t, clock_t c)
 
 System::System(list <Event>& ev,
 			   State::BasicCheckpoint chkp):
+simu_type(simple_shear),
 pairwise_resistance_changed(true),
 clk(chkp.clock),
 shear_rate(0),
@@ -208,6 +209,9 @@ void System::declareForceComponents()
 		force_components["delayed_adhesion"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setTActAdhesionForceToParticle);
 	}
 
+	force_components["pressure_diff"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setBodyForce);
+
+	
 	/********** Force R_FU^{mf}*(U^f-U^f_inf)  *************/
 	if (mobile_fixed) {
 		// rate proportional with walls, but this can change
@@ -733,7 +737,7 @@ void System::timeStepBoxing()
 	if (!zero_shear) {
 		double strain_increment = shear_rate*dt;
 		clk.cumulated_strain += strain_increment;
-		if (simu_type == simple_shear) {
+		if (simu_type != extensional_flow) {
 			vec3d shear_strain_increment = 2*dot(E_infinity, {0, 0, 1})*dt;
 			shear_strain += shear_strain_increment;
 			shear_disp += shear_strain_increment*lz;
@@ -1370,7 +1374,9 @@ void System::timeEvolution(double time_end, double strain_end)
 		avg_dt = dt;
 	}
 	if (events.empty() && retrim_ext_flow == false) {
-		calc_stress = true;
+		if (simu_type != pipe_flow) {
+			calc_stress = true;
+		}
 		(this->*timeEvolutionDt)(calc_stress, time_end, strain_end); // last time step, compute the stress
 	}
 	if (p.auto_determine_knkt
@@ -1949,6 +1955,16 @@ void System::setTActAdhesionForceToParticle(vector<vec3d> &force,
 	}
 }
 
+void System::setBodyForce(vector<vec3d> &force,
+						  vector<vec3d> &torque) {
+	for (int i=0; i<np_mobile; i++) {
+		force[i].set(force_pipe_flow, 0 , 0);
+	}
+	for (int i=np_mobile; i<np; i++) {
+		force[i].reset();
+	}
+}
+
 void System::setFixedParticleForceToParticle(vector<vec3d> &force,
 											 vector<vec3d> &torque)
 {
@@ -2100,7 +2116,7 @@ void System::setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty)
 
 void System::setShearDirection(double theta_shear) // will probably be deprecated soon
 {
-	if (simu_type == simple_shear) {
+	if (simu_type != extensional_flow) {
 		p.theta_shear = theta_shear;
 		double costheta_shear = cos(theta_shear);
 		double sintheta_shear = sin(theta_shear);
@@ -2326,6 +2342,16 @@ void System::tmpMixedProblemSetVelocities()
 				na_ang_velocity[i] = {0, -omega_wheel_out, 0};
 			}
 		}
+	} else if (p.simulation_mode == 60) {
+		int i_np_wall1 = np_mobile+np_wall1;
+		for (int i=np_mobile; i<i_np_wall1; i++) {
+			na_velocity[i] = {0, 0, 0};
+			na_ang_velocity[i].reset();
+		}
+		for (int i=i_np_wall1; i<np; i++) {
+			na_velocity[i] = {0, 0, 0};
+			na_ang_velocity[i].reset();
+		}
 	}
 }
 
@@ -2470,12 +2496,12 @@ void System::adjustVelocityPeriodicBoundary()
 		ang_velocity[i] = na_ang_velocity[i];
 	}
 	if (!zero_shear) {
-		if (simu_type == simple_shear) {
+		if (simu_type != extensional_flow) {
 			for (int i=0; i<np; i++) {
 				velocity[i] += u_inf[i];
 				ang_velocity[i] += omega_inf;
 			}
-		} else if (simu_type == extensional_flow) {
+		} else {
 			for (int i=0; i<np; i++) {
 				velocity[i] += u_inf[i];
 			}
@@ -2515,13 +2541,13 @@ void System::displacement(int i, const vec3d& dr)
 	 * we need to modify the velocity, which was already evaluated.
 	 * The position and velocity will be used to calculate the contact forces.
 	 */
-	if (simu_type == simple_shear) {
+	if (simu_type != extensional_flow) {
 		/**** simple shear flow ****/
 		int z_shift = periodize(position[i]);
 		if (z_shift != 0) {
 			velocity[i] += z_shift*vel_difference;
 		}
-	} else if (simu_type == extensional_flow) {
+	} else {
 		/**** extensional flow ****/
 		bool pd_transport = false;
 		periodizeExtFlow(i, pd_transport);

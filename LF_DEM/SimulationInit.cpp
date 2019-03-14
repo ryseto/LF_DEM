@@ -105,6 +105,9 @@ Dimensional::Unit Simulation::determineUnit(Parameters::ParameterSetFactory &PFa
 		system_of_units.add(Dimensional::Unit::stress, control_value);
 		internal_unit = control_value.unit;
 		//		internal_unit = Dimensional::Unit::stress;
+	} else if (control_var == Parameters::ControlVariable::pressure) {
+		system_of_units.add(Dimensional::Unit::stress, control_value);
+		internal_unit = control_value.unit;
 	}
 	return internal_unit;
 }
@@ -127,9 +130,11 @@ void Simulation::convertForces(Dimensional::Unit &internal_unit,
 		if (!sys.zero_shear) {
 			sys.set_shear_rate(forces.at(Dimensional::Unit::hydro).value);
 		}
-	}
-	if (control_var == Parameters::ControlVariable::stress) {
+	} else if (control_var == Parameters::ControlVariable::stress) {
 		sys.target_stress = forces.at(Dimensional::Unit::stress).value;
+	} else if (control_var == Parameters::ControlVariable::pressure) {
+		sys.force_pipe_flow = forces.at(Dimensional::Unit::stress).value;
+		cerr << "sys.force_pipe_flow = " << sys.force_pipe_flow << endl;
 	}
 }
 
@@ -272,6 +277,11 @@ void Simulation::setupFlow()
 			mat_stress_basis_3 = rotation_inv*mat_stress_basis_3*rotation;
 			stress_basis_0.setSymmetrize(mat_stress_basis_0);
 			stress_basis_3.setSymmetrize(mat_stress_basis_3);
+		} else {
+			/// @@@ ???
+			Einf_base.set(0, 0, 0, 0, 0, 0); // = D
+			Omegainf_base.set(0, 1, 0);
+			sys.setImposedFlow(0*Einf_base, 0*Omegainf_base);
 		}
 	} else {
 		cerr << " dimensionlessnumber = " << control_value.value << endl;
@@ -304,14 +314,14 @@ void Simulation::setupSimulation(string in_args,
 		} else {
 			guarranted_unit = control_value.unit;
 		}
-	} else if (control_var == Parameters::ControlVariable::stress) {
+	} else if (control_var == Parameters::ControlVariable::stress
+			   || control_var == Parameters::ControlVariable::pressure) {
 		guarranted_unit = control_value.unit;
 	} else {
 		ostringstream error_str;
 		error_str  << "control_var is not set properly." << endl;
 		throw runtime_error(error_str.str());
 	}
-
 	Parameters::ParameterSetFactory PFactory(guarranted_unit);
 	PFactory.setFromFile(filename_parameters);
 	setupNonDimensionalization(PFactory);
@@ -320,6 +330,9 @@ void Simulation::setupSimulation(string in_args,
 		sys.target_stress = target_stress_input/6/M_PI; //@@@
 	}
 	sys.p = PFactory.getParameterSet();
+	if (control_var == Parameters::ControlVariable::pressure) {
+		sys.p.simulation_mode = 60;
+	}
 	if (shear_rheology) {
 		if (sys.p.flow_type == "extension") {
 			sys.simu_type = sys.SimulationType::extensional_flow;
@@ -354,6 +367,8 @@ void Simulation::setupSimulation(string in_args,
 		// extensional flow
 		cerr << "extensional flow " << endl;
 		sys.vel_difference.reset();
+	} else {
+		sys.zero_shear = true;
 	}
 	if (simu_name.empty()) {
 		simu_name = prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
@@ -438,8 +453,10 @@ string Simulation::prepareSimulationName(bool binary_conf,
 	ostringstream string_control_parameters;
 	if (control_var == Parameters::ControlVariable::rate) {
 		string_control_parameters << "_" << "rate";
-	}
-	if (control_var == Parameters::ControlVariable::stress) {
+	} else if (control_var == Parameters::ControlVariable::stress) {
+		string_control_parameters << "_" << "stress";
+	} else if (control_var == Parameters::ControlVariable::pressure
+		) {
 		string_control_parameters << "_" << "stress";
 	}
 	// if (control_var == Parameters::ControlVariable::viscnb) {
