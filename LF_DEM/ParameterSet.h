@@ -126,6 +126,7 @@ namespace Parameters {
 		 */
 		double lub_reduce_parameter;	///< Lubrication regularization length ("roughness length") [1e-3]
 		double lub_max_gap;				///< Lubrication range (in interparticle gap distance) [0.5]
+		bool smooth_lubrication;        ///< 1/h - 1/h_max, giving 0 at h=hmax [false]
 		/*******************************************************
 		 CONTACTS
 		 ********************************************************/

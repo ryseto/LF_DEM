@@ -42,6 +42,7 @@ private:
 	vec3d *nvec;
 	double lub_coeff;
 	double log_lub_coeff;
+	double lub_coeff_min;
 	double a0;
 	double a1;
 	double ro;

@@ -23,6 +23,7 @@ p0_6(0),
 p1_6(0),
 lub_coeff(0),
 log_lub_coeff(0),
+lub_coeff_min(0),
 a0(0),
 a1(0),
 ro(0),
@@ -120,6 +121,7 @@ void Lubrication::setParticleData()
 	p1_6 = 6*p1;
 	calcLubConstants();
 	range = sys->calcLubricationRange(p0, p1);
+	lub_coeff_min = 1/(sys->p.lub_max_gap+sys->p.lub_reduce_parameter);
 }
 
 void Lubrication::activate()
@@ -697,10 +699,11 @@ void Lubrication::updateResistanceCoeff()
 {
 	if (interaction->get_reduced_gap() > 0) {
 		double coeff = 1/(interaction->get_reduced_gap()+sys->p.lub_reduce_parameter);
+		double coeff_norm = coeff-lub_coeff_min;
 		if (coeff > 1.) {
-			setResistanceCoeff(coeff, log(coeff));
+			setResistanceCoeff(coeff_norm, log(coeff));
 		} else {
-			setResistanceCoeff(coeff, 0.);
+			setResistanceCoeff(coeff_norm, 0.);
 		}
 	}
 }
