@@ -209,9 +209,9 @@ void System::declareForceComponents()
 		force_components["delayed_adhesion"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setTActAdhesionForceToParticle);
 	}
 
-	force_components["pressure_diff"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setBodyForce);
-
-	
+	if (simu_type == pipe_flow) {
+		force_components["pressure_diff"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setBodyForce);
+	}
 	/********** Force R_FU^{mf}*(U^f-U^f_inf)  *************/
 	if (mobile_fixed) {
 		// rate proportional with walls, but this can change
@@ -366,13 +366,6 @@ void System::setupParametersLubrication()
 		p.lubrication_model != "tangential") {
 		throw runtime_error(indent+"unknown lubrication_model "+p.lubrication_model+"\n");
 	}
-
-	if (p.lubrication_model == "tangential" && p.lub_max_gap >= 1) {
-		/* The tangential part of lubrication is approximated as log(1/h).
-		 * To keep log(1/h) > 0, h needs to be less than 1.
-		 */
-		throw runtime_error(indent+"lub_max_gap must be smaller than 1\n");
-	}
 }
 
 void System::setupParametersContacts()
@@ -507,7 +500,7 @@ void System::setupGenericConfiguration(T conf, Parameters::ControlVariable contr
 	np_mobile = np - p.np_fixed;
 	control = control_;
 
-	setBoxSize(conf.lx,conf.ly,conf.lz);
+	setBoxSize(conf.lx, conf.ly, conf.lz);
 	twodimension = ly == 0;
 
 	setupParameters();
@@ -577,7 +570,6 @@ void System::setupConfiguration(struct circular_couette_configuration conf, Para
 	np_wall2 = conf.np_wall2;
 	radius_in = conf.radius_in;
 	radius_out = conf.radius_out;
-
 	setupGenericConfiguration(conf, control_);
 }
 
@@ -791,7 +783,7 @@ void System::eventShearJamming()
 void System::forceResultantInterpaticleForces()
 {
 	auto &contact_force = force_components["contact"].force;
-	int np_tmp = np_mobile;
+	int np_tmp = np;
 	for (int i=0; i<np_tmp; i++) {
 		forceResultant[i] += contact_force[i];
 	}
@@ -965,7 +957,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	} else {
 		computeVelocities(calc_stress);
 	}
-	if (wall_rheology) {
+	if (wall_rheology && calc_stress) { // @@@@ calc_stress remove????
 		forceResultantReset();
 		forceResultantInterpaticleForces();
 	}
@@ -991,6 +983,15 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	if (eventLookUp != NULL) {
 		(this->*eventLookUp)();
 	}
+	//	static int cnt = 0;
+	//	if (cnt ++ % 50 == 0) {
+	//		for (int i=0; i< np; i++) {
+	//			cout << "c"  << position[i].x << ' ';
+	//			cout << position[i].y << ' ';
+	//			cout << position[i].z << endl;
+	//		}
+	//		cout << endl;
+	//	}
 }
 
 /****************************************************************************************************
@@ -1388,14 +1389,15 @@ void System::timeEvolution(double time_end, double strain_end)
 void System::createNewInteraction(int i, int j, double scaled_interaction_range)
 {
 	// new interaction
-	if (i >= np_mobile && j >= np_mobile) {
+	if (i < np_mobile || j < np_mobile) {
+		Interaction inter(this, i, j, scaled_interaction_range);
+		interaction.push_back(inter); // could emplace_back if Interaction gets a move ctor
+		// tell i and j their new partner
+		interaction_partners[i].push_back(j);
+		interaction_partners[j].push_back(i);
+	} else {
 		return;
 	}
-	Interaction inter(this, i, j, scaled_interaction_range);
-	interaction.push_back(inter); // could emplace_back if Interaction gets a move ctor
-	// tell i and j their new partner
-	interaction_partners[i].push_back(j);
-	interaction_partners[j].push_back(i);
 }
 
 bool System::hasNeighbor(int i, int j)
@@ -1957,8 +1959,12 @@ void System::setTActAdhesionForceToParticle(vector<vec3d> &force,
 
 void System::setBodyForce(vector<vec3d> &force,
 						  vector<vec3d> &torque) {
+	double angle = M_PI*p.body_force_angle/180;
+	double bf_x = force_pipe_flow*cos(angle);
+	double bf_z = -force_pipe_flow*sin(angle);
 	for (int i=0; i<np_mobile; i++) {
-		force[i].set(force_pipe_flow, 0 , 0);
+		double bf = force_pipe_flow;
+		force[i].set(radius[i]*bf_x, 0 , radius[i]*bf_z);
 	}
 	for (int i=np_mobile; i<np; i++) {
 		force[i].reset();

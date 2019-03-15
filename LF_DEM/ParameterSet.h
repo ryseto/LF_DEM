@@ -201,11 +201,13 @@ namespace Parameters {
 		int sj_check_count;			///< Jamming is judeged after counting this number [500] 
 		int sj_reversal_repetition;			///< Repetition number for shear reversal [2]
 		std::string sj_program_file;        ///< [""]
-		double theta_shear;  ///< Shear direction, in degress, 0 is shear along x, 90 is shear along y [0]
+		double theta_shear;  ///< Shear direction, in degrees, 0 is shear along x, 90 is shear along y [0]
 		double strain_reversal;  ///< for test_simulation = 21 (rtest1)
 		bool keep_input_strain;  ///< Use as initial strain value the strain from initial Lees-Edwards displacement [false]
 		double brownian_relaxation_time; ///< Averaging time scale in the stress controlled simulation for Brownian [1]
 		bool check_static_force_balance;
+		double body_force_angle;  ///< parallel to wall 0 and vertical to wall 90 [0]
+
 	};
 	
 } // namespace Parameters

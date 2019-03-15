@@ -1365,8 +1365,10 @@ void Simulation::outputGSD()
 		for (int i=0; i<np; i++) {
 			if (i < np1) {
 				uptr[i] = 0;
-			} else {
+			} else if (i < sys.np_mobile) {
 				uptr[i] = 1;
+			} else {
+				uptr[i] = 2;
 			}
 			fptr[i] = 2*sys.radius[i];
 		}

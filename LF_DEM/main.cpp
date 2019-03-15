@@ -130,6 +130,8 @@ int main(int argc, char **argv)
 						generate_init = 3; // simple shear with wall
 					} else if (optarg[0] == 's') {
 						generate_init = 4; // winding
+					} else if (optarg[0] == 'b') {
+						generate_init = 5; // bottom
 					}
 				}
 				break;
@@ -204,11 +206,10 @@ int main(int argc, char **argv)
 				simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
 												 control_variable, control_value,
 												 simu_identifier);
-			} else if (simulation_type == "pipe flow") {
+			} else {
 				simulation.simulationPipeFlow(in_args.str(), input_files, binary_conf,
 											  control_variable, control_value,
 											  simu_identifier);
-				
 			}
 		} catch (runtime_error& e) {
 			cerr << e.what() << endl;

@@ -66,6 +66,7 @@ private:
 	bool circulargap_config;
 	bool parallel_wall_config;
 	bool winding_wall_config;
+	bool bottom_wall_config;
 	double cg_radius_in;
 	double cg_radius_out;
 	double cg_ratio_radii;
@@ -100,11 +101,7 @@ private:
 	void outputPositionData(const System &sys);
 	template<typename T> void baseSetup(T &conf, bool is2d, double inflate_ratio);
 public:
-	GenerateInitConfig():
-	circulargap_config(false),
-	parallel_wall_config(false),
-	winding_wall_config(false) {};
-
+	GenerateInitConfig();
 	int generate(int rand_seed_, double volume_frac_gen_, int config_type);
 	/* config_type = 1 -- noraml
 	 * config_type = 2 -- circular wide gap

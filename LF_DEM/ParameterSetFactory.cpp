@@ -93,7 +93,8 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(sj_disp_max_shrink_factor, 1.1),
 		PARAM_INIT(sj_disp_max_goal, 1e-6),
 		PARAM_INIT(sj_shear_rate, 0),
-		PARAM_INIT(sj_velocity, 1e-3)
+		PARAM_INIT(sj_velocity, 1e-3),
+		PARAM_INIT(body_force_angle, 0)
 	};
 
 	/*================================

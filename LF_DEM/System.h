@@ -62,9 +62,6 @@ private:
 	std::vector<unsigned int> nb_blocks_mm;
 	std::vector<unsigned int> nb_blocks_mf;
 	std::vector<unsigned int> nb_blocks_ff;
-	int nb_of_contacts_mm;
-	int nb_of_contacts_mf;
-	int nb_of_contacts_ff;
 	bool pairwise_resistance_changed;
 	int total_num_timesteps;
 	double lx;
