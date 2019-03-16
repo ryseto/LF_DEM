@@ -160,10 +160,6 @@ void Simulation::assertParameterCompatibility()
 		sys.p.friction_model = 2;
 		cerr << "Warning : critical load simulation -> switched to friction_model=2" << endl;
 	}
-	if (sys.p.output.recording_interaction_history) {
-		cerr << "Interaction history recording needs to use the Euler's Method." << endl;
-		sys.p.integration_method = 0;
-	}
 }
 
 void Simulation::setConfigToSystem(bool binary_conf, const std::string &filename)

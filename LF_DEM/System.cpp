@@ -972,9 +972,6 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		if (!p.output.out_particle_stress.empty() || couette_stress || p.output.out_gsd) {
 			calcTotalStressPerParticle();
 		}
-		if (p.output.recording_interaction_history) {
-			recordHistory();
-		}
 	}
 	timeStepMove(time_end, strain_end);
 	for (int i=0; i<np; i++) {
@@ -1332,9 +1329,6 @@ void System::timeEvolution(double time_end, double strain_end)
 	}
 	bool calc_stress = false;
 	if (brownian_dominated) {
-		calc_stress = true;
-	}
-	if (p.output.recording_interaction_history) {
 		calc_stress = true;
 	}
 	retrim_ext_flow = false;
@@ -1958,7 +1952,11 @@ void System::setTActAdhesionForceToParticle(vector<vec3d> &force,
 }
 
 void System::setBodyForce(vector<vec3d> &force,
-						  vector<vec3d> &torque) {
+						  vector<vec3d> &torque)
+{
+	for (auto &t: torque) {
+		t.reset();
+	}
 	double angle = M_PI*p.body_force_angle/180;
 	double bf_x = force_pipe_flow*cos(angle);
 	double bf_z = -force_pipe_flow*sin(angle);
@@ -2899,18 +2897,6 @@ void System::yaplotBoxing(std::ofstream &fout_boxing)
 	}
 
 	fout_boxing << endl;
-}
-
-void System::recordHistory()
-{
-	for (unsigned int k=0; k<interaction.size(); k++) {
-		if (interaction[k].lubrication.is_active()) {
-			interaction[k].lubrication.calcLubricationForce();
-		} else {
-			interaction[k].lubrication.force = 0;
-		}
-		interaction[k].recordHistory();
-	}
 }
 
 void System::countContactNumber()

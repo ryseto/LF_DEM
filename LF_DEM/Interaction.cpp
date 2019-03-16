@@ -32,18 +32,6 @@ z_offset(0)
 	sys->interaction_list[i].insert(this);
 	sys->interaction_list[j].insert(this);
 	activateForceMembers();
-	if (sys->p.output.recording_interaction_history) {
-		if (sys->get_cumulated_strain() > sys->p.output.recording_start) {
-			record = true;
-			birth_strain = sys->get_cumulated_strain();
-			strain_history.clear();
-			angle_history.clear();
-			normalforce_history.clear();
-			gap_history.clear();
-		} else {
-			record = false;
-		}
-	}
 }
 
 Interaction::Interaction(const Interaction &other):
@@ -57,12 +45,6 @@ interaction_range(other.interaction_range),
 contact_state_changed_after_predictor(other.contact_state_changed_after_predictor),
 rvec(other.rvec),
 nvec(other.nvec),
-record(other.record),
-birth_strain(other.birth_strain),
-strain_history(other.strain_history),
-angle_history(other.angle_history),
-normalforce_history(other.normalforce_history),
-gap_history(other.gap_history),
 z_offset(other.z_offset)
 {
 	init();
@@ -114,14 +96,6 @@ void Interaction::swap(Interaction& other)
 	sys->interaction_list[p1].insert(this);
 	sys->interaction_list[other.p0].insert(&other);
 	sys->interaction_list[other.p1].insert(&other);
-	std::swap(record, other.record);
-	if (sys->p.output.recording_interaction_history) {
-		std::swap(birth_strain, other.birth_strain);
-		std::swap(strain_history, other.strain_history);
-		std::swap(angle_history, other.angle_history);
-		std::swap(normalforce_history, other.normalforce_history);
-		std::swap(gap_history, other.gap_history);
-	}
 }
 
 void Interaction::init()
@@ -207,9 +181,6 @@ void Interaction::deactivate()
 	}
 	if (sys->delayed_adhesion) {
 		delayed_adhesion->deactivate();
-	}
-	if (sys->p.output.recording_interaction_history) {
-		outputHisotry();
 	}
 }
 

@@ -87,7 +87,6 @@ private:
 	double sq_cos_ma; // magic angle @@@@
 	double sq_sin_ma; // magic angle @@@@
 	double cos_ma_sin_ma; // magic angle @@@@
-	//	std::stringstream history_output_stream;  <-- I cannot compile with this.
 	/* data */
 	bool keepRunning(double time_end, double strain_end);
 	bool keepRunning(const std::string& time_or_strain, const double& value_end);
@@ -402,7 +401,6 @@ private:
 	void retrim(vec3d&); // Extensional flow Periodic Boundary condition
 	void updateH(); // Extensional flow Periodic Boundary condition
 	void yaplotBoxing(std::ofstream &fout_boxing); // Extensional flow Periodic Boundary condition
-	void recordHistory();
 	void countContactNumber();
 	void checkStaticForceBalance();
 
