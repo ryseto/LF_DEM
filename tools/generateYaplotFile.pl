@@ -624,12 +624,13 @@ sub OutYaplotData{
 			$i = $int0[$k];
 			$j = $int1[$k];
 			#	//if ($contactstate[$k] >= 2) {
-				#if ($contactnumber[$i] >= 2 && $contactnumber[$j] >= 2) {
-					#$force = $F_lub[$k] + $Fc_n[$k];
-					$force = sqrt($Fc_n[$k]**2 + $Fc_t[$k]**2);
-					&OutString_width($int0[$k], $int1[$k], $force_factor*abs($force), 0.01);
+			#if ($contactnumber[$i] >= 2 && $contactnumber[$j] >= 2) {
+			#$force = $F_lub[$k] + $Fc_n[$k];
+			#$force = sqrt($Fc_n[$k]**2 + $Fc_t[$k]**2);
+			$force = $Fc_n[$k];
+			&OutString_width($int0[$k], $int1[$k], $force_factor*abs($force), 0.01);
 			#	}
-				#&OutString_width($int0[$k], $int1[$k], $force_factor*abs($force)/$target_stress, 0.01);
+			#&OutString_width($int0[$k], $int1[$k], $force_factor*abs($force)/$target_stress, 0.01);
 			#}
 		}
 	}
@@ -708,9 +709,9 @@ sub OutYaplotData{
 	}
 	## visualize rotation in 2D
 	if ($Ly == 0) {
-		if (0) {
+		if (1) {
 			printf OUT "y 6\n";
-			printf OUT "@ 8\n";
+			printf OUT "@ 12\n";
 			for ($i = 0; $i < $np; $i++) {
 				OutCross($i);
 			}

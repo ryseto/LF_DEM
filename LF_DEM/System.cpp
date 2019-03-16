@@ -210,7 +210,7 @@ void System::declareForceComponents()
 	}
 
 	if (simu_type == pipe_flow) {
-		force_components["pressure_diff"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setBodyForce);
+		force_components["body_force"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setBodyForce);
 	}
 	/********** Force R_FU^{mf}*(U^f-U^f_inf)  *************/
 	if (mobile_fixed) {
@@ -1957,12 +1957,21 @@ void System::setBodyForce(vector<vec3d> &force,
 	for (auto &t: torque) {
 		t.reset();
 	}
-	double angle = M_PI*p.body_force_angle/180;
-	double bf_x = force_pipe_flow*cos(angle);
-	double bf_z = -force_pipe_flow*sin(angle);
-	for (int i=0; i<np_mobile; i++) {
-		double bf = force_pipe_flow;
-		force[i].set(radius[i]*bf_x, 0 , radius[i]*bf_z);
+	if (true) {
+		double angle = M_PI*p.body_force_angle/180;
+		double bf_x = force_pipe_flow*cos(angle);
+		double bf_z = -force_pipe_flow*sin(angle);
+		for (int i=0; i<np_mobile; i++) {
+			double bf = force_pipe_flow;
+			force[i].set(radius[i]*bf_x, 0 , radius[i]*bf_z);
+		}
+	} else {
+		for (int i=0; i<np_mobile; i++) {
+			double angle = atan2(position[i].z-lz_half, position[i].x-lx_half);
+			double bf_x = -force_pipe_flow*cos(angle);
+			double bf_z = -force_pipe_flow*sin(angle);
+			force[i].set(radius[i]*bf_x, 0 , radius[i]*bf_z);
+		}
 	}
 	for (int i=np_mobile; i<np; i++) {
 		force[i].reset();
