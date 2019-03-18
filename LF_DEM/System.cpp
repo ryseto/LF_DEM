@@ -14,6 +14,7 @@
 #include "SystemHelperFunctions.h"
 #include "global.h"
 #include "States.h"
+#include "SolventFlow.h"
 #ifndef USE_DSFMT
 #include "MersenneTwister.h"
 #endif
@@ -957,6 +958,11 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	} else {
 		computeVelocities(calc_stress);
 	}
+	
+	if (p.solvent_flow) {
+		sflow.updateParticleVelocity();
+	}
+	
 	if (wall_rheology && calc_stress) { // @@@@ calc_stress remove????
 		forceResultantReset();
 		forceResultantInterpaticleForces();
@@ -2963,6 +2969,13 @@ void System::countContactNumber()
 	}
 	effective_coordination_number = num_bond_contact_network*(1.0/num_node_contact_network);
 }
+
+void System::initSolventFlow()
+{
+	sflow.init(this);
+
+}
+
 
 //void System::openHisotryFile(std::string &filename)
 //{

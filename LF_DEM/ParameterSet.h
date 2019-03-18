@@ -207,7 +207,7 @@ namespace Parameters {
 		double brownian_relaxation_time; ///< Averaging time scale in the stress controlled simulation for Brownian [1]
 		bool check_static_force_balance;
 		double body_force_angle;  ///< parallel to wall 0 and vertical to wall 90 [0]
-
+		bool solvent_flow; ///< [false]
 	};
 	
 } // namespace Parameters

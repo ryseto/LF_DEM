@@ -55,7 +55,8 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(output.out_na_disp, false),
 		PARAM_INIT(output.effective_coordination_number, false),
 		PARAM_INIT(check_static_force_balance, false),
-		PARAM_INIT(smooth_lubrication, false)
+		PARAM_INIT(smooth_lubrication, false),
+		PARAM_INIT(solvent_flow, false)
 	};
 
 	/*===========================================

@@ -404,6 +404,9 @@ void Simulation::simulationPipeFlow(std::string in_args,
 	control_var = control_variable_;
 	control_value = control_value_;
 	setupSimulation(in_args, input_files, binary_conf, simu_identifier);
+	ofstream fout_flow;
+	fout_flow.open("hoge.yap");
+	sys.initSolventFlow();
 	time_t now;
 	time_strain_1 = 0; //@@@
 	now = time(NULL);
@@ -426,6 +429,9 @@ void Simulation::simulationPipeFlow(std::string in_args,
 			output_events.insert("config");
 		}
 		generateOutput(output_events, binconf_counter);
+		
+		sys.sflow.outputYaplot(fout_flow);
+
 		printProgress();
 		if (time_strain_1 == 0 && sys.get_cumulated_strain() > 1) {
 			now = time(NULL);
@@ -446,6 +452,7 @@ void Simulation::simulationPipeFlow(std::string in_args,
 		string filename_configuration = input_files[0];
 		outputFinalConfiguration(filename_configuration);
 	}
+	fout_flow.close();
 	cout << indent << "Time evolution done" << endl << endl;
 }
 

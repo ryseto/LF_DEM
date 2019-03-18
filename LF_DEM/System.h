@@ -42,18 +42,17 @@
 #include "VelocityComponent.h"
 #include "ForceComponent.h"
 #include "cholmod.h"
-
+#include "SolventFlow.h"
 class MTRand;
 
 #ifdef USE_DSFMT
 #include "dSFMT-src-2.2.3/dSFMT.h"
 #endif
 
-
-
 class Simulation;
 // class Interaction;
 class BoxSet;
+class SolventFlow;
 
 class System{
 private:
@@ -188,7 +187,6 @@ private:
 	~System();
 
 	Parameters::ParameterSet p;
-	
 	int np_mobile; ///< number of mobile particles
 	enum SimulationType { simple_shear, extensional_flow, pipe_flow } simu_type;
 	//	bool ext_flow;
@@ -223,6 +221,8 @@ private:
 	std::vector<vec3d> rate_proportional_wall_torque;
 
 	BoxSet boxset;
+	SolventFlow sflow;
+
 	std::vector<double> radius;
 	std::vector<double> angle; // for 2D visualization
 
@@ -401,9 +401,12 @@ private:
 	void retrim(vec3d&); // Extensional flow Periodic Boundary condition
 	void updateH(); // Extensional flow Periodic Boundary condition
 	void yaplotBoxing(std::ofstream &fout_boxing); // Extensional flow Periodic Boundary condition
+
 	void countContactNumber();
 	void checkStaticForceBalance();
 
+	void initSolventFlow();
+	
 	void setBoxSize(double lx_, double ly_, double lz_)
 	{
 		lx = lx_;
