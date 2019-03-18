@@ -36,6 +36,7 @@
 		D988E38E165441750009949F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D988E38D165441750009949F /* main.cpp */; };
 		D988E390165441750009949F /* LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D988E38F165441750009949F /* LF_DEM.1 */; };
 		D988E39C1654A18D0009949F /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D988E39A1654A18D0009949F /* System.cpp */; };
+		D9892544223D3C76002FC5EB /* SolventFlow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9892542223D3C76002FC5EB /* SolventFlow.cpp */; };
 		D9953515180713FB00FC99C9 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9953514180713FB00FC99C9 /* main.cpp */; };
 		D9953517180713FB00FC99C9 /* cluster_life.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D9953516180713FB00FC99C9 /* cluster_life.1 */; };
 		D9953520180716B100FC99C9 /* Cluster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D995351E180716B100FC99C9 /* Cluster.cpp */; };
@@ -613,6 +614,8 @@
 		D988E399165443C10009949F /* vec3d.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = vec3d.h; sourceTree = "<group>"; };
 		D988E39A1654A18D0009949F /* System.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = System.cpp; sourceTree = "<group>"; };
 		D988E39B1654A18D0009949F /* System.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = System.h; sourceTree = "<group>"; };
+		D9892542223D3C76002FC5EB /* SolventFlow.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SolventFlow.cpp; sourceTree = "<group>"; };
+		D9892543223D3C76002FC5EB /* SolventFlow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SolventFlow.h; sourceTree = "<group>"; };
 		D98B3CCD17CCF057002B2A4D /* LubricationFunctions.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = LubricationFunctions.h; sourceTree = "<group>"; };
 		D98F62131E62367200053198 /* convertMaterialFunctions.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; name = convertMaterialFunctions.pl; path = tools/convertMaterialFunctions.pl; sourceTree = SOURCE_ROOT; };
 		D9953512180713FB00FC99C9 /* cluster_life */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cluster_life; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1358,6 +1361,8 @@
 				D9B18D5B200057510009113B /* OutputData.cpp */,
 				D988E39B1654A18D0009949F /* System.h */,
 				D988E39A1654A18D0009949F /* System.cpp */,
+				D9892543223D3C76002FC5EB /* SolventFlow.h */,
+				D9892542223D3C76002FC5EB /* SolventFlow.cpp */,
 				D94177981F7E041F00BB44C0 /* States.h */,
 				D94177991F7E041F00BB44C0 /* States.cpp */,
 				D92244831BFBF08700F46233 /* SystemHelperFunctions.cpp */,
@@ -1698,6 +1703,7 @@
 				D9FAAA301960685B00E601A9 /* Interaction.cpp in Sources */,
 				D92EAA0F17E39D5100C903F5 /* Contact.cpp in Sources */,
 				D92EAA1017E39D5100C903F5 /* Lubrication.cpp in Sources */,
+				D9892544223D3C76002FC5EB /* SolventFlow.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
