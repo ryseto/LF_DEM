@@ -8,32 +8,17 @@
 
 #ifndef SolventFlow_h
 #define SolventFlow_h
-
 #include <iostream>
 #include <iomanip>
 #include <fstream>
 #include <memory>
 #include <vector>
-#include "cholmod.h"
-#include "cholmod_check.h"
-
 #include "vec3d.h"
-#include "Contact.h"
-#include "Lubrication.h"
-#include "RepulsiveForce.h"
-#include "TimeActivatedAdhesion.h"
-#include "Sym2Tensor.h"
-#define DELETE(x) if(x){delete [] x; x = NULL;}
-// uncomment below to use long integer cholmod (necessary for GPU)
-#ifndef USE_GPU
-#define CHOL_FUNC(NAME) cholmod_ ## NAME
-typedef int chol_int;
-#else
-#define CHOL_FUNC(NAME) cholmod_l_ ## NAME
-typedef long chol_int;
-#endif
+#include "Eigen/Sparse"
+typedef Eigen::SparseMatrix<double> SpMat; // declares a column-major sparse matrix type of double
+typedef Eigen::Triplet<double> T;
 
-using namespace std;
+//using namespace Eigen;
 
 class System;
 class SolventFlow {
@@ -48,32 +33,25 @@ private:
 	int n;
 	double dx;
 	double dz;
-	vector<double> Pressure;
-	vector<double> div_u_particle;
-	vector<double> u_solvent_x;
-	vector<double> u_solvent_z;
-	vector<double> u_particle_x;
-	vector<double> u_particle_z;
-	vector<vec3d> pos;
-
 	// Staggered grid stores
 	// - the pressure at the cell center
 	// - the velocities at the cell faces.
-	
-	// Cholmod variables
-	cholmod_factor* chol_L ;
-	cholmod_common chol_c ;
-	cholmod_dense* chol_rhs;
-	cholmod_sparse* chol_matrix;
-	cholmod_dense* chol_solution;
-	cholmod_dense* chol_solve_workspace;
-	// cholmod_dense* chol_PTsolution;
-	//	cholmod_dense* chol_Psolution;
-	// resistance matrix building
-	chol_int dblocks_size;
-	chol_int current_column;
-	
-	
+	std::vector<double> pressure;
+	std::vector<double> div_u_particle;
+	std::vector<double> u_solvent_x;
+	std::vector<double> u_solvent_z;
+	std::vector<double> u_particle_x;
+	std::vector<double> u_particle_z;
+	std::vector<vec3d> pos;
+	int q(int xi, int zi){
+		int i = xi+zi*nx;
+		return i;
+	}
+	SpMat lap_mat;
+	//lap_mat;
+	Eigen::VectorXd b;
+	Eigen::VectorXd x;
+	Eigen::SimplicialLDLT <SpMat> *psolver;
 	
 public:
 	SolventFlow();
@@ -81,7 +59,8 @@ public:
 	void init(System* sys_);
 	void updateParticleVelocity();
 	void calcVelocityDivergence();
-	
+	void initPoissonSolver();
+	void solvePressure();
 	
 	void outputYaplot(std::ofstream &fout_flow);
 

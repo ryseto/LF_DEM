@@ -8,19 +8,16 @@
 
 #include "SolventFlow.h"
 #include "System.h"
-using namespace std;
+#include <vector>
 
 SolventFlow::SolventFlow()
 {
-	cerr << "." << endl;
-	
+	psolver = new Eigen::SimplicialLDLT <SpMat>;
 }
 
 SolventFlow::~SolventFlow()
 {
-//	DELETE(Pressure)
-//	DELETE(u_solvent)
-//	DELETE(u_particle)
+	delete [] psolver;
 }
 
 void SolventFlow::init(System* sys_)
@@ -31,11 +28,7 @@ void SolventFlow::init(System* sys_)
 	n = nx*nz;
 	dx = sys->get_lx()/nx;
 	dz = sys->get_lz()/nz;
-	
-//	Pressure = new double [nx*nz];
-//	u_solvent = new vec3d [nx*nz];
-//	u_particle = new vec3d [nx*nz];
-	Pressure.resize(n);
+	pressure.resize(n);
 	u_solvent_x.resize(n);
 	u_solvent_z.resize(n);
 	u_particle_x.resize(n);
@@ -48,6 +41,93 @@ void SolventFlow::init(System* sys_)
 			pos[ix+nx*iz].set(dx*ix+dx/2, 0, dz*iz+dz/2);
 		}
 	}
+}
+
+void SolventFlow::initPoissonSolver()
+{
+	std::vector< std::vector<double> > lmat;
+	lmat.resize(n);
+	for (int l=0; l<n; l++){
+		lmat[l].resize(n);
+	}
+	for (auto l : lmat) {
+		for (auto elm : l) {
+			elm = 0;
+		}
+	}
+	double exz = 2*(1/(dx*dx)+1/(dz*dz));
+	double ex = 1/(dx*dx);
+	double ez = 1/(dz*dz);
+
+	for (int zi = 0; zi < nz; zi++){
+		for (int xi = 0; xi < nx; xi++){
+			// b(xi, zi)
+			int xip1 = xi+1;
+			if (xip1 == nx) {
+				xip1 = 0;
+			}
+			int xim1 = xi-1;
+			if (xim1 == -1) {
+				xim1 = nx-1;
+			}
+			int zip1 = zi+1;
+			if (zip1 == nz) {
+				zip1 = 0;
+			}
+			int zim1 = zi-1;
+			if (zim1 == -1) {
+				zim1 = nz-1;
+			}
+			lmat[q(xi, zi)][q(xi,   zi  )] = -exz;  //p(xi,zi) --> b(xi,zi)
+			lmat[q(xi, zi)][q(xip1, zi  )] =   ex;  //p(xi+1,zi) --> b(xi,zi)
+			lmat[q(xi, zi)][q(xim1, zi  )] =   ex;  //p(xi-1,zi) --> b(xi,zi)
+			lmat[q(xi, zi)][q(xi  , zip1)] =   ez;  //p(xi,zi+1) --> b(xi,zi)
+			lmat[q(xi, zi)][q(xi  , zim1)] =   ez;  //p(xi,zi-1) --> b(xi,zi)
+		}
+	}
+	if (true) {
+		int cnt_nz = 0;
+		for (int l=0; l<n; l++) {
+			for (int k=0; k<n; k++) {
+				if ( lmat[l][k] != 0) {
+					cnt_nz ++;
+				}
+			}
+		}
+		std::cerr << "cnt_nz=  " << cnt_nz << std::endl;
+	}
+	
+	std::vector<T> t_lmat;            // list of non-zeros coefficients
+	for (int l=0; l<n; l++) {
+		for (int k=0; k<n; k++) {
+			if (lmat[l][k] != 0) {
+				// std::cerr << k << ' ' << l << ' ' << lmat[l][k] << std::endl;
+				t_lmat.push_back(T(k, l, lmat[l][k]));
+			}
+		}
+	}
+	std::cerr << t_lmat.size() << std::endl;
+	lap_mat.resize(n, n);
+	lap_mat.setFromTriplets(t_lmat.begin(), t_lmat.end());
+	b.resize(n);
+	x.resize(n);
+	psolver->analyzePattern(lap_mat);   // for this step the numerical values of A are not used
+	psolver->factorize(lap_mat);
+	if (psolver->info() != Eigen::Success) {
+		std::cerr << "decomposition failed" << std::endl;
+		return;
+	}
+	std::ofstream mat_out("mat.dat");
+	for (int l=0; l<n; l++) {
+		for (int k=0; k<n; k++) {
+			int i = k%nx;
+			int j = (k - i)/nx;
+			mat_out << lmat[l][k] << ' ';
+			
+		}
+		mat_out << std::endl;
+	}
+	mat_out.close();
 }
 
 void SolventFlow::updateParticleVelocity()
@@ -98,14 +178,14 @@ void SolventFlow::updateParticleVelocity()
 		}
 	}
 	calcVelocityDivergence();
+	solvePressure();
 }
-
 
 void SolventFlow::calcVelocityDivergence()
 {
 	double dux_dx, duz_dz;
-	for (int i=0; i<nx; i++){
-		for (int j=0; j<nz; j++){
+	for (int j=0; j<nz; j++){
+		for (int i=0; i<nx; i++){
 			int i_next = i+1;
 			if (i_next == nx) {
 				i_next = 0;
@@ -121,25 +201,50 @@ void SolventFlow::calcVelocityDivergence()
 	}
 }
 
+void SolventFlow::solvePressure()
+{
+	double delta_P_dxdx = 1;
+	for (int j=0; j<nz; j++){
+		for (int i=0; i<nx; i++){
+			//b.setConstant(i, random());
+			b(i+nx*j) = div_u_particle[i+nx*j];
+			if (i == 0) {
+				b(i+nx*j) += -delta_P_dxdx;
+			} else if (i == nx-1) {
+				b(i+nx*j) += delta_P_dxdx;
+			}
+		}
+	}
+	x = psolver->solve(b);
+	if (psolver->info() != Eigen::Success) {
+		// solving failed
+		std::cerr << "solving failed" << std::endl;
+		return;
+	}
+	for (int i=0; i < n; i++) {
+		pressure[i] = x(i);
+	}
+}
+
 void SolventFlow::outputYaplot(std::ofstream &fout_flow)
 {
 	static bool first = true;
 	if (first) {
 		first = false;
 	} else {
-		fout_flow << endl;
+		fout_flow << std::endl;
 	}
-	fout_flow << "y 1" << endl;
-	fout_flow << "@ 0" << endl;
-	fout_flow << "r 1" << endl;
+	fout_flow << "y 1" << std::endl;
+	fout_flow << "@ 0" << std::endl;
+	fout_flow << "r 1" << std::endl;
 	for (int i=0; i < sys->get_np(); i++) {
 		double x = sys->position[i].x-sys->get_lx()/2;
 		double z = sys->position[i].z-sys->get_lz()/2;
-		fout_flow << "c " << x  << ' ' << 0 << ' ' << z << endl;
+		fout_flow << "c " << x  << ' ' << 0 << ' ' << z << std::endl;
 	}
-	fout_flow << "y 2" << endl;
-	fout_flow << "@ 3" << endl;
-	fout_flow << "r " << 0.1 << endl;
+	fout_flow << "y 2" << std::endl;
+	fout_flow << "@ 3" << std::endl;
+	fout_flow << "r " << 0.1 << std::endl;
 	double vfactor = 0.2;
 	vec3d o_shift(sys->get_lx()/2, 0, sys->get_lz()/2);
 	for (int i=0; i<nx; i++){
@@ -149,41 +254,50 @@ void SolventFlow::outputYaplot(std::ofstream &fout_flow)
 			double vz = vfactor*u_particle_z[i + nx*j];
 			fout_flow << "s ";
 			fout_flow << po.x - dx/2      << ' ' << -0.02 << ' ' << po.z << ' ';
-			fout_flow << po.x - dx/2 + vx << ' ' << -0.02 << ' ' << po.z << endl;
+			fout_flow << po.x - dx/2 + vx << ' ' << -0.02 << ' ' << po.z << std::endl;
 			fout_flow << "s ";
 			fout_flow << po.x << ' ' << -0.02 << ' ' << po.z - dz/2 << ' ';
-			fout_flow << po.x << ' ' << -0.02 << ' ' << po.z - dz/2 + vz << endl;
+			fout_flow << po.x << ' ' << -0.02 << ' ' << po.z - dz/2 + vz << std::endl;
 
 		}
 	}
-	fout_flow << "y 3" << endl;
-	fout_flow << "@ 5" << endl;
-	fout_flow << "r " << 0.05 << endl;
+	fout_flow << "y 3" << std::endl;
+	fout_flow << "@ 5" << std::endl;
+	fout_flow << "r " << 0.05 << std::endl;
 	for (int i=0; i<nx; i++){
 		double x = i*dx-o_shift.x;
 		fout_flow << "s ";
 		fout_flow << x << ' ' << -0.02 << ' ' <<              -o_shift.z << ' ';
-		fout_flow << x << ' ' << -0.02 << ' ' << sys->get_lz()-o_shift.z << endl;
+		fout_flow << x << ' ' << -0.02 << ' ' << sys->get_lz()-o_shift.z << std::endl;
 	}
 	for (int i=0; i<nz; i++){
 		double z =  i*dz-o_shift.z;
 		fout_flow << "s ";
 		fout_flow <<              -o_shift.x << ' ' << -0.02 << ' ' << z << ' ';
-		fout_flow << sys->get_lx()-o_shift.x << ' ' << -0.02 << ' ' << z << endl;
+		fout_flow << sys->get_lx()-o_shift.x << ' ' << -0.02 << ' ' << z << std::endl;
 	}
 
-	fout_flow << "y 4" << endl;
-
-	for (int i=0; i<nx; i++){
-		for (int j=0; j<nz; j++){
-			if (div_u_particle[i+nx*j] > 0 ) {
-				fout_flow << "@ 4" << endl;
+	fout_flow << "y 4" << std::endl;
+	
+	double p_max = 0;
+	for (int i=0; i< n; i++) {
+		if (p_max < pressure[i]) {
+			p_max = pressure[i];
+		}
+	}
+	std::cerr << p_max << std::endl;
+	for (int j=0; j<nz; j++){
+		for (int i=0; i<nx; i++){
+			//			double s =div_u_particle[i+nx*j];
+			double s = pressure[i+nx*j]/10;
+			if (s > 0 ) {
+				fout_flow << "@ 4" << std::endl;
 			} else {
-				fout_flow << "@ 6" << endl;
+				fout_flow << "@ 6" << std::endl;
 			}
 			vec3d po = pos[i + nx*j] - o_shift;
-			fout_flow << "r "<< 0.4*abs(div_u_particle[i+nx*j]) << endl;
-			fout_flow << "c " << po.x << " -0.03 " << po.z << endl;
+			fout_flow << "r "<< abs(s) << std::endl;
+			fout_flow << "c " << po.x << " -0.03 " << po.z << std::endl;
 		}
 	}
 }

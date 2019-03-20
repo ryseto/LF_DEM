@@ -2973,6 +2973,7 @@ void System::countContactNumber()
 void System::initSolventFlow()
 {
 	sflow.init(this);
+	sflow.initPoissonSolver();
 
 }
 
