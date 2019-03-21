@@ -142,6 +142,7 @@ public:
 	vec3d getSpringForce() const;
 	vec3d getNormalForce() const;
 	double getNormalForceValue() const;
+	double getNormalSpringForce() const;
 	vec3d getTangentialForce() const;
 	double get_normal_load() const;
 	void calcContactStress();

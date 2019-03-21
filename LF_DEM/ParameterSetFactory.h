@@ -19,7 +19,9 @@ class ParameterSetFactory {
 public:
 	ParameterSetFactory(Dimensional::Unit guarranted_unit);
 	void setFromFile(const std::string& filename_parameters);
-	void setParameterFromKeyValue(const std::string &keyword, 
+	void setFromStringStream(std::stringstream& ss_initial_setup);
+	void setFromLine(std::string& line);
+	void setParameterFromKeyValue(const std::string &keyword,
 								  const std::string &value);
 	ParameterSet getParameterSet() const;
 	std::vector<Dimensional::ForceScale> getForceScales() const;

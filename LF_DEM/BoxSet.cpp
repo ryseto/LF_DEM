@@ -170,7 +170,7 @@ void BoxSet::allocateBoxes()
 void BoxSet::positionBoxes()
 {
 	// position boxes
-	if (!sys->ext_flow) {
+	if (sys->simu_type != sys->SimulationType::extensional_flow) {
 		auto it = Boxes.begin();
 		for (unsigned int ix=0; ix<x_box_nb; ix++) {
 			for (unsigned int iy=0; iy<y_box_nb; iy++) {

@@ -32,7 +32,7 @@ namespace Dimensional {
 		hydro,
 		repulsion,
 		brownian,
-		cohesion,
+		adhesion,
 		critical_load,
 		ft_max,
 		kn,
@@ -52,8 +52,8 @@ namespace Dimensional {
 				return "r";
 			case Unit::brownian:
 				return "b";
-			case Unit::cohesion:
-				return "c";
+			case Unit::adhesion:
+				return "ad";
 			case Unit::critical_load:
 				return "cl";
 			case Unit::ft_max:
@@ -87,8 +87,8 @@ namespace Dimensional {
 		if (s == "b" || s == "brownian") {
 			return Unit::brownian;
 		}
-		if (s == "c" || s == "cohesion") {
-			return Unit::cohesion;
+		if (s == "a" || s == "adhesion") {
+			return Unit::adhesion;
 		}
 		if (s == "cl" || s == "critical_load") {
 			return Unit::critical_load;

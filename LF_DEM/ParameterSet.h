@@ -66,7 +66,6 @@ namespace Parameters {
 		bool out_data_vel_components;		///< Output velocity components in the par* file [false]
 		bool out_na_vel;					///< Output non-affine velocity components in the par* file [false]
 		bool out_na_disp;					///< Output non-affine displacements since last time step in the par* file [false]
-		bool recording_interaction_history;	///< Output all histories of interactions (time_end should be short enough) [false]
 		double recording_start;				///< Hisotry is recorded after this strain [1]
 		bool effective_coordination_number; ///< Count and output effective coordination number [false]
 	};
@@ -84,7 +83,7 @@ namespace Parameters {
 		 ********************************************************/
 		double repulsion;				///< Amplitude of the repulsive force [0]
 		double critical_load;			///< Amplitude of the critical load [0]
-		double cohesion;				///< Amplitude of the cohesion [0 guarranted_unit]
+		double adhesion;				///< Amplitude of the adhesion [0 guarranted_unit]
 		double brownian;				///< Amplitude of the Brownian force [0]
 		double repulsive_length;		///< "Debye" screering length for the repulsive force [0.05]
 		double repulsive_max_length;	///< Maximum length until which the repulsive force can reach. If -1, no limit. (e.g. length of polymer brush) [-1]
@@ -126,6 +125,7 @@ namespace Parameters {
 		 */
 		double lub_reduce_parameter;	///< Lubrication regularization length ("roughness length") [1e-3]
 		double lub_max_gap;				///< Lubrication range (in interparticle gap distance) [0.5]
+		bool smooth_lubrication;        ///< 1/h - 1/h_max, giving 0 at h=hmax [false]
 		/*******************************************************
 		 CONTACTS
 		 ********************************************************/
@@ -198,14 +198,16 @@ namespace Parameters {
 		double sj_disp_max_shrink_factor;	///< rescaling factor for negative shear rate for shear jamming [1.1]
 		double sj_shear_rate;		///< Shear rate to judge shear jamming [0]
 		double sj_velocity;         ///< Velocity to judge shear jamming [1e-3]
-		int sj_check_count;			///< Jamming is judeged after counting this number [10]
+		int sj_check_count;			///< Jamming is judeged after counting this number [500] 
 		int sj_reversal_repetition;			///< Repetition number for shear reversal [2]
 		std::string sj_program_file;        ///< [""]
-		double theta_shear;  ///< Shear direction, in degress, 0 is shear along x, 90 is shear along y [0]
+		double theta_shear;  ///< Shear direction, in degrees, 0 is shear along x, 90 is shear along y [0]
 		double strain_reversal;  ///< for test_simulation = 21 (rtest1)
 		bool keep_input_strain;  ///< Use as initial strain value the strain from initial Lees-Edwards displacement [false]
 		double brownian_relaxation_time; ///< Averaging time scale in the stress controlled simulation for Brownian [1]
 		bool check_static_force_balance;
+		double body_force_angle;  ///< parallel to wall 0 and vertical to wall 90 [0]
+
 	};
 	
 } // namespace Parameters

@@ -35,16 +35,16 @@
 class Simulation
 {
 private:
-	System sys;
 	Parameters::ParameterSet p_initial;
 	std::string header_imported_configulation[2];
 	Parameters::ControlVariable control_var;
+	Dimensional::DimensionalQty<double> control_value;
 	/*
 	 * Resultant data
 	 */
 	Dimensional::Unit output_unit;
 	Dimensional::UnitSystem system_of_units;
-
+	bool shear_rheology;
 	double target_stress_input;
 	double input_rate;
 	double dimensionless_rate;
@@ -79,39 +79,45 @@ private:
 	OutputData outdata_int;
 	std::ofstream fout_boxing;
 	gsd_handle gsdOut;
+	int np1;
+	Dimensional::Unit determineUnit(Parameters::ParameterSetFactory &PFact);
+	void convertForces(Dimensional::Unit &internal_unit,
+					   Parameters::ParameterSetFactory &PFact);
+
 	/*
 	 * For inputs
 	 */
-	void setupOptionalSimulation(std::string indent);
+	void setupOptionalSimulation();
 	std::vector<Sym2Tensor> getParticleStressGroup(std::string group);
 	void checkDispersionType();
 	/*********** shear jamming  ************/
 	void operateJammingStressReversal(std::set<std::string> &output_events);
 	enum class DispersionType { mono, bi, poly };
 	DispersionType dispersion_type;
-	int np1;
+	std::string indent;
 public:
+	System sys;
 	/* For DEMsystem*/
 	Simulation(State::BasicCheckpoint chkp = State::zero_time_basicchkp);
 	void simulationSteadyShear(std::string in_args,
 							   std::vector<std::string>& input_files,
 							   bool binary_conf,
-							   Parameters::ControlVariable control_variable,
-							   Dimensional::DimensionalQty<double> control_value,
-							   std::string flow_type,
+							   Parameters::ControlVariable control_variable_,
+							   Dimensional::DimensionalQty<double> control_value_,
 							   std::string simu_identifier);
-
-
+	void simulationPipeFlow(std::string in_args,
+							std::vector<std::string>& input_files,
+							bool binary_conf,
+							Parameters::ControlVariable control_variable_,
+							Dimensional::DimensionalQty<double> control_value_,
+							std::string simu_identifier);
 	void setupSimulation(std::string in_args,
 						 std::vector<std::string>& input_files,
 						 bool binary_conf,
-						 Dimensional::DimensionalQty<double> control_value,
-						 std::string flow_type,
 						 std::string simu_identifier);
-	void setupFlow(Dimensional::DimensionalQty<double> control_value);
+	void setupFlow();
 	void setConfigToSystem(bool binary_conf, const std::string &filename);
 	TimeKeeper initTimeKeeper();
-	Parameters::ParameterSet p; // @@@@ We should distinguish p and sys.p more carefully.
 	bool keepRunning();
 	// void timeEvolution(double& next_output_data);
 	void generateOutput(const std::set<std::string> &output_events, int& binconf_counter);
@@ -129,14 +135,12 @@ public:
 	std::string prepareSimulationName(bool binary_conf,
 									  const std::string& filename_import_positions,
 									  const std::string& filename_parameters,
-									  const std::string& simu_identifier,
-									  Dimensional::DimensionalQty<double> control_value);
+									  const std::string& simu_identifier);
 	void echoInputFiles(std::string in_args,
 						std::vector<std::string>& input_files);
-	void contactForceParameter(std::string filename);
-	void contactForceParameterBrownian(std::string filename);
-	void setupNonDimensionalization(Dimensional::DimensionalQty<double> control_value, 
-									Parameters::ParameterSetFactory &PFact);
+//	void contactForceParameter(std::string filename); // @@@ Do we use this?
+//	void contactForceParameterBrownian(std::string filename); // @@@ Do we use this?
+	void setupNonDimensionalization(Parameters::ParameterSetFactory &PFact);
 	void stopShearing(TimeKeeper &tk); //simulation mode 22
 	void stressReversal();
 	void stressProgram();
@@ -154,6 +158,7 @@ public:
 	void outputConfigurationBinary(std::string);
 	void outputGSD();
 	void dataAdjustGSD(std::vector<vec3d> &pos,
+					   std::vector<vec3d> &vel,
 					   vec3d &shear_strain,
 					   double lx, double ly, double lz);
 	void checkpoint();
@@ -162,7 +167,6 @@ public:
 	void outputComputationTime();
 	bool kill;
 	bool force_to_run;
-	bool diminish_output;
 	/*********** Events  ************/
 	void handleEventsShearJamming();
 	void handleEventsFragility();

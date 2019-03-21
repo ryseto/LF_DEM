@@ -26,6 +26,9 @@ using namespace std;
 volatile sig_atomic_t sig_caught = 0;
 #endif
 
+int mainConventional(int argc, char **argv);
+int mainLammpsLike(int argc, char **argv);
+
 std::string prepareSimulationNameFromChkp(const std::string& filename_chkp)
 {
 	/**
@@ -39,7 +42,6 @@ std::string prepareSimulationNameFromChkp(const std::string& filename_chkp)
 
 int main(int argc, char **argv)
 {
-
 	cout << endl << "LF_DEM version " << GIT_VERSION << endl << endl;
 	string usage = "(1) Simulation\n $ LF_DEM [-r Rate] [-s Stress] [-R Rate_Sequence] [-S Stress_Sequence]\
 	[-e] [-m ?] [-k kn_kt_File] [-v Simulation_Identifier] [-i Provisional_Data] [-n]\
@@ -53,22 +55,22 @@ int main(int argc, char **argv)
 	double volume_frac_gen = 0;
 	bool binary_conf = false;
 	bool force_to_run = false;
-	bool diminish_output = false;
-	string flow_type = "shear";
+	string simulation_type = "shear rheology";
 	string config_filename = "not_given";
 	string param_filename = "not_given";
 	string knkt_filename = "not_given";
 	string stress_rate_filename = "not_given";
 	string chkp_filename = "";
 	string simu_name;
-
+	
 	Dimensional::DimensionalQty<double> control_value;
-	Parameters::ControlVariable rheology_control = Parameters::ControlVariable::rate;
+	Parameters::ControlVariable control_variable = Parameters::ControlVariable::rate;
 	string simu_identifier = "";
 	const struct option longopts[] = {
 		{"rate-controlled",   required_argument, 0, 'r'},
 		{"rate-infty",        required_argument, 0, '8'},
 		{"stress-controlled", required_argument, 0, 's'},
+		{"Pipe-flow",         required_argument, 0, 'P'},
 		{"generate",          optional_argument, 0, 'g'},
 		{"random-seed",       required_argument, 0, 'a'},
 		{"volume-fraction",   required_argument, 0, 'p'},
@@ -82,31 +84,33 @@ int main(int argc, char **argv)
 		{"help",              no_argument,       0, 'h'},
 		{0, 0, 0, 0},
 	};
-
+	
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hn80efds:t:r:g::p:a:k:i:v:c:N:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hn80fds:t:r:g::P:p:a:k:i:v:c:N:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
-				rheology_control = Parameters::ControlVariable::stress;
+				control_variable = Parameters::ControlVariable::stress;
 				control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Stress, optarg, "shear stress");
 				break;
 			case 'r':
-				rheology_control = Parameters::ControlVariable::rate;
+				control_variable = Parameters::ControlVariable::rate;
 				control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, optarg, "shear rate");
 				break;
 			case '8':
-				rheology_control = Parameters::ControlVariable::rate;
+				control_variable = Parameters::ControlVariable::rate;
 				control_value = {Dimensional::Dimension::Force, 1, Dimensional::Unit::hydro};
 				cout << "Rate control, infinite shear rate (hydro + hard contacts only)" << endl;
 				break;
+			case 'P':
+				simulation_type = "pipe flow";
+				control_variable = Parameters::ControlVariable::pressure;
+				control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Stress, optarg, "pressure");
+				break;
 			case '0':
-				rheology_control = Parameters::ControlVariable::rate;
+				control_variable = Parameters::ControlVariable::rate;
 				control_value = {Dimensional::Dimension::Force, 0, Dimensional::Unit::kn};
 				cout << "Rate control, zero shear rate (hydro + hard contacts only)" << endl;
-				break;
-			case 'e':
-				flow_type = "extension";
 				break;
 			case 'k':
 				knkt_filename = optarg;
@@ -126,6 +130,8 @@ int main(int argc, char **argv)
 						generate_init = 3; // simple shear with wall
 					} else if (optarg[0] == 's') {
 						generate_init = 4; // winding
+					} else if (optarg[0] == 'b') {
+						generate_init = 5; // bottom
 					}
 				}
 				break;
@@ -143,9 +149,6 @@ int main(int argc, char **argv)
 				break;
 			case 'f':
 				force_to_run = true;
-				break;
-			case 'd':
-				diminish_output = true;
 				break;
 			case 'N':
 				simu_name = optarg;
@@ -169,7 +172,7 @@ int main(int argc, char **argv)
 		generate_init_config.generate(random_seed, volume_frac_gen, generate_init);
 	} else {
 #ifdef SIGINT_CATCH
-		std::signal(SIGINT, sigint_handler);	
+		std::signal(SIGINT, sigint_handler);
 #endif
 		if (optind == argc-2) {
 			config_filename = argv[optind++];
@@ -183,9 +186,9 @@ int main(int argc, char **argv)
 		input_files[1] = param_filename;
 		input_files[2] = knkt_filename;
 		input_files[3] = stress_rate_filename;
-
+		
 		State::BasicCheckpoint state = State::zero_time_basicchkp;
-
+		
 		if (!chkp_filename.empty()) {
 			state = State::readBasicCheckpoint(chkp_filename);
 		}
@@ -197,12 +200,17 @@ int main(int argc, char **argv)
 		}
 
 		simulation.force_to_run = force_to_run;
-		simulation.diminish_output = diminish_output;
 
 		try {
-			simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
-											 rheology_control, control_value,
-											 flow_type, simu_identifier);
+			if (simulation_type == "shear rheology") {
+				simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
+												 control_variable, control_value,
+												 simu_identifier);
+			} else {
+				simulation.simulationPipeFlow(in_args.str(), input_files, binary_conf,
+											  control_variable, control_value,
+											  simu_identifier);
+			}
 		} catch (runtime_error& e) {
 			cerr << e.what() << endl;
 			return 1;

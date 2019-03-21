@@ -364,7 +364,7 @@ vec3d ContactDashpot::getForceOnP0(const vec3d &vel_p0,
 	if (is_active()) {
 		vec3d vi(vel_p0);
 		vec3d vj(vel_p1);
-		if (!sys->ext_flow) {
+		if (sys->simu_type != sys->SimulationType::extensional_flow) {
 			vj += interaction->z_offset*sys->get_vel_difference();
 		} else {
 			vj += sys->get_vel_difference_extension(interaction->pd_shift);

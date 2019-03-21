@@ -10,7 +10,7 @@
 #define PARAM_INIT_FORCESCALE(name, default_value) {#name,  [](ParameterSet &p, InputParameter<Dimensional::ForceScale> in) {p.name = in.value.dim_qty.value;}, default_value}
 
 namespace Parameters {
-
+	
 void Str2KeyValue(const std::string& str_parameter,
 				  std::string& keyword,
 				  std::string& value)
@@ -26,7 +26,8 @@ ParameterSetFactory::ParameterSetFactory(Dimensional::Unit guarranted_unit)
 	setDefaultValues(guarranted_unit);
 }
 
-void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit) { 
+void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
+{
 
 /*================================================
 =            DEFAULT PARAMETER VALUES            =
@@ -52,9 +53,9 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit) {
 		PARAM_INIT(output.log_time_interval, false),
 		PARAM_INIT(output.out_na_vel, false),
 		PARAM_INIT(output.out_na_disp, false),
-		PARAM_INIT(output.recording_interaction_history, false),
 		PARAM_INIT(output.effective_coordination_number, false),
-		PARAM_INIT(check_static_force_balance, false)
+		PARAM_INIT(check_static_force_balance, false),
+		PARAM_INIT(smooth_lubrication, false)
 	};
 
 	/*===========================================
@@ -92,7 +93,8 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit) {
 		PARAM_INIT(sj_disp_max_shrink_factor, 1.1),
 		PARAM_INIT(sj_disp_max_goal, 1e-6),
 		PARAM_INIT(sj_shear_rate, 0),
-		PARAM_INIT(sj_velocity, 1e-3)
+		PARAM_INIT(sj_velocity, 1e-3),
+		PARAM_INIT(body_force_angle, 0)
 	};
 
 	/*================================
@@ -106,7 +108,7 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit) {
 		PARAM_INIT(friction_model, 1),
 		PARAM_INIT(np_fixed, 0),
 		PARAM_INIT(simulation_mode, 0),
-		PARAM_INIT(sj_check_count, 10),
+		PARAM_INIT(sj_check_count, 500),
 		PARAM_INIT(sj_reversal_repetition, 10)
 	};
 
@@ -115,7 +117,7 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit) {
 	===============================*/
 	StrParams = \
 	{
-		PARAM_INIT(flow_type, ""),
+		PARAM_INIT(flow_type, "shear"),
 		PARAM_INIT(event_handler, ""),
 		PARAM_INIT(output.out_particle_stress, ""),
 		PARAM_INIT(lubrication_model, "tangential"),
@@ -145,8 +147,8 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit) {
 	default_val = {Dimensional::Unit::critical_load, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(critical_load, default_val));
 
-	default_val = {Dimensional::Unit::cohesion, {Dimensional::Dimension::Force, 0, guarranted_unit}};
-	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(cohesion, default_val));
+	default_val = {Dimensional::Unit::adhesion, {Dimensional::Dimension::Force, 0, guarranted_unit}};
+	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(adhesion, default_val));
 
 	default_val = {Dimensional::Unit::brownian, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(brownian, default_val));
@@ -254,6 +256,53 @@ void ParameterSetFactory::setFromFile(const std::string& filename_parameters)
 	}
 	std::cout << indent << "setFromFile...done" << std::endl;
 	fin.close();
+}
+
+void ParameterSetFactory::setFromStringStream(std::stringstream& ss_initial_setup)
+{
+	std::string indent = "  ParameterSetFactory::\t";
+	std::cout << indent << "setFromStringStream..." << std::endl;
+	std::string keyword, value;
+	std::string line;
+	while (std::getline(ss_initial_setup, line, ';')) {
+		std::string str_parameter;
+		removeBlank(line);
+		str_parameter = line;
+		std::string::size_type begin_comment;
+		std::string::size_type end_comment;
+		do {
+			begin_comment = str_parameter.find("/*");
+			end_comment = str_parameter.find("*/");
+			if (begin_comment > 10000) {
+				break;
+			}
+			str_parameter = str_parameter.substr(end_comment+2);
+		} while (true);
+		if (begin_comment > end_comment) {
+			std::cerr << str_parameter.find("/*") << std::endl;
+			std::cerr << str_parameter.find("*/") << std::endl;
+			throw std::runtime_error("syntax error in the parameter file.");
+		}
+		std::string::size_type pos_slashslash = str_parameter.find("//");
+		if (pos_slashslash != std::string::npos) {
+			throw std::runtime_error(" // is not the syntax to comment out. Use /* comment */");
+		}
+		Str2KeyValue(str_parameter, keyword, value);
+		setParameterFromKeyValue(keyword, value);
+	}
+	std::cout << indent << "setFromStringStream...done" << std::endl;
+}
+
+void ParameterSetFactory::setFromLine(std::string& line)
+{
+	std::string indent = "  ParameterSetFactory::\t";
+	std::cout << indent << "setFromStringStream..." << std::endl;
+	removeBlank(line);
+	std::string keyword, value;
+	Str2KeyValue(line, keyword, value);
+	std::cerr << keyword << ' ' << value << std::endl;
+	setParameterFromKeyValue(keyword, value);
+	std::cout << indent << "setFromStringStream...done" << std::endl;
 }
 
 void ParameterSetFactory::setParameterFromKeyValue(const std::string &keyword, 

@@ -42,6 +42,7 @@ private:
 	vec3d *nvec;
 	double lub_coeff;
 	double log_lub_coeff;
+	double lub_coeff_min;
 	double a0;
 	double a1;
 	double ro;
@@ -112,7 +113,7 @@ private:
 	inline bool is_active() const {return _active;};
 	void activate();
 	void deactivate();
-	void updateActivationState();
+	void updateActivationState(const bool contact_active);
 	void setParticleData();
 	void calcLubConstants();
 	//===== forces/stresses  ========================== //

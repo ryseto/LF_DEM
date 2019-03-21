@@ -137,7 +137,6 @@ namespace Dimensional {
 			flipDependency(unit);
 		}
 		unit_nodes[unit] = {Dimension::Force, 1, unit};
-
 		for (auto &node: unit_nodes) {
 			convertNodeUnit(node.second, unit);
 		}
@@ -153,6 +152,7 @@ namespace Dimensional {
 		std::set<Unit> visited;
 		for (auto node: unit_nodes) {
 			auto force = node.first;
+			//std::cerr << "force = " << node.first << std::endl;
 			auto value = node.second;
 			do {
 				visited.insert(force);

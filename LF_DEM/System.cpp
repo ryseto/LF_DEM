@@ -62,21 +62,20 @@ wagnerhash(time_t t, clock_t c)
 }
 #endif
 
-System::System(Parameters::ParameterSet& ps,
-			   list <Event>& ev,
+System::System(list <Event>& ev,
 			   State::BasicCheckpoint chkp):
+simu_type(simple_shear),
 pairwise_resistance_changed(true),
 clk(chkp.clock),
 shear_rate(0),
 omega_inf(0),
 events(ev),
-p(ps),
 brownian(false),
 friction(false),
 rolling_friction(false),
 repulsiveforce(false),
 delayed_adhesion(false),
-cohesion(false),
+adhesion(false),
 critical_load_model(false),
 brownian_dominated(false),
 twodimension(false),
@@ -210,6 +209,9 @@ void System::declareForceComponents()
 		force_components["delayed_adhesion"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setTActAdhesionForceToParticle);
 	}
 
+	if (simu_type == pipe_flow) {
+		force_components["body_force"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setBodyForce);
+	}
 	/********** Force R_FU^{mf}*(U^f-U^f_inf)  *************/
 	if (mobile_fixed) {
 		// rate proportional with walls, but this can change
@@ -364,13 +366,6 @@ void System::setupParametersLubrication()
 		p.lubrication_model != "tangential") {
 		throw runtime_error(indent+"unknown lubrication_model "+p.lubrication_model+"\n");
 	}
-
-	if (p.lubrication_model == "tangential" && p.lub_max_gap >= 1) {
-		/* The tangential part of lubrication is approximated as log(1/h).
-		 * To keep log(1/h) > 0, h needs to be less than 1.
-		 */
-		throw runtime_error(indent+"lub_max_gap must be smaller than 1\n");
-	}
 }
 
 void System::setupParametersContacts()
@@ -463,8 +458,8 @@ void System::setupParameters()
 	if (p.simulation_mode == 31) {
 		p.sd_coeff = 1e-6;
 	}
-	if (p.cohesion > 0) {
-		cohesion = true;
+	if (p.adhesion > 0) {
+		adhesion = true;
 	}
 	if (p.TA_adhesion.adhesion_max_force > 0) {
 		delayed_adhesion = true;
@@ -505,7 +500,7 @@ void System::setupGenericConfiguration(T conf, Parameters::ControlVariable contr
 	np_mobile = np - p.np_fixed;
 	control = control_;
 
-	setBoxSize(conf.lx,conf.ly,conf.lz);
+	setBoxSize(conf.lx, conf.ly, conf.lz);
 	twodimension = ly == 0;
 
 	setupParameters();
@@ -532,7 +527,7 @@ void System::setupGenericConfiguration(T conf, Parameters::ControlVariable contr
 	}
 
 	setConfiguration(conf.position, conf.radius, conf.angle);
-	if (ext_flow) {
+	if (simu_type == extensional_flow) {
 		// extensional flow
 		// @@@ Some variables need to be set before initializeBoxing() @@@
 		// @@@ This part is very messy. Needs to be rewritten careffuly.
@@ -558,7 +553,12 @@ void System::setupConfiguration(struct base_shear_configuration conf, Parameters
 
 void System::setupConfiguration(struct fixed_velo_configuration conf, Parameters::ControlVariable control_)
 {
-	p.np_fixed = conf.fixed_velocities.size();
+	np_wall1 = conf.np_wall1;
+	np_wall2 = conf.np_wall2;
+	//p.np_fixed = conf.fixed_velocities.size();
+	p.np_fixed = np_wall1+np_wall2;
+	z_bot = conf.z_bot;
+	z_top = conf.z_top;
 	setupGenericConfiguration(conf, control_);
 	setFixedVelocities(conf.fixed_velocities);
 }
@@ -570,7 +570,6 @@ void System::setupConfiguration(struct circular_couette_configuration conf, Para
 	np_wall2 = conf.np_wall2;
 	radius_in = conf.radius_in;
 	radius_out = conf.radius_out;
-
 	setupGenericConfiguration(conf, control_);
 }
 
@@ -682,8 +681,7 @@ void System::initializeBoxing()
 			}
 		}
 	}
-	if (!ext_flow) {
-		// simple shear
+	if (simu_type != extensional_flow) {
 		boxset.init(max_range, this);
 		for (int i=0; i<np; i++) {
 			boxset.box(i);
@@ -731,38 +729,23 @@ void System::timeStepBoxing()
 	if (!zero_shear) {
 		double strain_increment = shear_rate*dt;
 		clk.cumulated_strain += strain_increment;
-		const double small_value = 1e-9;
-		if (!ext_flow) {
-			// simple shear flow
+		if (simu_type != extensional_flow) {
 			vec3d shear_strain_increment = 2*dot(E_infinity, {0, 0, 1})*dt;
 			shear_strain += shear_strain_increment;
 			shear_disp += shear_strain_increment*lz;
-			{
-				int mx = 0;
-				if (shear_disp.x >= lx-small_value) {
-					mx = 1;
-				} else if (shear_disp.x <= -(lx-small_value)) {
-					mx = -1;
-				}
-				if (shear_disp.x < 0) {
-					mx --;
-				}
-				shear_disp.x += -mx*lx;
+			int m = (int)(shear_disp.x/lx);
+			if (shear_disp.x < 0) {
+				m--;
 			}
+			shear_disp.x = shear_disp.x-m*lx;
 			if (!twodimension) {
-				int my = 0;
-				if (shear_disp.y >= ly-small_value) {
-					my = 1;
-				} else if (shear_disp.y <= -(ly-small_value)) {
-					my = -1;
-				}
+				m = (int)(shear_disp.y/ly);
 				if (shear_disp.y < 0) {
-					my--;
+					m--;
 				}
-				shear_disp.y += -my*ly;
+				shear_disp.y = shear_disp.y-m*ly;
 			}
 		}
-		
 	} else {
 		if (wall_rheology || p.simulation_mode == 31) {
 			vec3d strain_increment = 2*dot(E_infinity, {0, 0, 1})*dt;
@@ -771,15 +754,10 @@ void System::timeStepBoxing()
 			angle_wheel += dt*(omega_wheel_in-omega_wheel_out);
 		}
 	}
-	if (ext_flow) {
-		updateH(); // update cell axes
-	}
-
-	if (!ext_flow) {
-		/**** simple shear flow ****/
+	if (simu_type != extensional_flow) {
 		boxset.update();
 	} else {
-		/**** extensional flow ****/
+		updateH(); // update cell axes
 		boxset.updateExtFlow();
 	}
 }
@@ -789,34 +767,41 @@ void System::eventShearJamming()
 	/**
 	 \brief Create an event when the shear rate is less than p.sj_shear_rate
 	*/
+	static int cnt_jamming = 0;
 	if (abs(shear_rate) < p.sj_shear_rate && max_na_velocity < p.sj_velocity) {
-		Event ev;
-		ev.type = "jammed_shear_rate";
-		events.push_back(Event(ev));
+		cnt_jamming ++;
+		if (cnt_jamming > p.sj_check_count) {
+			Event ev;
+			ev.type = "jammed_shear_rate";
+			events.push_back(Event(ev));
+		}
+	} else {
+		cnt_jamming = 0;
 	}
 }
 
 void System::forceResultantInterpaticleForces()
 {
 	auto &contact_force = force_components["contact"].force;
-	for (int i=0; i<np; i++) {
+	int np_tmp = np;
+	for (int i=0; i<np_tmp; i++) {
 		forceResultant[i] += contact_force[i];
 	}
 	if (friction) {
 		auto &contact_torque = force_components["contact"].torque;
-		for (int i=0; i<np; i++) {
+		for (int i=0; i<np_tmp; i++) {
 			torqueResultant[i] += contact_torque[i];
 		}
 	}
 	if (repulsiveforce) {
 		auto &repulsive_force = force_components["repulsion"].force;
-		for (int i=0; i<np; i++) {
+		for (int i=0; i<np_tmp; i++) {
 			forceResultant[i] += repulsive_force[i];
 		}
 	}
 	if (delayed_adhesion) {
 		auto &adhesion_force = force_components["repulsion"].force;
-		for (int i=0; i<np; i++) {
+		for (int i=0; i<np_tmp; i++) {
 			forceResultant[i] += adhesion_force[i];
 		}
 	}
@@ -872,8 +857,8 @@ void System::wallForces()
 			force_tang_wall1 = 0;
 			force_normal_wall1 = 0;
 			for (int i=np_mobile; i<i_np_1; i++) { // bottom
-					force_tang_wall1   += forceResultant[i].x;
-					force_normal_wall1 += forceResultant[i].z;
+				force_tang_wall1   += forceResultant[i].x;
+				force_normal_wall1 += forceResultant[i].z;
 			}
 			// top wall
 			force_tang_wall2 = 0;
@@ -972,7 +957,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	} else {
 		computeVelocities(calc_stress);
 	}
-	if (wall_rheology && calc_stress) {
+	if (wall_rheology && calc_stress) { // @@@@ calc_stress remove????
 		forceResultantReset();
 		forceResultantInterpaticleForces();
 	}
@@ -987,9 +972,6 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		if (!p.output.out_particle_stress.empty() || couette_stress || p.output.out_gsd) {
 			calcTotalStressPerParticle();
 		}
-		if (p.output.recording_interaction_history) {
-			recordHistory();
-		}
 	}
 	timeStepMove(time_end, strain_end);
 	for (int i=0; i<np; i++) {
@@ -998,6 +980,15 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	if (eventLookUp != NULL) {
 		(this->*eventLookUp)();
 	}
+	//	static int cnt = 0;
+	//	if (cnt ++ % 50 == 0) {
+	//		for (int i=0; i< np; i++) {
+	//			cout << "c"  << position[i].x << ' ';
+	//			cout << position[i].y << ' ';
+	//			cout << position[i].z << endl;
+	//		}
+	//		cout << endl;
+	//	}
 }
 
 /****************************************************************************************************
@@ -1091,7 +1082,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 		if (wall_rheology || brownian_dominated) {
 			calcStress();
 		}
-		if (!p.output.out_particle_stress.empty() || couette_stress) {
+		if (!p.output.out_particle_stress.empty() || couette_stress || p.output.out_gsd) {
 			calcTotalStressPerParticle();
 		}
 	}
@@ -1114,7 +1105,7 @@ void System::adaptTimeStep()
 	 * The max velocity is used to find dt from max displacement
 	 * at each time step.
 	 */
-	if (in_predictor){
+	if (in_predictor) {
 		if (!p.fixed_dt || eventLookUp != NULL) {
 			computeMaxNAVelocity();
 		}
@@ -1340,9 +1331,6 @@ void System::timeEvolution(double time_end, double strain_end)
 	if (brownian_dominated) {
 		calc_stress = true;
 	}
-	if (p.output.recording_interaction_history) {
-		calc_stress = true;
-	}
 	retrim_ext_flow = false;
 	avg_dt = 0;
 	avg_dt_nb = 0;
@@ -1353,7 +1341,7 @@ void System::timeEvolution(double time_end, double strain_end)
 		if (!brownian && !p.fixed_dt) { // adaptative time-step for non-Brownian cases
 			adaptTimeStep(time_end, strain_end);
 		}
-		if (ext_flow) {
+		if (simu_type == extensional_flow) {
 			if (clk.cumulated_strain+shear_rate*dt > strain_retrim) {
 				cerr << "strain_retrim = " << strain_retrim << endl;
 				dt_bak = dt;
@@ -1381,7 +1369,9 @@ void System::timeEvolution(double time_end, double strain_end)
 		avg_dt = dt;
 	}
 	if (events.empty() && retrim_ext_flow == false) {
-		calc_stress = true;
+		if (simu_type != pipe_flow) {
+			calc_stress = true;
+		}
 		(this->*timeEvolutionDt)(calc_stress, time_end, strain_end); // last time step, compute the stress
 	}
 	if (p.auto_determine_knkt
@@ -1393,11 +1383,15 @@ void System::timeEvolution(double time_end, double strain_end)
 void System::createNewInteraction(int i, int j, double scaled_interaction_range)
 {
 	// new interaction
-	Interaction inter(this, i, j, scaled_interaction_range);
-	interaction.push_back(inter); // could emplace_back if Interaction gets a move ctor
-	// tell i and j their new partner
-	interaction_partners[i].push_back(j);
-	interaction_partners[j].push_back(i);
+	if (i < np_mobile || j < np_mobile) {
+		Interaction inter(this, i, j, scaled_interaction_range);
+		interaction.push_back(inter); // could emplace_back if Interaction gets a move ctor
+		// tell i and j their new partner
+		interaction_partners[i].push_back(j);
+		interaction_partners[j].push_back(i);
+	} else {
+		return;
+	}
 }
 
 bool System::hasNeighbor(int i, int j)
@@ -1446,7 +1440,7 @@ void System::checkNewInteraction()
 	 */
 	vec3d pos_diff;
 	double sq_dist;
-	if (!ext_flow) {
+	if (simu_type != extensional_flow) {
 		for (int i=0; i<np-1; i++) {
 			for (auto j : boxset.neighborhood(i)) {
 				if (j > i) {
@@ -1957,6 +1951,33 @@ void System::setTActAdhesionForceToParticle(vector<vec3d> &force,
 	}
 }
 
+void System::setBodyForce(vector<vec3d> &force,
+						  vector<vec3d> &torque)
+{
+	for (auto &t: torque) {
+		t.reset();
+	}
+	if (true) {
+		double angle = M_PI*p.body_force_angle/180;
+		double bf_x = force_pipe_flow*cos(angle);
+		double bf_z = -force_pipe_flow*sin(angle);
+		for (int i=0; i<np_mobile; i++) {
+			double bf = force_pipe_flow;
+			force[i].set(radius[i]*bf_x, 0 , radius[i]*bf_z);
+		}
+	} else {
+		for (int i=0; i<np_mobile; i++) {
+			double angle = atan2(position[i].z-lz_half, position[i].x-lx_half);
+			double bf_x = -force_pipe_flow*cos(angle);
+			double bf_z = -force_pipe_flow*sin(angle);
+			force[i].set(radius[i]*bf_x, 0 , radius[i]*bf_z);
+		}
+	}
+	for (int i=np_mobile; i<np; i++) {
+		force[i].reset();
+	}
+}
+
 void System::setFixedParticleForceToParticle(vector<vec3d> &force,
 											 vector<vec3d> &torque)
 {
@@ -2076,9 +2097,10 @@ void System::set_shear_rate(double shear_rate_)
 	shear_rate = shear_rate_;
 	omega_inf = omegahat_inf*shear_rate;
 	E_infinity = Ehat_infinity*shear_rate;
-	if (!ext_flow) {
+	//@@@ I think use of "vel_difference" is dangerous.
+	if (simu_type == simple_shear) {
 		setVelocityDifference();
-	} else {
+	} else if (simu_type == extensional_flow) {
 		grad_u = shear_rate*grad_u_hat;
 	}
 }
@@ -2107,7 +2129,7 @@ void System::setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty)
 
 void System::setShearDirection(double theta_shear) // will probably be deprecated soon
 {
-	if (!ext_flow) {
+	if (simu_type != extensional_flow) {
 		p.theta_shear = theta_shear;
 		double costheta_shear = cos(theta_shear);
 		double sintheta_shear = sin(theta_shear);
@@ -2142,7 +2164,7 @@ void System::computeShearRate()
 	Sym2Tensor rate_indep_stress;
 	gatherStressesByRateDependencies(rate_prop_stress, rate_indep_stress);
 	/*
-	 *  target_stress = rate_indep_stress_ + rate * rate_prop_stress_at_1
+	 *  target_stress = rate_indep_stress + rate * rate_prop_stress_at_1
 	 *  rate = (target_stress - rate_indep_stress)/rate_prop_stress_at_1
 	 *
 	 *  kappa = (Sigma.E)/(E.E)
@@ -2163,6 +2185,9 @@ void System::computeShearRate()
 	if (rate_prop_shearstress_rate1 != 0) {
 		double rate = (target_stress-rate_indep_shearstress)/rate_prop_shearstress_rate1;
 		set_shear_rate(rate);
+	} else {
+		cerr << "rate_prop_shearstress_rate1 = 0 ???" << endl;
+		exit (1);
 	}
 	if (clk.cumulated_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
@@ -2181,7 +2206,7 @@ void System::computeShearRateWalls()
 
 	double total_rate_dep_wall_shear_stress = 0;
 	double total_rate_indep_wall_shear_stress = 0;
-
+	cerr << "np_fixed =" << p.np_fixed << endl;
 	for (int i=0; i<p.np_fixed; i++) {
 		total_rate_dep_wall_shear_stress += dot(fixed_velocities[i], rate_proportional_wall_force[i]);
 		total_rate_indep_wall_shear_stress += dot(fixed_velocities[i], non_rate_proportional_wall_force[i]);
@@ -2330,6 +2355,16 @@ void System::tmpMixedProblemSetVelocities()
 				na_ang_velocity[i] = {0, -omega_wheel_out, 0};
 			}
 		}
+	} else if (p.simulation_mode == 60) {
+		int i_np_wall1 = np_mobile+np_wall1;
+		for (int i=np_mobile; i<i_np_wall1; i++) {
+			na_velocity[i] = {0, 0, 0};
+			na_ang_velocity[i].reset();
+		}
+		for (int i=i_np_wall1; i<np; i++) {
+			na_velocity[i] = {0, 0, 0};
+			na_ang_velocity[i].reset();
+		}
 	}
 }
 
@@ -2402,6 +2437,11 @@ void System::computeVelocities(bool divided_velocities)
 		setFixedParticleVelocities();
 		computeVelocityWithoutComponents();
 	}
+	if (in_predictor){
+		if (eventLookUp != NULL) {
+			computeMaxNAVelocity();
+		}
+	}
 	adjustVelocityPeriodicBoundary();
 	if (divided_velocities && wall_rheology) {
 		if (in_predictor) {
@@ -2469,14 +2509,12 @@ void System::adjustVelocityPeriodicBoundary()
 		ang_velocity[i] = na_ang_velocity[i];
 	}
 	if (!zero_shear) {
-		if (!ext_flow) {
-			/**** simple shear flow ****/
+		if (simu_type != extensional_flow) {
 			for (int i=0; i<np; i++) {
 				velocity[i] += u_inf[i];
 				ang_velocity[i] += omega_inf;
 			}
 		} else {
-			/**** extensional flow ****/
 			for (int i=0; i<np; i++) {
 				velocity[i] += u_inf[i];
 			}
@@ -2516,7 +2554,7 @@ void System::displacement(int i, const vec3d& dr)
 	 * we need to modify the velocity, which was already evaluated.
 	 * The position and velocity will be used to calculate the contact forces.
 	 */
-	if (!ext_flow) {
+	if (simu_type != extensional_flow) {
 		/**** simple shear flow ****/
 		int z_shift = periodize(position[i]);
 		if (z_shift != 0) {
@@ -2868,18 +2906,6 @@ void System::yaplotBoxing(std::ofstream &fout_boxing)
 	}
 
 	fout_boxing << endl;
-}
-
-void System::recordHistory()
-{
-	for (unsigned int k=0; k<interaction.size(); k++) {
-		if (interaction[k].lubrication.is_active()) {
-			interaction[k].lubrication.calcLubricationForce();
-		} else {
-			interaction[k].lubrication.force = 0;
-		}
-		interaction[k].recordHistory();
-	}
 }
 
 void System::countContactNumber()

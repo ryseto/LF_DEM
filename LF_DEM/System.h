@@ -62,9 +62,6 @@ private:
 	std::vector<unsigned int> nb_blocks_mm;
 	std::vector<unsigned int> nb_blocks_mf;
 	std::vector<unsigned int> nb_blocks_ff;
-	int nb_of_contacts_mm;
-	int nb_of_contacts_mf;
-	int nb_of_contacts_ff;
 	bool pairwise_resistance_changed;
 	int total_num_timesteps;
 	double lx;
@@ -90,7 +87,6 @@ private:
 	double sq_cos_ma; // magic angle @@@@
 	double sq_sin_ma; // magic angle @@@@
 	double cos_ma_sin_ma; // magic angle @@@@
-	//	std::stringstream history_output_stream;  <-- I cannot compile with this.
 	/* data */
 	bool keepRunning(double time_end, double strain_end);
 	bool keepRunning(const std::string& time_or_strain, const double& value_end);
@@ -114,6 +110,7 @@ private:
 	void setDashpotForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setHydroForceToParticle_squeeze(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setHydroForceToParticle_squeeze_tangential(std::vector<vec3d> &force, std::vector<vec3d> &torque);
+	void setBodyForce(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void buildResistanceMatrix();
 	void setBrownianForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setSolverRHS(const ForceComponent &fc);
@@ -187,20 +184,21 @@ private:
 						  const std::vector <double>& angles);
  protected:
  public:
-	System(Parameters::ParameterSet& ps, std::list <Event>& ev, struct State::BasicCheckpoint = State::zero_time_basicchkp);
+	System(std::list <Event>& ev, struct State::BasicCheckpoint = State::zero_time_basicchkp);
 	~System();
 
-	Parameters::ParameterSet& p;
+	Parameters::ParameterSet p;
 	
 	int np_mobile; ///< number of mobile particles
-	bool ext_flow;
+	enum SimulationType { simple_shear, extensional_flow, pipe_flow } simu_type;
+	//	bool ext_flow;
 	// Interaction types
 	bool brownian;
 	bool friction;
 	bool rolling_friction;
 	bool repulsiveforce;
 	bool delayed_adhesion;
-	bool cohesion;
+	bool adhesion;
 	bool critical_load_model;
 	bool brownian_dominated;
 	bool lubrication;
@@ -325,6 +323,8 @@ private:
 	vec3d force_downwall;
 	double effective_coordination_number;
 	double stress_transition_target;
+	/**** pipe flow setup ***********/
+	double force_pipe_flow;
 	/****************************************************************************************************
 	 * Extensional flow using Kraynik-Reinelt Method was originally implemented                         *
 	 * by Antonio Martiniello and Giulio Giuseppe Giusteri from Auguest to November 2016 at OIST.       *
@@ -401,7 +401,6 @@ private:
 	void retrim(vec3d&); // Extensional flow Periodic Boundary condition
 	void updateH(); // Extensional flow Periodic Boundary condition
 	void yaplotBoxing(std::ofstream &fout_boxing); // Extensional flow Periodic Boundary condition
-	void recordHistory();
 	void countContactNumber();
 	void checkStaticForceBalance();
 
@@ -527,7 +526,7 @@ private:
 		return Ehat_infinity;
 	}
 
-	void setShearDirection(double theta_shear);
+	void setShearDirection(double theta_shear); // @@@@@ This function should be removed in future
 
 	void setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty);
 

@@ -50,7 +50,6 @@ void Contact::setDashpotConstants()
 {
 	dashpot.setDashpotResistanceCoeffs(sys->p.kn, sys->p.kt,
 									   sys->p.contact_relaxation_time, sys->p.contact_relaxation_time_tan);
-	
 }
 
 void Contact::setInteractionData()
@@ -76,8 +75,6 @@ void Contact::setInteractionData()
 	}
 	dashpot.setParticleData();
 	setDashpotConstants();
-//	dashpot.setDashpotResistanceCoeffs(sys->p.kn, sys->p.kt,
-//									   sys->p.contact_relaxation_time, sys->p.contact_relaxation_time_tan);
 }
 
 void Contact::activate()
@@ -91,7 +88,6 @@ void Contact::activate()
 	active = true;
 	f_spring_normal_norm = 0;
 	f_spring_normal.reset();
-	normal_load = 0;
 	f_spring_total.reset();
 	if (sys->friction) {
 		if (sys->p.friction_model == 2 || sys->p.friction_model == 3) {
@@ -134,10 +130,10 @@ void Contact::deactivate()
 vec3d Contact::getSlidingVelocity() const
 {
 	vec3d vel_offset;
-	if (!sys->ext_flow) {
+	if (sys->simple_shear == sys->SimulationType::simple_shear) {
 		// simple shear
 		vel_offset = interaction->z_offset*sys->get_vel_difference();
-	} else {
+	} else if (sys->simple_shear == sys->SimulationType::extensional_flow) {
 		// extensional flow
 		vel_offset = sys->get_vel_difference_extension(interaction->pd_shift);
 	}
@@ -285,8 +281,8 @@ void Contact::frictionlaw_standard()
 	double sq_f_tan;
 	double sq_f_rolling;
 	normal_load = f_spring_normal_norm;
-	if (sys->cohesion) {
-		normal_load += sys->p.cohesion;
+	if (sys->adhesion) {
+		normal_load += sys->p.adhesion;
 	}
 	if (normal_load > 0) {
 		if (state == 2) {
@@ -439,7 +435,7 @@ void Contact::frictionlaw_coulomb_max()
 		// dynamic friction in previous step
 		supportable_tanforce = mu_dynamic*normal_load;
 	} else {
-	  std::cerr << "contact state" << state << std::endl;
+		std::cerr << "contact state" << state << std::endl;
 		exit(1);
 	}
 	if (supportable_tanforce > ft_max) {
@@ -540,6 +536,16 @@ vec3d Contact::getNormalForce() const
 double Contact::getNormalForceValue() const
 {
 	return dot(interaction->nvec, getTotalForce());
+}
+
+double Contact::getNormalSpringForce() const
+{
+	/* h < 0
+	 * f_spring_normal_norm > 0 ..... repulsive force
+	 * h > 0
+	 * f_spring_normal_norm < 0 ..... attractive force
+	 */
+	return f_spring_normal_norm;
 }
 
 double Contact::get_normal_load() const

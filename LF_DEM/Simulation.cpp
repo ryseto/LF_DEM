@@ -19,13 +19,13 @@
 using namespace std;
 
 Simulation::Simulation(State::BasicCheckpoint chkp):
-sys(System(p, events, chkp)),
+shear_rheology(true),
 target_stress_input(0),
 restart_from_chkp(false),
+jamming_strain(0),
 stress_reversal(false),
 timestep_1(0),
-diminish_output(false),
-jamming_strain(0)
+sys(System(events, chkp))
 {
 	kill = false;
 	restart_from_chkp = !isZeroTimeChkp(chkp);
@@ -103,15 +103,7 @@ void Simulation::handleEventsShearJamming()
 				jammed = true;
 			}
 		}
-		if (jammed) {
-			shear_jam_counter ++;
-			cout << " jammed " << shear_jam_counter << endl;
-		} else {
-			shear_jam_counter = 0;
-		}
-		if (shear_jam_counter == sys.p.sj_check_count) {
-			ending_simulation = true;
-		}
+		ending_simulation = true;
 	}
 	if (ending_simulation == true) {
 		cout << "jammed" << endl;
@@ -187,9 +179,11 @@ void Simulation::generateOutput(const set<string> &output_events, int& binconf_c
 		sys.checkStaticForceBalance();
 	}
 	if (output_events.find("data") != output_events.end()) {
-		sys.calcStressPerParticle();
-		sys.calcStress();
-		outputData();
+		if (shear_rheology) {
+			sys.calcStressPerParticle();
+			sys.calcStress();
+			outputData();
+		}
 	}
 	if (output_events.find("config") != output_events.end()) {
 		if (sys.p.output.out_binary_conf) {
@@ -205,7 +199,7 @@ void Simulation::generateOutput(const set<string> &output_events, int& binconf_c
 	}
 }
 
-void Simulation::setupOptionalSimulation(string indent)
+void Simulation::setupOptionalSimulation()
 {
 	cout << indent << "simulation_mode = " << sys.p.simulation_mode << endl;
 	switch (sys.p.simulation_mode) {
@@ -260,24 +254,27 @@ void Simulation::setupOptionalSimulation(string indent)
 			cout << indent << "Test simulation (wtest1), simple shear with walls" << endl;
 			sys.zero_shear = true;
 			sys.mobile_fixed = true;
+			sys.p.output.origin_zero_flow = false;
 			break;
 		case 41:
 			cout << indent << "Test simulation (wtestA), simple shear with walls" << endl;
 			sys.wall_rheology = true;
 			sys.zero_shear = true;
 			sys.mobile_fixed = true;
+			sys.p.output.origin_zero_flow = false;
 			break;
 		case 42:
 			cout << indent << "Test simulation (wtestB), simple shear with walls" << endl;
 			sys.wall_rheology = true;
 			sys.zero_shear = true;
 			sys.mobile_fixed = true;
+			sys.p.output.origin_zero_flow = false;
 			break;
-		case 51:
-			cout << indent << "Test simulation (wtestB), simple shear with walls" << endl;
+		case 60:
 			sys.wall_rheology = true;
 			sys.zero_shear = true;
 			sys.mobile_fixed = true;
+			sys.p.output.origin_zero_flow = false;
 			break;
 		default:
 			break;
@@ -328,20 +325,15 @@ void Simulation::printProgress()
 void Simulation::simulationSteadyShear(string in_args,
 									   vector<string>& input_files,
 									   bool binary_conf,
-									   Parameters::ControlVariable control_variable,
-									   Dimensional::DimensionalQty<double> control_value,
-									   string flow_type,
+									   Parameters::ControlVariable control_variable_,
+									   Dimensional::DimensionalQty<double> control_value_,
 									   string simu_identifier)
 {
-	string indent = "  Simulation::\t";
-	if (flow_type == "extension") {
-		sys.ext_flow = true;
-	} else {
-		sys.ext_flow = false;
-	}
-	control_var = control_variable;
-	setupSimulation(in_args, input_files, binary_conf, control_value,
-	                flow_type, simu_identifier);
+	indent = "  Simulation::\t";
+	shear_rheology = true;
+	control_var = control_variable_;
+	control_value = control_value_;
+	setupSimulation(in_args, input_files, binary_conf, simu_identifier);
 	time_t now;
 	time_strain_1 = 0;
 	now = time(NULL);
@@ -400,6 +392,64 @@ void Simulation::simulationSteadyShear(string in_args,
 	cout << indent << "Time evolution done" << endl << endl;
 }
 
+void Simulation::simulationPipeFlow(std::string in_args,
+									std::vector<std::string>& input_files,
+									bool binary_conf,
+									Parameters::ControlVariable control_variable_,
+									Dimensional::DimensionalQty<double> control_value_,
+									std::string simu_identifier)
+{
+	indent = "  Simulation::PipeFlow\t";
+	shear_rheology = false;
+	control_var = control_variable_;
+	control_value = control_value_;
+	setupSimulation(in_args, input_files, binary_conf, simu_identifier);
+	time_t now;
+	time_strain_1 = 0; //@@@
+	now = time(NULL);
+	time_strain_0 = now; //@@@
+	cout << indent << "Time evolution started" << endl << endl;
+	TimeKeeper tk = initTimeKeeper();
+	if (restart_from_chkp) {
+		std::set<std::string> elapsed;
+		do {
+			elapsed = tk.getElapsedClocks(sys.get_time(), sys.get_cumulated_strain());
+		}
+		while (!elapsed.empty()); // flush tk to not output on first time step
+	}
+	int binconf_counter = 0;
+	while (keepRunning()) {
+		timeEvolutionUntilNextOutput(tk);
+		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_cumulated_strain());
+		if (sys.retrim_ext_flow) {
+			output_events.insert("data");
+			output_events.insert("config");
+		}
+		generateOutput(output_events, binconf_counter);
+		printProgress();
+		if (time_strain_1 == 0 && sys.get_cumulated_strain() > 1) {
+			now = time(NULL);
+			time_strain_1 = now;
+			timestep_1 = sys.get_total_num_timesteps();
+		}
+	}
+	now = time(NULL);
+	time_strain_end = now;
+	timestep_end = sys.get_total_num_timesteps();
+	outputComputationTime();
+	string filename_parameters = input_files[1];
+	if (filename_parameters.find("init_relax", 0) != string::npos) {
+		/* To prepare relaxed initial configuration,
+		 * we can use Brownian simulation for a short interval.
+		 * Here is just to export the position data.
+		 */
+		string filename_configuration = input_files[0];
+		outputFinalConfiguration(filename_configuration);
+	}
+	cout << indent << "Time evolution done" << endl << endl;
+}
+
+
 void Simulation::operateJammingStressReversal(std::set<std::string> &output_events)
 {
 	if (stress_reversal && sys.get_time()-time_last_sj_program > sj_duration_min) {
@@ -436,22 +486,22 @@ void Simulation::operateJammingStressReversal(std::set<std::string> &output_even
 void Simulation::stopShearing(TimeKeeper &tk)
 {
 	static bool initial_shearing = true;
-	double strain_to_stop;
-	if (!sys.ext_flow) {
+	double strain_to_stop = 0;
+	if (sys.simu_type == sys.SimulationType::simple_shear) {
 		strain_to_stop = 2;
-	} else {
+	} else if (sys.simu_type == sys.SimulationType::extensional_flow) {
 		strain_to_stop = sys.strain_retrim_interval;
 	}
 	if (sys.get_cumulated_strain() >= strain_to_stop-1e-8) {
 		sys.zero_shear = true;
 		sys.set_shear_rate(0);
-		if (!sys.ext_flow) {
+		if (sys.simu_type == sys.SimulationType::simple_shear) {
 			// simple shear
 			Sym2Tensor Einf_common = {0, 0, 0, 0, 0, 0};
 			vec3d Omegainf(0, 0, 0);
 			sys.setImposedFlow(Einf_common, Omegainf);
 			sys.setVelocityDifference();
-		} else {
+		} else if (sys.simu_type == sys.SimulationType::extensional_flow) {
 			// extensional flow
 			sys.vel_difference.reset();
 			sys.grad_u.set_zero();
@@ -699,8 +749,8 @@ void Simulation::outputData()
 	/* maximum deformation of contact bond
 	 */
 	outdata.entryData("min gap", Dimensional::Dimension::none, 1, evaluateMinGap(sys));
-	if (sys.cohesion) {
-		outdata.entryData("max gap(cohesion)", Dimensional::Dimension::none, 1, evaluateMaxContactGap(sys));
+	if (sys.adhesion) {
+		outdata.entryData("max gap", Dimensional::Dimension::none, 1, evaluateMaxContactGap(sys));
 	}
 	if (sys.friction) {
 		outdata.entryData("max tangential displacement", Dimensional::Dimension::none, 1, evaluateMaxDispTan(sys));
@@ -801,7 +851,7 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 		snapshot_header << "# time" << sep << time.value << endl;
 		snapshot_header << "# theta" << sep << sys.p.theta_shear << endl;
 	}
-	if (sys.ext_flow) {
+	if (sys.simu_type == sys.SimulationType::extensional_flow) {
 		/* The following snapshot data is required to
 		 * construct visualization file for extensional flow simulation in the script
 		 * generateYaplotFile_extflow.pl
@@ -879,15 +929,12 @@ void Simulation::outputParFileTxt()
 {
 	int np = sys.get_np();
 	int output_precision = 6;
-	if (diminish_output) {
-		output_precision = 4;
-	}
 	outdata_par.setDefaultPrecision(output_precision);
 	outdata_int.setDefaultPrecision(output_precision);
 	auto pos = sys.position;
 	auto vel = sys.velocity;
 	if (sys.p.output.origin_zero_flow) {
-		if (!sys.ext_flow) {
+		if (sys.simu_type != sys.SimulationType::extensional_flow) {
 			for (int i=0; i<np; i++) {
 				pos[i] = shiftUpCoordinate(sys.position[i].x-0.5*sys.get_lx(),
 										   sys.position[i].y-0.5*sys.get_ly(),
@@ -929,13 +976,13 @@ void Simulation::outputParFileTxt()
 			outdata_par.entryData("position x", Dimensional::Dimension::none, 1, pos[i].x, 6);
 			outdata_par.entryData("position z", Dimensional::Dimension::none, 1, pos[i].z, 6);
 		}
-		if (diminish_output == false) {
-			outdata_par.entryData("velocity (x, y, z)", Dimensional::Dimension::Velocity, 3, vel[i]);
-			outdata_par.entryData("angular velocity (x, y, z)", Dimensional::Dimension::none, 3, sys.ang_velocity[i]);
-			if (sys.twodimension) {
-				outdata_par.entryData("angle", Dimensional::Dimension::none, 1, sys.angle[i]);
-			}
+
+		outdata_par.entryData("velocity (x, y, z)", Dimensional::Dimension::Velocity, 3, vel[i]);
+		outdata_par.entryData("angular velocity (x, y, z)", Dimensional::Dimension::none, 3, sys.ang_velocity[i]);
+		if (sys.twodimension) {
+			outdata_par.entryData("angle", Dimensional::Dimension::none, 1, sys.angle[i]);
 		}
+
 		//		if (sys.couette_stress) {
 		//			double stress_rr, stress_thetatheta, stress_rtheta;
 		//			sys.getStressCouette(i, stress_rr, stress_thetatheta, stress_rtheta);
@@ -1039,18 +1086,18 @@ void Simulation::outputIntFileTxt()
 		Sym2Tensor stress_contact = inter.contact.getContactStressXF();
 		outdata_int.entryData("particle 1 label", Dimensional::Dimension::none, 1, i);
 		outdata_int.entryData("particle 2 label", Dimensional::Dimension::none, 1, j);
-		if (diminish_output == false) {
-			outdata_int.entryData("contact state "
-								  "(0 = no contact, "
-								  "1 = frictionless contact, "
-								  "2 = non-sliding frictional, "
-								  "3 = sliding frictional)",
-								  Dimensional::Dimension::none, 1, inter.contact.getFrictionState());
-			outdata_int.entryData("normal vector, oriented from particle 1 to particle 2", \
-								  Dimensional::Dimension::none, 3, inter.nvec);
-			outdata_int.entryData("dimensionless gap = s-2, s = 2r/(a1+a2)", \
-								  Dimensional::Dimension::none, 1,  inter.get_reduced_gap());
-		}
+
+		outdata_int.entryData("contact state "
+							  "(0 = no contact, "
+							  "1 = frictionless contact, "
+							  "2 = non-sliding frictional, "
+							  "3 = sliding frictional)",
+							  Dimensional::Dimension::none, 1, inter.contact.getFrictionState());
+		outdata_int.entryData("normal vector, oriented from particle 1 to particle 2", \
+							  Dimensional::Dimension::none, 3, inter.nvec);
+		outdata_int.entryData("dimensionless gap = s-2, s = 2r/(a1+a2)", \
+							  Dimensional::Dimension::none, 1,  inter.get_reduced_gap());
+		
 		/* [NOTE]
 		 * Lubrication forces are reference values
 		 * in the Brownian case. The force balancing
@@ -1059,20 +1106,20 @@ void Simulation::outputIntFileTxt()
 		 * It seems there is no better way to visualize
 		 * the lubrication forces.
 		 */
-		if (diminish_output == false) {
-			if (sys.lubrication) {
-				if (inter.get_reduced_gap() > 0) {
-					double normal_part = -dot(inter.lubrication.getTotalForce(), inter.nvec);
-					outdata_int.entryData("normal part of the lubrication force (positive for compression)", Dimensional::Dimension::Force, 1, \
-										  normal_part);
-					outdata_int.entryData("tangential part of the lubrication force", Dimensional::Dimension::Force, 3, \
-										  inter.lubrication.getTangentialForce());
-				} else {
-					outdata_int.entryData("normal part of the lubrication force (positive for compression)", Dimensional::Dimension::Force, 1, 0);
-					outdata_int.entryData("tangential part of the lubrication force", Dimensional::Dimension::Force, 3, vec3d(0,0,0));
-				}
+
+		if (sys.lubrication) {
+			if (inter.get_reduced_gap() > 0) {
+				double normal_part = -dot(inter.lubrication.getTotalForce(), inter.nvec);
+				outdata_int.entryData("normal part of the lubrication force (positive for compression)", Dimensional::Dimension::Force, 1, \
+									  normal_part);
+				outdata_int.entryData("tangential part of the lubrication force", Dimensional::Dimension::Force, 3, \
+									  inter.lubrication.getTangentialForce());
+			} else {
+				outdata_int.entryData("normal part of the lubrication force (positive for compression)", Dimensional::Dimension::Force, 1, 0);
+				outdata_int.entryData("tangential part of the lubrication force", Dimensional::Dimension::Force, 3, vec3d(0,0,0));
 			}
 		}
+
 		/*
 		 * Contact forces are the sums of spring forces and dashpot forces.
 		 * (It can be negative even repulsive contact force).
@@ -1080,25 +1127,23 @@ void Simulation::outputIntFileTxt()
 		outdata_int.entryData("norm of the normal part of the contact force", Dimensional::Dimension::Force, 1, \
 							  -inter.contact.getNormalForceValue());
 		
-		if (diminish_output == false) {
-			outdata_int.entryData("tangential part of the contact force", Dimensional::Dimension::Force, 3, \
-								  inter.contact.getTangentialForce());
-		}
+
+		outdata_int.entryData("tangential part of the contact force", Dimensional::Dimension::Force, 3, \
+							  inter.contact.getTangentialForce());
 		if (sys.repulsiveforce) {
 			outdata_int.entryData("norm of the normal repulsive force", Dimensional::Dimension::Force, 1, \
 								  inter.repulsion.getForceNorm());
 		}
-		if (diminish_output == false) {
-			outdata_int.entryData("Viscosity contribution of contact xF", Dimensional::Dimension::Stress, 1, \
-								  doubledot(stress_contact, sys.getEinfty()/sr)/sr);
-		}
+
+		outdata_int.entryData("Viscosity contribution of contact xF", Dimensional::Dimension::Stress, 1, \
+							  doubledot(stress_contact, sys.getEinfty()/sr)/sr);
 		if (sys.delayed_adhesion) {
 			outdata_int.entryData("norm of the normal adhesion force", Dimensional::Dimension::Force, 1, \
 								  inter.delayed_adhesion->getForceNorm());
-			if (diminish_output == false) {
-				outdata_int.entryData("adhesion ratio uptime to activation time", Dimensional::Dimension::none, 1, \
-									  inter.delayed_adhesion->ratioUptimeToActivation());
-			}
+			
+			outdata_int.entryData("adhesion ratio uptime to activation time", Dimensional::Dimension::none, 1, \
+								  inter.delayed_adhesion->ratioUptimeToActivation());
+			
 		}
 	}
 	if (sys.interaction.size() > 0) {
@@ -1149,61 +1194,53 @@ void Simulation::outputFinalConfiguration(const string& filename_import_position
 }
 
 void Simulation::dataAdjustGSD(std::vector<vec3d> &pos,
+							   std::vector<vec3d> &vel,
 							   vec3d &shear_strain,
 							   double lx, double ly, double lz)
 {
 	int np = sys.get_np();
-	bool simple_shear_mod1;
-	if (sys.eventLookUp == NULL) {
-		/* modulate for 0 < strain < 1
-		 */
-		simple_shear_mod1 = true;
-		shear_strain = sys.shear_disp/lz;
-	} else {
-		/* no modulation for deformed simulation cell.
-		 * This is useful to visualize shear jamming.
-		 */
-		simple_shear_mod1 = false;
+	if (sys.simu_type == sys.SimulationType::simple_shear) {
 		shear_strain = sys.get_shear_strain();
+		static int cnt_strain = 0;
+		shear_strain.x -= cnt_strain;
+		if (shear_strain.x > 0.5) {
+			shear_strain.x -= 1;
+			cnt_strain += 1;
+		}
+		if (shear_strain.x < -0.5) {
+			shear_strain.x += 1;
+			cnt_strain -= 1;
+		}
 	}
-	/* In OVITO, the origin is always the center of simulation cell ((lx+ gamma*lz)/2, lz/2).
-	 * The strain gamma is modulated between 0 and 1.
-	 * We need the follwoing treratment avoid discontinous jump of particle positions.
+	pos.resize(sys.position.size());
+	if (sys.simu_type == sys.SimulationType::simple_shear) {
+		for (int i=0; i<np; i++) {
+			pos[i] = shiftUpCoordinate(sys.position[i].x-0.5*lx,
+									   sys.position[i].y-0.5*ly,
+									   sys.position[i].z-0.5*lz);
+		}
+	} else {
+		vec3d pos_shift(0.5*lx, 0.5*ly, 0.5*lz);
+		for (int i=0; i<np; i++) {
+			pos[i] = sys.position[i]-pos_shift;
+		}
+	}
+	/* If the origin is shifted,
+	 * we need to change the velocities of particles as well.
 	 */
- 	double total_strain = sys.get_shear_strain().x;
-	int int_total_strain = roundf(total_strain);
-	if (abs(total_strain-int_total_strain) < 1e-8) {
-		total_strain = int_total_strain;
-	}
-	int int_shear_strain_x = roundf(shear_strain.x);
-	if (abs(shear_strain.x-int_shear_strain_x) < 1e-8) {
-		shear_strain.x = int_shear_strain_x;
-	}
-	while (abs(total_strain) >= 2) {
-		if (total_strain > 0) {
-			total_strain -= 2;
-		} else {
-			total_strain += 2;
+	if (sys.simu_type == sys.SimulationType::simple_shear) {
+		for (int i=0; i<np; i++) {
+			if (pos[i].z < 0) {
+				vel[i] -= sys.vel_difference;
+			}
 		}
-	}
-	bool half_shift = false;
-	if (simple_shear_mod1 && abs(total_strain) >= 1) {
-		half_shift = true;
-	}
-	for (int i=0; i<np; i++) {
-		if (half_shift) {
-			pos[i].x += lx/2;
-		}
-		if (-(pos[i].x)+(shear_strain.x)*(pos[i].z) > 0) {
-			pos[i].x += lx;
-		}
-		if (-(pos[i].x-lx)+(shear_strain.x)*(pos[i].z) < 0) {
-			pos[i].x -= lx;
-		}
-		pos[i].x -= (lx+shear_strain.x*lz)/2;
-		pos[i].z -= lz/2;
-		if (!sys.twodimension) {
-			pos[i].y -= ly/2;
+		for (int i=0; i<np; i++) {
+			while (-(pos[i].x+lx/2)+(shear_strain.x)*(pos[i].z) > 0) {
+				pos[i].x += lx;
+			}
+			while (-(pos[i].x-lx/2)+(shear_strain.x)*(pos[i].z) < 0) {
+				pos[i].x -= lx;
+			}
 		}
 	}
 }
@@ -1224,7 +1261,8 @@ void Simulation::outputGSD()
 		scalarBuffer.resize(np, 0);
 		uintBuffer.resize(np, 0);
 	}
-	std::vector<vec3d> pos = sys.position;
+	std::vector<vec3d> pos;
+	std::vector<vec3d> vel = sys.velocity;
 	double lx = sys.get_lx();
 	double ly = sys.get_ly();
 	double lz = sys.get_lz();
@@ -1233,14 +1271,18 @@ void Simulation::outputGSD()
 	}
 	vec3d shear_strain;
 
-	dataAdjustGSD(pos, shear_strain, lx, ly, lz);
+	dataAdjustGSD(pos, vel, shear_strain, lx, ly, lz);
 	
 	vector<int> eff_contact;
 	for (unsigned k=0; k<sys.interaction.size(); k++) {
 		unsigned int i, j;
 		std::tie(i, j) = sys.interaction[k].get_par_num();
 		if (sys.interaction[k].contact.is_active()) {
-			if (sys.n_contact[i] >= 2 && sys.n_contact[j] >= 2) {
+			if (sys.p.output.effective_coordination_number) {
+				if (sys.n_contact[i] >= 2 && sys.n_contact[j] >= 2) {
+					eff_contact.push_back(k);
+				}
+			} else {
 				eff_contact.push_back(k);
 			}
 		}
@@ -1272,7 +1314,7 @@ void Simulation::outputGSD()
 	//		throw runtime_error(error_str.str());
 	//	}
 	double xybox, xzbox, yzbox;
-	if (!sys.ext_flow) {
+	if (sys.simu_type != sys.SimulationType::extensional_flow) {
 		xybox = shear_strain.x;
 		xzbox = 0;
 		yzbox = 0;
@@ -1289,7 +1331,6 @@ void Simulation::outputGSD()
 	gsd_write_chunk(&gsdOut, "confix1guration/step", GSD_TYPE_UINT64, 1, 1, 0, &_ts);
 	gsd_write_chunk(&gsdOut, "configuration/dimensions", GSD_TYPE_UINT8, 1, 1, 0, &dim);
 	gsd_write_chunk(&gsdOut, "configuration/box", GSD_TYPE_FLOAT, 6, 1, 0, &box);
-
 	if (ts == 0) {
 		const int max_size = 63;
 		{
@@ -1306,6 +1347,7 @@ void Simulation::outputGSD()
 				snprintf(types, max_size, "colloid1");
 				snprintf(types+max_size, max_size, "colloid2");
 			} else {
+				cerr << "not mono or bi ..." << endl;
 				exit(1);
 			}
 			gsd_write_chunk(&gsdOut, "particles/types", GSD_TYPE_INT8, n_types, max_size, 0, types);
@@ -1313,7 +1355,7 @@ void Simulation::outputGSD()
 		}
 		{
 			// Bond type names
-			int  n_types = 1;
+			int n_types = 1;
 			char types[n_types*max_size];
 			snprintf(types, max_size, "effective contact");
 			gsd_write_chunk(&gsdOut, "bonds/types", GSD_TYPE_INT8, n_types, max_size, 0, types);
@@ -1332,8 +1374,10 @@ void Simulation::outputGSD()
 		for (int i=0; i<np; i++) {
 			if (i < np1) {
 				uptr[i] = 0;
-			} else {
+			} else if (i < sys.np_mobile) {
 				uptr[i] = 1;
+			} else {
+				uptr[i] = 2;
 			}
 			fptr[i] = 2*sys.radius[i];
 		}
