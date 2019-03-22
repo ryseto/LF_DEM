@@ -16,7 +16,7 @@ extra_link_args = setup_in.Blas_Linking_Flags + setup_in.Lapack_Linking_Flags\
                   + setup_in.SuiteSparse_Linking_Flags + setup_in.Extra_Linking_Flags
 include_dirs = setup_in.Blas_Include_Dirs + setup_in.Lapack_Include_Dirs\
                + setup_in.SuiteSparse_Include_Dirs
-extra_compile_args = setup_in.Extra_Compile_Args+["-std=c++11", "-O3"]
+extra_compile_args = setup_in.Extra_Compile_Args+["-std=c++11", "-O3", "-fpermissive"] # -fpermissive for gsd.c
 
 pylf_dem_version = subprocess.check_output(
                    ["git", "describe", "--dirty"])
@@ -26,7 +26,7 @@ extra_compile_args += ["-DGIT_VERSION=\""+pylf_dem_version+"\""]
 library_dirs = setup_in.Library_Dirs
 
 srcs = [x for x in os.listdir(setup_in.LFDEM_ROOT+"/LF_DEM/") if x.find(".cpp")+4==len(x)]
-
+srcs.append(setup_in.LFDEM_ROOT+"/LF_DEM/gsd.c")
 for i in range(len(srcs)):
     srcs[i] = setup_in.LFDEM_ROOT+"/LF_DEM/"+srcs[i]
 srcs.append('pyLFDEM_wrap.cxx')

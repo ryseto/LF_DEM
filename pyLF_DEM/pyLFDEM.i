@@ -24,6 +24,7 @@ namespace std {
   %template(StringVector) vector<string>;
   %template(Vec3dVector) vector<vec3d>;
   %template(DoubleVector) vector<double>;
+  %template(IntVector) vector<int>;
   %template(Sym2Vector) vector<Sym2Tensor>;
   %template(PairUIntUInt) pair<unsigned int, unsigned int>;
   %template(PairIntInt) pair<int, int>;

@@ -116,6 +116,8 @@ public:
 						 bool binary_conf,
 						 std::string simu_identifier);
 	void setupFlow();
+	void setupControl(Parameters::ControlVariable control_variable_,
+					   Dimensional::DimensionalQty<double> control_value_);
 	void setConfigToSystem(bool binary_conf, const std::string &filename);
 	TimeKeeper initTimeKeeper();
 	bool keepRunning();

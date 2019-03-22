@@ -166,7 +166,6 @@ private:
 	Averager<double> kt_avg;
 	Averager<double> overlap_avg;
 	Averager<double> max_disp_tan_avg;
-	std::list <Event>& events;
 
 	void declareStressComponents();
 	void declareVelocityComponents();
@@ -184,8 +183,7 @@ private:
 						  const std::vector <double>& angles);
  protected:
  public:
-	System(std::list <Event>& ev, struct State::BasicCheckpoint = State::zero_time_basicchkp);
-	~System();
+	System(struct State::BasicCheckpoint = State::zero_time_basicchkp);
 
 	Parameters::ParameterSet p;
 	
@@ -349,6 +347,9 @@ private:
 	double strain_retrim; // APR
 	double strain_retrim_interval; // APR
 	std::vector <int> overlap_particles;
+
+	std::list <Event> events;
+	
 	/****************************************/
 	void setVelocityDifference(); // Lees-Edwards boundary condition
 	void setSystemVolume();
