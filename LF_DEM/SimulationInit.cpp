@@ -290,6 +290,16 @@ void Simulation::setupFlow()
 	}
 }
 
+void Simulation::setupControl(Parameters::ControlVariable control_variable_,
+							   Dimensional::DimensionalQty<double> control_value_)
+{
+	control_var = control_variable_;
+	control_value = control_value_;
+	cout << indent << "Simulation:: Control variable set: " << (unsigned)control_var << " " << control_value.value << endl;
+
+}
+
+
 void Simulation::setupSimulation(string in_args,
 								 vector<string>& input_files,
 								 bool binary_conf,
@@ -315,7 +325,11 @@ void Simulation::setupSimulation(string in_args,
 		guarranted_unit = control_value.unit;
 	} else {
 		ostringstream error_str;
-		error_str  << "control_var is not set properly." << endl;
+		error_str << "control_var is not set properly. " << (unsigned)control_var;
+		error_str << " (can be rate: " << (unsigned)Parameters::ControlVariable::rate; 
+		error_str << ", stress: " << (unsigned)Parameters::ControlVariable::stress;
+		error_str << ", pressure: " << (unsigned)Parameters::ControlVariable::pressure << ")";
+		error_str << endl;
 		throw runtime_error(error_str.str());
 	}
 	Parameters::ParameterSetFactory PFactory(guarranted_unit);
@@ -499,7 +513,7 @@ void Simulation::checkDispersionType()
 {
 	int cnt_type = 0;
 	np1 = sys.get_np();
-	for (int i=0; i<sys.get_np()-1; i++) {
+	for (unsigned i=0; i<sys.get_np()-1; i++) {
 		if (sys.radius[i+1] != sys.radius[i]) {
 			cnt_type ++;
 			np1 = i+1;

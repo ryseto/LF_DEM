@@ -10,7 +10,7 @@ void BoxSet::init(double interaction_dist, System* sys_)
 	cout << indent << "Setting up Cell List System ... ";
 	sys = sys_;
 	boxMap.resize(sys->get_np());
-	for (int i=0; i<sys->get_np(); i++) {
+	for (unsigned i=0; i<sys->get_np(); i++) {
 		boxMap[i] = NULL;
 	}
 	origin_ext_flow.reset();
@@ -77,7 +77,7 @@ void BoxSet::initExtFlow(double interaction_dist,
 	cout << indent << "Setting up Cell List System ... \n";
 	sys = sys_;
 	boxMap.resize(sys->get_np());
-	for (int i=0; i<sys->get_np(); i++) {
+	for (unsigned i=0; i<sys->get_np(); i++) {
 		boxMap[i] = NULL;
 	}
 	origin_ext_flow = origin;
@@ -858,7 +858,7 @@ void BoxSet::printNeighborhoodContainers()
 
 void BoxSet::printBoxMap()
 {
-	for (int i=0; i<sys->get_np(); i++) {
+	for (unsigned i=0; i<sys->get_np(); i++) {
 		cerr << i << " " << boxMap[i]->getPosition() << endl;
 	}
 }

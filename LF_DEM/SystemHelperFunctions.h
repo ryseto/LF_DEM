@@ -4,7 +4,7 @@
 inline double evaluateMaxAngVelocity(const System & sys)
 {
 	double _max_ang_velocity = 0;
-	for (int i = 0; i < sys.get_np(); i++) {
+	for (unsigned i = 0; i < sys.get_np(); i++) {
 		vec3d na_ang_velocity_tmp = sys.na_ang_velocity[i];
 		if (na_ang_velocity_tmp.norm() > _max_ang_velocity) {
 			_max_ang_velocity = na_ang_velocity_tmp.norm();
@@ -56,7 +56,7 @@ inline double evaluateMaxContactGap(const System & sys)
 inline double evaluateMaxVelocity(const System &sys)
 {
 	double sq_max_velocity = 0;
-	for (int i = 0; i < sys.get_np(); i++) {
+	for (unsigned i = 0; i < sys.get_np(); i++) {
 		vec3d na_velocity_tmp = sys.na_velocity[i];
 		if (na_velocity_tmp.sq_norm() > sq_max_velocity) {
 			sq_max_velocity = na_velocity_tmp.sq_norm();
@@ -141,4 +141,19 @@ inline double getPotentialEnergy(const System &sys)
 	}
 	return total_energy;
 }
+
+inline double isInContact(const System &sys, std::vector<int> &isincontact)
+{
+	isincontact.resize(sys.get_np());
+	for (unsigned i=0; i<sys.get_np(); i ++) {
+		for (auto& inter : sys.interaction_list[i]) {
+			if (inter->contact.is_active()) {
+				isincontact[i] = 1;
+			} else {
+				isincontact[i] = 0;
+			}
+		}
+	}
+ }
+
 #endif /* defined(__LF_DEM__SystemHF__) */

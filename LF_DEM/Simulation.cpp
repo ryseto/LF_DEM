@@ -25,7 +25,7 @@ restart_from_chkp(false),
 jamming_strain(0),
 stress_reversal(false),
 timestep_1(0),
-sys(System(events, chkp))
+sys(System(chkp))
 {
 	kill = false;
 	restart_from_chkp = !isZeroTimeChkp(chkp);
@@ -86,7 +86,7 @@ void Simulation::handleEventsShearJamming()
 	 */
 	bool ending_simulation = false;
 	if (sys.p.fixed_dt == false) {
-		for (const auto& ev : events) {
+		for (const auto& ev : sys.events) {
 			if (ev.type == "jammed_shear_rate") {
 				cout << " jammed rate " << endl;
 				sys.p.disp_max /= sys.p.sj_disp_max_shrink_factor;
@@ -98,7 +98,7 @@ void Simulation::handleEventsShearJamming()
 	} else {
 		static int shear_jam_counter = 0;
 		bool jammed = false;
-		for (const auto& ev : events) {
+		for (const auto& ev : sys.events) {
 			if (ev.type == "jammed_shear_rate") {
 				jammed = true;
 			}
@@ -122,7 +122,7 @@ void Simulation::handleEventsFragility()
 		When a jammed_shear_rate event is thrown, p.disp_max is decreased.
 	 If p.disp_max is below a minimal value, the shear direction is switched to y-shear.
 	 */
-	for (const auto& ev : events) {
+	for (const auto& ev : sys.events) {
 		if (ev.type == "jammed_shear_rate") {
 			cout << " jammed rate " << endl;
 			sys.p.disp_max /= sys.p.sj_disp_max_shrink_factor;
@@ -138,7 +138,7 @@ void Simulation::handleEventsJammingStressReversal()
 {
 	//	double sr = sqrt(2*sys.getEinfty().selfdoubledot()); // shear rate for simple shear.
 	stress_reversal = false;
-	for (const auto& ev : events) {
+	for (const auto& ev : sys.events) {
 		if (ev.type == "jammed_shear_rate") {
 			if (sys.p.fixed_dt) {
 				stress_reversal = true;
@@ -169,7 +169,7 @@ void Simulation::handleEvents()
 	if (sys.p.event_handler == "jamming_stress_reversal") {
 		handleEventsJammingStressReversal();
 	}
-	events.clear();
+	sys.events.clear();
 }
 
 void Simulation::generateOutput(const set<string> &output_events, int& binconf_counter)
@@ -331,8 +331,7 @@ void Simulation::simulationSteadyShear(string in_args,
 {
 	indent = "  Simulation::\t";
 	shear_rheology = true;
-	control_var = control_variable_;
-	control_value = control_value_;
+	setupControl(control_variable_,	control_value = control_value_);
 	setupSimulation(in_args, input_files, binary_conf, simu_identifier);
 	time_t now;
 	time_strain_1 = 0;
@@ -923,7 +922,7 @@ void Simulation::outputPstFileTxt()
 		auto group_name = group_shorts[string(1, type)];
 		particle_stress[group_name] = getParticleStressGroup(group_name);
 	}
-	for (int i=0; i<sys.get_np(); i++) {
+	for (unsigned i=0; i<sys.get_np(); i++) {
 		for (const auto &pst: particle_stress) {
 			outdata_pst.entryData(pst.first + " stress (xx, xy, xz, yz, yy, zz)", Dimensional::Dimension::Stress, 6, pst.second[i]);
 		}
@@ -975,7 +974,7 @@ void Simulation::outputParFileTxt()
 	cout << "   out config: " << sys.get_cumulated_strain() << endl;
 	outdata_par.setUnits(system_of_units, output_unit);
 
-	for (int i=0; i<sys.get_np(); i++) {
+	for (unsigned i=0; i<sys.get_np(); i++) {
 		outdata_par.entryData("particle index", Dimensional::Dimension::none, 1, i);
 		outdata_par.entryData("radius", Dimensional::Dimension::none, 1, sys.radius[i]);
 		if (!sys.twodimension) {
