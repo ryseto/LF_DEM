@@ -362,7 +362,7 @@ std::pair<std::vector<vec3d>, std::vector<double>> GenerateInitConfig::putRandom
 		}
 		delta_x = lx/nb_pin;
 		for (i=0; i<nb_pin; i++){
-			double x = delta_x*(i+1);
+			double x = delta_x*i + delta_x/2;
 			double z = z_bot+2*radius_wall_particle;
 			vec3d pos(x, 0, z);
 			position[2*i+np_movable+np_wall1] = pos;
