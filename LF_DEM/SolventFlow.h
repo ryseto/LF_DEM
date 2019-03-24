@@ -35,6 +35,8 @@ private:
 	double dz;
 	double d_tau;
 	double pressure_difference;
+	double smooth_length;
+	double sq_smooth_length;
 	// Staggered grid stores
 	// - the pressure at the cell center
 	// - the velocities at the cell faces.
@@ -49,8 +51,6 @@ private:
 	std::vector<double> u_x;
 	std::vector<double> u_z;
 	std::vector<double> phi;
-
-	
 	std::vector<vec3d> pos;
 	int q(int xi, int zi){
 		if (xi >= nx) {
@@ -72,7 +72,7 @@ private:
 	Eigen::SimplicialLDLT <SpMat> *psolver;
 	
 	void calcMeshVelocity();
-	
+	double weightFunc(double r_sq);
 public:
 	SolventFlow();
 	~SolventFlow();

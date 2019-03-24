@@ -634,7 +634,7 @@ sub OutYaplotData{
 			#}
 		}
 	}
-	if (1) {
+	if (0) {
 		printf OUT "@ 5\n";
 		for ($k = 0; $k < $num_interaction; $k ++) {
 			$force = $F_lub[$k] + $Fc_n[$k];
@@ -709,7 +709,7 @@ sub OutYaplotData{
 	}
 	## visualize rotation in 2D
 	if ($Ly == 0) {
-		if (1) {
+		if (0) {
 			printf OUT "y 6\n";
 			printf OUT "@ 12\n";
 			for ($i = 0; $i < $np; $i++) {

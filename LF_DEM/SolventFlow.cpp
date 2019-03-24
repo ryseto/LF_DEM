@@ -28,6 +28,8 @@ void SolventFlow::init(System* sys_)
 	n = nx*nz;
 	dx = sys->get_lx()/nx;
 	dz = sys->get_lz()/nz; // @@ need to be changed.
+	smooth_length = dx/2;
+	sq_smooth_length = smooth_length*smooth_length;
 	pressure.resize(n);
 	u_x.resize(n);
 	u_z.resize(n);
@@ -63,7 +65,6 @@ void SolventFlow::initPoissonSolver()
 			lmat[l][m] = 0;
 		}
 	}
-	
 	double exz = 2*(1/(dx*dx)+1/(dz*dz));
 	double ex = 1/(dx*dx);
 	double ez = 1/(dz*dz);
@@ -100,6 +101,11 @@ void SolventFlow::initPoissonSolver()
 	}
 }
 
+double SolventFlow::weightFunc(double r_sq)
+{
+	return exp(-r_sq/sq_smooth_length);
+}
+
 void SolventFlow::calcMeshVelocity()
 {
 	for (int k=0; k<n; k++) {
@@ -109,8 +115,7 @@ void SolventFlow::calcMeshVelocity()
 	}
 	double x, z, radius;
 	double ux, uz;
-	double ave_range = 1.5;
-	double sq_ave_range = ave_range*ave_range;
+	double cell_area = dx*dz;
 	std::vector <int> mesh_id;
 	std::vector <double> ux_values;
 	std::vector <double> uz_values;
@@ -130,7 +135,6 @@ void SolventFlow::calcMeshVelocity()
 		double total_weight_ux = 0;
 		double total_weight_uz = 0;
 		double total_weight_phi = 0;
-		double particle_volume = M_PI*sys->radius[i]*sys->radius[i];
 		for (int l=-1; l<=2; l++){
 			for (int m=-1; m<=2; m++){
 				int iix = ix+l;
@@ -158,42 +162,67 @@ void SolventFlow::calcMeshVelocity()
 				double z_u = z_p - dz/2;
 				double xx = (xo-x_p)*(xo-x_p);
 				double zz = (zo-z_p)*(zo-z_p);
-				double dist_sq_phi = xx+zz;
-				double dist_sq_ux =  (xo-x_u)*(xo-x_u) + zz;
-				double dist_sq_uz =  xx + (zo-z_u)*(zo-z_u);
-				double w_ux = exp(-dist_sq_ux/sq_ave_range);
-				double w_uz = exp(-dist_sq_uz/sq_ave_range);
-				double w_phi = exp(-dist_sq_phi/sq_ave_range);
+				double w_ux = weightFunc((xo-x_u)*(xo-x_u) + zz);
+				double w_uz = weightFunc(xx + (zo-z_u)*(zo-z_u));
+				double w_phi = weightFunc(xx+zz);
 				total_weight_ux += w_ux;
 				total_weight_uz += w_uz;
 				total_weight_phi += w_phi;
 				mesh_id.push_back(k);
-				double phi = particle_volume/(dx*dz);
 				ux_values.push_back(ux*radius*w_ux);
 				uz_values.push_back(uz*radius*w_uz);
-				phi_values.push_back(phi*w_phi);
+				phi_values.push_back(w_phi);
 			}
 		}
+		double particle_volume = M_PI*sys->radius[i]*sys->radius[i];
 		for (int l=0; l<mesh_id.size(); l++) {
 			int k = mesh_id[l];
 			u_x[k] += ux_values[l]/total_weight_ux;
 			u_z[k] += uz_values[l]/total_weight_uz;
-			phi[k] += phi_values[l]/total_weight_phi;
+			phi[k] += (particle_volume*phi_values[l]/cell_area)/total_weight_phi;
 		}
+	}
+	if (false) {
+		static std::ofstream fout_tmp("hoge.yap");
+		fout_tmp << "y 1" << std::endl;
+		fout_tmp << "@ 0" << std::endl;
+		for (int i=0; i < sys->get_np(); i++) {
+			double x = sys->position[i].x-sys->get_lx()/2;
+			double z = sys->position[i].z-sys->get_lz()/2;
+			double a = sys->radius[i];
+			fout_tmp << "r " << a << std::endl;
+			fout_tmp << "c " << x  << ' ' << 0 << ' ' << z << std::endl;
+		}
+		fout_tmp << "y 2" << std::endl;
+		fout_tmp << "@ 3" << std::endl;
+		double total_area = 0;
+		for (int k=0; k<n; k++) {
+			double x_p = pos[k].x;
+			double z_p = pos[k].z;
+			double r = sqrt(cell_area*phi[k]/M_PI);
+			fout_tmp << "r " << r << std::endl;
+			fout_tmp << "c " << x_p-sys->get_lx()/2  << ' ' << 0 << ' ' << z_p-sys->get_lz()/2 << std::endl;
+			total_area += r*r*M_PI;
+		}
+		std::cerr << "phi = " << total_area/(sys->get_lx()*sys->get_lz()) << std::endl;
+		fout_tmp << std::endl;
 	}
 }
 
 void SolventFlow::update(double pressure_difference_)
 {
 	static std::ofstream fout_tmp("debug.dat");
-	pressure_difference = pressure_difference_;
+	pressure_difference = 10*pressure_difference_;
 	calcMeshVelocity();
 	double rho = 0.1;
 	d_tau = sys->dt/rho;
+	double phi_max = 0.84;
+	double inv_res_max = (1-phi_max)*(1-phi_max)/phi_max;
 	for (int k=0; k<n; k++) {
-		double coeff = d_tau*phi[k];
-		u_sol_ast_x[k] = u_sol_x[k] + coeff*u_x[k];
-		u_sol_ast_z[k] = u_sol_z[k] + coeff*u_z[k];
+		double porefrac = 1-phi[k];
+		double res_coeff = inv_res_max*phi[k]/porefrac*porefrac;
+		u_sol_ast_x[k] = u_sol_x[k] + res_coeff*u_x[k];
+		u_sol_ast_z[k] = u_sol_z[k] + res_coeff*u_z[k];
 	}
 	calcVelocityDivergence();
 	solvePressure();
@@ -257,7 +286,7 @@ void SolventFlow::updateSolventFlow()
 	double pd;
 	for (int j=0; j<nz; j++){
 		for (int i=0; i<nx; i++){
-			int k = q(i,j);
+			int k = i+nx*j;
 			im1 = i-1;
 			pd = 0;
 			if (im1 == -1) {
@@ -298,11 +327,11 @@ double SolventFlow::meanVelocity()
 
 void SolventFlow::velocityProfile(std::ofstream &fout_fp)
 {
-	for (int j=0; j<nz; j++){
+	for (int j=0; j<nz; j++) {
 		double total_ux_sol = 0;
 		double total_ux_na = 0;
 		for (int i=0; i<nx; i++){
-			int k = q(i,j);
+			int k = i+nx*j;
 			total_ux_sol += u_sol_x[q(i,j)];
 			total_ux_na += u_x[q(i,j)];
 		}
@@ -312,11 +341,7 @@ void SolventFlow::velocityProfile(std::ofstream &fout_fp)
 		fout_fp << pos[q(0,j)].z << ' ' << mean_ux_sol << ' ' << mean_ux_na+mean_ux_sol << std::endl;
 	}
 	fout_fp << std::endl;
-	
-	
-	
 }
-
 
 void SolventFlow::outputYaplot(std::ofstream &fout_flow)
 {
@@ -328,7 +353,6 @@ void SolventFlow::outputYaplot(std::ofstream &fout_flow)
 	}
 	fout_flow << "y 1" << std::endl;
 	fout_flow << "@ 0" << std::endl;
-
 	for (int i=0; i < sys->get_np(); i++) {
 		double x = sys->position[i].x-sys->get_lx()/2;
 		double z = sys->position[i].z-sys->get_lz()/2;
@@ -392,22 +416,21 @@ void SolventFlow::outputYaplot(std::ofstream &fout_flow)
 			fout_flow << po.x + vx << ' ' << -0.02 << ' ' << po.z + vz << std::endl;
 		}
 	}
-
-	
 	
 	if (1) {
 		fout_flow << "y 5" << std::endl;
+		double cell_area = dx*dz;
 		for (int j=0; j<nz; j++){
 			for (int i=0; i<nx; i++){
 				vec3d po = pos[i + nx*j] - o_shift;
-				double s = phi[i + nx*j];
+				double r = sqrt(cell_area*phi[i + nx*j]/M_PI);
 				//double s = 100*div_u_sol_ast[i+nx*j];
-				if (s > 0 ) {
+				if (r > 0 ) {
 					fout_flow << "@ 4" << std::endl;
 				} else {
 					fout_flow << "@ 6" << std::endl;
 				}
-				fout_flow << "r " << abs(s) << std::endl;
+				fout_flow << "r " << abs(r) << std::endl;
 				fout_flow << "c ";
 				fout_flow << po.x << ' ' << -0.02 << ' ' << po.z << std::endl;
 			}
