@@ -215,14 +215,25 @@ void SolventFlow::update(double pressure_difference_)
 	pressure_difference = 10*pressure_difference_;
 	calcMeshVelocity();
 	double rho = 0.1;
-	d_tau = sys->dt/rho;
 	double phi_max = 0.84;
 	double inv_res_max = (1-phi_max)*(1-phi_max)/phi_max;
-	for (int k=0; k<n; k++) {
-		double porefrac = 1-phi[k];
-		double res_coeff = inv_res_max*phi[k]/porefrac*porefrac;
-		u_sol_ast_x[k] = u_sol_x[k] + res_coeff*u_x[k];
-		u_sol_ast_z[k] = u_sol_z[k] + res_coeff*u_z[k];
+	double res_wall = 100;
+	double res_coeff;
+	double common_factor = 0.1;
+	d_tau = sys->dt/rho;
+	bool wall_domain;
+	for (int j=0; j<nz; j++) {
+		for (int i=0; i<nx; i++) {
+			int k = i + nx*j;
+			double porefrac = 1-phi[k];
+			res_coeff  = common_factor*inv_res_max*phi[k]/porefrac*porefrac;
+			u_sol_ast_x[k] = u_sol_x[k] + res_coeff*d_tau*u_x[k];
+			if (j == 0) {
+				u_sol_ast_z[k] = 0;
+			} else {
+				u_sol_ast_z[k] = u_sol_z[k] + res_coeff*d_tau*u_z[k];
+			}
+		}
 	}
 	calcVelocityDivergence();
 	solvePressure();
@@ -298,7 +309,11 @@ void SolventFlow::updateSolventFlow()
 				jm1 = nz-1;
 			}
 			u_sol_x[k] = u_sol_ast_x[k] - d_tau*(pressure[k] - (pressure[q(im1,j)]+pd))/dx;
-			u_sol_z[k] = u_sol_ast_z[k] - d_tau*(pressure[k] -  pressure[q(i,jm1)])/dz;
+			if (j == 0) {
+				u_sol_z[k] = 0;
+			} else {
+				u_sol_z[k] = u_sol_ast_z[k] - d_tau*(pressure[k] - pressure[q(i,jm1)])/dz;
+			}
 //			std::cerr << k << ' ' << q(im1,j) << ' ' << q(i, jm1) << ' ' << pressure[k] - pressure[q(im1,j)] << ' ' << pressure[k] - pressure[q(i,jm1)] << std::endl;
 		}
 	}

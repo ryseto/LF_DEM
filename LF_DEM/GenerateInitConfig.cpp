@@ -37,7 +37,7 @@ cg_ratio_radii(-1),
 np_fix(0),
 np_movable(0),
 radius_wall_particle(-1),
-wall_pin_interval(-1)
+nb_pin(-1)
 {
 	cerr << "GenerateInitConfig" << endl;
 }
@@ -92,7 +92,6 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 		 *   r = radius_out + a;
 		 * Mobile partilces can be in radius_in < r < radius_out
 		 */
-		
 		np_wall1 = ((cg_radius_in-radius_wall_particle)*2*M_PI)/(2*radius_wall_particle);
 		np_wall2 = ((cg_radius_out+radius_wall_particle)*2*M_PI)/(2*radius_wall_particle);
 		cerr << "np_in = " << np_wall1 << endl;
@@ -115,15 +114,10 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 		 *   z = z_top + a;
 		 * Mobile partilces can be in z_bot < r < z_top
 		 */
-		int np_wall = lx/(2*radius_wall_particle);
-		int np_wall_adjust = 0;
-		if (wall_pin_interval != -1) {
-			np_wall_adjust = np_wall % wall_pin_interval;
-		}
-		np_wall1 = np_wall-np_wall_adjust;
-		np_wall2 = np_wall-np_wall_adjust;
+		np_wall1 = lx/(2*radius_wall_particle);
+		np_wall2 = 2*nb_pin;
 		np_movable = np;
-		np_fix = np_wall1+np_wall2;
+		np_fix = np_wall1 + np_wall2;
 		np += np_fix;
 		struct fixed_velo_configuration c;
 		baseSetup(c, sys.twodimension, inflate_ratio);
@@ -359,24 +353,33 @@ std::pair<std::vector<vec3d>, std::vector<double>> GenerateInitConfig::putRandom
 			}
 		}
 		double delta_x = lx/np_wall1;
-		vec3d del(0, 0, radius_wall_particle);
 		for (i=0; i<np_wall1; i++){
-			vec3d pos(radius_wall_particle+delta_x*i, 0, z_bot-radius_wall_particle);
-			if (wall_pin_interval > 0
-				&& i%wall_pin_interval == wall_pin_interval-1) {
-				pos += del;
-			}
+			double x = radius_wall_particle+delta_x*i;
+			double z = z_bot;
+			vec3d pos(x, 0, z);
 			position[i+np_movable] = pos;
 			radius[i+np_movable] = radius_wall_particle;
 		}
-		for (i=0; i<np_wall2; i++){
-			vec3d pos(radius_wall_particle+delta_x*i, 0, z_top+radius_wall_particle);
-			if (wall_pin_interval > 0                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     && i%wall_pin_interval == wall_pin_interval-1) {
-				pos -= del;
-			}
-			position[i+np_movable+np_wall1] = pos;
-			radius[i+np_movable+np_wall1] = radius_wall_particle;
+		delta_x = lx/nb_pin;
+		for (i=0; i<nb_pin; i++){
+			double x = delta_x*(i+1);
+			double z = z_bot+2*radius_wall_particle;
+			vec3d pos(x, 0, z);
+			position[2*i+np_movable+np_wall1] = pos;
+			radius[2*i+np_movable+np_wall1] = radius_wall_particle;
+			z = z_top-2*radius_wall_particle;
+			pos.set(x, 0, z);
+			position[2*i+1+np_movable+np_wall1] = pos;
+			radius[2*i+1+np_movable+np_wall1] = radius_wall_particle;
 		}
+//		for (i=0; i<np_wall2; i++){
+//			vec3d pos(radius_wall_particle+delta_x*i, 0, z_top);
+//			if (wall_pin_interval > 0                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     && i%wall_pin_interval == wall_pin_interval-1) {
+//				pos -= del;
+//			}
+//			position[i+np_movable+np_wall1] = pos;
+//			radius[i+np_movable+np_wall1] = radius_wall_particle;
+//		}
 		cerr << np_wall1 << ' ' << np_wall2 << endl;
 	} else if (winding_wall_config) {
 		int i = 0;
@@ -680,12 +683,10 @@ void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init
 		double area2 = M_PI*(cg_radius_in+a)*(cg_radius_in+a)/2;
 		cerr << " area fraction = " << area_particle/(area1-area2);
 	} else if (parallel_wall_config || bottom_wall_config) {
-		lz += 10;
 		radius_wall_particle = readStdinDefault(1.0, "wall particle size");
-		wall_pin_interval = readStdinDefault(-1, "wall pin interval");
-		z_bot = 5;
-		z_top = lz-5;
-
+		nb_pin = readStdinDefault(-1, "number of wall pin");
+		z_bot = 0;
+		z_top = lz;
 	}
 	lx_half = lx/2;
 	ly_half = ly/2;

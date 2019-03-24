@@ -75,7 +75,7 @@ private:
 	int np_fix;
 	int np_movable;
 	double radius_wall_particle;
-	int wall_pin_interval;
+	int nb_pin;
 #ifndef USE_DSFMT
 	MTRand rand_gen;
 #endif
