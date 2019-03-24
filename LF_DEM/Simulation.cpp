@@ -182,8 +182,8 @@ void Simulation::generateOutput(const set<string> &output_events, int& binconf_c
 		if (shear_rheology) {
 			sys.calcStressPerParticle();
 			sys.calcStress();
-			outputData();
 		}
+		outputData();
 	}
 	if (output_events.find("config") != output_events.end()) {
 		if (sys.p.output.out_binary_conf) {
@@ -273,7 +273,7 @@ void Simulation::setupOptionalSimulation()
 		case 60:
 			sys.wall_rheology = true;
 			sys.zero_shear = true;
-			sys.mobile_fixed = true;
+			// sys.mobile_fixed = true;
 			sys.p.output.origin_zero_flow = false;
 			break;
 		default:
@@ -405,7 +405,10 @@ void Simulation::simulationPipeFlow(std::string in_args,
 	control_value = control_value_;
 	setupSimulation(in_args, input_files, binary_conf, simu_identifier);
 	ofstream fout_flow;
-	fout_flow.open("hoge.yap");
+	fout_flow.open("debug.yap");
+	ofstream fout_fprofile;
+	fout_fprofile.open("flowprofile.dat");
+
 	sys.initSolventFlow();
 	time_t now;
 	time_strain_1 = 0; //@@@
@@ -431,7 +434,7 @@ void Simulation::simulationPipeFlow(std::string in_args,
 		generateOutput(output_events, binconf_counter);
 		
 		sys.sflow.outputYaplot(fout_flow);
-
+		sys.sflow.velocityProfile(fout_fprofile);
 		printProgress();
 		if (time_strain_1 == 0 && sys.get_cumulated_strain() > 1) {
 			now = time(NULL);
@@ -659,165 +662,172 @@ void Simulation::outputData()
 	if (sys.p.output.effective_coordination_number) {
 		sys.countContactNumber();
 	}
-	outdata.entryData("time", Dimensional::Dimension::Time, 1, sys.get_time());
-	if (sys.wall_rheology == false || sys.get_omega_wheel() == 0) {
-		// Simple shear geometry
-		outdata.entryData("cumulated shear strain", Dimensional::Dimension::none, 1, sys.get_cumulated_strain());
-		/* Note: shear rate
-		 * shear rate = 2*sqrt(sys.getEinfty().selfdoubledot()/2);
-		 * - shear rate (\dot{\gamma}) in simple shear flow
-		 * - twice of extensional rate (\dot{\varepsilon})in extensional flow
-		 */
-		outdata.entryData("shear rate", Dimensional::Dimension::Rate, 1, sys.get_shear_rate());
-	} else {
-		// Rotary Couette geometry
-		outdata.entryData("rotation angle", Dimensional::Dimension::none, 1, sys.get_angle_wheel());
-		outdata.entryData("omega wheel", Dimensional::Dimension::Rate, 1, sys.get_omega_wheel());
-	}
-	/************** viscosity **********************************************************************/
-	if (sr != 0) {
-		viscosity = 0.5*doubledot(sys.total_stress, sys.getEinfty())/sys.getEinfty().selfdoubledot();
-	} else {
-		// @@@ tentative ouptut for Pe = 0 simulation
-		// output xz component of stress tensor
-		//viscous_material_function = sys.total_stress.elm[2];
-		viscosity = 0.5*doubledot(sys.total_stress, Einf_base)/ Einf_base.selfdoubledot();
-		/* D = ((0, 0, 1/2), (0, 0, 0), (1/2, 0, 0))
-		 */
-	}
-	outdata.entryData("viscosity", Dimensional::Dimension::Viscosity, 1, viscosity);
-	for (const auto &stress_comp: sys.total_stress_groups) {
-		string entry_name = "Viscosity("+stress_comp.first+")";
-		double viscosity_component = 0.5*doubledot(stress_comp.second, sys.getEinfty())/sys.getEinfty().selfdoubledot();
-		outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, viscosity_component);
-	}
-	//outdata.entryData("shear stress", Dimensional::Dimension::Stress, 1, shear_stress);
-	auto stress_diag = sys.total_stress.diag();
-	/************** isotropic stress (particle pressure) **************************************/
-	outdata.entryData("particle pressure", Dimensional::Dimension::Stress, 1, -sys.total_stress.trace()/3);
-	outdata.entryData("particle pressure contact", Dimensional::Dimension::Stress, 1, -sys.total_stress_groups["contact"].trace()/3);
-	/************** normal stress anisotropy  *************************************************/
-	if (sys.p.output.new_material_functions) {
-		/************** material function lambda0 *********************************************
-		 * Anisotropy between isotropic stress in the flow plane and the out-of-plane normal stress.
-		 * lambda0 has a better physical meaning than N2.
-		 * lambda0 = - (2/3)*(N2 + 0.5*N1)/shear_rate = (2/3)*N0/shear_rate N0 = 1.5 lambda0
-		 * N2 = rate*(-1.5*lambda0 + lambda3)
-		 * lambda0*ep_dot / p = lambda0*gamma_dot / 2p = - (N2 + 0.5*N1)* / 3 p
-		 **************************************************************************************/
-		double mf_inplane_pressure; // lambda_0
-		if (sr != 0) {
-			/* E = ((-1/4, 0, 0), (0, 1/2, 0), (0, 0, -1/4))
+	if (shear_rheology) {
+		outdata.entryData("time", Dimensional::Dimension::Time, 1, sys.get_time());
+		if (sys.wall_rheology == false || sys.get_omega_wheel() == 0) {
+			// Simple shear geometry
+			outdata.entryData("cumulated shear strain", Dimensional::Dimension::none, 1, sys.get_cumulated_strain());
+			/* Note: shear rate
+			 * shear rate = 2*sqrt(sys.getEinfty().selfdoubledot()/2);
+			 * - shear rate (\dot{\gamma}) in simple shear flow
+			 * - twice of extensional rate (\dot{\varepsilon})in extensional flow
 			 */
-			mf_inplane_pressure = 0.5*doubledot(sys.total_stress, stress_basis_0)/stress_basis_0.selfdoubledot();
+			outdata.entryData("shear rate", Dimensional::Dimension::Rate, 1, sys.get_shear_rate());
 		} else {
-			mf_inplane_pressure = 0;
+			// Rotary Couette geometry
+			outdata.entryData("rotation angle", Dimensional::Dimension::none, 1, sys.get_angle_wheel());
+			outdata.entryData("omega wheel", Dimensional::Dimension::Rate, 1, sys.get_omega_wheel());
 		}
-		outdata.entryData("inviscid function 0th", Dimensional::Dimension::Viscosity, 1, mf_inplane_pressure);
-		for (const auto &stress_comp: sys.total_stress_groups) {
-			string entry_name = "inviscid function 0th("+stress_comp.first+")";
-			double mf_inplane_pressure_component = 0.5*doubledot(stress_comp.second, stress_basis_0)/stress_basis_0.selfdoubledot();
-			outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, mf_inplane_pressure_component);
-		}
-		/************** material function lambda3 ****************************************
-		 * lambda3 induces a reoreientation of the stress eigenvectors.
-		 * lambda3 is equivalent to N1.
-		 * lambda3 = - (1/2)*N1/shear_rate
-		 * N1 = -2*shear_rate*lambda_3
-		 *********************************************************************************/
-		double mf_reorientation; // lambda_3
+		/************** viscosity **********************************************************************/
 		if (sr != 0) {
-			mf_reorientation = 0.5*doubledot(sys.total_stress, stress_basis_3)/stress_basis_3.selfdoubledot();
-			/* G = ((-1/2, 0, 0), (0, 0, 0), (0, 0, 1/2)
-			 */
+			viscosity = 0.5*doubledot(sys.total_stress, sys.getEinfty())/sys.getEinfty().selfdoubledot();
 		} else {
-			mf_reorientation = 0;
+			// @@@ tentative ouptut for Pe = 0 simulation
+			// output xz component of stress tensor
+			//viscous_material_function = sys.total_stress.elm[2];
+			viscosity = 0.5*doubledot(sys.total_stress, Einf_base)/ Einf_base.selfdoubledot();
+			/* D = ((0, 0, 1/2), (0, 0, 0), (1/2, 0, 0))
+			 */
 		}
-		outdata.entryData("inviscid function 3rd", Dimensional::Dimension::Viscosity, 1, mf_reorientation);
+		outdata.entryData("viscosity", Dimensional::Dimension::Viscosity, 1, viscosity);
 		for (const auto &stress_comp: sys.total_stress_groups) {
-			string entry_name = "inviscid function 3rd("+stress_comp.first+")";
-			double mf_reorientation_component = 0.5*doubledot(stress_comp.second, stress_basis_3)/stress_basis_3.selfdoubledot();
-			outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, mf_reorientation_component);
+			string entry_name = "Viscosity("+stress_comp.first+")";
+			double viscosity_component = 0.5*doubledot(stress_comp.second, sys.getEinfty())/sys.getEinfty().selfdoubledot();
+			outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, viscosity_component);
+		}
+		//outdata.entryData("shear stress", Dimensional::Dimension::Stress, 1, shear_stress);
+		auto stress_diag = sys.total_stress.diag();
+		/************** isotropic stress (particle pressure) **************************************/
+		outdata.entryData("particle pressure", Dimensional::Dimension::Stress, 1, -sys.total_stress.trace()/3);
+		outdata.entryData("particle pressure contact", Dimensional::Dimension::Stress, 1, -sys.total_stress_groups["contact"].trace()/3);
+		/************** normal stress anisotropy  *************************************************/
+		if (sys.p.output.new_material_functions) {
+			/************** material function lambda0 *********************************************
+			 * Anisotropy between isotropic stress in the flow plane and the out-of-plane normal stress.
+			 * lambda0 has a better physical meaning than N2.
+			 * lambda0 = - (2/3)*(N2 + 0.5*N1)/shear_rate = (2/3)*N0/shear_rate N0 = 1.5 lambda0
+			 * N2 = rate*(-1.5*lambda0 + lambda3)
+			 * lambda0*ep_dot / p = lambda0*gamma_dot / 2p = - (N2 + 0.5*N1)* / 3 p
+			 **************************************************************************************/
+			double mf_inplane_pressure; // lambda_0
+			if (sr != 0) {
+				/* E = ((-1/4, 0, 0), (0, 1/2, 0), (0, 0, -1/4))
+				 */
+				mf_inplane_pressure = 0.5*doubledot(sys.total_stress, stress_basis_0)/stress_basis_0.selfdoubledot();
+			} else {
+				mf_inplane_pressure = 0;
+			}
+			outdata.entryData("inviscid function 0th", Dimensional::Dimension::Viscosity, 1, mf_inplane_pressure);
+			for (const auto &stress_comp: sys.total_stress_groups) {
+				string entry_name = "inviscid function 0th("+stress_comp.first+")";
+				double mf_inplane_pressure_component = 0.5*doubledot(stress_comp.second, stress_basis_0)/stress_basis_0.selfdoubledot();
+				outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, mf_inplane_pressure_component);
+			}
+			/************** material function lambda3 ****************************************
+			 * lambda3 induces a reoreientation of the stress eigenvectors.
+			 * lambda3 is equivalent to N1.
+			 * lambda3 = - (1/2)*N1/shear_rate
+			 * N1 = -2*shear_rate*lambda_3
+			 *********************************************************************************/
+			double mf_reorientation; // lambda_3
+			if (sr != 0) {
+				mf_reorientation = 0.5*doubledot(sys.total_stress, stress_basis_3)/stress_basis_3.selfdoubledot();
+				/* G = ((-1/2, 0, 0), (0, 0, 0), (0, 0, 1/2)
+				 */
+			} else {
+				mf_reorientation = 0;
+			}
+			outdata.entryData("inviscid function 3rd", Dimensional::Dimension::Viscosity, 1, mf_reorientation);
+			for (const auto &stress_comp: sys.total_stress_groups) {
+				string entry_name = "inviscid function 3rd("+stress_comp.first+")";
+				double mf_reorientation_component = 0.5*doubledot(stress_comp.second, stress_basis_3)/stress_basis_3.selfdoubledot();
+				outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, mf_reorientation_component);
+			}
+		} else {
+			/************** Normal stress differences **************************************
+			 * N1 = sigma11 - sigma22
+			 * N2 = sigma22 - sigma33
+			 *******************************************************************************/
+			normal_stress_diff1 = (stress_diag.x-stress_diag.z)/sr;
+			normal_stress_diff2 = (stress_diag.z-stress_diag.y)/sr;
+			outdata.entryData("N1 viscosity", Dimensional::Dimension::Viscosity, 1, normal_stress_diff1);
+			outdata.entryData("N2 viscosity", Dimensional::Dimension::Viscosity, 1, normal_stress_diff2);
+		}
+		/***************************************************************************************************************/
+		/* energy
+		 */
+		outdata.entryData("energy", Dimensional::Dimension::none, 1, getPotentialEnergy(sys));
+		/* maximum deformation of contact bond
+		 */
+		outdata.entryData("min gap", Dimensional::Dimension::none, 1, evaluateMinGap(sys));
+		if (sys.adhesion) {
+			outdata.entryData("max gap", Dimensional::Dimension::none, 1, evaluateMaxContactGap(sys));
+		}
+		if (sys.friction) {
+			outdata.entryData("max tangential displacement", Dimensional::Dimension::none, 1, evaluateMaxDispTan(sys));
+		}
+		if (sys.rolling_friction) {
+			outdata.entryData("max rolling displacement", Dimensional::Dimension::none, 1, evaluateMaxDispRolling(sys));
+		}
+		/* contact number
+		 */
+		unsigned int contact_nb, frictional_contact_nb;
+		std::tie(contact_nb, frictional_contact_nb) = countNumberOfContact(sys);
+		double contact_nb_per_particle = (double)2*contact_nb/sys.get_np();
+		double frictional_contact_nb_per_particle = (double)2*frictional_contact_nb/sys.get_np();
+		outdata.entryData("contact number", Dimensional::Dimension::none, 1, contact_nb_per_particle);
+		outdata.entryData("frictional contact number", Dimensional::Dimension::none, 1, frictional_contact_nb_per_particle);
+		outdata.entryData("number of interaction", Dimensional::Dimension::none, 1, sys.get_nb_interactions());
+		if (sys.delayed_adhesion) {
+			unsigned active_nb;
+			double active_ratio;
+			std::tie(active_nb, active_ratio) = getTAAdhesionActivityStatistics(sys);
+			outdata.entryData("delayed adhesion active nb", Dimensional::Dimension::none, 1, active_nb);
+			outdata.entryData("delayed adhesion active ratio", Dimensional::Dimension::none, 1, active_ratio);
+		}
+		/* maximum velocity
+		 */
+		outdata.entryData("max velocity", Dimensional::Dimension::Velocity, 1, sys.max_na_velocity);
+		outdata.entryData("max angular velocity", Dimensional::Dimension::Velocity, 1, evaluateMaxAngVelocity(sys));
+		/* simulation parameter
+		 */
+		outdata.entryData("dt", Dimensional::Dimension::Time, 1, sys.avg_dt);
+		outdata.entryData("kn", Dimensional::Dimension::none, 1, sys.p.kn);
+		outdata.entryData("kt", Dimensional::Dimension::none, 1, sys.p.kt);
+		outdata.entryData("kr", Dimensional::Dimension::none, 1, sys.p.kr);
+		vec3d shear_strain = sys.get_shear_strain();
+		outdata.entryData("shear strain", Dimensional::Dimension::none, 3, shear_strain);
+		if (sys.wall_rheology) {
+			outdata.entryData("shear viscosity wall 1", Dimensional::Dimension::Viscosity, 1, sys.shearstress_wall1/sr);
+			outdata.entryData("shear viscosity wall 2", Dimensional::Dimension::Viscosity, 1, sys.shearstress_wall2/sr);
+			outdata.entryData("normal stress/rate wall 1", Dimensional::Dimension::Viscosity, 1, sys.normalstress_wall1/sr);
+			outdata.entryData("normal stress/rate wall 2", Dimensional::Dimension::Viscosity, 1, sys.normalstress_wall2/sr);
+		}
+		if (sys.p.simulation_mode == 31) {
+			outdata.entryData("force top wall", Dimensional::Dimension::Force, 3, sys.force_upwall);
+			outdata.entryData("force bottom wall", Dimensional::Dimension::Force, 3, sys.force_downwall);
+		}
+		if (sys.brownian) {
+			outdata.entryData("max_velocity_brownian", Dimensional::Dimension::Velocity, 1, evaluateMaxNAVelocityComponent(sys, "brownian"));
+			outdata.entryData("max_velocity_contact", Dimensional::Dimension::Velocity, 1, evaluateMaxNAVelocityComponent(sys, "contact"));
+		}
+		if (sys.p.output.effective_coordination_number) {
+			outdata.entryData("eff_coordination_number", Dimensional::Dimension::none, 1, sys.effective_coordination_number);
+		}
+		outdata.entryData("shear stress", Dimensional::Dimension::Stress, 1, sys.target_stress);
+		outdata.entryData("theta shear", Dimensional::Dimension::none, 1, sys.p.theta_shear);
+		if (sys.p.event_handler == "jamming_stress_reversal") {
+			outdata.entryData("jamming strain", Dimensional::Dimension::none, 1, jamming_strain);
+		}
+		if (sys.p.check_static_force_balance) {
+			outdata.entryData("max force imbalance",  Dimensional::Dimension::none, 1, sys.max_force_imbalance);
 		}
 	} else {
-		/************** Normal stress differences **************************************
-		 * N1 = sigma11 - sigma22
-		 * N2 = sigma22 - sigma33
-		 *******************************************************************************/
-		normal_stress_diff1 = (stress_diag.x-stress_diag.z)/sr;
-		normal_stress_diff2 = (stress_diag.z-stress_diag.y)/sr;
-		outdata.entryData("N1 viscosity", Dimensional::Dimension::Viscosity, 1, normal_stress_diff1);
-		outdata.entryData("N2 viscosity", Dimensional::Dimension::Viscosity, 1, normal_stress_diff2);
+		outdata.entryData("time", Dimensional::Dimension::Time, 1, sys.get_time());
+		outdata.entryData("cumulated shear strain", Dimensional::Dimension::none, 1, sys.sflow.meanVelocity());
 	}
-	/***************************************************************************************************************/
-	/* energy
-	 */
-	outdata.entryData("energy", Dimensional::Dimension::none, 1, getPotentialEnergy(sys));
-	/* maximum deformation of contact bond
-	 */
-	outdata.entryData("min gap", Dimensional::Dimension::none, 1, evaluateMinGap(sys));
-	if (sys.adhesion) {
-		outdata.entryData("max gap", Dimensional::Dimension::none, 1, evaluateMaxContactGap(sys));
-	}
-	if (sys.friction) {
-		outdata.entryData("max tangential displacement", Dimensional::Dimension::none, 1, evaluateMaxDispTan(sys));
-	}
-	if (sys.rolling_friction) {
-		outdata.entryData("max rolling displacement", Dimensional::Dimension::none, 1, evaluateMaxDispRolling(sys));
-	}
-	/* contact number
-	 */
-	unsigned int contact_nb, frictional_contact_nb;
-	std::tie(contact_nb, frictional_contact_nb) = countNumberOfContact(sys);
-	double contact_nb_per_particle = (double)2*contact_nb/sys.get_np();
-	double frictional_contact_nb_per_particle = (double)2*frictional_contact_nb/sys.get_np();
-	outdata.entryData("contact number", Dimensional::Dimension::none, 1, contact_nb_per_particle);
-	outdata.entryData("frictional contact number", Dimensional::Dimension::none, 1, frictional_contact_nb_per_particle);
-	outdata.entryData("number of interaction", Dimensional::Dimension::none, 1, sys.get_nb_interactions());
-	if (sys.delayed_adhesion) {
-		unsigned active_nb;
-		double active_ratio;
-		std::tie(active_nb, active_ratio) = getTAAdhesionActivityStatistics(sys);
-		outdata.entryData("delayed adhesion active nb", Dimensional::Dimension::none, 1, active_nb);
-		outdata.entryData("delayed adhesion active ratio", Dimensional::Dimension::none, 1, active_ratio);
-	}
-	/* maximum velocity
-	 */
-	outdata.entryData("max velocity", Dimensional::Dimension::Velocity, 1, sys.max_na_velocity);
-	outdata.entryData("max angular velocity", Dimensional::Dimension::Velocity, 1, evaluateMaxAngVelocity(sys));
-	/* simulation parameter
-	 */
-	outdata.entryData("dt", Dimensional::Dimension::Time, 1, sys.avg_dt);
-	outdata.entryData("kn", Dimensional::Dimension::none, 1, sys.p.kn);
-	outdata.entryData("kt", Dimensional::Dimension::none, 1, sys.p.kt);
-	outdata.entryData("kr", Dimensional::Dimension::none, 1, sys.p.kr);
-	vec3d shear_strain = sys.get_shear_strain();
-	outdata.entryData("shear strain", Dimensional::Dimension::none, 3, shear_strain);
-	if (sys.wall_rheology) {
-		outdata.entryData("shear viscosity wall 1", Dimensional::Dimension::Viscosity, 1, sys.shearstress_wall1/sr);
-		outdata.entryData("shear viscosity wall 2", Dimensional::Dimension::Viscosity, 1, sys.shearstress_wall2/sr);
-		outdata.entryData("normal stress/rate wall 1", Dimensional::Dimension::Viscosity, 1, sys.normalstress_wall1/sr);
-		outdata.entryData("normal stress/rate wall 2", Dimensional::Dimension::Viscosity, 1, sys.normalstress_wall2/sr);
-	}
-	if (sys.p.simulation_mode == 31) {
-		outdata.entryData("force top wall", Dimensional::Dimension::Force, 3, sys.force_upwall);
-		outdata.entryData("force bottom wall", Dimensional::Dimension::Force, 3, sys.force_downwall);
-	}
-	if (sys.brownian) {
-		outdata.entryData("max_velocity_brownian", Dimensional::Dimension::Velocity, 1, evaluateMaxNAVelocityComponent(sys, "brownian"));
-		outdata.entryData("max_velocity_contact", Dimensional::Dimension::Velocity, 1, evaluateMaxNAVelocityComponent(sys, "contact"));
-	}
-	if (sys.p.output.effective_coordination_number) {
-		outdata.entryData("eff_coordination_number", Dimensional::Dimension::none, 1, sys.effective_coordination_number);
-	}
-	outdata.entryData("shear stress", Dimensional::Dimension::Stress, 1, sys.target_stress);
-	outdata.entryData("theta shear", Dimensional::Dimension::none, 1, sys.p.theta_shear);
-	if (sys.p.event_handler == "jamming_stress_reversal") {
-		outdata.entryData("jamming strain", Dimensional::Dimension::none, 1, jamming_strain);
-	}
-	if (sys.p.check_static_force_balance) {
-		outdata.entryData("max force imbalance",  Dimensional::Dimension::none, 1, sys.max_force_imbalance);
-	}
+	
+	
 
 	outdata.writeToFile();
 	/****************************   Stress Tensor Output *****************/

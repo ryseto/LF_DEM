@@ -324,7 +324,7 @@ private:
 	double effective_coordination_number;
 	double stress_transition_target;
 	/**** pipe flow setup ***********/
-	double force_pipe_flow;
+	double pressure_difference;
 	/****************************************************************************************************
 	 * Extensional flow using Kraynik-Reinelt Method was originally implemented                         *
 	 * by Antonio Martiniello and Giulio Giuseppe Giusteri from Auguest to November 2016 at OIST.       *
@@ -404,7 +404,6 @@ private:
 
 	void countContactNumber();
 	void checkStaticForceBalance();
-
 	void initSolventFlow();
 	
 	void setBoxSize(double lx_, double ly_, double lz_)

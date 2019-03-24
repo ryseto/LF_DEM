@@ -210,7 +210,7 @@ void System::declareForceComponents()
 		force_components["delayed_adhesion"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setTActAdhesionForceToParticle);
 	}
 
-	if (simu_type == pipe_flow) {
+	if (false && simu_type == pipe_flow) {
 		force_components["body_force"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setBodyForce);
 	}
 	/********** Force R_FU^{mf}*(U^f-U^f_inf)  *************/
@@ -958,9 +958,18 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	} else {
 		computeVelocities(calc_stress);
 	}
+	if (!p.fixed_dt) {
+		adaptTimeStep(time_end, strain_end);
+	}
 	
 	if (p.solvent_flow) {
-		sflow.updateParticleVelocity();
+		sflow.update(pressure_difference);
+		for (int i=0; i<np_mobile; i++) {
+			vec3d local_flow = sflow.localFlow(position[i]);
+			// na_velocity = u_particle - u_solvent
+			velocity[i] = na_velocity[i]+local_flow;
+			ang_velocity[i] = na_ang_velocity[i];
+		}
 	}
 	
 	if (wall_rheology && calc_stress) { // @@@@ calc_stress remove????
@@ -1116,7 +1125,6 @@ void System::adaptTimeStep()
 			computeMaxNAVelocity();
 		}
 	}
-
 	double max_interaction_vel = evaluateMaxInterNormalVelocity(*this);
 	if (friction) {
 		auto max_sliding_velocity = evaluateMaxContactSlidingVelocity(*this);
@@ -1157,14 +1165,16 @@ void System::adaptTimeStep(double time_end, double strain_end)
 	adaptTimeStep();
 	// To stop exactly at t == time_end or strain == strain_end,
 	// whatever comes first
-	if (strain_end >= 0) {
-		if (fabs(dt*shear_rate) > strain_end-clk.cumulated_strain) {
-			dt = fabs((strain_end-clk.cumulated_strain)/shear_rate);
+	if (simu_type != pipe_flow) {
+		if (strain_end >= 0) {
+			if (fabs(dt*shear_rate) > strain_end-clk.cumulated_strain) {
+				dt = fabs((strain_end-clk.cumulated_strain)/shear_rate);
+			}
 		}
-	}
-	if (time_end >= 0) {
-		if (get_time()+dt > time_end) {
-			dt = time_end-get_time();
+		if (time_end >= 0) {
+			if (get_time()+dt > time_end) {
+				dt = time_end-get_time();
+			}
 		}
 	}
 }
@@ -1195,9 +1205,7 @@ void System::timeStepMove(double time_end, double strain_end)
 	 * clk.cumulated_strain = shear_rate * t for both simple shear and extensional flow.
 	 */
 	/* Adapt dt to get desired p.disp_max	 */
-	if (!p.fixed_dt) {
-		adaptTimeStep(time_end, strain_end);
-	}
+
 	//	cerr << dt << ' ' << p.critical_load  << endl;
 	clk.time_ += dt;
 	total_num_timesteps ++;
@@ -1963,12 +1971,13 @@ void System::setBodyForce(vector<vec3d> &force,
 	for (auto &t: torque) {
 		t.reset();
 	}
+
+	double force_pipe_flow = 1e-5;
 	if (true) {
 		double angle = M_PI*p.body_force_angle/180;
 		double bf_x = force_pipe_flow*cos(angle);
 		double bf_z = -force_pipe_flow*sin(angle);
 		for (int i=0; i<np_mobile; i++) {
-			double bf = force_pipe_flow;
 			force[i].set(radius[i]*bf_x, 0 , radius[i]*bf_z);
 		}
 	} else {
@@ -2362,14 +2371,16 @@ void System::tmpMixedProblemSetVelocities()
 			}
 		}
 	} else if (p.simulation_mode == 60) {
-		int i_np_wall1 = np_mobile+np_wall1;
-		for (int i=np_mobile; i<i_np_wall1; i++) {
-			na_velocity[i] = {0, 0, 0};
-			na_ang_velocity[i].reset();
-		}
-		for (int i=i_np_wall1; i<np; i++) {
-			na_velocity[i] = {0, 0, 0};
-			na_ang_velocity[i].reset();
+		if (mobile_fixed) {
+			int i_np_wall1 = np_mobile+np_wall1;
+			for (int i=np_mobile; i<i_np_wall1; i++) {
+				na_velocity[i].reset();
+				na_ang_velocity[i].reset();
+			}
+			for (int i=i_np_wall1; i<np; i++) {
+				na_velocity[i].reset();
+				na_ang_velocity[i].reset();
+			}
 		}
 	}
 }
@@ -2383,6 +2394,7 @@ void System::sumUpVelocityComponents()
 	for (const auto &vc: na_velo_components) {
 		const auto &vel = vc.second.vel;
 		const auto &ang_vel = vc.second.ang_vel;
+		cerr << "." << ' ';
 		for (int i=0; i<np_mobile; i++) {
 			na_velocity[i] += vel[i];
 			na_ang_velocity[i] += ang_vel[i];
@@ -2425,7 +2437,9 @@ void System::computeVelocities(bool divided_velocities)
 		if (control == Parameters::ControlVariable::stress) {
 			set_shear_rate(1);
 		}
-		computeUInf();
+		if (!p.solvent_flow) {
+			computeUInf();
+		}
 		setFixedParticleVelocities();
 		computeVelocityByComponents();
 		if (control == Parameters::ControlVariable::stress) {
@@ -2439,7 +2453,9 @@ void System::computeVelocities(bool divided_velocities)
 		}
 		sumUpVelocityComponents();
 	} else {
-		computeUInf();
+		if (!p.solvent_flow) {
+			computeUInf();
+		}
 		setFixedParticleVelocities();
 		computeVelocityWithoutComponents();
 	}
@@ -2448,7 +2464,9 @@ void System::computeVelocities(bool divided_velocities)
 			computeMaxNAVelocity();
 		}
 	}
-	adjustVelocityPeriodicBoundary();
+	if (!p.solvent_flow) {
+		adjustVelocityPeriodicBoundary();
+	}
 	if (divided_velocities && wall_rheology) {
 		if (in_predictor) {
 			forceResultantLubricationForce();

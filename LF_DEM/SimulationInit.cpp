@@ -133,8 +133,8 @@ void Simulation::convertForces(Dimensional::Unit &internal_unit,
 	} else if (control_var == Parameters::ControlVariable::stress) {
 		sys.target_stress = forces.at(Dimensional::Unit::stress).value;
 	} else if (control_var == Parameters::ControlVariable::pressure) {
-		sys.force_pipe_flow = forces.at(Dimensional::Unit::stress).value;
-		cerr << "sys.force_pipe_flow = " << sys.force_pipe_flow << endl;
+		sys.pressure_difference = forces.at(Dimensional::Unit::stress).value;
+		cerr << "sys.pressure_difference = " << sys.pressure_difference << endl;
 	}
 }
 
