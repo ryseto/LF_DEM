@@ -1797,7 +1797,8 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 		return;
 	}
 	if (mobile_fixed) {
-		throw runtime_error("Brownian algorithm with fixed particles not implemented yet.\n");
+		cerr << "Brownian algorithm with fixed particles not implemented yet.\n";
+//		throw runtime_error("Brownian algorithm with fixed particles not implemented yet.\n");
 	}
 	for (auto &f: force) {
 		f.reset();

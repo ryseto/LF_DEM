@@ -226,21 +226,50 @@ void SolventFlow::predictorStep()
 	double phi_max = 0.84;
 	double inv_res_max = (1-phi_max)*(1-phi_max)/phi_max;
 	double coeff = 0.1*inv_res_max;
-	double viscous_stabiliser = 0.5e-4;
+	double viscosity = 1;
+	double dx2 = dx*dx;
+	double dz2 = dz*dz;
 	for (int j=0; j<nz; j++) {
 		for (int i=0; i<nx; i++) {
 			int k = i + nx*j;
 			double porefrac = 1-phi[k];
 			double res_coeff = coeff*phi[k]/(porefrac*porefrac);
-			u_sol_ast_x[k] = u_sol_x[k] + res_coeff*d_tau*u_diff_x[k] - viscous_stabiliser*u_sol_x[k]; // u_x = u_p - u_s
+			u_sol_ast_x[k] = u_sol_x[k] + res_coeff*d_tau*u_diff_x[k];
+			//- viscous_stabiliser*u_sol_x[k]; // u_x = u_p - u_s
 			if (sys->p.boundary_conditions == 1) {
 				if (j == 0) {
 					u_sol_ast_z[k] = 0;
 				} else {
-					u_sol_ast_z[k] = u_sol_z[k] + res_coeff*d_tau*u_diff_z[k] - viscous_stabiliser*u_sol_z[k];
+					u_sol_ast_z[k] = u_sol_z[k] + res_coeff*d_tau*u_diff_z[k];
+					//- viscous_stabiliser*u_sol_z[k];
 				}
 			} else {
-				u_sol_ast_z[k] = u_sol_z[k] + res_coeff*d_tau*u_diff_z[k] - viscous_stabiliser*u_sol_z[k];
+				u_sol_ast_z[k] = u_sol_z[k] + res_coeff*d_tau*u_diff_z[k];
+				//- viscous_stabiliser*u_sol_z[k];
+			}
+			if (true) {
+				int ip1 = i+1;
+				if (ip1 == nx) {
+					ip1 = 0;
+				}
+				int im1 = i-1;
+				if (im1 == -1) {
+					im1 = 0;
+				}
+				int jp1 = j+1;
+				if (jp1 == nz) {
+					jp1 = 0;
+				}
+				int jm1 = j-1;
+				if (jm1 == -1) {
+					jm1 = 0;
+				}
+				int ir = ip1+j*nx; //right
+				int il = im1+j*nx; //left
+				int ju = i+jp1*nx; //up
+				int jd = i+jm1*nx; //down
+				u_sol_ast_x[k] += viscosity*((u_sol_x[ir]-2*u_sol_x[k]+u_sol_x[il])/(dx2)+(u_sol_x[ju]-2*u_sol_x[k]+u_sol_x[jd])/(dz2));
+				u_sol_ast_z[k] += viscosity*((u_sol_z[ir]-2*u_sol_z[k]+u_sol_z[il])/(dx2)+(u_sol_z[ju]-2*u_sol_z[k]+u_sol_z[jd])/(dz2));
 			}
 		}
 	}
