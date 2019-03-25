@@ -823,7 +823,9 @@ void Simulation::outputData()
 		}
 	} else {
 		outdata.entryData("time", Dimensional::Dimension::Time, 1, sys.get_time());
-		outdata.entryData("cumulated shear strain", Dimensional::Dimension::none, 1, sys.sflow.meanVelocity());
+		outdata.entryData("flux", Dimensional::Dimension::none, 1, sys.sflow.calcFlux());
+		outdata.entryData("pressure difference", Dimensional::Dimension::Stress, 1, sys.sflow.pressure_difference);
+	
 	}
 	
 	

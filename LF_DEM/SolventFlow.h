@@ -34,7 +34,6 @@ private:
 	double dx;
 	double dz;
 	double d_tau;
-	double pressure_difference;
 	double smooth_length;
 	double sq_smooth_length;
 	// Staggered grid stores
@@ -69,6 +68,10 @@ private:
 public:
 	SolventFlow();
 	~SolventFlow();
+	
+	double pressure_difference;
+
+	
 	void init(System* sys_);
 	void update(double pressure_difference);
 	void initPoissonSolver();
@@ -76,5 +79,8 @@ public:
 	double meanVelocity();
 	void outputYaplot(std::ofstream &fout_flow);
 	void velocityProfile(std::ofstream &fout_fp);
+	double calcFlux();
+
+
 };
 #endif /* SolventFlow_hpp */

@@ -22,12 +22,13 @@ SolventFlow::~SolventFlow()
 
 void SolventFlow::init(System* sys_)
 {
+	pressure_difference = 0;
 	sys = sys_;
 	nx = 20;
 	nz = 20;
 	n = nx*nz;
 	dx = sys->get_lx()/nx;
-	dz = sys->get_lz()/nz; // @@ need to be changed.
+	dz = sys->get_lz()/nz;
 	smooth_length = dx/2;
 	sq_smooth_length = smooth_length*smooth_length;
 	pressure.resize(n);
@@ -210,8 +211,16 @@ void SolventFlow::particleVelocityDiffToMesh()
 void SolventFlow::update(double pressure_difference_)
 {
 	static std::ofstream fout_tmp("debug.dat");
-	pressure_difference = 10*pressure_difference_;
-	double rho = 0.1;
+	double flux = calcFlux();
+	double target_flux = 1;
+	//pressure_difference = 10*pressure_difference_;
+	double pd_increment = 1e-5;
+	if (flux < target_flux) {
+		pressure_difference += pd_increment;
+	} else {
+		pressure_difference -= pd_increment;
+	}
+	double rho = 0.01;
 	d_tau = sys->dt/rho;
 	particleVelocityDiffToMesh();
 	predictorStep();
@@ -237,6 +246,10 @@ void SolventFlow::predictorStep()
 			u_sol_ast_x[k] = u_sol_x[k] + res_coeff*d_tau*u_diff_x[k];
 			//- viscous_stabiliser*u_sol_x[k]; // u_x = u_p - u_s
 			if (sys->p.boundary_conditions == 1) {
+				/* periodic boundary condtions in x directions.
+				 * Non-slip boundy conditions at z = 0 and z=Lz.
+				 *
+				 */
 				if (j == 0) {
 					u_sol_ast_z[k] = 0;
 				} else {
@@ -244,6 +257,8 @@ void SolventFlow::predictorStep()
 					//- viscous_stabiliser*u_sol_z[k];
 				}
 			} else {
+				/* periodic boundary condtions in x and z directions.
+				 */
 				u_sol_ast_z[k] = u_sol_z[k] + res_coeff*d_tau*u_diff_z[k];
 				//- viscous_stabiliser*u_sol_z[k];
 			}
@@ -268,8 +283,8 @@ void SolventFlow::predictorStep()
 				int il = im1+j*nx; //left
 				int ju = i+jp1*nx; //up
 				int jd = i+jm1*nx; //down
-				u_sol_ast_x[k] += viscosity*((u_sol_x[ir]-2*u_sol_x[k]+u_sol_x[il])/(dx2)+(u_sol_x[ju]-2*u_sol_x[k]+u_sol_x[jd])/(dz2));
-				u_sol_ast_z[k] += viscosity*((u_sol_z[ir]-2*u_sol_z[k]+u_sol_z[il])/(dx2)+(u_sol_z[ju]-2*u_sol_z[k]+u_sol_z[jd])/(dz2));
+				u_sol_ast_x[k] += viscosity*d_tau*((u_sol_x[ir]-2*u_sol_x[k]+u_sol_x[il])/(dx2)+(u_sol_x[ju]-2*u_sol_x[k]+u_sol_x[jd])/(dz2));
+				u_sol_ast_z[k] += viscosity*d_tau*((u_sol_z[ir]-2*u_sol_z[k]+u_sol_z[il])/(dx2)+(u_sol_z[ju]-2*u_sol_z[k]+u_sol_z[jd])/(dz2));
 			}
 		}
 	}
@@ -340,12 +355,18 @@ void SolventFlow::correctorStep()
 			}
 			u_sol_x[k] = u_sol_ast_x[k] - d_tau*(pressure[k] - (pressure[im1+j*nx]+pd))/dx;
 			if (sys->p.boundary_conditions == 1) {
+				/* periodic boundary condtions in x directions.
+				 * Non-slip boundy conditions at z = 0 and z=Lz.
+				 *
+				 */
 				if (j == 0) {
 					u_sol_z[k] = 0;
 				} else {
 					u_sol_z[k] = u_sol_ast_z[k] - d_tau*(pressure[k] - pressure[i+jm1*nx])/dz;
 				}
 			} else {
+				/* periodic boundary condtions in x and z directions.
+				 */
 				u_sol_z[k] = u_sol_ast_z[k] - d_tau*(pressure[k] - pressure[i+jm1*nx])/dz;
 			}
 		}
@@ -379,6 +400,44 @@ double SolventFlow::meanVelocity()
 		mean_velocity += u_sol_x[k] ;
 	}
 	return mean_velocity/n;
+}
+
+double SolventFlow::calcFlux()
+{
+	if (true) {
+		int i=(int)(0.5*nx);
+		double flux_total = 0;
+		for (int j=0; j<nz; j++) {
+			int k = i + nx*j;
+			flux_total += u_sol_x[k]*dz;
+		}
+		return flux_total/sys->get_lz();
+	} else {
+		std::vector <double> flux(nx);
+		double flux_min = 99999;
+		double flux_max = 0;
+		for (int i=0; i< nx; i++) {
+			double flux_total = 0;
+			for (int j=0; j<nz; j++) {
+				int k = i + nx*j;
+				flux_total += u_sol_x[k]*dz;
+			}
+			flux[i] = flux_total/sys->get_lz();
+			if (flux[i] < flux_min) {
+				flux_min = flux[i];
+			}
+			if (flux[i] > flux_max) {
+				flux_max = flux[i];
+			}
+		}
+		double flux_sum = 0;
+		for (auto fl : flux) {
+			flux_sum += fl;
+		}
+		double flux_mean = flux_sum/nx;
+		std::cerr << (flux_max  - flux_min)/flux_mean << std::endl;
+		return flux_mean;
+	}
 }
 
 void SolventFlow::velocityProfile(std::ofstream &fout_fp)
