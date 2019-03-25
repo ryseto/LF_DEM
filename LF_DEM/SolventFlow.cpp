@@ -226,15 +226,19 @@ void SolventFlow::predictorStep()
 	double phi_max = 0.84;
 	double inv_res_max = (1-phi_max)*(1-phi_max)/phi_max;
 	double coeff = 0.1*inv_res_max;
-	double viscous_stabiliser = 1e-5;
+	double viscous_stabiliser = 0.5e-4;
 	for (int j=0; j<nz; j++) {
 		for (int i=0; i<nx; i++) {
 			int k = i + nx*j;
 			double porefrac = 1-phi[k];
 			double res_coeff = coeff*phi[k]/(porefrac*porefrac);
 			u_sol_ast_x[k] = u_sol_x[k] + res_coeff*d_tau*u_diff_x[k] - viscous_stabiliser*u_sol_x[k]; // u_x = u_p - u_s
-			if (j == 0) {
-				u_sol_ast_z[k] = 0;
+			if (sys->p.boundary_conditions == 1) {
+				if (j == 0) {
+					u_sol_ast_z[k] = 0;
+				} else {
+					u_sol_ast_z[k] = u_sol_z[k] + res_coeff*d_tau*u_diff_z[k] - viscous_stabiliser*u_sol_z[k];
+				}
 			} else {
 				u_sol_ast_z[k] = u_sol_z[k] + res_coeff*d_tau*u_diff_z[k] - viscous_stabiliser*u_sol_z[k];
 			}
@@ -306,8 +310,12 @@ void SolventFlow::correctorStep()
 				jm1 = nz-1;
 			}
 			u_sol_x[k] = u_sol_ast_x[k] - d_tau*(pressure[k] - (pressure[im1+j*nx]+pd))/dx;
-			if (j == 0) {
-				u_sol_z[k] = 0;
+			if (sys->p.boundary_conditions == 1) {
+				if (j == 0) {
+					u_sol_z[k] = 0;
+				} else {
+					u_sol_z[k] = u_sol_ast_z[k] - d_tau*(pressure[k] - pressure[i+jm1*nx])/dz;
+				}
 			} else {
 				u_sol_z[k] = u_sol_ast_z[k] - d_tau*(pressure[k] - pressure[i+jm1*nx])/dz;
 			}

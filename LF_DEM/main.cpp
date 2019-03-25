@@ -132,6 +132,8 @@ int main(int argc, char **argv)
 						generate_init = 4; // winding
 					} else if (optarg[0] == 'b') {
 						generate_init = 5; // bottom
+					} else if (optarg[0] == 'f') {
+						generate_init = 6; // filter mesh
 					}
 				}
 				break;

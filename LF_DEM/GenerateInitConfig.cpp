@@ -25,6 +25,7 @@ circulargap_config(false),
 parallel_wall_config(false),
 winding_wall_config(false),
 bottom_wall_config(false),
+filter_mesh_config(false),
 z_top(-1),
 z_bot(-1),
 np_wall1(0),
@@ -73,7 +74,11 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 	} else if (config_type == 5) {
 		cerr << "generate a flat bottom" <<endl;
 		bottom_wall_config = true;
+	} else if (config_type == 6) {
+		cerr << "filter mesh at right side" <<endl;
+		filter_mesh_config = true;
 	}
+	
 	
 	Simulation simu;
 	setParameters(simu, volume_frac_gen_);
@@ -125,6 +130,17 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 		c.np_wall2 = np_wall2;
 		c.z_bot = z_bot;
 		c.z_top = z_top;
+		sys.setupConfiguration(c, Parameters::ControlVariable::rate);
+	} else if (filter_mesh_config) {
+		np_wall1 =nb_pin;
+		np_wall2 = 0;
+		np_movable = np;
+		np_fix = nb_pin;
+		np += nb_pin;
+		struct fixed_velo_configuration c;
+		baseSetup(c, sys.twodimension, inflate_ratio);
+		c.np_wall1 = nb_pin;
+		c.np_wall2 = 0;
 		sys.setupConfiguration(c, Parameters::ControlVariable::rate);
 	} else if (winding_wall_config) {
 		np_wall1 = (cg_radius_out+cg_radius_in)*M_PI/2/1.5+1;
@@ -245,6 +261,12 @@ void GenerateInitConfig::outputPositionData(const System &sys)
 		fout << lx << ' ' << ly << ' ' << lz << ' ';
 		fout << np_wall1 << ' ' << np_wall2 << ' ';
 		fout << z_bot << ' ' << z_top  << endl;
+	} else if (filter_mesh_config) {
+		fout << "# np1 np2 vf lx ly lz np_wall1 np_wall2" << endl;
+		fout << std::setprecision(15);
+		fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
+		fout << lx << ' ' << ly << ' ' << lz << ' ';
+		fout << np_wall1 << ' ' << np_wall2 << endl;
 	} else {
 		fout << "# np1 np2 vf lx ly lz vf1 vf2 dispx dispy" << endl;
 		fout << std::setprecision(15);
@@ -381,6 +403,39 @@ std::pair<std::vector<vec3d>, std::vector<double>> GenerateInitConfig::putRandom
 //			radius[i+np_movable+np_wall1] = radius_wall_particle;
 //		}
 		cerr << np_wall1 << ' ' << np_wall2 << endl;
+		
+	} else if (filter_mesh_config) {
+		int i = 0;
+		while (i < np_movable) {
+			double a;
+			if (i < np1) {
+				a = a1;
+			} else {
+				a = a2;
+			}
+			vec3d pos(lx*RANDOM, 0, lz*RANDOM);
+			position[i] = pos;
+			radius[i] = a;
+			i++;
+		}
+		double delta_z = lz/nb_pin;
+		for (i=0; i<np_wall1; i++){
+			double z = delta_z*i + delta_z/2;
+			double x = lx-radius_wall_particle;
+			vec3d pos(x, 0, z);
+			position[i+np_movable] = pos;
+			radius[i+np_movable] = radius_wall_particle;
+		}
+		//		for (i=0; i<np_wall2; i++){
+		//			vec3d pos(radius_wall_particle+delta_x*i, 0, z_top);
+		//			if (wall_pin_interval > 0                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     && i%wall_pin_interval == wall_pin_interval-1) {
+		//				pos -= del;
+		//			}
+		//			position[i+np_movable+np_wall1] = pos;
+		//			radius[i+np_movable+np_wall1] = radius_wall_particle;
+		//		}
+		cerr << np_wall1 << ' ' << np_wall2 << endl;
+		
 	} else if (winding_wall_config) {
 		int i = 0;
 		vec3d r_center1(0, 0, 0);
@@ -682,11 +737,14 @@ void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init
 		double area1 = M_PI*(cg_radius_out-a)*(cg_radius_out-a)/2;
 		double area2 = M_PI*(cg_radius_in+a)*(cg_radius_in+a)/2;
 		cerr << " area fraction = " << area_particle/(area1-area2);
-	} else if (parallel_wall_config || bottom_wall_config) {
+	} else if (parallel_wall_config || bottom_wall_config ) {
 		radius_wall_particle = readStdinDefault(1.0, "wall particle size");
 		nb_pin = readStdinDefault(-1, "number of wall pin");
 		z_bot = 0;
 		z_top = lz;
+	} else if (filter_mesh_config) {
+		radius_wall_particle = readStdinDefault(1.0, "wall particle size");
+		nb_pin = readStdinDefault(-1, "number of wall pin");
 	}
 	lx_half = lx/2;
 	ly_half = ly/2;

@@ -67,6 +67,7 @@ private:
 	bool parallel_wall_config;
 	bool winding_wall_config;
 	bool bottom_wall_config;
+	bool filter_mesh_config;
 	double cg_radius_in;
 	double cg_radius_out;
 	double cg_ratio_radii;

@@ -78,6 +78,7 @@ namespace Parameters {
 		int simulation_mode;
 		std::string flow_type;
 		double magic_angle; // magic angle for extensinoal flow
+		int boundary_conditions; // boundary conditions for flow fields 0: all PD 1: x-PD and z-Wall  [0]
 		/*******************************************************
 		 INTERACTIONS
 		 ********************************************************/

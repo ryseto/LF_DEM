@@ -257,6 +257,7 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	}
 	if (p.np_fixed > 0) {
 		mobile_fixed = true;
+		cerr << "np fixed " << p.np_fixed << endl;
 	}
 	position.resize(np);
 	radius.resize(np);
