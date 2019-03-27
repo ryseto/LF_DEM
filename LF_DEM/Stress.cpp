@@ -85,7 +85,6 @@ void System::addUpInteractionStressGU(std::vector<Sym2Tensor> &stress_comp,
 	if (!lubrication) {
 		return;
 	}
-
 	for (const auto &inter: interaction) {
 		if (inter.lubrication.is_active()) {
 			unsigned int i, j;

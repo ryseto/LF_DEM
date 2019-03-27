@@ -54,7 +54,7 @@ class Simulation;
 class BoxSet;
 class SolventFlow;
 
-class System{
+class System {
 private:
 
 	int np; ///< number of particles

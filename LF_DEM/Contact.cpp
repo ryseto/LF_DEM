@@ -311,7 +311,6 @@ void Contact::frictionlaw_standard()
 			setRollingForceNorm(sqrt(sq_f_rolling), supportable_rollingforce);
 		}
 	}
-	return;
 }
 
 void Contact::frictionlaw_infinity()
@@ -320,7 +319,6 @@ void Contact::frictionlaw_infinity()
 	 \brief Friction law
 	 */
 	state = 2; // static friction
-	return;
 }
 
 void Contact::setTangentialForceNorm(double current_force_norm,
@@ -372,7 +370,6 @@ void Contact::frictionlaw_criticalload()
 			}
 		}
 	}
-	return;
 }
 
 void Contact::frictionlaw_criticalload_mu_inf()
@@ -395,7 +392,6 @@ void Contact::frictionlaw_criticalload_mu_inf()
 		// The tangential spring constant may be rescaled to control maximum strain
 		state = 2; // static friction
 	}
-	return;
 }
 
 void Contact::frictionlaw_ft_max()
@@ -410,7 +406,6 @@ void Contact::frictionlaw_ft_max()
 	} else {
 		state = 2; // static friction
 	}
-	return;
 }
 
 void Contact::frictionlaw_coulomb_max()
@@ -448,7 +443,6 @@ void Contact::frictionlaw_coulomb_max()
 	} else {
 		state = 2; // static friction
 	}
-	return;
 }
 
 void Contact::addUpForce(std::vector<vec3d> &force_per_particle) const

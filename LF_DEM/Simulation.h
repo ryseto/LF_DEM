@@ -32,8 +32,7 @@
 #include "Timer.h"
 #include "gsd.h"
 
-class Simulation
-{
+class Simulation {
 private:
 	Parameters::ParameterSet p_initial;
 	std::string header_imported_configulation[2];

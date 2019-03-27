@@ -433,7 +433,6 @@ void Simulation::openOutputFiles()
 	}
 	//string box_name = "box_"+simu_name+".dat";
 	//fout_boxing.open(box_name);
-	return;
 }
 
 string Simulation::prepareSimulationName(bool binary_conf,

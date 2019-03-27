@@ -36,6 +36,7 @@ private:
 	double d_tau;
 	double smooth_length;
 	double sq_smooth_length;
+	double cell_area;
 	// Staggered grid stores
 	// - the pressure at the cell center
 	// - the velocities at the cell faces.
@@ -51,6 +52,13 @@ private:
 	std::vector<double> u_diff_z;
 	std::vector<double> phi;
 	std::vector<vec3d> pos;
+	std::vector <int> u_mesh_nb;
+	std::vector <int> phi_mesh_nb;
+	std::vector <double> udx_values;
+	std::vector <double> udz_values;
+	std::vector <double> phi_values;
+	
+	
 	int meshNb(int xi, int zi);
 	SpMat lap_mat;
 	//lap_mat;
@@ -64,14 +72,11 @@ private:
 	void calcVelocityDivergence();
 	void solvePressure();
 	void correctorStep();
-	
+	double porousResistance(double volume_fraction);
 public:
 	SolventFlow();
 	~SolventFlow();
-	
 	double pressure_difference;
-
-	
 	void init(System* sys_);
 	void update(double pressure_difference);
 	void initPoissonSolver();
@@ -80,7 +85,5 @@ public:
 	void outputYaplot(std::ofstream &fout_flow);
 	void velocityProfile(std::ofstream &fout_fp);
 	double calcFlux();
-
-
 };
 #endif /* SolventFlow_hpp */

@@ -202,7 +202,7 @@ void System::declareForceComponents()
 		force_components["delayed_adhesion"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setTActAdhesionForceToParticle);
 	}
 
-	if (false && simu_type == pipe_flow) {
+	if (false) {
 		force_components["body_force"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setBodyForce);
 	}
 	/********** Force R_FU^{mf}*(U^f-U^f_inf)  *************/
@@ -1793,7 +1793,7 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 	 stored in the stokes_solver.
 
 	 */
-	if(!in_predictor) { // The Brownian force must be the same in the predictor and the corrector
+	if (!in_predictor) { // The Brownian force must be the same in the predictor and the corrector
 		return;
 	}
 	if (mobile_fixed) {
@@ -1965,20 +1965,21 @@ void System::setBodyForce(vector<vec3d> &force,
 	for (auto &t: torque) {
 		t.reset();
 	}
-
-	double force_pipe_flow = 1e-5;
+	return;
+	double body_force = 1e-5;
 	if (true) {
 		double angle = M_PI*p.body_force_angle/180;
-		double bf_x = force_pipe_flow*cos(angle);
-		double bf_z = -force_pipe_flow*sin(angle);
+		double bf_x = body_force*cos(angle);
+		//double bf_z = -body_force*sin(angle);
+		double bf_z = 0;
 		for (int i=0; i<np_mobile; i++) {
 			force[i].set(radius[i]*bf_x, 0 , radius[i]*bf_z);
 		}
 	} else {
 		for (int i=0; i<np_mobile; i++) {
 			double angle = atan2(position[i].z-lz_half, position[i].x-lx_half);
-			double bf_x = -force_pipe_flow*cos(angle);
-			double bf_z = -force_pipe_flow*sin(angle);
+			double bf_x = -body_force*cos(angle);
+			double bf_z = -body_force*sin(angle);
 			force[i].set(radius[i]*bf_x, 0 , radius[i]*bf_z);
 		}
 	}
@@ -2986,7 +2987,6 @@ void System::initSolventFlow()
 {
 	sflow.init(this);
 	sflow.initPoissonSolver();
-
 }
 
 

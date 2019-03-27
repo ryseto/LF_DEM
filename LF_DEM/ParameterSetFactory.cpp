@@ -18,7 +18,6 @@ void Str2KeyValue(const std::string& str_parameter,
 	std::string::size_type pos_equal = str_parameter.find("=");
 	keyword = str_parameter.substr(0, pos_equal);
 	value = str_parameter.substr(pos_equal+1);
-	return;
 }
 
 ParameterSetFactory::ParameterSetFactory(Dimensional::Unit guarranted_unit) 
@@ -111,7 +110,9 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(simulation_mode, 0),
 		PARAM_INIT(boundary_conditions, 0),
 		PARAM_INIT(sj_check_count, 500),
-		PARAM_INIT(sj_reversal_repetition, 10)
+		PARAM_INIT(sj_reversal_repetition, 10),
+		PARAM_INIT(mesh_nx, 20),
+		PARAM_INIT(mesh_nz, 20)
 	};
 
 	/*===============================
@@ -155,6 +156,9 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 	default_val = {Dimensional::Unit::brownian, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(brownian, default_val));
 
+	default_val = {Dimensional::Unit::kn, {Dimensional::Dimension::Force, 0, guarranted_unit}};
+	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(body_force, default_val));
+	
 	/*==============================================
 	=            Dimensional Quantities            =
 	==============================================*/
