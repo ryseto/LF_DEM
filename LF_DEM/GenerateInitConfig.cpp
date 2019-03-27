@@ -739,12 +739,12 @@ void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init
 		cerr << " area fraction = " << area_particle/(area1-area2);
 	} else if (parallel_wall_config || bottom_wall_config ) {
 		radius_wall_particle = readStdinDefault(1.0, "wall particle size");
-		nb_pin = readStdinDefault(-1, "number of wall pin");
+		nb_pin = readStdinDefault(0, "number of wall pin");
 		z_bot = 0;
 		z_top = lz;
 	} else if (filter_mesh_config) {
 		radius_wall_particle = readStdinDefault(1.0, "wall particle size");
-		nb_pin = readStdinDefault(-1, "number of wall pin");
+		nb_pin = readStdinDefault(0, "number of wall pin");
 	}
 	lx_half = lx/2;
 	ly_half = ly/2;

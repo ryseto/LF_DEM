@@ -62,15 +62,38 @@ void SolventFlow::initPoissonSolver()
 	double ez = 1/(dz*dz);
 	for (int j = 0; j < nz; j++) {
 		for (int i = 0; i < nx; i++) {
-			// b(xi, zi)
-			int k = i+j*nx;
-			lmat[k][k] += -exz;  //p(xi,zi) --> b(xi,zi)
-			lmat[k][meshNb(i+1, j)] += ex;  //p(xi+1,zi) --> b(xi,zi)
-			lmat[k][meshNb(i-1, j)] += ex;  //p(xi-1,zi) --> b(xi,zi)
-			lmat[k][meshNb(i, j+1)] += ez;  //p(xi,zi+1) --> b(xi,zi)
-			lmat[k][meshNb(i, j-1)] += ez;  //p(xi,zi-1) --> b(xi,zi)
+			if (sys->p.boundary_conditions == 0) {
+				// b(xi, zi)
+				int k = i+j*nx;
+				lmat[k][k] += -exz;  //p(xi,zi) --> b(xi,zi)
+				lmat[k][meshNb(i+1, j)] += ex;  //p(xi+1,zi) --> b(xi,zi)
+				lmat[k][meshNb(i-1, j)] += ex;  //p(xi-1,zi) --> b(xi,zi)
+				lmat[k][meshNb(i, j+1)] += ez;  //p(xi,zi+1) --> b(xi,zi)
+				lmat[k][meshNb(i, j-1)] += ez;  //p(xi,zi-1) --> b(xi,zi)
+			} else if (sys->p.boundary_conditions == 1) {
+				int k = i+j*nx;
+				if (j == 0) {
+					lmat[k][k] += -2*ex-ez;
+					lmat[k][meshNb(i+1, j)] += ex;  //p(xi+1,zi) --> b(xi,zi)
+					lmat[k][meshNb(i-1, j)] += ex;  //p(xi-1,zi) --> b(xi,zi)
+					lmat[k][meshNb(i, j+1)] += ez;  //p(xi,zi+1) --> b(xi,zi)
+				} else if (j == nz-1) {
+					lmat[k][k] += -2*ex-ez;
+					lmat[k][meshNb(i+1, j)] += ex;  //p(xi+1,zi) --> b(xi,zi)
+					lmat[k][meshNb(i-1, j)] += ex;  //p(xi-1,zi) --> b(xi,zi)
+					lmat[k][meshNb(i, j-1)] += ez;  //p(xi,zi-1) --> b(xi,zi)
+				} else {
+					lmat[k][k] += -exz;  //p(xi,zi) --> b(xi,zi)
+					lmat[k][meshNb(i+1, j)] += ex;  //p(xi+1,zi) --> b(xi,zi)
+					lmat[k][meshNb(i-1, j)] += ex;  //p(xi-1,zi) --> b(xi,zi)
+					lmat[k][meshNb(i, j+1)] += ez;  //p(xi,zi+1) --> b(xi,zi)
+					lmat[k][meshNb(i, j-1)] += ez;  //p(xi,zi-1) --> b(xi,zi)
+				}
+			}
 		}
 	}
+	//	std::fill(lmat[0].begin(), lmat[0].end(), 0);
+	//lmat[0][0] = 1;
 	std::vector<T> t_lmat;            // list of non-zeros coefficients
 	for (int l=0; l<n; l++) {
 		for (int k=0; k<n; k++) {
@@ -240,6 +263,10 @@ void SolventFlow::predictorStep()
 	double viscosity = 1;
 	double dx2 = dx*dx;
 	double dz2 = dz*dz;
+	double ux_top = 0;
+	double ux_bot = 0;
+	
+
 	for (int j=0; j<nz; j++) {
 		int jp1 = (j == nz-1 ? 0 : j+1);
 		int jm1 = (j == 0 ? nz-1 : j-1);
@@ -252,24 +279,40 @@ void SolventFlow::predictorStep()
 			int ju = i   + jp1*nx; //up
 			int jd = i   + jm1*nx; //down
 			double res_coeff = porousResistance(phi[k]);
-			double dd_ux = (u_sol_x[ir]-2*u_sol_x[k]+u_sol_x[il])/dx2+(u_sol_x[ju]-2*u_sol_x[k]+u_sol_x[jd])/dz2;
-			double dd_uz = (u_sol_z[ir]-2*u_sol_z[k]+u_sol_z[il])/dx2+(u_sol_z[ju]-2*u_sol_z[k]+u_sol_z[jd])/dz2;
-			double fx = viscosity*dd_ux + res_coeff*u_diff_x[k];
-			double fz = viscosity*dd_uz + res_coeff*u_diff_z[k];
-			u_sol_ast_x[k] = u_sol_x[k] + d_tau*fx;
-			if (sys->p.boundary_conditions == 1) {
+			if (sys->p.boundary_conditions == 0) {
+				/* periodic boundary condtions in x and z directions.
+				 */
+				double dd_ux = (u_sol_x[ir]-2*u_sol_x[k]+u_sol_x[il])/dx2+(u_sol_x[ju]-2*u_sol_x[k]+u_sol_x[jd])/dz2;
+				double dd_uz = (u_sol_z[ir]-2*u_sol_z[k]+u_sol_z[il])/dx2+(u_sol_z[ju]-2*u_sol_z[k]+u_sol_z[jd])/dz2;
+				double fx = viscosity*dd_ux + res_coeff*u_diff_x[k];
+				double fz = viscosity*dd_uz + res_coeff*u_diff_z[k];
+				u_sol_ast_x[k] = u_sol_x[k] + d_tau*fx;
+				u_sol_ast_z[k] = u_sol_z[k] + d_tau*fz;
+			} else {
 				/* periodic boundary condtions in x directions.
 				 * Non-slip boundy conditions at z = 0 and z=Lz.
 				 */
 				if (j == 0) {
-					u_sol_ast_z[k] = 0;
+					// bottom
+					double ux_bot_m1 = 2*ux_bot - u_sol_x[k];
+					double dd_ux = (u_sol_x[ir]-2*u_sol_x[k]+u_sol_x[il])/dx2+(u_sol_x[ju]-2*u_sol_x[k]+ux_bot_m1)/dz2;
+					double fx = viscosity*dd_ux + res_coeff*u_diff_x[k];
+					u_sol_ast_x[k] = u_sol_x[k] + d_tau*fx;
+					u_sol_ast_z[k] = ux_bot;
+				} else if (j == nz-1) {
+					double ux_top_p1 = 2*ux_top - u_sol_x[k];
+					double dd_ux = (u_sol_x[ir]-2*u_sol_x[k]+u_sol_x[il])/dx2+(ux_top_p1-2*u_sol_x[k]+u_sol_x[jd])/dz2;
+					double fx = viscosity*dd_ux + res_coeff*u_diff_x[k];
+					u_sol_ast_x[k] = u_sol_x[k] + d_tau*fx;
+					u_sol_ast_z[k] = ux_top;
 				} else {
+					double dd_ux = (u_sol_x[ir]-2*u_sol_x[k]+u_sol_x[il])/dx2+(u_sol_x[ju]-2*u_sol_x[k]+u_sol_x[jd])/dz2;
+					double dd_uz = (u_sol_z[ir]-2*u_sol_z[k]+u_sol_z[il])/dx2+(u_sol_z[ju]-2*u_sol_z[k]+u_sol_z[jd])/dz2;
+					double fx = viscosity*dd_ux + res_coeff*u_diff_x[k];
+					double fz = viscosity*dd_uz + res_coeff*u_diff_z[k];
+					u_sol_ast_x[k] = u_sol_x[k] + d_tau*fx;
 					u_sol_ast_z[k] = u_sol_z[k] + d_tau*fz;
 				}
-			} else {
-				/* periodic boundary condtions in x and z directions.
-				 */
-				u_sol_ast_z[k] = u_sol_z[k] + d_tau*fz;
 			}
 		}
 	}
