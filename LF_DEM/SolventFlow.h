@@ -37,6 +37,7 @@ private:
 	double smooth_length;
 	double sq_smooth_length;
 	double cell_area;
+	double numerical_Re;
 	// Staggered grid stores
 	// - the pressure at the cell center
 	// - the velocities at the cell faces.

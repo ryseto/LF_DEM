@@ -30,6 +30,7 @@ void SolventFlow::init(System* sys_)
 	dx = sys->get_lx()/nx;
 	dz = sys->get_lz()/nz;
 	cell_area = dx*dz;
+	numerical_Re = 0.01;
 	smooth_length = dx/2;
 	sq_smooth_length = smooth_length*smooth_length;
 	pressure.resize(n, 0);
@@ -214,8 +215,7 @@ void SolventFlow::update(double pressure_difference_)
 	} else {
 		pressure_difference = 0;
 	}
-	double rho = 0.01;
-	d_tau = sys->dt/rho;
+	d_tau = sys->dt/numerical_Re;
 	particleVelocityDiffToMesh();
 	predictorStep();
 	calcVelocityDivergence();
@@ -224,7 +224,7 @@ void SolventFlow::update(double pressure_difference_)
 	fout_tmp << std::endl;
 }
 
-double SolventFlow::porousResistance(double volume_fraction)
+double SolventFlow::porousResistance(double area_fraction)
 {
 	/*
 	static const double phi_max = 1;
@@ -232,7 +232,7 @@ double SolventFlow::porousResistance(double volume_fraction)
 	static const double inv_res_max = (phi_max-phi_st)/phi_st;
 	return inv_res_max*volume_fraction/(phi_max-volume_fraction);
 	*/
-	return volume_fraction;
+	return (27.0/8)*area_fraction;
 }
 
 void SolventFlow::predictorStep()
