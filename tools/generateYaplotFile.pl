@@ -709,7 +709,7 @@ sub OutYaplotData{
 	}
 	## visualize rotation in 2D
 	if ($Ly == 0) {
-		if (0) {
+		if (1) {
 			printf OUT "y 6\n";
 			printf OUT "@ 12\n";
 			for ($i = 0; $i < $np; $i++) {

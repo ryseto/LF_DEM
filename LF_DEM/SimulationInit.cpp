@@ -108,6 +108,10 @@ Dimensional::Unit Simulation::determineUnit(Parameters::ParameterSetFactory &PFa
 	} else if (control_var == Parameters::ControlVariable::pressure) {
 		system_of_units.add(Dimensional::Unit::stress, control_value);
 		internal_unit = control_value.unit;
+	} else if (control_var == Parameters::ControlVariable::force) {
+		//@@@@ 
+		system_of_units.add(Dimensional::Unit::stress, control_value);
+		internal_unit = control_value.unit;
 	}
 	return internal_unit;
 }
@@ -322,6 +326,8 @@ void Simulation::setupSimulation(string in_args,
 		}
 	} else if (control_var == Parameters::ControlVariable::stress
 			   || control_var == Parameters::ControlVariable::pressure) {
+		guarranted_unit = control_value.unit;
+	} else if (control_var == Parameters::ControlVariable::force) {
 		guarranted_unit = control_value.unit;
 	} else {
 		ostringstream error_str;

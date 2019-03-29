@@ -104,12 +104,13 @@ public:
 							   Parameters::ControlVariable control_variable_,
 							   Dimensional::DimensionalQty<double> control_value_,
 							   std::string simu_identifier);
-	void simulationPipeFlow(std::string in_args,
-							std::vector<std::string>& input_files,
-							bool binary_conf,
-							Parameters::ControlVariable control_variable_,
-							Dimensional::DimensionalQty<double> control_value_,
-							std::string simu_identifier);
+	void simulationFlowField(std::string simulation_type,
+							 std::string in_args,
+							 std::vector<std::string>& input_files,
+							 bool binary_conf,
+							 Parameters::ControlVariable control_variable_,
+							 Dimensional::DimensionalQty<double> control_value_,
+							 std::string simu_identifier);
 	void setupSimulation(std::string in_args,
 						 std::vector<std::string>& input_files,
 						 bool binary_conf,

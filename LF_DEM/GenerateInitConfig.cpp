@@ -368,10 +368,19 @@ std::pair<std::vector<vec3d>, std::vector<double>> GenerateInitConfig::putRandom
 				a = a2;
 			}
 			vec3d pos(lx*RANDOM, 0, lz*RANDOM);
-			if (pos.z > z_bot+shift_up && pos.z < z_top-3) {
-				position[i] = pos;
-				radius[i] = a;
-				i++;
+			if (true) {
+				if (pos.z > z_bot+shift_up && pos.z < z_top-shift_up) {
+					position[i] = pos;
+					radius[i] = a;
+					i++;
+				}
+			} else {
+				vec3d pos_center(lx_half, 0, lz_half);
+				if ( (pos_center - pos).norm()< 15) {
+					position[i] = pos;
+					radius[i] = a;
+					i++;
+				}
 			}
 		}
 		double delta_x = lx/np_wall1;

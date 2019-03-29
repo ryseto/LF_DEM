@@ -80,6 +80,7 @@ namespace Parameters {
 		double magic_angle; // magic angle for extensinoal flow
 		int boundary_conditions; // boundary conditions for flow fields 0: all PD 1: x-PD and z-Wall  [0]
 		bool solvent_flow; ///< [false]
+		bool body_force;
 		/*******************************************************
 		 INTERACTIONS
 		 ********************************************************/
@@ -92,7 +93,6 @@ namespace Parameters {
 		double interaction_range;		///< maximum range (center-to-center) for interactions (repulsive force, etc.). If -1, lub_max_gap is used as cutoff [-1]
 		double vdW_coeffient; ///< [-1]
 		double vdW_singularity_cutoff; ///< [0.1]
-		double body_force;  /// [0]
 		int np_fixed;
 		struct TActAdhesion::Parameters TA_adhesion; ///< Time delayed adhesion params (.adhesion_range [1e-2], .adhesion_max_force [0h], .activation_time [0h])
 		/*******************************************************

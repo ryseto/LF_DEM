@@ -13,7 +13,9 @@
 #include <fstream>
 #include <memory>
 #include <vector>
+#include <stdexcept>
 #include "vec3d.h"
+//#include "Sym2Tensor.h"
 #include "Eigen/Sparse"
 typedef Eigen::SparseMatrix<double> SpMat; // declares a column-major sparse matrix type of double
 typedef Eigen::Triplet<double> T;
@@ -33,11 +35,17 @@ private:
 	int n;
 	double dx;
 	double dz;
+	double ux_bot;
+	double ux_top;
 	double d_tau;
 	double smooth_length;
 	double sq_smooth_length;
 	double cell_area;
 	double numerical_Re;
+	double target_flux;
+
+	bool settling;
+	bool channel_flow;
 	// Staggered grid stores
 	// - the pressure at the cell center
 	// - the velocities at the cell faces.
@@ -51,6 +59,9 @@ private:
 	std::vector<double> u_particle_z;
 	std::vector<double> u_diff_x;
 	std::vector<double> u_diff_z;
+	std::vector<double> d_ux_d_z;
+	std::vector<double> d_uz_d_x;
+	std::vector<double> omega;
 	std::vector<double> phi;
 	std::vector<vec3d> pos;
 	std::vector <int> u_mesh_nb;
@@ -58,15 +69,12 @@ private:
 	std::vector <double> udx_values;
 	std::vector <double> udz_values;
 	std::vector <double> phi_values;
-	
-	
 	int meshNb(int xi, int zi);
 	SpMat lap_mat;
 	//lap_mat;
 	Eigen::VectorXd b;
 	Eigen::VectorXd x;
 	Eigen::SimplicialLDLT <SpMat> *psolver;
-	
 	void particleVelocityDiffToMesh();
 	double weightFunc(double r_sq);
 	void predictorStep();
@@ -74,14 +82,16 @@ private:
 	void solvePressure();
 	void correctorStep();
 	double porousResistance(double volume_fraction);
+	void calcOmega();
 public:
 	SolventFlow();
 	~SolventFlow();
 	double pressure_difference;
-	void init(System* sys_);
+	void init(System* sys_, std::string simulation_type);
 	void update(double pressure_difference);
 	void initPoissonSolver();
-	vec3d localFlow(const vec3d &p);
+	void localFlow(const vec3d &p, vec3d &u, vec3d &omega);
+	std::vector<double> localStrainRateTensor(const vec3d &p);
 	double meanVelocity();
 	void outputYaplot(std::ofstream &fout_flow);
 	void velocityProfile(std::ofstream &fout_fp);

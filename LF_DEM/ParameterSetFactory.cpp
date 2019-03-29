@@ -55,7 +55,8 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(output.effective_coordination_number, false),
 		PARAM_INIT(check_static_force_balance, false),
 		PARAM_INIT(smooth_lubrication, false),
-		PARAM_INIT(solvent_flow, false)
+		PARAM_INIT(solvent_flow, false),
+		PARAM_INIT(body_force, false)
 	};
 
 	/*===========================================
@@ -155,9 +156,6 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 
 	default_val = {Dimensional::Unit::brownian, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(brownian, default_val));
-
-	default_val = {Dimensional::Unit::kn, {Dimensional::Dimension::Force, 0, guarranted_unit}};
-	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(body_force, default_val));
 	
 	/*==============================================
 	=            Dimensional Quantities            =

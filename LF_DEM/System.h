@@ -199,6 +199,7 @@ private:
 	bool brownian_dominated;
 	bool lubrication;
 	bool pairwise_resistance;
+	bool body_force;
 	// Simulation parameters
 	bool twodimension;
 	Parameters::ControlVariable control;
@@ -393,6 +394,7 @@ private:
 						  double &stress_rtheta);
 	StokesSolver stokes_solver;
 	void initializeBoxing();
+
 	/*************************************************************/
 	double calcInteractionRangeDefault(int, int);
 	double calcLubricationRange(int, int);
@@ -405,8 +407,8 @@ private:
 
 	void countContactNumber();
 	void checkStaticForceBalance();
-	void initSolventFlow();
-	
+	void initSolventFlow(std::string simulation_type);
+
 	void setBoxSize(double lx_, double ly_, double lz_)
 	{
 		lx = lx_;
