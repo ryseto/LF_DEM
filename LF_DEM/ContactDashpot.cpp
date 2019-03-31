@@ -439,3 +439,21 @@ std::tuple<vec3d, vec3d, vec3d, vec3d> ContactDashpot::getRFU_Uinf(const vec3d &
 		return std::make_tuple(vec3d(), vec3d(), vec3d(), vec3d());
 	}
 }
+
+std::tuple<vec3d, vec3d, vec3d, vec3d> ContactDashpot::getRFU_Ulocal(const vec3d &u_local_p0,
+																	 const vec3d &u_local_p1,
+																	 const vec3d &omega_local_p0,
+																	 const vec3d &omega_local_p1) const
+{
+	/** \brief */
+	if (is_active()) {
+		vec3d force_p0 = getForceOnP0(u_local_p0, u_local_p1, omega_local_p0, omega_local_p1);
+		vec3d torque_p0;
+		if (tangential_coeff > 0) {
+			torque_p0 = a0*cross(nvec, force_p0);
+		}
+		return std::make_tuple(force_p0, -force_p0, torque_p0, (a1/a0)*torque_p0);
+	} else {
+		return std::make_tuple(vec3d(), vec3d(), vec3d(), vec3d());
+	}
+}

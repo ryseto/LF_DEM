@@ -60,7 +60,8 @@ void GenerateInitConfig::baseSetup(T &conf, bool is2d, double inflate_ratio)
 	conf.volume_or_area_fraction = volume_fraction;
 }
 
-int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int config_type)
+int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, double cluster_phi_,
+								 int config_type)
 {
 	if (config_type == 2) {
 		cerr << "generate circular wide gap " <<endl;
@@ -78,12 +79,11 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 		cerr << "filter mesh at right side" <<endl;
 		filter_mesh_config = true;
 	}
-	
-	
 	Simulation simu;
 	setParameters(simu, volume_frac_gen_);
 	rand_seed = rand_seed_;
 	cerr << "rand_seed = " << rand_seed_ << endl;
+	cluster_phi = cluster_phi_;
 	
 	auto &sys = simu.getSys();
 	double contact_ratio = 0.05;
@@ -120,9 +120,9 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 		 * Mobile partilces can be in z_bot < r < z_top
 		 */
 		np_wall1 = lx/(2*radius_wall_particle);
-		np_wall2 = 2*nb_pin;
+		np_wall2 = lx/(2*radius_wall_particle);
 		np_movable = np;
-		np_fix = np_wall1 + np_wall2;
+		np_fix = np_wall1 + np_wall2 + 2*nb_pin;
 		np += np_fix;
 		struct fixed_velo_configuration c;
 		baseSetup(c, sys.twodimension, inflate_ratio);
@@ -177,6 +177,15 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, int co
 			break;
 		}
 	}
+	
+	///@@@@ Symmetry check
+	if (true) {
+		for (int i=0; i<np_movable/2; i++) {
+			sys.position[i+np_movable/2].x = sys.position[i].x;
+			sys.position[i+np_movable/2].z = lz-sys.position[i].z;
+		}
+	}
+	
 	for (int i=0; i<np_movable; i++) {
 		if (i < np1) {
 			sys.radius[i] = a1;
@@ -357,9 +366,21 @@ std::pair<std::vector<vec3d>, std::vector<double>> GenerateInitConfig::putRandom
 	} else if (parallel_wall_config || bottom_wall_config) {
 		int i = 0;
 		double shift_up = 2;
+		double cluster_radius;
 		if (bottom_wall_config) {
 			shift_up = 5;
 		}
+		int num_cl = 0;
+		if (cluster_phi != 0) {
+			if (cluster_phi > 0) {
+				num_cl = 1;
+			} else {
+				num_cl = 2;
+			}
+			cluster_radius = sqrt(np1*a1*a1 + np2*a2*a2)/(num_cl* abs(cluster_phi));
+			cerr << "cluster_radius = " << cluster_radius << endl;
+		}
+		vec3d pos;
 		while (i < np_movable) {
 			double a;
 			if (i < np1) {
@@ -367,20 +388,42 @@ std::pair<std::vector<vec3d>, std::vector<double>> GenerateInitConfig::putRandom
 			} else {
 				a = a2;
 			}
-			vec3d pos(lx*RANDOM, 0, lz*RANDOM);
-			if (true) {
+			if (num_cl == 0) {
+				pos.set(lx*RANDOM, 0, lz*RANDOM);
+			} else {
+				pos.set(2*cluster_radius*RANDOM+lx_half-cluster_radius, 0, lz*RANDOM);
+			}
+			if (num_cl == 0) {
 				if (pos.z > z_bot+shift_up && pos.z < z_top-shift_up) {
 					position[i] = pos;
 					radius[i] = a;
 					i++;
 				}
 			} else {
-				vec3d pos_center(lx_half, 0, lz_half);
-				if ( (pos_center - pos).norm()< 15) {
-					position[i] = pos;
-					radius[i] = a;
-					i++;
+				if (num_cl ==  1) {
+					vec3d pos_center(lx_half, 0, lz_half);
+					if ( (pos_center - pos).norm()< cluster_radius) {
+						position[i] = pos;
+						radius[i] = a;
+						i++;
+					}
+				} else if (num_cl == 2) {
+					//double z1 = (lz-cluster_radius)/3;
+					//double z2 = (2*lz+cluster_radius)/3;
+					double z_center;
+					if (i < np_movable/2) {
+						z_center = (lz-cluster_radius)/3;
+					} else {
+						z_center = (2*lz+cluster_radius)/3;
+					}
+					vec3d pos_center1(lx_half, 0, z_center);
+					if ( (pos_center1 - pos).norm()< cluster_radius) {
+						position[i] = pos;
+						radius[i] = a;
+						i++;
+					}
 				}
+
 			}
 		}
 		double delta_x = lx/np_wall1;
@@ -390,6 +433,13 @@ std::pair<std::vector<vec3d>, std::vector<double>> GenerateInitConfig::putRandom
 			vec3d pos(x, 0, z);
 			position[i+np_movable] = pos;
 			radius[i+np_movable] = radius_wall_particle;
+		}
+		for (i=0; i<np_wall1; i++){
+			double x = radius_wall_particle+delta_x*i;
+			double z = z_top;
+			vec3d pos(x, 0, z);
+			position[i+np_movable+np_wall1] = pos;
+			radius[i+np_movable+np_wall1] = radius_wall_particle;
 		}
 		delta_x = lx/nb_pin;
 		for (i=0; i<nb_pin; i++){
@@ -749,8 +799,9 @@ void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init
 	} else if (parallel_wall_config || bottom_wall_config ) {
 		radius_wall_particle = readStdinDefault(1.0, "wall particle size");
 		nb_pin = readStdinDefault(0, "number of wall pin");
-		z_bot = 0;
-		z_top = lz;
+		double delta = 1e-6;
+		z_bot = 0  + delta;
+		z_top = lz - delta;
 	} else if (filter_mesh_config) {
 		radius_wall_particle = readStdinDefault(1.0, "wall particle size");
 		nb_pin = readStdinDefault(0, "number of wall pin");

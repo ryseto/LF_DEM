@@ -159,6 +159,12 @@ void System::allocateRessources()
 	total_stress_pp.resize(np);
 	phi6.resize(np);
 	n_contact.resize(np);
+	if (p.solvent_flow) {
+		u_local.resize(np);
+		omega_local.resize(np);
+		E_local.resize(np);
+	}
+	
 }
 
 void System::declareForceComponents()
@@ -956,15 +962,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		adjustVelocityPeriodicBoundary();
 	} else {
 		sflow.update(pressure_difference);
-		for (int i=0; i<np_mobile; i++) {
-			vec3d u_local;
-			vec3d omega_local;
-			sflow.localFlow(position[i], u_local, omega_local);
-			// na_velocity = u_particle - u_solvent
-			velocity[i] = na_velocity[i] + u_local;
-			ang_velocity[i] = na_ang_velocity[i] + omega_local;
-			// ang_velocity[i] = na_ang_velocity[i];
-		}
+		adjustVelocitySolventFlow();
 	}
 	if (wall_rheology && calc_stress) { // @@@@ calc_stress remove????
 		forceResultantReset();
@@ -1871,14 +1869,11 @@ void System::setDashpotForceToParticle(vector<vec3d> &force,
 	} else if (p.solvent_flow) {
 		vec3d GEi, GEj, HEi, HEj;
 		unsigned int i, j;
-		vec3d ui_local, uj_local;
-		vec3d oi_local, oj_local;
 		for (const auto &inter: interaction) {
 			if (inter.contact.is_active() && inter.contact.dashpot.is_active()) {
 				std::tie(i, j) = inter.get_par_num();
-				sflow.localFlow(position[i], ui_local, oi_local);
-				sflow.localFlow(position[j], uj_local, oj_local);
-				std::tie(GEi, GEj, HEi, HEj) = inter.contact.dashpot.getRFU_Uinf(ui_local, uj_local, (oi_local+oj_local)/2);
+				std::tie(GEi, GEj, HEi, HEj) = inter.contact.dashpot.getRFU_Ulocal(u_local[i], u_local[j],
+																				   omega_local[i], omega_local[j]);
 				force[i] += GEi;
 				force[j] += GEj;
 				torque[i] += HEi;
@@ -1914,11 +1909,7 @@ void System::setHydroForceToParticle_squeeze(vector<vec3d> &force,
 		for (const auto &inter: interaction) {
 			if (inter.lubrication.is_active()) {
 				std::tie(i, j) = inter.get_par_num();
-				vec3d pos = (position[i]+position[j])/2;
-				periodize(pos);
-				vector<double> sr_tens = sflow.localStrainRateTensor(pos);
-				std::tie(GEi, GEj) = inter.lubrication.calcGE_squeeze(Sym2Tensor(sr_tens[0], 0, sr_tens[1],
-																				 0, 0,  sr_tens[2])); // G*E_\infty term
+				std::tie(GEi, GEj) = inter.lubrication.calcGE_squeeze(E_local[i], E_local[j]); // G*E_\infty term
 				force[i] += GEi;
 				force[j] += GEj;
 			}
@@ -1954,11 +1945,7 @@ void System::setHydroForceToParticle_squeeze_tangential(vector<vec3d> &force,
 		for (const auto &inter: interaction) {
 			if (inter.lubrication.is_active()) {
 				std::tie(i, j) = inter.get_par_num();
-				vec3d pos = (position[i]+position[j])/2;
-				periodize(pos);
-				vector<double> sr_tens = sflow.localStrainRateTensor(pos);
-				std::tie(GEi, GEj, HEi, HEj) = inter.lubrication.calcGEHE_squeeze_tangential(Sym2Tensor(sr_tens[0], 0, sr_tens[1],
-																										0, 0,  sr_tens[2])); // G*E_\infty term, no gamma dot
+				std::tie(GEi, GEj, HEi, HEj) = inter.lubrication.calcGEHE_squeeze_tangential(E_local[i], E_local[j]); // G*E_\infty term, no gamma dot
 				force[i] += GEi;
 				force[j] += GEj;
 				torque[i] += HEi;
@@ -2021,12 +2008,12 @@ void System::setBodyForce(vector<vec3d> &force,
 		t.reset();
 	}
 	if (true) {
-		double body_force = 1e-2; // @@@@@@@@@2
+		double body_force = 0.01; // @@@@@@@@@2
 		double angle = M_PI*p.body_force_angle/180;
-		double bf_x = body_force*cos(angle);
+		double bf_x = body_force*cos(angle); // cos(angle);
 		double bf_z = -body_force*sin(angle);
 		for (int i=0; i<np_mobile; i++) {
-			force[i].set(radius[i]*bf_x, 0 , radius[i]*bf_z);
+			force[i].set(radius_cubed[i]*bf_x, 0 , radius_cubed[i]*bf_z);
 		}
 	} else {
 		for (int i=0; i<np_mobile; i++) {
@@ -2584,6 +2571,19 @@ void System::adjustVelocityPeriodicBoundary()
 				velocity[i] += u_inf[i];
 			}
 		}
+	}
+}
+
+void System::adjustVelocitySolventFlow()
+{
+	vector<double> st_tens(3);
+	for (int i=0; i<np_mobile; i++) {
+		sflow.localFlow(position[i], u_local[i], omega_local[i], st_tens);
+		E_local[i].set(st_tens[0], 0, st_tens[1], 0, 0, st_tens[2]);
+	}
+	for (int i=0; i<np_mobile; i++) {
+		velocity[i] = na_velocity[i] + u_local[i];
+		ang_velocity[i] = na_ang_velocity[i] + omega_local[i];
 	}
 }
 

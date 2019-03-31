@@ -46,13 +46,14 @@ int main(int argc, char **argv)
 	string usage = "(1) Simulation\n $ LF_DEM [-r Rate] [-s Stress] [-R Rate_Sequence] [-S Stress_Sequence]\
 	[-e] [-m ?] [-k kn_kt_File] [-v Simulation_Identifier] [-i Provisional_Data] [-n]\
 	Configuration_File Parameter_File \
-	\n\n OR \n\n(2) Generate initial configuration\n $ LF_DEM [-a Random_Seed] [-p Volume_Fraction] -g[c/w/s]\n";
+	\n\n OR \n\n(2) Generate initial configuration\n $ LF_DEM [-a Random_Seed] [-p Volume_Fraction] [-b cluster radius] -g[c/w/s/b/f]\n";
 
 	int generate_init = 0;
 	string type_init_config = "normal";
 
 	int random_seed = 1;
 	double volume_frac_gen = 0;
+	double cluster_phi = 0;
 	bool binary_conf = false;
 	bool force_to_run = false;
 	string simulation_type = "shear rheology";
@@ -74,6 +75,7 @@ int main(int argc, char **argv)
 		{"settling",          required_argument, 0, 'S'},
 		{"generate",          optional_argument, 0, 'g'},
 		{"random-seed",       required_argument, 0, 'a'},
+		{"cluster-radius",    required_argument, 0, 'b'},
 		{"volume-fraction",   required_argument, 0, 'p'},
 		{"kn-kt-file",        required_argument, 0, 'k'},
 		{"binary",            no_argument,       0, 'n'},
@@ -88,7 +90,7 @@ int main(int argc, char **argv)
 	
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hn80fds:t:r:C:S:g::p:a:k:i:v:c:N:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hn80fds:t:r:C:S:g::p:a:b:k:i:v:c:N:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
 				simulation_type = "shear rheology";
@@ -153,6 +155,18 @@ int main(int argc, char **argv)
 			case 'a':
 				random_seed = atoi(optarg);
 				break;
+			case 'b':
+				/* To generate initial configuration. Radius of initial cluster.
+				 * positive value: one cluster
+				 * negative value: two clusters
+				 */
+				cluster_phi = atof(optarg);
+				if (cluster_phi > 0) {
+					cout << "To form one cluster\n";
+				} else if (cluster_phi < 0) {
+					cout << "To form two clusters\n";
+				}
+				break;
 			case 'n':
 				binary_conf = true;
 				break;
@@ -181,7 +195,8 @@ int main(int argc, char **argv)
 	}
 	if (generate_init >= 1) {
 		GenerateInitConfig generate_init_config;
-		generate_init_config.generate(random_seed, volume_frac_gen, generate_init);
+		generate_init_config.generate(random_seed, volume_frac_gen, cluster_phi,
+									  generate_init);
 	} else {
 #ifdef SIGINT_CATCH
 		std::signal(SIGINT, sigint_handler);

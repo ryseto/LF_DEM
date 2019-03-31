@@ -371,6 +371,13 @@ void Simulation::setupSimulation(string in_args,
 
 	setConfigToSystem(binary_conf, filename_import_positions);
 
+	if (false) {
+		// Symmetry check
+		for (int i=0; i< sys.get_np(); i++) {
+			sys.position[i].z = sys.get_lz()-sys.position[i].z;
+		}
+	}
+	
 	p_initial = sys.p;
 	
 	sys.resetContactModelParameer(); //@@@@ temporary repair

@@ -1631,6 +1631,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = D988E37E165441750009949F;
@@ -1918,6 +1919,10 @@
 					"-Wshadow",
 					"-DUSE_DSFMT=\"SFMT_RNG\"",
 					"-DDSFMT_MEXP=19937",
+					"-Xpreprocessor",
+					"-fopenmp",
+					"-lomp",
+					"-parallel",
 				);
 				PRODUCT_NAME = LF_DEM;
 				SDKROOT = macosx;
@@ -1995,6 +2000,10 @@
 					"-Wshadow",
 					"-DUSE_DSFMT=\"SFMT_RNG\"",
 					"-DDSFMT_MEXP=19937",
+					"-Xpreprocessor",
+					"-fopenmp",
+					"-lomp",
+					"-parallel",
 				);
 				PRODUCT_NAME = LF_DEM;
 				SDKROOT = macosx;
@@ -2048,7 +2057,10 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
-				HEADER_SEARCH_PATHS = /Users/seto/SuiteSparse/include;
+				HEADER_SEARCH_PATHS = (
+					/Users/seto/SuiteSparse/include,
+					/usr/local/include/,
+				);
 				LD_DYLIB_INSTALL_NAME = "";
 				LIBRARY_SEARCH_PATHS = /Users/seto/SuiteSparse/lib;
 				OTHER_CFLAGS = "";
@@ -2108,7 +2120,10 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
-				HEADER_SEARCH_PATHS = /Users/seto/SuiteSparse/include;
+				HEADER_SEARCH_PATHS = (
+					/Users/seto/SuiteSparse/include,
+					/usr/local/include/,
+				);
 				LD_DYLIB_INSTALL_NAME = "";
 				LIBRARY_SEARCH_PATHS = /Users/seto/SuiteSparse/lib;
 				OTHER_CFLAGS = "";

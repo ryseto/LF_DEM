@@ -142,7 +142,7 @@ inline double getPotentialEnergy(const System &sys)
 	return total_energy;
 }
 
-inline double isInContact(const System &sys, std::vector<int> &isincontact)
+inline void isInContact(const System &sys, std::vector<int> &isincontact)
 {
 	isincontact.resize(sys.get_np());
 	for (unsigned i=0; i<sys.get_np(); i ++) {

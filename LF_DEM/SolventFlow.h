@@ -15,8 +15,9 @@
 #include <vector>
 #include <stdexcept>
 #include "vec3d.h"
-//#include "Sym2Tensor.h"
 #include "Eigen/Sparse"
+#include "Eigen/Core"
+
 typedef Eigen::SparseMatrix<double> SpMat; // declares a column-major sparse matrix type of double
 typedef Eigen::Triplet<double> T;
 
@@ -33,6 +34,7 @@ private:
 	int nx;
 	int nz;
 	int n;
+	int jmax_uz;
 	double dx;
 	double dz;
 	double ux_bot;
@@ -43,6 +45,7 @@ private:
 	double cell_area;
 	double numerical_Re;
 	double target_flux;
+	double viscosity;
 
 	bool settling;
 	bool channel_flow;
@@ -59,16 +62,18 @@ private:
 	std::vector<double> u_particle_z;
 	std::vector<double> u_diff_x;
 	std::vector<double> u_diff_z;
-	std::vector<double> d_ux_d_z;
-	std::vector<double> d_uz_d_x;
 	std::vector<double> omega;
-	std::vector<double> phi;
+	std::vector<double> strain_rate_xx;
+	std::vector<double> strain_rate_xz;
+	std::vector<double> strain_rate_zz;
+	std::vector<double> phi_ux;
+	std::vector<double> phi_uz;
 	std::vector<vec3d> pos;
-	std::vector <int> u_mesh_nb;
-	std::vector <int> phi_mesh_nb;
+	std::vector <int> mesh_nb;
 	std::vector <double> udx_values;
 	std::vector <double> udz_values;
-	std::vector <double> phi_values;
+	std::vector <double> phi_ux_values;
+	std::vector <double> phi_uz_values;
 	int meshNb(int xi, int zi);
 	SpMat lap_mat;
 	//lap_mat;
@@ -90,8 +95,8 @@ public:
 	void init(System* sys_, std::string simulation_type);
 	void update(double pressure_difference);
 	void initPoissonSolver();
-	void localFlow(const vec3d &p, vec3d &u, vec3d &omega);
-	std::vector<double> localStrainRateTensor(const vec3d &p);
+	void localFlow(const vec3d &p, vec3d &u_local, vec3d &omega_local,
+				   std::vector<double> &e_local);
 	double meanVelocity();
 	void outputYaplot(std::ofstream &fout_flow);
 	void velocityProfile(std::ofstream &fout_fp);

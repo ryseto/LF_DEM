@@ -93,6 +93,7 @@ private:
 	int np1;
 	int np2;
 	int max_iteration;
+	double cluster_phi;
 	vec3d dr;
 	inline vec3d randUniformSphere(double r);
 	inline vec3d randUniformCircle(double r);
@@ -103,7 +104,8 @@ private:
 	template<typename T> void baseSetup(T &conf, bool is2d, double inflate_ratio);
 public:
 	GenerateInitConfig();
-	int generate(int rand_seed_, double volume_frac_gen_, int config_type);
+	int generate(int rand_seed_, double volume_frac_gen_, double cluster_phi_,
+				 int config_type);
 	/* config_type = 1 -- noraml
 	 * config_type = 2 -- circular wide gap
 	 * config_type = 3 -- simple shear with wall

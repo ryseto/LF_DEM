@@ -124,6 +124,7 @@ private:
 	void computeBrownianVelocities();
 	void tmpMixedProblemSetVelocities();
 	void adjustVelocityPeriodicBoundary();
+	void adjustVelocitySolventFlow();
 	void rushWorkFor2DBrownian(std::vector<vec3d> &vel, std::vector<vec3d> &ang_vel); // We need to implement real 2D simulation.
 	void computeUInf();
 	void computeShearRate();
@@ -160,6 +161,10 @@ private:
 	std::vector<double> stokesdrag_coeff_t_sqrt;
 	std::vector <struct DBlock> resistance_matrix_dblock;
 
+	std::vector<vec3d> u_local;
+	std::vector<vec3d> omega_local;
+	std::vector<Sym2Tensor> E_local;
+	
 	void adjustContactModelParameters();
 	Averager<double> kn_avg;
 	Averager<double> kt_avg;
