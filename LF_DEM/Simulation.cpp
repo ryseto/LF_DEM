@@ -96,7 +96,6 @@ void Simulation::handleEventsShearJamming()
 			ending_simulation = true;
 		}
 	} else {
-		static int shear_jam_counter = 0;
 		bool jammed = false;
 		for (const auto& ev : sys.events) {
 			if (ev.type == "jammed_shear_rate") {

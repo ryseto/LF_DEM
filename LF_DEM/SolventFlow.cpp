@@ -223,12 +223,11 @@ void SolventFlow::particleVelocityDiffToMesh()
 					double xx = (xo-pos[k].x)*(xo-pos[k].x);
 					double zz = (zo-pos[k].z)*(zo-pos[k].z);
 					double xu = iix*dx;
-					double w_udx = (m != 2 ? weightFunc((xo-xu)*(xo-xu) + zz) : 0 );
+					double zu = iiz*dz;
+					double w_udx = (m != 2 ? weightFunc((xo-xu)*(xo-xu) + zz) : 0);
 					total_weight_udx += w_udx;
 					udx_values.push_back(ud_x*w_udx);
 					phi_ux_values.push_back(w_udx);
-					/////////////////////////////////////
-					double zu = iiz*dz;
 					double w_udz = (l != 2 ? weightFunc(xx + (zo-zu)*(zo-zu)) : 0);
 					total_weight_udz += w_udz;
 					udz_values.push_back(ud_z*w_udz);
@@ -437,7 +436,6 @@ void SolventFlow::correctorStep()
 			int im1 = (i == 0 ? nx-1 : i-1);
 			double pd = (i == 0 ? pressure_difference : 0);
 			{// bottom
-				int j=0;
 				u_sol_x[i] = u_sol_ast_x[i] - d_tau*(pressure[i] - (pressure[im1]+pd))/dx;
 				u_sol_z[i] = 0;
 			}
@@ -500,7 +498,6 @@ void SolventFlow::calcOmega()
 					//
 					int k =i+nx*j;
 					int im1 = (i == 0 ? nx-1 : i-1);
-					int ip1 = (i == nx-1 ? 0 : i+1);
 					double d_ux_d_x = (-u_sol_x[i+jm1*nx]+u_sol_x[im1+jm1*nx])/dx;
 					double d_uz_d_z = 0;
 					double d_ux_d_z = 2*(ux_top-u_sol_x[i+jm1*nx])/dz; // left_bottom
@@ -734,7 +731,7 @@ void SolventFlow::outputYaplot(std::ofstream &fout_flow)
 	
 	if (0) {
 		fout_flow << "y 5" << std::endl;
-		double cell_area = dx*dz;
+//		double cell_area = dx*dz;
 		fout_flow << "@ 10" << std::endl;
 		
 		for (int j=0; j<nz; j++){

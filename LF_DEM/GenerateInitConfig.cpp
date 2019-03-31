@@ -21,24 +21,25 @@
 using namespace std;
 
 GenerateInitConfig::GenerateInitConfig():
+z_top(-1),
+z_bot(-1),
+a1(1),
+a2(1),
 circulargap_config(false),
 parallel_wall_config(false),
 winding_wall_config(false),
 bottom_wall_config(false),
 filter_mesh_config(false),
-z_top(-1),
-z_bot(-1),
-np_wall1(0),
-np_wall2(0),
-a1(1),
-a2(1),
 cg_radius_in(-1),
 cg_radius_out(-1),
 cg_ratio_radii(-1),
+np_wall1(0),
+np_wall2(0),
 np_fix(0),
 np_movable(0),
 radius_wall_particle(-1),
-nb_pin(-1)
+nb_pin(-1),
+symmetry_check(false)
 {
 	cerr << "GenerateInitConfig" << endl;
 }
@@ -81,10 +82,13 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, double
 	}
 	Simulation simu;
 	setParameters(simu, volume_frac_gen_);
+	if (rand_seed_ == -999) {
+		rand_seed_ = 137;
+		symmetry_check = true;
+	}
 	rand_seed = rand_seed_;
 	cerr << "rand_seed = " << rand_seed_ << endl;
 	cluster_phi = cluster_phi_;
-	
 	auto &sys = simu.getSys();
 	double contact_ratio = 0.05;
 	double min_gap = -0.01;
@@ -179,7 +183,7 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, double
 	}
 	
 	///@@@@ Symmetry check
-	if (true) {
+	if (symmetry_check) {
 		for (int i=0; i<np_movable/2; i++) {
 			sys.position[i+np_movable/2].x = sys.position[i].x;
 			sys.position[i+np_movable/2].z = lz-sys.position[i].z;
@@ -377,22 +381,13 @@ std::pair<std::vector<vec3d>, std::vector<double>> GenerateInitConfig::putRandom
 			} else {
 				num_cl = 2;
 			}
-			cluster_radius = sqrt(np1*a1*a1 + np2*a2*a2)/(num_cl* abs(cluster_phi));
+			cluster_radius = sqrt((np1*a1*a1 + np2*a2*a2)/(num_cl* abs(cluster_phi)));
 			cerr << "cluster_radius = " << cluster_radius << endl;
 		}
 		vec3d pos;
 		while (i < np_movable) {
-			double a;
-			if (i < np1) {
-				a = a1;
-			} else {
-				a = a2;
-			}
-			if (num_cl == 0) {
-				pos.set(lx*RANDOM, 0, lz*RANDOM);
-			} else {
-				pos.set(2*cluster_radius*RANDOM+lx_half-cluster_radius, 0, lz*RANDOM);
-			}
+			double a = (i < np1 ? a1 : a2);
+			pos.set(lx*RANDOM, 0, lz*RANDOM);
 			if (num_cl == 0) {
 				if (pos.z > z_bot+shift_up && pos.z < z_top-shift_up) {
 					position[i] = pos;
@@ -408,22 +403,16 @@ std::pair<std::vector<vec3d>, std::vector<double>> GenerateInitConfig::putRandom
 						i++;
 					}
 				} else if (num_cl == 2) {
-					//double z1 = (lz-cluster_radius)/3;
-					//double z2 = (2*lz+cluster_radius)/3;
-					double z_center;
-					if (i < np_movable/2) {
-						z_center = (lz-cluster_radius)/3;
-					} else {
-						z_center = (2*lz+cluster_radius)/3;
-					}
-					vec3d pos_center1(lx_half, 0, z_center);
-					if ( (pos_center1 - pos).norm()< cluster_radius) {
+					double z1 = (lz-cluster_radius)/3;
+					double z2 = (2*lz+cluster_radius)/3;
+					double z_center = (i < np_movable/2 ? z1 : z2);
+					vec3d pos_center(lx_half, 0, z_center);
+					if ( (pos_center - pos).norm()< cluster_radius) {
 						position[i] = pos;
 						radius[i] = a;
 						i++;
 					}
 				}
-
 			}
 		}
 		double delta_x = lx/np_wall1;

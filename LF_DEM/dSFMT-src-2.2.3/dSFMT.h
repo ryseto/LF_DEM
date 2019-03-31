@@ -43,7 +43,7 @@ extern "C" {
 
 #if !defined(DSFMT_MEXP)
 #ifdef __GNUC__
-  #warning "DSFMT_MEXP is not defined. I assume DSFMT_MEXP is 19937."
+#warning "DSFMT_MEXP is not defined. I assume DSFMT_MEXP is 19937."
 #endif
   #define DSFMT_MEXP 19937
 #endif
