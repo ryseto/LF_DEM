@@ -87,7 +87,7 @@ private:
 	void solvePressure();
 	void correctorStep();
 	double porousResistance(double volume_fraction);
-	void calcOmega();
+	void calcVelocityGradients();
 public:
 	SolventFlow();
 	~SolventFlow();

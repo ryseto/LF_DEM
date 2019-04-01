@@ -225,7 +225,7 @@ private:
 	std::vector<vec3d> rate_proportional_wall_torque;
 
 	BoxSet boxset;
-	SolventFlow sflow;
+	SolventFlow *sflow;
 
 	std::vector<double> radius;
 	std::vector<double> angle; // for 2D visualization
@@ -413,7 +413,9 @@ private:
 	void countContactNumber();
 	void checkStaticForceBalance();
 	void initSolventFlow(std::string simulation_type);
-
+	vec3d meanParticleVelocity();
+	vec3d meanParticleAngVelocity();
+	
 	void setBoxSize(double lx_, double ly_, double lz_)
 	{
 		lx = lx_;

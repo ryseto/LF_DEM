@@ -163,11 +163,11 @@ void System::allocateRessources()
 	phi6.resize(np);
 	n_contact.resize(np);
 	if (p.solvent_flow) {
+		sflow = new SolventFlow;
 		u_local.resize(np);
 		omega_local.resize(np);
 		E_local.resize(np);
 	}
-	
 }
 
 void System::declareForceComponents()
@@ -964,7 +964,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	if (!p.solvent_flow) {
 		adjustVelocityPeriodicBoundary();
 	} else {
-		sflow.update(pressure_difference);
+		sflow->update(pressure_difference);
 		adjustVelocitySolventFlow();
 	}
 	if (wall_rheology && calc_stress) { // @@@@ calc_stress remove????
@@ -2581,7 +2581,7 @@ void System::adjustVelocitySolventFlow()
 {
 	vector<double> st_tens(3);
 	for (int i=0; i<np_mobile; i++) {
-		sflow.localFlow(position[i], u_local[i], omega_local[i], st_tens);
+		sflow->localFlow(position[i], u_local[i], omega_local[i], st_tens);
 		E_local[i].set(st_tens[0], 0, st_tens[1], 0, 0, st_tens[2]);
 	}
 	for (int i=0; i<np_mobile; i++) {
@@ -3034,7 +3034,26 @@ void System::countContactNumber()
 
 void System::initSolventFlow(string simulation_type)
 {
-	sflow.init(this, simulation_type);
+	sflow->init(this, simulation_type);
+}
+
+vec3d System::meanParticleVelocity()
+{
+	vec3d mean_velocity(0);
+	for (int i=0; i<np_mobile; i++) {
+		mean_velocity += velocity[i];
+	}
+	return mean_velocity/np_mobile;
+}
+
+vec3d System::meanParticleAngVelocity()
+{
+	vec3d mean_ang_velocity(0);
+	for (int i=0; i<np_mobile; i++) {
+		mean_ang_velocity += ang_velocity[i];
+	}
+	return mean_ang_velocity/np_mobile;
+	
 }
 
 //void System::openHisotryFile(std::string &filename)

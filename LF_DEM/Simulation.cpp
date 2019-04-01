@@ -437,8 +437,8 @@ void Simulation::simulationFlowField(std::string simulation_type,
 		}
 		generateOutput(output_events, binconf_counter);
 		
-		sys.sflow.outputYaplot(fout_flow);
-		sys.sflow.velocityProfile(fout_fprofile);
+		sys.sflow->outputYaplot(fout_flow);
+		sys.sflow->velocityProfile(fout_fprofile);
 		printProgress();
 		if (time_strain_1 == 0 && sys.get_cumulated_strain() > 1) {
 			now = time(NULL);
@@ -828,8 +828,12 @@ void Simulation::outputData()
 		}
 	} else {
 		outdata.entryData("time", Dimensional::Dimension::Time, 1, sys.get_time());
-		outdata.entryData("flux", Dimensional::Dimension::none, 1, sys.sflow.calcFlux());
-		outdata.entryData("pressure difference", Dimensional::Dimension::Stress, 1, sys.sflow.pressure_difference);
+		outdata.entryData("flux", Dimensional::Dimension::none, 1, sys.sflow->calcFlux());
+		outdata.entryData("pressure difference", Dimensional::Dimension::Stress, 1, sys.sflow->pressure_difference);
+		outdata.entryData("mean particle velocity", Dimensional::Dimension::Velocity, 3, sys.meanParticleVelocity());
+		outdata.entryData("mean particle angvelocity", Dimensional::Dimension::Velocity, 3, sys.meanParticleAngVelocity());
+		
+		
 		outdata.entryData("min gap", Dimensional::Dimension::none, 1, evaluateMinGap(sys));
 		if (sys.adhesion) {
 			outdata.entryData("max gap", Dimensional::Dimension::none, 1, evaluateMaxContactGap(sys));

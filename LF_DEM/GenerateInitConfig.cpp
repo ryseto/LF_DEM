@@ -189,7 +189,6 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, double
 			sys.position[i+np_movable/2].z = lz-sys.position[i].z;
 		}
 	}
-	
 	for (int i=0; i<np_movable; i++) {
 		if (i < np1) {
 			sys.radius[i] = a1;

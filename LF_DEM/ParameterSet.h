@@ -212,6 +212,9 @@ namespace Parameters {
 		double body_force_angle;  ///< parallel to wall 0 and vertical to wall 90 [0]
 		int mesh_nx; // solvent_flow [20]
 		int mesh_nz; // solvent_flow [20]
+		double sflow_pressure_increment; // To adjust pressure diffrence to fix flux value [1e-4]
+		double sflow_target_flux; // [0]
+
 	};
 	
 } // namespace Parameters
