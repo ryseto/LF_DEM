@@ -79,8 +79,8 @@ private:
 	int meshNb(int xi, int zi);
 	SpMat lap_mat;
 	//lap_mat;
-	Eigen::VectorXd b;
-	Eigen::VectorXd x;
+	Eigen::VectorXd rhs_vector;
+	Eigen::VectorXd pressure_vector;
 	Eigen::SimplicialLDLT <SpMat> *psolver;
 	void particleVelocityDiffToMesh();
 	double weightFunc(double r_sq);

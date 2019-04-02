@@ -158,8 +158,8 @@ void SolventFlow::initPoissonSolver()
 	std::cerr << t_lmat.size() << std::endl;
 	lap_mat.resize(n, n);
 	lap_mat.setFromTriplets(t_lmat.begin(), t_lmat.end());
-	b.resize(n);
-	x.resize(n);
+	rhs_vector.resize(n);
+	pressure_vector.resize(n);
 	psolver->analyzePattern(lap_mat);   // for this step the numerical values of A are not used
 	psolver->factorize(lap_mat);
 	if (psolver->info() != Eigen::Success) {
@@ -411,16 +411,16 @@ void SolventFlow::calcVelocityDivergence()
 void SolventFlow::solvePressure()
 {
 	for (int k=0; k<n; k++) {
-		b(k) = (1/d_tau)*div_u_sol_ast[k];
+		rhs_vector(k) = (1/d_tau)*div_u_sol_ast[k];
 	}
 	if (abs(pressure_difference_x) > 0) {
 		double delta_P_dxdx = pressure_difference_x/(dx*dx);
 		for (int j=0; j<nz; j++) {
 			int nx_j = nx*j;
 			// i = 0 --> k = nx*j
-			b(nx_j) += -delta_P_dxdx;
+			rhs_vector(nx_j) += -delta_P_dxdx;
 			// i = nx-1 ---> k = nx-1+j*nx
-			b(nx-1+nx_j) += delta_P_dxdx;
+			rhs_vector(nx-1+nx_j) += delta_P_dxdx;
 		}
 	}
 	
@@ -428,22 +428,22 @@ void SolventFlow::solvePressure()
 		double delta_P_dzdz = pressure_difference_z/(dz*dz);
 		for (int i=0; i<nx; i++) {
 			// j = 0 --> k = nx*j
-			b(i) += -delta_P_dzdz;
+			rhs_vector(i) += -delta_P_dzdz;
 			// j = nz-1 ---> k = i+(nz-1)*nx
-			b(i+(nz-1)*nx) += delta_P_dzdz;
+			rhs_vector(i+(nz-1)*nx) += delta_P_dzdz;
 		}
 	}
 	
 	
-	x = psolver->solve(b);
+	pressure_vector = psolver->solve(rhs_vector);
 	if (psolver->info() != Eigen::Success) {
 		// solving failed
 		std::cerr << "solving failed" << std::endl;
 		return;
 	}
-	double mean_p = x.mean();
+	double mean_p = pressure_vector.mean();
 	for (int i=0; i<n; i++) {
-		pressure[i] = x(i)-mean_p;
+		pressure[i] = pressure_vector(i)-mean_p;
 	}
 }
 
@@ -569,8 +569,8 @@ void SolventFlow::localFlow(const vec3d &p,
 	int jp1 = (j == nz-1 ? 0 : j+1);
 	int jnx = j*nx;
 	int jp1nx = jp1*nx;
-	double x_diff = (x_dx - i);
-	double z_diff = (z_dz - j);
+	double x_diff = x_dx - i;
+	double z_diff = z_dz - j;
 	int kk[4];
 	/***************************************************************/
 	double z_diff_shift;
@@ -626,9 +626,33 @@ void SolventFlow::localFlow(const vec3d &p,
 	e_local[1] += (strain_rate_xz[kk[2]]-strain_rate_xz[kk[0]])*z_diff;
 	e_local[1] += (strain_rate_xz[kk[3]]-strain_rate_xz[kk[1]]-strain_rate_xz[kk[2]]+strain_rate_xz[kk[0]])*x_diff*z_diff;
 	/***************************************************************/
+	// (dx/2, dy/2)
+	x_dx = (p.x-dx/2)/dx+1;
+	z_dz = (p.z-dz/2)/dz+1;
+	i = (int)x_dx-1;
+	j = (int)z_dz-1;
+	x_diff = x_dx - i;
+	z_diff = z_dz - j;
+	if (i == -1) {i += nx;}
+	if (j == -1) {j += nz;}
+	ip1 = (i == nx-1 ? 0 : i+1);
+	jp1 = (j == nz-1 ? 0 : j+1);
 	
-	e_local[0] = strain_rate_xx[k];
-	e_local[2] = strain_rate_zz[k];
+	kk[0] = i   + jnx;
+	kk[1] = ip1 + jnx; // +dx
+	kk[2] = i   + jp1nx; // +dz
+	kk[3] = ip1 + jp1nx; // +dx+dz
+	e_local[0] = strain_rate_xx[kk[0]];
+	e_local[0] += (strain_rate_xx[kk[1]]-strain_rate_xx[kk[0]])*x_diff;
+	e_local[0] += (strain_rate_xx[kk[2]]-strain_rate_xx[kk[0]])*z_diff;
+	e_local[0] += (strain_rate_xx[kk[3]]-strain_rate_xx[kk[1]]-strain_rate_xx[kk[2]]+strain_rate_xx[kk[0]])*x_diff*z_diff;
+
+	e_local[2] = strain_rate_zz[kk[0]];
+	e_local[2] += (strain_rate_zz[kk[1]]-strain_rate_zz[kk[0]])*x_diff;
+	e_local[2] += (strain_rate_zz[kk[2]]-strain_rate_zz[kk[0]])*z_diff;
+	e_local[2] += (strain_rate_zz[kk[3]]-strain_rate_zz[kk[1]]-strain_rate_zz[kk[2]]+strain_rate_zz[kk[0]])*x_diff*z_diff;
+
+
 	//e_local[0] = 0;
 	//e_local[2] = 0;
 }
@@ -661,21 +685,34 @@ vec3d SolventFlow::calcFlux()
 
 void SolventFlow::velocityProfile(std::ofstream &fout_fp)
 {
+	Eigen::VectorXd ux_sol(nz);
+	Eigen::VectorXd ux_na(nz);
+	Eigen::VectorXd phi(nz);
+
 	for (int j=0; j<nz; j++) {
 		double total_ux_sol = 0;
 		double total_ux_na = 0;
+		double total_phi = 0;
 		for (int i=0; i<nx; i++){
 			int k = i+nx*j;
 			total_ux_sol += u_sol_x[k];
 			total_ux_na += u_diff_x[k];
+			total_phi += phi_ux[k];
 		}
-		double mean_ux_sol = total_ux_sol/nx;
-		double mean_ux_na = total_ux_na/nx;
+		ux_sol(j) = total_ux_sol/nx;
+		ux_na(j) = total_ux_na/nx;
 		// na = up - us
+		phi(j) = total_phi/nx;
 		// na + us = up - us + us = up
-		fout_fp << pos[meshNb(0,j)].z << ' ' << mean_ux_sol << ' ' << mean_ux_na+mean_ux_sol << std::endl;
+	}
+	
+	double mean_ux_sol = ux_sol.mean();
+	for (int j=0; j<nz; j++) {
+		fout_fp << pos[meshNb(0,j)].z << ' ' << ux_sol(j)-mean_ux_sol << ' ';
+		fout_fp << ux_na(j) << ' ' << phi(j) << std::endl;
 	}
 	fout_fp << std::endl;
+		
 }
 
 void SolventFlow::outputYaplot(std::ofstream &fout_flow)
