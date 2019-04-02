@@ -444,6 +444,15 @@ void Simulation::openOutputFiles()
 		gsd_create(gsd_filename.c_str(), "CIL", "hoomd", gsd_make_version(1, 1));
 		gsd_open(&gsdOut, gsd_filename.c_str() , GSD_OPEN_APPEND);
 	}
+	if (sys.p.solvent_flow) {
+		string sflow_filename = "sf_"+simu_name+".yap";
+		fout_flow.open(sflow_filename.c_str());
+	}
+	if (sys.p.solvent_flow) {
+		string flowprofile_filename = "fp_"+simu_name+".dat";
+		fout_fprofile.open(flowprofile_filename.c_str());
+	}
+
 	//string box_name = "box_"+simu_name+".dat";
 	//fout_boxing.open(box_name);
 }

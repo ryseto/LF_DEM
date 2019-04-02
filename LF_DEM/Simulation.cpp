@@ -195,6 +195,10 @@ void Simulation::generateOutput(const set<string> &output_events, int& binconf_c
 		if (sys.p.output.out_gsd) {
 			outputGSD();
 		}
+		if (sys.p.solvent_flow) {
+			sys.sflow->outputYaplot(fout_flow);
+			sys.sflow->velocityProfile(fout_fprofile);
+		}
 	}
 }
 
@@ -409,10 +413,6 @@ void Simulation::simulationFlowField(std::string simulation_type,
 		sys.body_force = false;
 	}
 	setupSimulation(in_args, input_files, binary_conf, simu_identifier);
-	ofstream fout_flow;
-	fout_flow.open("debug.yap");
-	ofstream fout_fprofile;
-	fout_fprofile.open("flowprofile.dat");
 	sys.initSolventFlow(simulation_type);
 	time_t now;
 	time_strain_1 = 0; //@@@
@@ -431,14 +431,7 @@ void Simulation::simulationFlowField(std::string simulation_type,
 	while (keepRunning()) {
 		timeEvolutionUntilNextOutput(tk);
 		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_cumulated_strain());
-		if (sys.retrim_ext_flow) {
-			output_events.insert("data");
-			output_events.insert("config");
-		}
 		generateOutput(output_events, binconf_counter);
-		
-		sys.sflow->outputYaplot(fout_flow);
-		sys.sflow->velocityProfile(fout_fprofile);
 		printProgress();
 		if (time_strain_1 == 0 && sys.get_cumulated_strain() > 1) {
 			now = time(NULL);
@@ -828,8 +821,10 @@ void Simulation::outputData()
 		}
 	} else {
 		outdata.entryData("time", Dimensional::Dimension::Time, 1, sys.get_time());
-		outdata.entryData("flux", Dimensional::Dimension::none, 1, sys.sflow->calcFlux());
-		outdata.entryData("pressure difference", Dimensional::Dimension::Stress, 1, sys.sflow->pressure_difference);
+		outdata.entryData("flux", Dimensional::Dimension::none, 3, sys.sflow->calcFlux());
+		outdata.entryData("pressure difference x", Dimensional::Dimension::Stress, 1, sys.sflow->pressure_difference_x);
+		outdata.entryData("pressure difference z", Dimensional::Dimension::Stress, 1, sys.sflow->pressure_difference_z);
+		outdata.entryData("ave pressure difference x", Dimensional::Dimension::Stress, 1, sys.sflow->average_pressure.get());
 		outdata.entryData("mean particle velocity", Dimensional::Dimension::Velocity, 3, sys.meanParticleVelocity());
 		outdata.entryData("mean particle angvelocity", Dimensional::Dimension::Velocity, 3, sys.meanParticleAngVelocity());
 		
@@ -847,6 +842,8 @@ void Simulation::outputData()
 		outdata.entryData("contact number", Dimensional::Dimension::none, 1, contact_nb_per_particle);
 		outdata.entryData("frictional contact number", Dimensional::Dimension::none, 1, frictional_contact_nb_per_particle);
 		outdata.entryData("number of interaction", Dimensional::Dimension::none, 1, sys.get_nb_interactions());
+
+
 	}
 	outdata.writeToFile();
 	/****************************   Stress Tensor Output *****************/

@@ -15,6 +15,7 @@
 #include <vector>
 #include <stdexcept>
 #include "vec3d.h"
+#include "Averager.h"
 #include "Eigen/Sparse"
 #include "Eigen/Core"
 
@@ -43,9 +44,10 @@ private:
 	double smooth_length;
 	double sq_smooth_length;
 	double cell_area;
-	double numerical_Re;
 	double target_flux;
 	double viscosity;
+	vec3d flux;
+
 
 	bool settling;
 	bool channel_flow;
@@ -91,7 +93,10 @@ private:
 public:
 	SolventFlow();
 	~SolventFlow();
-	double pressure_difference;
+	double pressure_difference_x;
+	double pressure_difference_z;
+	Averager<double> average_pressure;
+	
 	void init(System* sys_, std::string simulation_type);
 	void update(double pressure_difference);
 	void initPoissonSolver();
@@ -100,6 +105,6 @@ public:
 	double meanVelocity();
 	void outputYaplot(std::ofstream &fout_flow);
 	void velocityProfile(std::ofstream &fout_fp);
-	double calcFlux();
+	vec3d calcFlux();
 };
 #endif /* SolventFlow_hpp */

@@ -77,6 +77,8 @@ private:
 	OutputData outdata_par;
 	OutputData outdata_int;
 	std::ofstream fout_boxing;
+	std::ofstream fout_flow;
+	std::ofstream fout_fprofile;
 	gsd_handle gsdOut;
 	int np1;
 	Dimensional::Unit determineUnit(Parameters::ParameterSetFactory &PFact);
