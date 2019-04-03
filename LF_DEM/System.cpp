@@ -2012,21 +2012,12 @@ void System::setBodyForce(vector<vec3d> &force,
 	for (auto &t: torque) {
 		t.reset();
 	}
-	if (true) {
-		double body_force = 0.01; // @@@@@@@@@2
-		double angle = M_PI*p.body_force_angle/180;
-		double bf_x = body_force*cos(angle); // cos(angle);
-		double bf_z = -body_force*sin(angle);
-		for (int i=0; i<np_mobile; i++) {
-			force[i].set(radius_cubed[i]*bf_x, 0 , radius_cubed[i]*bf_z);
-		}
-	} else {
-		for (int i=0; i<np_mobile; i++) {
-			double angle = atan2(position[i].z-lz_half, position[i].x-lx_half);
-			double bf_x = -p.body_force*cos(angle);
-			double bf_z = -p.body_force*sin(angle);
-			force[i].set(radius[i]*bf_x, 0 , radius[i]*bf_z);
-		}
+	double body_force = 0.01;
+	double angle = M_PI*p.body_force_angle/180;
+	double bf_x = body_force*cos(angle); // cos(angle);
+	double bf_z = -body_force*sin(angle);
+	for (int i=0; i<np_mobile; i++) {
+		force[i].set(radius_cubed[i]*bf_x, 0 , radius_cubed[i]*bf_z);
 	}
 	for (int i=np_mobile; i<np; i++) {
 		force[i].reset();

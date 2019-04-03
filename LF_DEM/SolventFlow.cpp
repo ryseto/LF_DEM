@@ -34,7 +34,8 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 		error_str << "Incorrect simulation type\n";
 		throw std::runtime_error(error_str.str());
 	}
-	average_pressure.setRelaxationTime(10);
+	average_pressure_x.setRelaxationTime(10);
+	average_pressure_z.setRelaxationTime(10);
 	if (settling) {
 		std::cerr << "settling simulation" << std::endl;
 		pressure_difference_x = 0;
@@ -254,8 +255,8 @@ void SolventFlow::update(double pressure_difference_)
 {
 	static std::ofstream fout_tmp("debug.dat");
 	vec3d flux = calcFlux();
-	average_pressure.update(pressure_difference_x, sys->get_time());
-
+	average_pressure_x.update(pressure_difference_x, sys->get_time());
+	average_pressure_z.update(pressure_difference_z, sys->get_time());
 	if (channel_flow) {
 		//pressure_difference = 10*pressure_difference_;
 		if (flux.x < sys->p.sflow_target_flux) {
@@ -272,7 +273,7 @@ void SolventFlow::update(double pressure_difference_)
 			pressure_difference_x -= diff_x*diff_x*sys->p.sflow_pressure_increment;
 		}
 		
-		pressure_difference_x += - (pressure_difference_x - average_pressure.get())*sys->dt;
+		pressure_difference_x += - (pressure_difference_x - average_pressure_x.get())*sys->dt;
 		
 		// pressure_difference_x -= (pressure_difference_x-average_pressure.get());
 		double diff_z = abs(flux.z);
@@ -281,7 +282,7 @@ void SolventFlow::update(double pressure_difference_)
 		} else {
 			pressure_difference_z -= diff_z*diff_z*sys->p.sflow_pressure_increment;
 		}
-		pressure_difference_z += - pressure_difference_z*sys->dt;
+		pressure_difference_z += - (pressure_difference_z - average_pressure_z.get())*sys->dt;
 	}
 	d_tau = sys->dt/sys->p.sflow_re;
 	particleVelocityDiffToMesh();

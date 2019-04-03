@@ -824,7 +824,7 @@ void Simulation::outputData()
 		outdata.entryData("flux", Dimensional::Dimension::none, 3, sys.sflow->calcFlux());
 		outdata.entryData("pressure difference x", Dimensional::Dimension::Stress, 1, sys.sflow->pressure_difference_x);
 		outdata.entryData("pressure difference z", Dimensional::Dimension::Stress, 1, sys.sflow->pressure_difference_z);
-		outdata.entryData("ave pressure difference x", Dimensional::Dimension::Stress, 1, sys.sflow->average_pressure.get());
+		outdata.entryData("ave pressure difference x", Dimensional::Dimension::Stress, 1, sys.sflow->average_pressure_x.get());
 		outdata.entryData("mean particle velocity", Dimensional::Dimension::Velocity, 3, sys.meanParticleVelocity());
 		outdata.entryData("mean particle angvelocity", Dimensional::Dimension::Velocity, 3, sys.meanParticleAngVelocity());
 		
