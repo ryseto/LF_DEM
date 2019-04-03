@@ -573,16 +573,17 @@ void SolventFlow::localFlow(const vec3d &p,
 	double z_diff = z_dz - j;
 	int kk[4];
 	/***************************************************************/
-	double z_diff_shift;
+	// (0, dy/2)
+	double z_diffS;
 	if (z_diff < 0.5) {
 		int jm1 = (j == 0 ? nz-1 : j-1);
-		z_diff_shift = z_diff + 0.5;
+		z_diffS = z_diff + 0.5;
 		kk[0] = i   + jm1*nx;
 		kk[1] = ip1 + jm1*nx;
 		kk[2] = i   + jnx;
 		kk[3] = ip1 + jnx;
 	} else {
-		z_diff_shift = z_diff - 0.5;
+		z_diffS = z_diff - 0.5;
 		kk[0] = i   + jnx;
 		kk[1] = ip1 + jnx;
 		kk[2] = i   + jp1nx;
@@ -590,29 +591,31 @@ void SolventFlow::localFlow(const vec3d &p,
 	}
 	u_local.x = u_sol_x[kk[0]];
 	u_local.x += (u_sol_x[kk[1]]-u_sol_x[kk[0]])*x_diff;
-	u_local.x += (u_sol_x[kk[2]]-u_sol_x[kk[0]])*z_diff_shift;
-	u_local.x += (u_sol_x[kk[3]]-u_sol_x[kk[2]]-u_sol_x[kk[1]]+u_sol_x[kk[0]])*x_diff*z_diff_shift;
+	u_local.x += (u_sol_x[kk[2]]-u_sol_x[kk[0]])*z_diffS;
+	u_local.x += (u_sol_x[kk[3]]-u_sol_x[kk[2]]-u_sol_x[kk[1]]+u_sol_x[kk[0]])*x_diff*z_diffS;
 	/***************************************************************/
-	double x_diff_shift;
+	// (dx/2, 0)
+	double x_diffS;
 	if (x_diff < 0.5) {
 		int im1 = (i == 0 ? nx-1 : i-1);
-		x_diff_shift = x_diff + 0.5;
+		x_diffS = x_diff + 0.5;
 		kk[0] = im1 + jnx;
 		kk[1] = i   + jnx;
 		kk[2] = im1 + jp1nx;
 		kk[3] = i   + jp1nx;
 	} else {
-		x_diff_shift = x_diff - 0.5;
+		x_diffS = x_diff - 0.5;
 		kk[0] = i   + jnx;
 		kk[1] = ip1 + jnx;
 		kk[2] = i   + jp1nx;
 		kk[3] = ip1 + jp1nx;
 	}
 	u_local.z = u_sol_z[kk[0]];
-	u_local.z += (u_sol_z[kk[1]]-u_sol_z[kk[0]])*x_diff_shift;
+	u_local.z += (u_sol_z[kk[1]]-u_sol_z[kk[0]])*x_diffS;
 	u_local.z += (u_sol_z[kk[2]]-u_sol_z[kk[0]])*z_diff;
-	u_local.z += (u_sol_z[kk[3]]-u_sol_z[kk[2]]-u_sol_z[kk[1]]+u_sol_z[kk[0]])*x_diff_shift*z_diff;
+	u_local.z += (u_sol_z[kk[3]]-u_sol_z[kk[2]]-u_sol_z[kk[1]]+u_sol_z[kk[0]])*x_diffS*z_diff;
 	/***************************************************************/
+	// (0, 0)
 	kk[0] = i   + jnx;
 	kk[1] = ip1 + jnx; // +dx
 	kk[2] = i   + jp1nx; // +dz
@@ -627,8 +630,8 @@ void SolventFlow::localFlow(const vec3d &p,
 	e_local[1] += (strain_rate_xz[kk[3]]-strain_rate_xz[kk[1]]-strain_rate_xz[kk[2]]+strain_rate_xz[kk[0]])*x_diff*z_diff;
 	/***************************************************************/
 	// (dx/2, dy/2)
-	x_dx = (p.x-dx/2)/dx+1;
-	z_dz = (p.z-dz/2)/dz+1;
+	x_dx += 0.5; // (p.x-dx/2)/dx+1
+	z_dz += 0.5; // (p.z-dz/2)/dz+1
 	i = (int)x_dx-1;
 	j = (int)z_dz-1;
 	x_diff = x_dx - i;
@@ -651,7 +654,6 @@ void SolventFlow::localFlow(const vec3d &p,
 	e_local[2] += (strain_rate_zz[kk[1]]-strain_rate_zz[kk[0]])*x_diff;
 	e_local[2] += (strain_rate_zz[kk[2]]-strain_rate_zz[kk[0]])*z_diff;
 	e_local[2] += (strain_rate_zz[kk[3]]-strain_rate_zz[kk[1]]-strain_rate_zz[kk[2]]+strain_rate_zz[kk[0]])*x_diff*z_diff;
-
 
 	//e_local[0] = 0;
 	//e_local[2] = 0;

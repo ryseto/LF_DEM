@@ -1912,7 +1912,8 @@ void System::setHydroForceToParticle_squeeze(vector<vec3d> &force,
 		for (const auto &inter: interaction) {
 			if (inter.lubrication.is_active()) {
 				std::tie(i, j) = inter.get_par_num();
-				std::tie(GEi, GEj) = inter.lubrication.calcGE_squeeze(E_local[i], E_local[j]); // G*E_\infty term
+				//std::tie(GEi, GEj) = inter.lubrication.calcGE_squeeze(E_local[i], E_local[j]); // G*E_\infty term
+				std::tie(GEi, GEj) = inter.lubrication.calcGE_squeeze(0.5*(E_local[i]+E_local[j])); // G*E_\infty term
 				force[i] += GEi;
 				force[j] += GEj;
 			}
@@ -1948,7 +1949,8 @@ void System::setHydroForceToParticle_squeeze_tangential(vector<vec3d> &force,
 		for (const auto &inter: interaction) {
 			if (inter.lubrication.is_active()) {
 				std::tie(i, j) = inter.get_par_num();
-				std::tie(GEi, GEj, HEi, HEj) = inter.lubrication.calcGEHE_squeeze_tangential(E_local[i], E_local[j]); // G*E_\infty term, no gamma dot
+				//std::tie(GEi, GEj, HEi, HEj) = inter.lubrication.calcGEHE_squeeze_tangential(E_local[i], E_local[j]); // G*E_\infty term, no gamma dot
+				std::tie(GEi, GEj, HEi, HEj) = inter.lubrication.calcGEHE_squeeze_tangential(0.5*(E_local[i]+E_local[j])); // G*E_\infty term, no gamma dot
 				force[i] += GEi;
 				force[j] += GEj;
 				torque[i] += HEi;
