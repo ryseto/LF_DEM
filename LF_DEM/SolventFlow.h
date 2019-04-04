@@ -47,7 +47,7 @@ private:
 	double target_flux;
 	double viscosity;
 	vec3d flux;
-
+	double pc_dumper;
 
 	bool settling;
 	bool channel_flow;
@@ -94,9 +94,7 @@ public:
 	SolventFlow();
 	~SolventFlow();
 	double pressure_difference_x;
-	double pressure_difference_z;
 	Averager<double> average_pressure_x;
-	Averager<double> average_pressure_z;
 	void init(System* sys_, std::string simulation_type);
 	void update(double pressure_difference);
 	void initPoissonSolver();

@@ -34,18 +34,14 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 		error_str << "Incorrect simulation type\n";
 		throw std::runtime_error(error_str.str());
 	}
-	average_pressure_x.setRelaxationTime(10);
-	average_pressure_z.setRelaxationTime(10);
+	average_pressure_x.setRelaxationTime(5);
 	if (settling) {
 		std::cerr << "settling simulation" << std::endl;
 		pressure_difference_x = 0;
-		pressure_difference_z = 0;
 		sys->body_force = true;
-		
 	}
 	if (channel_flow) {
 		pressure_difference_x = 0;
-		pressure_difference_z = 0;
 		sys->body_force = false;
 	}
 	viscosity = 1;
@@ -63,6 +59,7 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 	u_sol_ast_x.resize(n, 0);
 	div_u_sol_ast.resize(n, 0);
 	phi_ux.resize(n,0);
+	pc_dumper = 1;
 	
 	if (sys->p.boundary_conditions == 0) {
 		pos.resize(n);
@@ -254,9 +251,8 @@ void SolventFlow::particleVelocityDiffToMesh()
 void SolventFlow::update(double pressure_difference_)
 {
 	static std::ofstream fout_tmp("debug.dat");
-	vec3d flux = calcFlux();
+	flux = calcFlux();
 	average_pressure_x.update(pressure_difference_x, sys->get_time());
-	average_pressure_z.update(pressure_difference_z, sys->get_time());
 	if (channel_flow) {
 		//pressure_difference = 10*pressure_difference_;
 		if (flux.x < sys->p.sflow_target_flux) {
@@ -272,17 +268,8 @@ void SolventFlow::update(double pressure_difference_)
 		} else {
 			pressure_difference_x -= diff_x*diff_x*sys->p.sflow_pressure_increment;
 		}
-		
-		pressure_difference_x += - (pressure_difference_x - average_pressure_x.get())*sys->dt;
-		
+		pressure_difference_x += - pc_dumper*(pressure_difference_x - average_pressure_x.get())*sys->dt;
 		// pressure_difference_x -= (pressure_difference_x-average_pressure.get());
-		double diff_z = abs(flux.z);
-		if (flux.z < 0) {
-			pressure_difference_z += diff_z*diff_z*sys->p.sflow_pressure_increment;
-		} else {
-			pressure_difference_z -= diff_z*diff_z*sys->p.sflow_pressure_increment;
-		}
-		pressure_difference_z += - (pressure_difference_z - average_pressure_z.get())*sys->dt;
 	}
 	d_tau = sys->dt/sys->p.sflow_re;
 	particleVelocityDiffToMesh();
@@ -336,7 +323,14 @@ void SolventFlow::predictorStep()
 				double fx = viscosity*dd_ux + res_coeff_ux*u_diff_x[k];
 				double fz = viscosity*dd_uz + res_coeff_uz*u_diff_z[k];
 				u_sol_ast_x[k] = u_sol_x[k] + d_tau*fx;
-				u_sol_ast_z[k] = u_sol_z[k] + d_tau*fz;
+				u_sol_ast_z[k] = u_sol_z[k] + d_tau*(fz - sys->p.sf_zfriction*flux.z);
+				/* sf_zfriction*u_sol_z[k] term is added
+				 * to stabilize view center along z direction.
+				 * When periodic boundary conditions are used, nothing bounds the z velocity.
+				 * We may control by pressure difference along z-direction.
+				 * But, the expected average value is zero and the overall velocity along z direction
+				 * is not important. Thus, we introduce the friction to v = 0 frame.
+				 */
 			} else {
 				/* periodic boundary condtions in x directions.
 				 * Non-slip boundy conditions at z = 0 and z=Lz.
@@ -414,28 +408,16 @@ void SolventFlow::solvePressure()
 	for (int k=0; k<n; k++) {
 		rhs_vector(k) = (1/d_tau)*div_u_sol_ast[k];
 	}
-	if (abs(pressure_difference_x) > 0) {
+	if (pressure_difference_x != 0) {
 		double delta_P_dxdx = pressure_difference_x/(dx*dx);
 		for (int j=0; j<nz; j++) {
-			int nx_j = nx*j;
+			int j_nx = j*nx;
 			// i = 0 --> k = nx*j
-			rhs_vector(nx_j) += -delta_P_dxdx;
+			rhs_vector(j_nx) += -delta_P_dxdx;
 			// i = nx-1 ---> k = nx-1+j*nx
-			rhs_vector(nx-1+nx_j) += delta_P_dxdx;
+			rhs_vector(nx-1+j_nx) += delta_P_dxdx;
 		}
 	}
-	
-	if (abs(pressure_difference_z) > 0) {
-		double delta_P_dzdz = pressure_difference_z/(dz*dz);
-		for (int i=0; i<nx; i++) {
-			// j = 0 --> k = nx*j
-			rhs_vector(i) += -delta_P_dzdz;
-			// j = nz-1 ---> k = i+(nz-1)*nx
-			rhs_vector(i+(nz-1)*nx) += delta_P_dzdz;
-		}
-	}
-	
-	
 	pressure_vector = psolver->solve(rhs_vector);
 	if (psolver->info() != Eigen::Success) {
 		// solving failed
@@ -453,15 +435,19 @@ void SolventFlow::correctorStep()
 	if (sys->p.boundary_conditions == 0) {
 		/* periodic boundary condtions in x and z directions.
 		 */
+		double d_tau_dx = d_tau/dx;
+		double d_tau_dz = d_tau/dz;
 		for (int i=0; i<nx; i++) {
 			int im1 = (i == 0 ? nx-1 : i-1);
 			double pd_x = (i == 0 ? pressure_difference_x : 0);
 			for (int j=0; j<nz; j++) {
 				int k = i+nx*j;
 				int jm1 = (j == 0 ? nz-1 : j-1);
-				double pd_z = (j == 0 ? pressure_difference_z : 0);
-				u_sol_x[k] = u_sol_ast_x[k] - d_tau*(pressure[k] - (pressure[im1+j*nx]+pd_x))/dx;
-				u_sol_z[k] = u_sol_ast_z[k] - d_tau*(pressure[k] - (pressure[i+jm1*nx]+pd_z))/dz;
+				//double pd_z = (j == 0 ? pressure_difference_z : 0);
+				double pd_z = 0;
+				
+				u_sol_x[k] = u_sol_ast_x[k] - d_tau_dx*(pressure[k] - (pressure[im1+j*nx]+pd_x));
+				u_sol_z[k] = u_sol_ast_z[k] - d_tau_dz*(pressure[k] - pressure[i+jm1*nx]+pd_z);
 			}
 		}
 	} else {
@@ -849,22 +835,40 @@ void SolventFlow::outputYaplot(std::ofstream &fout_flow)
 		}
 	}
 	
-	fout_flow << "y 9" << std::endl;
-	fout_flow << "@ 5" << std::endl;
-	fout_flow << "r " << 0.05 << std::endl;
-	for (int i=0; i<nx; i++){
-		double x = i*dx-o_shift.x;
-		fout_flow << "s ";
-		fout_flow << x << ' ' << -0.02 << ' ' <<              -o_shift.z << ' ';
-		fout_flow << x << ' ' << -0.02 << ' ' << sys->get_lz()-o_shift.z << std::endl;
-	}
-	for (int i=0; i<nz; i++){
-		double z =  i*dz-o_shift.z;
-		fout_flow << "s ";
-		fout_flow <<              -o_shift.x << ' ' << -0.02 << ' ' << z << ' ';
-		fout_flow << sys->get_lx()-o_shift.x << ' ' << -0.02 << ' ' << z << std::endl;
+	if (1) {
+		fout_flow << "y 5" << std::endl;
+		//		double cell_area = dx*dz;
+		fout_flow << "@ 5" << std::endl;
+		for (int j=0; j<nz; j++){
+			for (int i=0; i<nx; i++){
+				int k = i + j*nx;
+				vec3d po = pos[k] - o_shift;
+				double r = 50*strain_rate_xz[k];
+				fout_flow << "r " << abs(r) << std::endl;
+				fout_flow << "c ";
+				fout_flow << po.x -dx/2<< ' ' << -0.02 << ' ' << po.z - dz/2 << std::endl;
+			}
+		}
 	}
 	
+	if (0) {
+		fout_flow << "y 9" << std::endl;
+		fout_flow << "@ 5" << std::endl;
+		fout_flow << "r " << 0.05 << std::endl;
+		for (int i=0; i<nx; i++){
+			double x = i*dx-o_shift.x;
+			fout_flow << "s ";
+			fout_flow << x << ' ' << -0.02 << ' ' <<              -o_shift.z << ' ';
+			fout_flow << x << ' ' << -0.02 << ' ' << sys->get_lz()-o_shift.z << std::endl;
+		}
+		for (int i=0; i<nz; i++){
+			double z =  i*dz-o_shift.z;
+			fout_flow << "s ";
+			fout_flow <<              -o_shift.x << ' ' << -0.02 << ' ' << z << ' ';
+			fout_flow << sys->get_lx()-o_shift.x << ' ' << -0.02 << ' ' << z << std::endl;
+		}
+	}
+		
 	fout_flow << "y 4" << std::endl;
 	double p_max = 0;
 	for (int i=0; i< n; i++) {

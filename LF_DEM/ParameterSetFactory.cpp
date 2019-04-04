@@ -98,7 +98,8 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(body_force_angle, 0),
 		PARAM_INIT(sflow_re, 0.01),
 		PARAM_INIT(sflow_pressure_increment, 1e-4),
-		PARAM_INIT(sflow_target_flux, 0)
+		PARAM_INIT(sflow_target_flux, 0),
+		PARAM_INIT(sf_zfriction, 1e-2)
 	};
 
 	/*================================

@@ -213,8 +213,9 @@ namespace Parameters {
 		int mesh_nx; // solvent_flow [20]
 		int mesh_nz; // solvent_flow [20]
 		double sflow_re; // [0.001]
-		double sflow_pressure_increment; // To adjust pressure diffrence to fix flux value [1e-4]
-		double sflow_target_flux; // [0]
+		double sflow_pressure_increment; // To adjust pressure diffrence to fix flux value along x-direction [1e-4]
+		double sflow_target_flux; // Target flux along x-direction controlled by pressure difference [0]
+		double sf_zfriction; // To stabilize the frame along z-direction when the peridoic boundary condition along z-direction is used.
 
 	};
 	
