@@ -45,8 +45,8 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 		sys->body_force = false;
 	}
 	viscosity = 1;
-	nx = sys->p.mesh_nx;
-	nz = sys->p.mesh_nz;
+	nx = sys->p.sflow_nx;
+	nz = sys->p.sflow_nz;
 	n = nx*nz;
 	dx = sys->get_lx()/nx;
 	dz = sys->get_lz()/nz;
@@ -60,7 +60,7 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 	div_u_sol_ast.resize(n, 0);
 	phi_ux.resize(n,0);
 	
-	if (sys->p.boundary_conditions == 0) {
+	if (sys->p.sflow_boundary_conditions == 0) {
 		pos.resize(n);
 		jmax_uz = nz;
 		u_diff_z.resize(n, 0);
@@ -91,6 +91,13 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 		}
 	}
 	initPoissonSolver();
+	
+	double particle_area = 0;
+	for (int i=0; i<sys->np_mobile; i++) {
+		particle_area += M_PI*sys->radius[i]*sys->radius[i];
+	}
+	average_area_fraction = particle_area/sys->get_lx()/sys->get_lz();
+	std::cerr << " area_fraction = " << average_area_fraction << std::endl;
 }
 
 void SolventFlow::initPoissonSolver()
@@ -106,14 +113,14 @@ void SolventFlow::initPoissonSolver()
 	for (int j = 0; j < nz; j++) {
 		for (int i = 0; i < nx; i++) {
 			int k = i+j*nx;
-			if (sys->p.boundary_conditions == 0) {
+			if (sys->p.sflow_boundary_conditions == 0) {
 				// b(xi, zi)
 				lmat[k][k]              += -2*(dx2i+dz2i);  //p(xi,zi) --> b(xi,zi)
 				lmat[k][meshNb(i+1, j)] += dx2i;  //p(xi+1,zi) --> b(xi,zi)
 				lmat[k][meshNb(i-1, j)] += dx2i;  //p(xi-1,zi) --> b(xi,zi)
 				lmat[k][meshNb(i, j+1)] += dz2i;  //p(xi,zi+1) --> b(xi,zi)
 				lmat[k][meshNb(i, j-1)] += dz2i;  //p(xi,zi-1) --> b(xi,zi)
-			} else if (sys->p.boundary_conditions == 1) {
+			} else if (sys->p.sflow_boundary_conditions == 1) {
 				if (j == 0) {
 					// dp/dz = 0 at the bottom wall
 					lmat[k][k]              += -2*dx2i-dz2i;
@@ -208,7 +215,7 @@ void SolventFlow::particleVelocityDiffToMesh()
 					iix -= nx;
 					xo -= sys->get_lx();
 				}
-				if (sys->p.boundary_conditions == 0) {
+				if (sys->p.sflow_boundary_conditions == 0) {
 					if (iiz <= -1) {
 						iiz += nz;
 						zo += sys->get_lz();
@@ -250,19 +257,19 @@ void SolventFlow::particleVelocityDiffToMesh()
 void SolventFlow::update(double pressure_difference_)
 {
 	static std::ofstream fout_tmp("debug.dat");
-	flux = calcFlux();
+	u_sol_ave = calcAverageUsol();
 	average_pressure_x.update(pressure_difference_x, sys->get_time());
 	if (channel_flow) {
 		//pressure_difference = 10*pressure_difference_;
-		if (flux.x < sys->p.sflow_target_flux) {
+		if (u_sol_ave.x < sys->p.sflow_target_flux) {
 			pressure_difference_x += sys->p.sflow_pcontrol_increment;
 		} else {
 			pressure_difference_x -= sys->p.sflow_pcontrol_increment;
 		}
 	} else {
-		double pd_increment = sys->p.sflow_pcontrol_increment;
-		double diff_x = abs(flux.x-target_flux);
-		if (flux.x < target_flux) {
+		//double pd_increment = sys->p.sflow_pcontrol_increment;
+		double diff_x = abs(u_sol_ave.x-target_flux);
+		if (u_sol_ave.x < target_flux) {
 			pressure_difference_x += diff_x*diff_x*sys->p.sflow_pcontrol_increment;
 		} else {
 			pressure_difference_x -= diff_x*diff_x*sys->p.sflow_pcontrol_increment;
@@ -282,13 +289,15 @@ void SolventFlow::update(double pressure_difference_)
 
 double SolventFlow::porousResistance(double area_fraction)
 {
-	//static const double phi_max = 1.2;
 	/*
-	 static const double phi_st = 0.8;
-	 static const double inv_res_max = (phi_max-phi_st)/phi_st;
-	 return inv_res_max*volume_fraction/(phi_max-volume_fraction);
+	 * 27/8=3.375
 	 */
-	return (27.0/8)*area_fraction;
+	double porosity = (1-area_fraction)/(1-average_area_fraction);
+	double poro_factor = 1;
+	for (int k=0; k<sys->p.sflow_Darcy_power; k++) {
+		poro_factor *= porosity;
+	}
+	return 3.375*area_fraction/poro_factor;
 }
 
 void SolventFlow::predictorStep()
@@ -297,7 +306,7 @@ void SolventFlow::predictorStep()
 	double dz2 = dz*dz;
 	for (int j=0; j<nz; j++) {
 		int jp1, jm1;
-		if (sys->p.boundary_conditions == 0) {
+		if (sys->p.sflow_boundary_conditions == 0) {
 			jp1 = (j == nz-1 ? 0 : j+1);
 			jm1 = (j == 0 ? nz-1 : j-1);
 		} else {
@@ -314,7 +323,7 @@ void SolventFlow::predictorStep()
 			int jd = i   + jm1*nx; //down
 			double res_coeff_ux = porousResistance(phi_ux[k]);
 			double res_coeff_uz = porousResistance(phi_uz[k]);
-			if (sys->p.boundary_conditions == 0) {
+			if (sys->p.sflow_boundary_conditions == 0) {
 				/* periodic boundary condtions in x and z directions.
 				 */
 				double dd_ux = (u_sol_x[ir]-2*u_sol_x[k]+u_sol_x[il])/dx2+(u_sol_x[ju]-2*u_sol_x[k]+u_sol_x[jd])/dz2;
@@ -322,7 +331,7 @@ void SolventFlow::predictorStep()
 				double fx = viscosity*dd_ux + res_coeff_ux*u_diff_x[k];
 				double fz = viscosity*dd_uz + res_coeff_uz*u_diff_z[k];
 				u_sol_ast_x[k] = u_sol_x[k] + d_tau*fx;
-				u_sol_ast_z[k] = u_sol_z[k] + d_tau*(fz - sys->p.sf_zfriction*flux.z);
+				u_sol_ast_z[k] = u_sol_z[k] + d_tau*(fz - sys->p.sf_zfriction*u_sol_ave.z);
 				/* sf_zfriction*u_sol_z[k] term is added
 				 * to stabilize view center along z direction.
 				 * When periodic boundary conditions are used, nothing bounds the z velocity.
@@ -364,7 +373,7 @@ void SolventFlow::predictorStep()
 			}
 		}
 	}
-	if (sys->p.boundary_conditions == 1) {
+	if (sys->p.sflow_boundary_conditions == 1) {
 		int j = nz;
 		for (int i=0; i<nx; i++) {
 			int k = i + nx*j;
@@ -377,7 +386,7 @@ void SolventFlow::calcVelocityDivergence()
 {
 	// This works for both boundary conditions.
 	// u_sol_ast_z[i, j = 0] = 0 (top and bottom)
-	if (sys->p.boundary_conditions == 0) {
+	if (sys->p.sflow_boundary_conditions == 0) {
 		for (int j=0; j<nz; j++) {
 			int jp1 = (j == nz-1 ? 0 : j+1);
 			for (int i=0; i<nx; i++) {
@@ -431,7 +440,7 @@ void SolventFlow::solvePressure()
 
 void SolventFlow::correctorStep()
 {
-	if (sys->p.boundary_conditions == 0) {
+	if (sys->p.sflow_boundary_conditions == 0) {
 		/* periodic boundary condtions in x and z directions.
 		 */
 		double d_tau_dx = d_tau/dx;
@@ -476,7 +485,7 @@ void SolventFlow::correctorStep()
 
 void SolventFlow::calcVelocityGradients()
 {
-	if (sys->p.boundary_conditions == 0) {
+	if (sys->p.sflow_boundary_conditions == 0) {
 		for (int j=0; j< nz; j++) {
 			int jp1 = (j == nz-1 ? 0 : j+1);
 			int jm1 = (j == 0 ? nz-1 : j-1);
@@ -654,21 +663,22 @@ double SolventFlow::meanVelocity()
 	return mean_velocity/n;
 }
 
-vec3d SolventFlow::calcFlux()
+vec3d SolventFlow::calcAverageUsol()
 {
 	int i=(int)(0.5*nx);
-	double flux_total_x = 0;
+	double u_sol_x_total = 0;
 	for (int j=0; j<nz; j++) {
 		int k = i + nx*j;
-		flux_total_x += u_sol_x[k]*dz;
+		u_sol_x_total += u_sol_x[k];
 	}
+
 	int j=(int)(0.5*nz);
-	double flux_total_z = 0;
+	double u_sol_z_total = 0;
 	for (int i=0; i<nx; i++) {
 		int k = i + nx*j;
-		flux_total_z += u_sol_z[k]*dx;
+		u_sol_z_total += u_sol_z[k];
 	}
-	return vec3d(flux_total_x/sys->get_lz(), 0 , flux_total_z/sys->get_lx());
+	return vec3d(u_sol_x_total/nz, 0 , u_sol_z_total/nx);
 }
 
 void SolventFlow::velocityProfile(std::ofstream &fout_fp)
@@ -695,9 +705,21 @@ void SolventFlow::velocityProfile(std::ofstream &fout_fp)
 	}
 	
 	double mean_ux_sol = ux_sol.mean();
+	/*
+	 * F_bf = up - u
+	 * ux_na is the distributed up-u on mesh points.
+	 * The total value (<ux_na>*[#mesh points] must be N*F_bf/
+	 * std::cerr << "<up-u> = " << ux_na.mean()*nx*nz/sys->np_mobile << std::endl;
+	 *
+	 */
+	std::cerr << "<up-u> = " << ux_na.mean()*nx*nz/sys->np_mobile << std::endl;
 	for (int j=0; j<nz; j++) {
-		fout_fp << pos[meshNb(0,j)].z << ' ' << ux_sol(j)-mean_ux_sol << ' ';
-		fout_fp << ux_na(j) << ' ' << phi(j) << std::endl;
+		double ux_solvent = ux_sol(j)-mean_ux_sol;
+		fout_fp << pos[meshNb(0,j)].z << ' '; // 1: z
+		fout_fp << ux_solvent << ' '; // 2: total velocity profile
+		fout_fp << ux_na(j) + ux_solvent << ' '; // 3: u_particle
+		fout_fp << phi(j); // 4: volume fraction
+		fout_fp << std::endl;
 	}
 	fout_fp << std::endl;
 		
@@ -811,7 +833,7 @@ void SolventFlow::outputYaplot(std::ofstream &fout_flow)
 		}
 	}
 	
-	if (0) {
+	if (1) {
 		fout_flow << "y 5" << std::endl;
 //		double cell_area = dx*dz;
 		fout_flow << "@ 10" << std::endl;
@@ -820,21 +842,21 @@ void SolventFlow::outputYaplot(std::ofstream &fout_flow)
 			for (int i=0; i<nx; i++){
 				vec3d po = pos[i + nx*j] - o_shift;
 				// double r = sqrt(cell_area*phi[i + nx*j]/M_PI);
-				//double r = porousResistance(phi[i + nx*j]);
+				double r = porousResistance(phi_ux[i + nx*j]);
 				//double s = 100*div_u_sol_ast[i+nx*j];
-				//				if (r > 0 ) {
+				//if (r > 0 ) {
 				//					fout_flow << "@ 4" << std::endl;
 				//				} else {
 				//					fout_flow << "@ 6" << std::endl;
 				//				}
-				//fout_flow << "r " << abs(r) << std::endl;
+				fout_flow << "r " << 0.1*abs(r) << std::endl;
 				fout_flow << "c ";
 				fout_flow << po.x << ' ' << -0.02 << ' ' << po.z << std::endl;
 			}
 		}
 	}
 	
-	if (1) {
+	if (0) {
 		fout_flow << "y 5" << std::endl;
 		//		double cell_area = dx*dz;
 		fout_flow << "@ 5" << std::endl;

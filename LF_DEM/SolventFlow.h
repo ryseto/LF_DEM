@@ -46,7 +46,7 @@ private:
 	double cell_area;
 	double target_flux;
 	double viscosity;
-	vec3d flux;
+	double average_area_fraction;
 	bool sedimentation;
 	bool channel_flow;
 	// Staggered grid stores
@@ -92,6 +92,7 @@ public:
 	SolventFlow();
 	~SolventFlow();
 	double pressure_difference_x;
+	vec3d u_sol_ave;
 	Averager<double> average_pressure_x;
 	void init(System* sys_, std::string simulation_type);
 	void update(double pressure_difference);
@@ -101,6 +102,6 @@ public:
 	double meanVelocity();
 	void outputYaplot(std::ofstream &fout_flow);
 	void velocityProfile(std::ofstream &fout_fp);
-	vec3d calcFlux();
+	vec3d calcAverageUsol();
 };
 #endif /* SolventFlow_hpp */

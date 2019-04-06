@@ -154,6 +154,7 @@ public:
 	void createDataHeader(std::stringstream& data_header);
 	void getSnapshotHeader(std::stringstream& snapshot_header);
 	void outputData();
+	void outputDataSedimentatioin();
 	void outputConfigurationData();
 	void outputFinalConfiguration(const std::string&);
 	void outputIntFileTxt();

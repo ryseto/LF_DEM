@@ -78,7 +78,7 @@ namespace Parameters {
 		int simulation_mode;
 		std::string flow_type;
 		double magic_angle; // magic angle for extensinoal flow
-		int boundary_conditions; // boundary conditions for flow fields 0: all PD 1: x-PD and z-Wall  [0]
+		int sflow_boundary_conditions; // boundary conditions for flow fields 0: all PD 1: x-PD and z-Wall  [0]
 		bool solvent_flow; ///< [false]
 		/*******************************************************
 		 INTERACTIONS
@@ -210,8 +210,9 @@ namespace Parameters {
 		double brownian_relaxation_time; ///< Averaging time scale in the stress controlled simulation for Brownian [1]
 		bool check_static_force_balance;
 		double body_force_angle;  ///< parallel to wall 0 and vertical to wall 90 [0]
-		int mesh_nx; // solvent_flow [20]
-		int mesh_nz; // solvent_flow [20]
+		int sflow_nx; // solvent_flow [20]
+		int sflow_nz; // solvent_flow [20]
+		int sflow_Darcy_power; // lambda for phi/(1-phi)^{lambda} (Modified Darcy's law) [0]
 		double sflow_re; // [0.001]
 		double sflow_pcontrol_increment; // To adjust pressure diffrence to fix flux value along x-direction [1e-4]
 		double sflow_pcontrol_rtime; // [0.1]
