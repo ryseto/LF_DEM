@@ -80,7 +80,6 @@ namespace Parameters {
 		double magic_angle; // magic angle for extensinoal flow
 		int boundary_conditions; // boundary conditions for flow fields 0: all PD 1: x-PD and z-Wall  [0]
 		bool solvent_flow; ///< [false]
-		bool body_force;
 		/*******************************************************
 		 INTERACTIONS
 		 ********************************************************/
@@ -93,6 +92,7 @@ namespace Parameters {
 		double interaction_range;		///< maximum range (center-to-center) for interactions (repulsive force, etc.). If -1, lub_max_gap is used as cutoff [-1]
 		double vdW_coeffient; ///< [-1]
 		double vdW_singularity_cutoff; ///< [0.1]
+		double bodyforce;              ///< Amplitude of the body force [0]
 		int np_fixed;
 		struct TActAdhesion::Parameters TA_adhesion; ///< Time delayed adhesion params (.adhesion_range [1e-2], .adhesion_max_force [0h], .activation_time [0h])
 		/*******************************************************
@@ -213,7 +213,9 @@ namespace Parameters {
 		int mesh_nx; // solvent_flow [20]
 		int mesh_nz; // solvent_flow [20]
 		double sflow_re; // [0.001]
-		double sflow_pressure_increment; // To adjust pressure diffrence to fix flux value along x-direction [1e-4]
+		double sflow_pcontrol_increment; // To adjust pressure diffrence to fix flux value along x-direction [1e-4]
+		double sflow_pcontrol_rtime; // [0.1]
+		double sflow_pcontrol_damper; // [0.1]
 		double sflow_target_flux; // Target flux along x-direction controlled by pressure difference [0]
 		double sf_zfriction; // To stabilize the frame along z-direction when the peridoic boundary condition along z-direction is used.
 

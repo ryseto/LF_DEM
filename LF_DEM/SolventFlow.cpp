@@ -11,7 +11,7 @@
 #include <vector>
 
 SolventFlow::SolventFlow():
-settling(false),
+sedimentation(false),
 channel_flow(false)
 {
 	psolver = new Eigen::SimplicialLDLT <SpMat>;
@@ -25,8 +25,8 @@ SolventFlow::~SolventFlow()
 void SolventFlow::init(System* sys_, std::string simulation_type)
 {
 	sys = sys_;
-	if (simulation_type == "settling") {
-		settling = true;
+	if (simulation_type == "sedimentation") {
+		sedimentation = true;
 	} else if (simulation_type == "channel flow") {
 		channel_flow = true;
 	} else {
@@ -34,9 +34,9 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 		error_str << "Incorrect simulation type\n";
 		throw std::runtime_error(error_str.str());
 	}
-	average_pressure_x.setRelaxationTime(5);
-	if (settling) {
-		std::cerr << "settling simulation" << std::endl;
+	average_pressure_x.setRelaxationTime(sys->p.sflow_pcontrol_rtime);
+	if (sedimentation) {
+		std::cerr << "sedimentation simulation" << std::endl;
 		pressure_difference_x = 0;
 		sys->body_force = true;
 	}
@@ -59,7 +59,6 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 	u_sol_ast_x.resize(n, 0);
 	div_u_sol_ast.resize(n, 0);
 	phi_ux.resize(n,0);
-	pc_dumper = 1;
 	
 	if (sys->p.boundary_conditions == 0) {
 		pos.resize(n);
@@ -256,19 +255,19 @@ void SolventFlow::update(double pressure_difference_)
 	if (channel_flow) {
 		//pressure_difference = 10*pressure_difference_;
 		if (flux.x < sys->p.sflow_target_flux) {
-			pressure_difference_x += sys->p.sflow_pressure_increment;
+			pressure_difference_x += sys->p.sflow_pcontrol_increment;
 		} else {
-			pressure_difference_x -= sys->p.sflow_pressure_increment;
+			pressure_difference_x -= sys->p.sflow_pcontrol_increment;
 		}
 	} else {
-		double pd_increment = sys->p.sflow_pressure_increment;
+		double pd_increment = sys->p.sflow_pcontrol_increment;
 		double diff_x = abs(flux.x-target_flux);
 		if (flux.x < target_flux) {
-			pressure_difference_x += diff_x*diff_x*sys->p.sflow_pressure_increment;
+			pressure_difference_x += diff_x*diff_x*sys->p.sflow_pcontrol_increment;
 		} else {
-			pressure_difference_x -= diff_x*diff_x*sys->p.sflow_pressure_increment;
+			pressure_difference_x -= diff_x*diff_x*sys->p.sflow_pcontrol_increment;
 		}
-		pressure_difference_x += - pc_dumper*(pressure_difference_x - average_pressure_x.get())*sys->dt;
+		pressure_difference_x += - sys->p.sflow_pcontrol_damper*(pressure_difference_x - average_pressure_x.get())*sys->dt;
 		// pressure_difference_x -= (pressure_difference_x-average_pressure.get());
 	}
 	d_tau = sys->dt/sys->p.sflow_re;
@@ -734,7 +733,7 @@ void SolventFlow::outputYaplot(std::ofstream &fout_flow)
 		}
 	}
 	
-	double vfactor = 1;
+	double vfactor = 0.1;
 	vec3d o_shift(sys->get_lx()/2, 0, sys->get_lz()/2);
 	if (0) {
 		fout_flow << "y 2" << std::endl;
@@ -843,7 +842,7 @@ void SolventFlow::outputYaplot(std::ofstream &fout_flow)
 			for (int i=0; i<nx; i++){
 				int k = i + j*nx;
 				vec3d po = pos[k] - o_shift;
-				double r = 50*strain_rate_xz[k];
+				double r = strain_rate_xz[k];
 				fout_flow << "r " << abs(r) << std::endl;
 				fout_flow << "c ";
 				fout_flow << po.x -dx/2<< ' ' << -0.02 << ' ' << po.z - dz/2 << std::endl;

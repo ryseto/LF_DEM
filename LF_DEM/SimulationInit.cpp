@@ -109,9 +109,11 @@ Dimensional::Unit Simulation::determineUnit(Parameters::ParameterSetFactory &PFa
 		system_of_units.add(Dimensional::Unit::stress, control_value);
 		internal_unit = control_value.unit;
 	} else if (control_var == Parameters::ControlVariable::force) {
-		//@@@@ 
-		system_of_units.add(Dimensional::Unit::stress, control_value);
-		internal_unit = control_value.unit;
+		// sedimentation problem
+		system_of_units.add(Dimensional::Unit::bodyforce, control_value);
+		system_of_units.setInternalUnit(Dimensional::Unit::bodyforce);
+		internal_unit = Dimensional::Unit::bodyforce;
+		sys.zero_shear = true; // zero imposed shear
 	}
 	return internal_unit;
 }
@@ -126,6 +128,10 @@ void Simulation::convertForces(Dimensional::Unit &internal_unit,
 
 	// set the output unit
 	output_unit = control_value.unit;
+	if (sys.body_force) {
+		/*** for sedimentation simulations ***/
+		output_unit = Dimensional::Unit::bodyforce;
+	}
 	cout << indent << "output units = " << Dimensional::unit2suffix(output_unit) << endl;
 
 	// when there is a hydro force, its value is the non-dimensionalized shear rate.
@@ -139,7 +145,11 @@ void Simulation::convertForces(Dimensional::Unit &internal_unit,
 	} else if (control_var == Parameters::ControlVariable::pressure) {
 		sys.pressure_difference = forces.at(Dimensional::Unit::stress).value;
 		cerr << "sys.pressure_difference = " << sys.pressure_difference << endl;
+	} else if (control_var == Parameters::ControlVariable::force) {
+		/*** for sedimentation simulations ***/
+		cerr << "sedimentation simulation" << endl;
 	}
+
 }
 
 void Simulation::assertParameterCompatibility()
@@ -346,9 +356,6 @@ void Simulation::setupSimulation(string in_args,
 		sys.target_stress = target_stress_input/6/M_PI; //@@@
 	}
 	sys.p = PFactory.getParameterSet();
-	if (control_var == Parameters::ControlVariable::pressure) {
-		sys.p.simulation_mode = 60;
-	}
 	if (shear_rheology) {
 		if (sys.p.flow_type == "extension") {
 			sys.simu_type = sys.SimulationType::extensional_flow;
@@ -356,9 +363,12 @@ void Simulation::setupSimulation(string in_args,
 			sys.simu_type = sys.SimulationType::simple_shear;
 		}
 	} else {
-		sys.simu_type = sys.SimulationType::pipe_flow;
+		cerr << "Repulsive force = " << sys.p.repulsion << endl;
+		sys.simu_type = sys.SimulationType::solvent_flow;
 	}
-	setupFlow(); // Including parameter p setting.
+	if (!sys.p.solvent_flow) {
+		setupFlow(); // Including parameter p setting.
+	}
 	if (sys.simu_type == sys.SimulationType::extensional_flow) {
 		sys.p.output.origin_zero_flow = false;
 	}
@@ -400,6 +410,7 @@ void Simulation::setupSimulation(string in_args,
 	openOutputFiles();
 	echoInputFiles(in_args, input_files);
 	checkDispersionType();
+	cerr << "@2 = " << sys.p.repulsion << endl;
 	cout << indent << "Simulation setup [ok]" << endl;
 }
 
@@ -486,16 +497,19 @@ string Simulation::prepareSimulationName(bool binary_conf,
 		string_control_parameters << "_" << "rate";
 	} else if (control_var == Parameters::ControlVariable::stress) {
 		string_control_parameters << "_" << "stress";
-	} else if (control_var == Parameters::ControlVariable::pressure
-		) {
-		string_control_parameters << "_" << "stress";
+	} else if (control_var == Parameters::ControlVariable::pressure) {
+		string_control_parameters << "_" << "pressure";
+	} else if (control_var == Parameters::ControlVariable::force) {
+		string_control_parameters << "_" << "force";
 	}
 	// if (control_var == Parameters::ControlVariable::viscnb) {
 	// 	string_control_parameters << "_" << "viscnb";
 	// }
 	string_control_parameters << control_value.value << Dimensional::unit2suffix(control_value.unit);
 	ss_simu_name << string_control_parameters.str();
-	ss_simu_name << "_" << sys.p.flow_type;
+	if (shear_rheology) {
+		ss_simu_name << "_" << sys.p.flow_type;
+	}
 	if (simu_identifier != "") {
 		ss_simu_name << "_";
 		ss_simu_name << simu_identifier;

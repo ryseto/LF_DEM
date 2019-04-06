@@ -47,9 +47,7 @@ private:
 	double target_flux;
 	double viscosity;
 	vec3d flux;
-	double pc_dumper;
-
-	bool settling;
+	bool sedimentation;
 	bool channel_flow;
 	// Staggered grid stores
 	// - the pressure at the cell center

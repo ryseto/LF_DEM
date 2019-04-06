@@ -406,8 +406,8 @@ void Simulation::simulationFlowField(std::string simulation_type,
 	shear_rheology = false;
 	control_var = control_variable_;
 	control_value = control_value_;
-	if (simulation_type == "settling") {
-		std::cerr << "settling simulation" << std::endl;
+	if (simulation_type == "sedimentation") {
+		std::cerr << "sedimentation simulation" << std::endl;
 		sys.body_force = true;
 	} else if (simulation_type == "channel flow") {
 		sys.body_force = false;

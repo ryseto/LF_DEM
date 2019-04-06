@@ -191,7 +191,7 @@ private:
 
 	Parameters::ParameterSet p;
 	int np_mobile; ///< number of mobile particles
-	enum SimulationType { simple_shear, extensional_flow, pipe_flow } simu_type;
+	enum SimulationType { simple_shear, extensional_flow, solvent_flow } simu_type;
 	//	bool ext_flow;
 	// Interaction types
 	bool brownian;

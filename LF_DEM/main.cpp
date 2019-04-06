@@ -72,7 +72,7 @@ int main(int argc, char **argv)
 		{"rate-infty",        required_argument, 0, '8'},
 		{"stress-controlled", required_argument, 0, 's'},
 		{"channel-flow",      required_argument, 0, 'C'},
-		{"settling",          required_argument, 0, 'S'},
+		{"sedimentation",     required_argument, 0, 'S'},
 		{"generate",          optional_argument, 0, 'g'},
 		{"random-seed",       required_argument, 0, 'a'},
 		{"cluster-radius",    required_argument, 0, 'b'},
@@ -87,7 +87,6 @@ int main(int argc, char **argv)
 		{"help",              no_argument,       0, 'h'},
 		{0, 0, 0, 0},
 	};
-	
 	int index;
 	int c;
 	while ((c = getopt_long(argc, argv, "hn80fds:t:r:C:S:g::p:a:b:k:i:v:c:N:", longopts, &index)) != -1) {
@@ -120,9 +119,14 @@ int main(int argc, char **argv)
 				control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, optarg, "force");
 				break;
 			case 'S':
-				simulation_type = "settling";
+				simulation_type = "sedimentation";
 				control_variable = Parameters::ControlVariable::force;
-				control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, optarg, "force");
+				if (optarg[0] == '8' && optarg[1] == '\0') {
+					control_value = {Dimensional::Dimension::Force, 1, Dimensional::Unit::bodyforce};
+					cerr << "control value = infinity" << ' ' << control_value.value << endl;
+				} else {
+					control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, optarg, "force");
+				}
 				break;
 			case 'k':
 				knkt_filename = optarg;

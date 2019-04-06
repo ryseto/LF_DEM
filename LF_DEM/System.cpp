@@ -187,7 +187,7 @@ void System::declareForceComponents()
 	}
 
 	/*********** Hydro force, i.e.  R_FE:E_inf *****************/
-	if (!zero_shear) {
+	if (!zero_shear || p.solvent_flow) {
 		if (p.lubrication_model == "normal") {
 			force_components["hydro"] = ForceComponent(np, RATE_PROPORTIONAL, !torque, &System::setHydroForceToParticle_squeeze);
 		}
@@ -1165,7 +1165,7 @@ void System::adaptTimeStep(double time_end, double strain_end)
 	adaptTimeStep();
 	// To stop exactly at t == time_end or strain == strain_end,
 	// whatever comes first
-	if (simu_type != pipe_flow) {
+	if (simu_type != solvent_flow) {
 		if (strain_end >= 0) {
 			if (fabs(dt*shear_rate) > strain_end-clk.cumulated_strain) {
 				dt = fabs((strain_end-clk.cumulated_strain)/shear_rate);
@@ -1383,7 +1383,7 @@ void System::timeEvolution(double time_end, double strain_end)
 		avg_dt = dt;
 	}
 	if (events.empty() && retrim_ext_flow == false) {
-		if (simu_type != pipe_flow) {
+		if (simu_type != solvent_flow) {
 			calc_stress = true;
 		}
 		(this->*timeEvolutionDt)(calc_stress, time_end, strain_end); // last time step, compute the stress
@@ -2012,7 +2012,7 @@ void System::setBodyForce(vector<vec3d> &force,
 	for (auto &t: torque) {
 		t.reset();
 	}
-	double body_force = 0.01;
+	double body_force = 1;
 	double angle = M_PI*p.body_force_angle/180;
 	double bf_x = body_force*cos(angle); // cos(angle);
 	double bf_z = -body_force*sin(angle);
@@ -2532,7 +2532,6 @@ void System::computeVelocitiesStokesDrag()
 	if (brownian && twodimension) {
 		rushWorkFor2DBrownian(na_velocity, na_ang_velocity);
 	}
-	adjustVelocityPeriodicBoundary();
 }
 
 void System::computeUInf()
@@ -2577,6 +2576,7 @@ void System::adjustVelocitySolventFlow()
 		sflow->localFlow(position[i], u_local[i], omega_local[i], st_tens);
 		E_local[i].set(st_tens[0], 0, st_tens[1], 0, 0, st_tens[2]);
 	}
+	
 	for (int i=0; i<np_mobile; i++) {
 		velocity[i] = na_velocity[i] + u_local[i];
 		ang_velocity[i] = na_ang_velocity[i] + omega_local[i];

@@ -34,6 +34,7 @@ namespace Dimensional {
 		brownian,
 		adhesion,
 		critical_load,
+		bodyforce,
 		ft_max,
 		kn,
 		kt,
@@ -56,6 +57,8 @@ namespace Dimensional {
 				return "ad";
 			case Unit::critical_load:
 				return "cl";
+			case Unit::bodyforce:
+				return "bf";
 			case Unit::ft_max:
 				return "ft";
 			case Unit::kn:
@@ -93,6 +96,9 @@ namespace Dimensional {
 		if (s == "cl" || s == "critical_load") {
 			return Unit::critical_load;
 		}
+		if (s == "bf" || s == "") {
+			return Unit::bodyforce;
+		}		
 		if (s == "ft" || s == "ft_max") {
 			return Unit::ft_max;
 		}
