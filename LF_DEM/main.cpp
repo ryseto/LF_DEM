@@ -43,9 +43,10 @@ std::string prepareSimulationNameFromChkp(const std::string& filename_chkp)
 int main(int argc, char **argv)
 {
 	cout << endl << "LF_DEM version " << GIT_VERSION << endl << endl;
-	string usage = "(1) Simulation\n $ LF_DEM [-r Rate] [-s Stress] [-R Rate_Sequence] [-S Stress_Sequence]\
+	string usage = "(1) Simulation\n $ LF_DEM [-r Rate] [-s Stress] [-R Rate_Sequence] [-S body-force/repulsive force (for sedimentation)]\
 	[-e] [-m ?] [-k kn_kt_File] [-v Simulation_Identifier] [-i Provisional_Data] [-n]\
 	Configuration_File Parameter_File \
+	\n ('-r inf' for infinite Pe and '-r zero' for zero shear simulations) \
 	\n\n OR \n\n(2) Generate initial configuration\n $ LF_DEM [-a Random_Seed] [-p Volume_Fraction] [-b cluster radius] -g[c/w/s/b/f]\n";
 
 	int generate_init = 0;
@@ -99,19 +100,21 @@ int main(int argc, char **argv)
 			case 'r':
 				simulation_type = "shear rheology";
 				control_variable = Parameters::ControlVariable::rate;
-				control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, optarg, "shear rate");
+				if (strcmp(optarg, "inf") == 0) {
+					control_value = {Dimensional::Dimension::Force, 1, Dimensional::Unit::hydro};
+					cout << "Rate control, infinite shear rate (hydro + hard contacts only)" << endl;
+				} else if (strcmp(optarg, "zero") == 0) {
+					control_value = {Dimensional::Dimension::Force, 0, Dimensional::Unit::kn};
+					cout << "Rate control, zero shear rate (hydro + hard contacts only)" << endl;
+				} else {
+					control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, optarg, "shear rate");
+				}
 				break;
 			case '8':
-				simulation_type = "shear rheology";
-				control_variable = Parameters::ControlVariable::rate;
-				control_value = {Dimensional::Dimension::Force, 1, Dimensional::Unit::hydro};
-				cout << "Rate control, infinite shear rate (hydro + hard contacts only)" << endl;
-				break;
+				cout << "'-r inf' for infinite shear rate (hydro + hard contacts only)" << endl;
+				return 1;
 			case '0':
-				simulation_type = "shear rheology";
-				control_variable = Parameters::ControlVariable::rate;
-				control_value = {Dimensional::Dimension::Force, 0, Dimensional::Unit::kn};
-				cout << "Rate control, zero shear rate (hydro + hard contacts only)" << endl;
+				cout << "'-r zero' for zero shear rate (hydro + hard contacts only)" << endl;
 				break;
 			case 'C':
 				simulation_type = "channel flow";
@@ -121,10 +124,11 @@ int main(int argc, char **argv)
 			case 'S':
 				simulation_type = "sedimentation";
 				control_variable = Parameters::ControlVariable::force;
-				if (optarg[0] == '8' && optarg[1] == '\0') {
+				if (strcmp(optarg, "inf") == 0) {
 					control_value = {Dimensional::Dimension::Force, 1, Dimensional::Unit::bodyforce};
-					cerr << "control value = infinity" << ' ' << control_value.value << endl;
+					cerr << "Body force/repulsive force = infinity" << ' ' << control_value.value << endl;
 				} else {
+					cerr << "control variable = body force/repulsive force = " << ' ' << control_value.value << endl;
 					control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, optarg, "force");
 				}
 				break;
