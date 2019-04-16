@@ -17,3 +17,5 @@ xcuserdata
 Makefile_config.mk
 __pycache__
 build/
+.vscode/
+
