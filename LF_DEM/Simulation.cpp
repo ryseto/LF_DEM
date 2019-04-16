@@ -96,7 +96,6 @@ void Simulation::handleEventsShearJamming()
 			ending_simulation = true;
 		}
 	} else {
-		static int shear_jam_counter = 0;
 		bool jammed = false;
 		for (const auto& ev : sys.events) {
 			if (ev.type == "jammed_shear_rate") {
@@ -183,6 +182,8 @@ void Simulation::generateOutput(const set<string> &output_events, int& binconf_c
 			sys.calcStressPerParticle();
 			sys.calcStress();
 			outputData();
+		} else {
+			outputDataSedimentatioin();
 		}
 	}
 	if (output_events.find("config") != output_events.end()) {
@@ -195,6 +196,10 @@ void Simulation::generateOutput(const set<string> &output_events, int& binconf_c
 		}
 		if (sys.p.output.out_gsd) {
 			outputGSD();
+		}
+		if (sys.p.solvent_flow) {
+			sys.sflow->outputYaplot(fout_flow);
+			sys.sflow->velocityProfile(fout_fprofile);
 		}
 	}
 }
@@ -273,7 +278,7 @@ void Simulation::setupOptionalSimulation()
 		case 60:
 			sys.wall_rheology = true;
 			sys.zero_shear = true;
-			sys.mobile_fixed = true;
+			// sys.mobile_fixed = true;
 			sys.p.output.origin_zero_flow = false;
 			break;
 		default:
@@ -391,18 +396,26 @@ void Simulation::simulationSteadyShear(string in_args,
 	cout << indent << "Time evolution done" << endl << endl;
 }
 
-void Simulation::simulationPipeFlow(std::string in_args,
-									std::vector<std::string>& input_files,
-									bool binary_conf,
-									Parameters::ControlVariable control_variable_,
-									Dimensional::DimensionalQty<double> control_value_,
-									std::string simu_identifier)
+void Simulation::simulationFlowField(std::string simulation_type,
+									 std::string in_args,
+									 std::vector<std::string>& input_files,
+									 bool binary_conf,
+									 Parameters::ControlVariable control_variable_,
+									 Dimensional::DimensionalQty<double> control_value_,
+									 std::string simu_identifier)
 {
 	indent = "  Simulation::PipeFlow\t";
 	shear_rheology = false;
 	control_var = control_variable_;
 	control_value = control_value_;
+	if (simulation_type == "sedimentation") {
+		std::cerr << "sedimentation simulation" << std::endl;
+		sys.body_force = true;
+	} else if (simulation_type == "channel flow") {
+		sys.body_force = false;
+	}
 	setupSimulation(in_args, input_files, binary_conf, simu_identifier);
+	sys.initSolventFlow(simulation_type);
 	time_t now;
 	time_strain_1 = 0; //@@@
 	now = time(NULL);
@@ -420,10 +433,6 @@ void Simulation::simulationPipeFlow(std::string in_args,
 	while (keepRunning()) {
 		timeEvolutionUntilNextOutput(tk);
 		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_cumulated_strain());
-		if (sys.retrim_ext_flow) {
-			output_events.insert("data");
-			output_events.insert("config");
-		}
 		generateOutput(output_events, binconf_counter);
 		printProgress();
 		if (time_strain_1 == 0 && sys.get_cumulated_strain() > 1) {
@@ -445,6 +454,7 @@ void Simulation::simulationPipeFlow(std::string in_args,
 		string filename_configuration = input_files[0];
 		outputFinalConfiguration(filename_configuration);
 	}
+	fout_flow.close();
 	cout << indent << "Time evolution done" << endl << endl;
 }
 
@@ -651,6 +661,11 @@ void Simulation::outputData()
 	if (sys.p.output.effective_coordination_number) {
 		sys.countContactNumber();
 	}
+	unsigned int contact_nb, frictional_contact_nb;
+	std::tie(contact_nb, frictional_contact_nb) = countNumberOfContact(sys);
+	double contact_nb_per_particle = (double)2*contact_nb/sys.get_np();
+	double frictional_contact_nb_per_particle = (double)2*frictional_contact_nb/sys.get_np();
+
 	outdata.entryData("time", Dimensional::Dimension::Time, 1, sys.get_time());
 	if (sys.wall_rheology == false || sys.get_omega_wheel() == 0) {
 		// Simple shear geometry
@@ -759,10 +774,6 @@ void Simulation::outputData()
 	}
 	/* contact number
 	 */
-	unsigned int contact_nb, frictional_contact_nb;
-	std::tie(contact_nb, frictional_contact_nb) = countNumberOfContact(sys);
-	double contact_nb_per_particle = (double)2*contact_nb/sys.get_np();
-	double frictional_contact_nb_per_particle = (double)2*frictional_contact_nb/sys.get_np();
 	outdata.entryData("contact number", Dimensional::Dimension::none, 1, contact_nb_per_particle);
 	outdata.entryData("frictional contact number", Dimensional::Dimension::none, 1, frictional_contact_nb_per_particle);
 	outdata.entryData("number of interaction", Dimensional::Dimension::none, 1, sys.get_nb_interactions());
@@ -775,17 +786,8 @@ void Simulation::outputData()
 	}
 	/* maximum velocity
 	 */
-	outdata.entryData("max non-affine velocity", Dimensional::Dimension::Velocity, 1, sys.max_na_velocity);
-	outdata.entryData("max non-affine angular velocity", Dimensional::Dimension::Velocity, 1, evaluateMaxAngVelocity(sys));
-	outdata.entryData("max normal relative velocity (among interacting pairs)", Dimensional::Dimension::Velocity, 1, evaluateMaxInterNormalVelocity(sys));
-
-	if (sys.friction) {
-		outdata.entryData("max contact sliding velocity", Dimensional::Dimension::Velocity, 1, evaluateMaxContactSlidingVelocity(sys));
-	}
-	if (sys.rolling_friction) {
-		outdata.entryData("max contact rolling velocity", Dimensional::Dimension::Velocity, 1, evaluateMaxContactRollingVelocity(sys));
-	}
-
+	outdata.entryData("max velocity", Dimensional::Dimension::Velocity, 1, sys.max_na_velocity);
+	outdata.entryData("max angular velocity", Dimensional::Dimension::Velocity, 1, evaluateMaxAngVelocity(sys));
 	/* simulation parameter
 	 */
 	outdata.entryData("dt", Dimensional::Dimension::Time, 1, sys.avg_dt);
@@ -832,6 +834,43 @@ void Simulation::outputData()
 		outdata_st.entryData(entry_name, Dimensional::Dimension::Stress, 6, stress_comp.second);
 	}
 	outdata_st.writeToFile();
+}
+
+void Simulation::outputDataSedimentatioin()
+{
+	
+	outdata.setUnits(system_of_units, output_unit);
+	unsigned int contact_nb, frictional_contact_nb;
+	std::tie(contact_nb, frictional_contact_nb) = countNumberOfContact(sys);
+	double contact_nb_per_particle = (double)2*contact_nb/sys.get_np();
+	double frictional_contact_nb_per_particle = (double)2*frictional_contact_nb/sys.get_np();
+	
+	
+	outdata.entryData("time", Dimensional::Dimension::Time, 1, sys.get_time()); // 1
+	outdata.entryData("suspension velocity", Dimensional::Dimension::none, 3, sys.sflow->u_sol_ave); // 2,3,4
+	outdata.entryData("pressure difference x", Dimensional::Dimension::Stress, 1, sys.sflow->pressure_difference_x); // 5
+	outdata.entryData("ave pressure difference x", Dimensional::Dimension::Stress, 1, sys.sflow->average_pressure_x.get()); //6
+//@@@@ sys.meanParticleVelocity() - sys.sflow->calcAverageUsol()
+	outdata.entryData("relative particle velocity", Dimensional::Dimension::Velocity, 3, sys.meanParticleVelocity()-sys.sflow->u_sol_ave);//7 8 9
+	outdata.entryData("relative particle angvelocity", Dimensional::Dimension::Velocity, 3, sys.meanParticleAngVelocity());
+	
+	
+	outdata.entryData("min gap", Dimensional::Dimension::none, 1, evaluateMinGap(sys));
+	if (sys.adhesion) {
+		outdata.entryData("max gap", Dimensional::Dimension::none, 1, evaluateMaxContactGap(sys));
+	}
+	if (sys.friction) {
+		outdata.entryData("max tangential displacement", Dimensional::Dimension::none, 1, evaluateMaxDispTan(sys));
+	}
+	if (sys.rolling_friction) {
+		outdata.entryData("max rolling displacement", Dimensional::Dimension::none, 1, evaluateMaxDispRolling(sys));
+	}
+	outdata.entryData("contact number", Dimensional::Dimension::none, 1, contact_nb_per_particle);
+	outdata.entryData("frictional contact number", Dimensional::Dimension::none, 1, frictional_contact_nb_per_particle);
+	outdata.entryData("number of interaction", Dimensional::Dimension::none, 1, sys.get_nb_interactions());
+	outdata.entryData("dt", Dimensional::Dimension::Time, 1, sys.avg_dt);
+	
+	outdata.writeToFile();
 }
 
 void Simulation::getSnapshotHeader(stringstream& snapshot_header)

@@ -14,6 +14,7 @@
 #include "SystemHelperFunctions.h"
 #include "global.h"
 #include "States.h"
+#include "SolventFlow.h"
 #ifndef USE_DSFMT
 #include "MersenneTwister.h"
 #endif
@@ -63,11 +64,12 @@ wagnerhash(time_t t, clock_t c)
 #endif
 
 System::System(State::BasicCheckpoint chkp):
-simu_type(simple_shear),
+np(0),
 pairwise_resistance_changed(true),
 clk(chkp.clock),
 shear_rate(0),
 omega_inf(0),
+simu_type(simple_shear),
 brownian(false),
 friction(false),
 rolling_friction(false),
@@ -76,6 +78,8 @@ delayed_adhesion(false),
 adhesion(false),
 critical_load_model(false),
 brownian_dominated(false),
+lubrication(false),
+body_force(false),
 twodimension(false),
 control(Parameters::ControlVariable::rate),
 zero_shear(false),
@@ -85,11 +89,12 @@ couette_stress(false),
 dt(0),
 avg_dt(0),
 shear_disp(0),
+max_na_velocity(0),
 target_stress(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
-max_na_velocity(0),
 vel_difference(0),
+z_bot(-1),
 z_top(-1),
 eventLookUp(NULL)
 {
@@ -157,6 +162,12 @@ void System::allocateRessources()
 	total_stress_pp.resize(np);
 	phi6.resize(np);
 	n_contact.resize(np);
+	if (p.solvent_flow) {
+		sflow = new SolventFlow;
+		u_local.resize(np);
+		omega_local.resize(np);
+		E_local.resize(np);
+	}
 }
 
 void System::declareForceComponents()
@@ -176,7 +187,7 @@ void System::declareForceComponents()
 	}
 
 	/*********** Hydro force, i.e.  R_FE:E_inf *****************/
-	if (!zero_shear) {
+	if (!zero_shear || p.solvent_flow) {
 		if (p.lubrication_model == "normal") {
 			force_components["hydro"] = ForceComponent(np, RATE_PROPORTIONAL, !torque, &System::setHydroForceToParticle_squeeze);
 		}
@@ -201,8 +212,8 @@ void System::declareForceComponents()
 		force_components["delayed_adhesion"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setTActAdhesionForceToParticle);
 	}
 
-	if (simu_type == pipe_flow) {
-		force_components["body_force"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setBodyForce);
+	if (body_force) {
+		force_components["body_force"] = ForceComponent(np, RATE_INDEPENDENT, torque, &System::setBodyForce);
 	}
 	/********** Force R_FU^{mf}*(U^f-U^f_inf)  *************/
 	if (mobile_fixed) {
@@ -256,6 +267,7 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	}
 	if (p.np_fixed > 0) {
 		mobile_fixed = true;
+		cerr << "np fixed " << p.np_fixed << endl;
 	}
 	position.resize(np);
 	radius.resize(np);
@@ -446,9 +458,6 @@ void System::setupParameters()
 			error_str << "Modify the parameter file." << endl;
 			throw runtime_error(error_str.str());
 		}
-	}
-	if (p.simulation_mode == 31) {
-		p.sd_coeff = 1e-6;
 	}
 	if (p.adhesion > 0) {
 		adhesion = true;
@@ -949,6 +958,15 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	} else {
 		computeVelocities(calc_stress);
 	}
+	if (!p.fixed_dt) {
+		adaptTimeStep(time_end, strain_end);
+	}
+	if (!p.solvent_flow) {
+		adjustVelocityPeriodicBoundary();
+	} else {
+		sflow->update(pressure_difference);
+		adjustVelocitySolventFlow();
+	}
 	if (wall_rheology && calc_stress) { // @@@@ calc_stress remove????
 		forceResultantReset();
 		forceResultantInterpaticleForces();
@@ -1047,7 +1065,9 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	} else {
 		computeVelocitiesStokesDrag();
 	}
-
+	if (!p.solvent_flow) {
+		adjustVelocityPeriodicBoundary();
+	}
 	if (wall_rheology && calc_stress) {
 		forceResultantReset();
 		forceResultantInterpaticleForces();
@@ -1068,6 +1088,9 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 		computeVelocities(calc_stress);
 	} else {
 		computeVelocitiesStokesDrag();
+	}
+	if (!p.solvent_flow) {
+		adjustVelocityPeriodicBoundary();
 	}
 	if (calc_stress) {
 		calcStressPerParticle(); // stress compornents
@@ -1102,7 +1125,6 @@ void System::adaptTimeStep()
 			computeMaxNAVelocity();
 		}
 	}
-
 	double max_interaction_vel = evaluateMaxInterNormalVelocity(*this);
 	if (friction) {
 		auto max_sliding_velocity = evaluateMaxContactSlidingVelocity(*this);
@@ -1143,14 +1165,16 @@ void System::adaptTimeStep(double time_end, double strain_end)
 	adaptTimeStep();
 	// To stop exactly at t == time_end or strain == strain_end,
 	// whatever comes first
-	if (strain_end >= 0) {
-		if (fabs(dt*shear_rate) > strain_end-clk.cumulated_strain) {
-			dt = fabs((strain_end-clk.cumulated_strain)/shear_rate);
+	if (simu_type != solvent_flow) {
+		if (strain_end >= 0) {
+			if (fabs(dt*shear_rate) > strain_end-clk.cumulated_strain) {
+				dt = fabs((strain_end-clk.cumulated_strain)/shear_rate);
+			}
 		}
-	}
-	if (time_end >= 0) {
-		if (get_time()+dt > time_end) {
-			dt = time_end-get_time();
+		if (time_end >= 0) {
+			if (get_time()+dt > time_end) {
+				dt = time_end-get_time();
+			}
 		}
 	}
 }
@@ -1181,9 +1205,7 @@ void System::timeStepMove(double time_end, double strain_end)
 	 * clk.cumulated_strain = shear_rate * t for both simple shear and extensional flow.
 	 */
 	/* Adapt dt to get desired p.disp_max	 */
-	if (!p.fixed_dt) {
-		adaptTimeStep(time_end, strain_end);
-	}
+
 	//	cerr << dt << ' ' << p.critical_load  << endl;
 	clk.time_ += dt;
 	total_num_timesteps ++;
@@ -1361,7 +1383,7 @@ void System::timeEvolution(double time_end, double strain_end)
 		avg_dt = dt;
 	}
 	if (events.empty() && retrim_ext_flow == false) {
-		if (simu_type != pipe_flow) {
+		if (simu_type != solvent_flow) {
 			calc_stress = true;
 		}
 		(this->*timeEvolutionDt)(calc_stress, time_end, strain_end); // last time step, compute the stress
@@ -1778,11 +1800,12 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 	 stored in the stokes_solver.
 
 	 */
-	if(!in_predictor) { // The Brownian force must be the same in the predictor and the corrector
+	if (!in_predictor) { // The Brownian force must be the same in the predictor and the corrector
 		return;
 	}
 	if (mobile_fixed) {
-		throw runtime_error("Brownian algorithm with fixed particles not implemented yet.\n");
+		cerr << "Brownian algorithm with fixed particles not implemented yet.\n";
+//		throw runtime_error("Brownian algorithm with fixed particles not implemented yet.\n");
 	}
 	for (auto &f: force) {
 		f.reset();
@@ -1846,6 +1869,20 @@ void System::setDashpotForceToParticle(vector<vec3d> &force,
 				torque[j] += HEj;
 			}
 		}
+	} else if (p.solvent_flow) {
+		vec3d GEi, GEj, HEi, HEj;
+		unsigned int i, j;
+		for (const auto &inter: interaction) {
+			if (inter.contact.is_active() && inter.contact.dashpot.is_active()) {
+				std::tie(i, j) = inter.get_par_num();
+				std::tie(GEi, GEj, HEi, HEj) = inter.contact.dashpot.getRFU_Ulocal(u_local[i], u_local[j],
+																				   omega_local[i], omega_local[j]);
+				force[i] += GEi;
+				force[j] += GEj;
+				torque[i] += HEi;
+				torque[j] += HEj;
+			}
+		}
 	}
 }
 
@@ -1869,6 +1906,18 @@ void System::setHydroForceToParticle_squeeze(vector<vec3d> &force,
 				force[j] += GEj;
 			}
 		}
+	} else if (p.solvent_flow) {
+		vec3d GEi, GEj;
+		unsigned int i, j;
+		for (const auto &inter: interaction) {
+			if (inter.lubrication.is_active()) {
+				std::tie(i, j) = inter.get_par_num();
+				//std::tie(GEi, GEj) = inter.lubrication.calcGE_squeeze(E_local[i], E_local[j]); // G*E_\infty term
+				std::tie(GEi, GEj) = inter.lubrication.calcGE_squeeze(0.5*(E_local[i]+E_local[j])); // G*E_\infty term
+				force[i] += GEi;
+				force[j] += GEj;
+			}
+		}
 	}
 }
 
@@ -1888,6 +1937,20 @@ void System::setHydroForceToParticle_squeeze_tangential(vector<vec3d> &force,
 			if (inter.lubrication.is_active()) {
 				std::tie(i, j) = inter.get_par_num();
 				std::tie(GEi, GEj, HEi, HEj) = inter.lubrication.calcGEHE_squeeze_tangential(E_infinity); // G*E_\infty term, no gamma dot
+				force[i] += GEi;
+				force[j] += GEj;
+				torque[i] += HEi;
+				torque[j] += HEj;
+			}
+		}
+	} else if (p.solvent_flow) {
+		vec3d GEi, GEj, HEi, HEj;
+		unsigned int i, j;
+		for (const auto &inter: interaction) {
+			if (inter.lubrication.is_active()) {
+				std::tie(i, j) = inter.get_par_num();
+				//std::tie(GEi, GEj, HEi, HEj) = inter.lubrication.calcGEHE_squeeze_tangential(E_local[i], E_local[j]); // G*E_\infty term, no gamma dot
+				std::tie(GEi, GEj, HEi, HEj) = inter.lubrication.calcGEHE_squeeze_tangential(0.5*(E_local[i]+E_local[j])); // G*E_\infty term, no gamma dot
 				force[i] += GEi;
 				force[j] += GEj;
 				torque[i] += HEi;
@@ -1949,21 +2012,12 @@ void System::setBodyForce(vector<vec3d> &force,
 	for (auto &t: torque) {
 		t.reset();
 	}
-	if (true) {
-		double angle = M_PI*p.body_force_angle/180;
-		double bf_x = force_pipe_flow*cos(angle);
-		double bf_z = -force_pipe_flow*sin(angle);
-		for (int i=0; i<np_mobile; i++) {
-			double bf = force_pipe_flow;
-			force[i].set(radius[i]*bf_x, 0 , radius[i]*bf_z);
-		}
-	} else {
-		for (int i=0; i<np_mobile; i++) {
-			double angle = atan2(position[i].z-lz_half, position[i].x-lx_half);
-			double bf_x = -force_pipe_flow*cos(angle);
-			double bf_z = -force_pipe_flow*sin(angle);
-			force[i].set(radius[i]*bf_x, 0 , radius[i]*bf_z);
-		}
+	double body_force = 1;
+	double angle = M_PI*p.body_force_angle/180;
+	double bf_x = body_force*cos(angle); // cos(angle);
+	double bf_z = -body_force*sin(angle);
+	for (int i=0; i<np_mobile; i++) {
+		force[i].set(radius_cubed[i]*bf_x, 0 , radius_cubed[i]*bf_z);
 	}
 	for (int i=np_mobile; i<np; i++) {
 		force[i].reset();
@@ -2348,14 +2402,16 @@ void System::tmpMixedProblemSetVelocities()
 			}
 		}
 	} else if (p.simulation_mode == 60) {
-		int i_np_wall1 = np_mobile+np_wall1;
-		for (int i=np_mobile; i<i_np_wall1; i++) {
-			na_velocity[i] = {0, 0, 0};
-			na_ang_velocity[i].reset();
-		}
-		for (int i=i_np_wall1; i<np; i++) {
-			na_velocity[i] = {0, 0, 0};
-			na_ang_velocity[i].reset();
+		if (mobile_fixed) {
+			int i_np_wall1 = np_mobile+np_wall1;
+			for (int i=np_mobile; i<i_np_wall1; i++) {
+				na_velocity[i].reset();
+				na_ang_velocity[i].reset();
+			}
+			for (int i=i_np_wall1; i<np; i++) {
+				na_velocity[i].reset();
+				na_ang_velocity[i].reset();
+			}
 		}
 	}
 }
@@ -2407,11 +2463,13 @@ void System::computeVelocities(bool divided_velocities)
 	 simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
 	 */
 	stokes_solver.resetRHS();
+	if (!p.solvent_flow) {
+		computeUInf();
+	}
 	if (divided_velocities || control == Parameters::ControlVariable::stress) {
 		if (control == Parameters::ControlVariable::stress) {
 			set_shear_rate(1);
 		}
-		computeUInf();
 		setFixedParticleVelocities();
 		computeVelocityByComponents();
 		if (control == Parameters::ControlVariable::stress) {
@@ -2425,16 +2483,14 @@ void System::computeVelocities(bool divided_velocities)
 		}
 		sumUpVelocityComponents();
 	} else {
-		computeUInf();
 		setFixedParticleVelocities();
 		computeVelocityWithoutComponents();
 	}
-	if (in_predictor){
+	if (in_predictor) {
 		if (eventLookUp != NULL) {
 			computeMaxNAVelocity();
 		}
 	}
-	adjustVelocityPeriodicBoundary();
 	if (divided_velocities && wall_rheology) {
 		if (in_predictor) {
 			forceResultantLubricationForce();
@@ -2476,7 +2532,6 @@ void System::computeVelocitiesStokesDrag()
 	if (brownian && twodimension) {
 		rushWorkFor2DBrownian(na_velocity, na_ang_velocity);
 	}
-	adjustVelocityPeriodicBoundary();
 }
 
 void System::computeUInf()
@@ -2511,6 +2566,20 @@ void System::adjustVelocityPeriodicBoundary()
 				velocity[i] += u_inf[i];
 			}
 		}
+	}
+}
+
+void System::adjustVelocitySolventFlow()
+{
+	vector<double> st_tens(3);
+	for (int i=0; i<np_mobile; i++) {
+		sflow->localFlow(position[i], u_local[i], omega_local[i], st_tens);
+		E_local[i].set(st_tens[0], 0, st_tens[1], 0, 0, st_tens[2]);
+	}
+	
+	for (int i=0; i<np_mobile; i++) {
+		velocity[i] = na_velocity[i] + u_local[i];
+		ang_velocity[i] = na_ang_velocity[i] + omega_local[i];
 	}
 }
 
@@ -2954,6 +3023,30 @@ void System::countContactNumber()
 		}
 	}
 	effective_coordination_number = num_bond_contact_network*(1.0/num_node_contact_network);
+}
+
+void System::initSolventFlow(string simulation_type)
+{
+	sflow->init(this, simulation_type);
+}
+
+vec3d System::meanParticleVelocity()
+{
+	vec3d mean_velocity(0);
+	for (int i=0; i<np_mobile; i++) {
+		mean_velocity += velocity[i];
+	}
+	return mean_velocity/np_mobile;
+}
+
+vec3d System::meanParticleAngVelocity()
+{
+	vec3d mean_ang_velocity(0);
+	for (int i=0; i<np_mobile; i++) {
+		mean_ang_velocity += ang_velocity[i];
+	}
+	return mean_ang_velocity/np_mobile;
+	
 }
 
 //void System::openHisotryFile(std::string &filename)

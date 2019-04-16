@@ -634,7 +634,7 @@ sub OutYaplotData{
 			#}
 		}
 	}
-	if (1) {
+	if (0) {
 		printf OUT "@ 5\n";
 		for ($k = 0; $k < $num_interaction; $k ++) {
 			$force = $F_lub[$k] + $Fc_n[$k];

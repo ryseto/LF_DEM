@@ -18,7 +18,6 @@ void Str2KeyValue(const std::string& str_parameter,
 	std::string::size_type pos_equal = str_parameter.find("=");
 	keyword = str_parameter.substr(0, pos_equal);
 	value = str_parameter.substr(pos_equal+1);
-	return;
 }
 
 ParameterSetFactory::ParameterSetFactory(Dimensional::Unit guarranted_unit) 
@@ -55,7 +54,8 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(output.out_na_disp, false),
 		PARAM_INIT(output.effective_coordination_number, false),
 		PARAM_INIT(check_static_force_balance, false),
-		PARAM_INIT(smooth_lubrication, false)
+		PARAM_INIT(smooth_lubrication, false),
+		PARAM_INIT(solvent_flow, false)
 	};
 
 	/*===========================================
@@ -94,7 +94,13 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(sj_disp_max_goal, 1e-6),
 		PARAM_INIT(sj_shear_rate, 0),
 		PARAM_INIT(sj_velocity, 1e-3),
-		PARAM_INIT(body_force_angle, 0)
+		PARAM_INIT(body_force_angle, 0),
+		PARAM_INIT(sflow_re, 0.01),
+		PARAM_INIT(sflow_pcontrol_increment, 1e-4),
+		PARAM_INIT(sflow_pcontrol_rtime, 0.1),
+		PARAM_INIT(sflow_pcontrol_damper, 100),
+		PARAM_INIT(sflow_target_flux, 0),
+		PARAM_INIT(sf_zfriction, 1e-2)
 	};
 
 	/*================================
@@ -109,7 +115,11 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(np_fixed, 0),
 		PARAM_INIT(simulation_mode, 0),
 		PARAM_INIT(sj_check_count, 500),
-		PARAM_INIT(sj_reversal_repetition, 10)
+		PARAM_INIT(sj_reversal_repetition, 10),
+		PARAM_INIT(sflow_boundary_conditions, 0),
+		PARAM_INIT(sflow_nx, 20),
+		PARAM_INIT(sflow_nz, 20),
+		PARAM_INIT(sflow_Darcy_power, 0)
 	};
 
 	/*===============================
@@ -153,6 +163,12 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 	default_val = {Dimensional::Unit::brownian, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(brownian, default_val));
 
+	default_val = {Dimensional::Unit::bodyforce, {Dimensional::Dimension::Force, 0, guarranted_unit}};
+	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(bodyforce, default_val));
+
+	
+	
+	
 	/*==============================================
 	=            Dimensional Quantities            =
 	==============================================*/

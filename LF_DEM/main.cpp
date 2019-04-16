@@ -46,13 +46,14 @@ int main(int argc, char **argv)
 	string usage = "(1) Simulation\n $ LF_DEM [-r Rate] [-s Stress] [-R Rate_Sequence] [-S Stress_Sequence]\
 	[-e] [-m ?] [-k kn_kt_File] [-v Simulation_Identifier] [-i Provisional_Data] [-n]\
 	Configuration_File Parameter_File \
-	\n\n OR \n\n(2) Generate initial configuration\n $ LF_DEM [-a Random_Seed] [-p Volume_Fraction] -g[c/w/s]\n";
+	\n\n OR \n\n(2) Generate initial configuration\n $ LF_DEM [-a Random_Seed] [-p Volume_Fraction] [-b cluster radius] -g[c/w/s/b/f]\n";
 
 	int generate_init = 0;
 	string type_init_config = "normal";
 
 	int random_seed = 1;
 	double volume_frac_gen = 0;
+	double cluster_phi = 0;
 	bool binary_conf = false;
 	bool force_to_run = false;
 	string simulation_type = "shear rheology";
@@ -70,9 +71,11 @@ int main(int argc, char **argv)
 		{"rate-controlled",   required_argument, 0, 'r'},
 		{"rate-infty",        required_argument, 0, '8'},
 		{"stress-controlled", required_argument, 0, 's'},
-		{"Pipe-flow",         required_argument, 0, 'P'},
+		{"channel-flow",      required_argument, 0, 'C'},
+		{"sedimentation",     required_argument, 0, 'S'},
 		{"generate",          optional_argument, 0, 'g'},
 		{"random-seed",       required_argument, 0, 'a'},
+		{"cluster-radius",    required_argument, 0, 'b'},
 		{"volume-fraction",   required_argument, 0, 'p'},
 		{"kn-kt-file",        required_argument, 0, 'k'},
 		{"binary",            no_argument,       0, 'n'},
@@ -84,33 +87,46 @@ int main(int argc, char **argv)
 		{"help",              no_argument,       0, 'h'},
 		{0, 0, 0, 0},
 	};
-	
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hn80fds:t:r:g::P:p:a:k:i:v:c:N:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hn80fds:t:r:C:S:g::p:a:b:k:i:v:c:N:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
+				simulation_type = "shear rheology";
 				control_variable = Parameters::ControlVariable::stress;
 				control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Stress, optarg, "shear stress");
 				break;
 			case 'r':
+				simulation_type = "shear rheology";
 				control_variable = Parameters::ControlVariable::rate;
 				control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, optarg, "shear rate");
 				break;
 			case '8':
+				simulation_type = "shear rheology";
 				control_variable = Parameters::ControlVariable::rate;
 				control_value = {Dimensional::Dimension::Force, 1, Dimensional::Unit::hydro};
 				cout << "Rate control, infinite shear rate (hydro + hard contacts only)" << endl;
 				break;
-			case 'P':
-				simulation_type = "pipe flow";
-				control_variable = Parameters::ControlVariable::pressure;
-				control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Stress, optarg, "pressure");
-				break;
 			case '0':
+				simulation_type = "shear rheology";
 				control_variable = Parameters::ControlVariable::rate;
 				control_value = {Dimensional::Dimension::Force, 0, Dimensional::Unit::kn};
 				cout << "Rate control, zero shear rate (hydro + hard contacts only)" << endl;
+				break;
+			case 'C':
+				simulation_type = "channel flow";
+				control_variable = Parameters::ControlVariable::force;
+				control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, optarg, "force");
+				break;
+			case 'S':
+				simulation_type = "sedimentation";
+				control_variable = Parameters::ControlVariable::force;
+				if (optarg[0] == '8' && optarg[1] == '\0') {
+					control_value = {Dimensional::Dimension::Force, 1, Dimensional::Unit::bodyforce};
+					cerr << "control value = infinity" << ' ' << control_value.value << endl;
+				} else {
+					control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, optarg, "force");
+				}
 				break;
 			case 'k':
 				knkt_filename = optarg;
@@ -132,6 +148,8 @@ int main(int argc, char **argv)
 						generate_init = 4; // winding
 					} else if (optarg[0] == 'b') {
 						generate_init = 5; // bottom
+					} else if (optarg[0] == 'f') {
+						generate_init = 6; // filter mesh
 					}
 				}
 				break;
@@ -140,6 +158,18 @@ int main(int argc, char **argv)
 				break;
 			case 'a':
 				random_seed = atoi(optarg);
+				break;
+			case 'b':
+				/* To generate initial configuration. Radius of initial cluster.
+				 * positive value: one cluster
+				 * negative value: two clusters
+				 */
+				cluster_phi = atof(optarg);
+				if (cluster_phi > 0) {
+					cout << "To form one cluster\n";
+				} else if (cluster_phi < 0) {
+					cout << "To form two clusters\n";
+				}
 				break;
 			case 'n':
 				binary_conf = true;
@@ -169,7 +199,8 @@ int main(int argc, char **argv)
 	}
 	if (generate_init >= 1) {
 		GenerateInitConfig generate_init_config;
-		generate_init_config.generate(random_seed, volume_frac_gen, generate_init);
+		generate_init_config.generate(random_seed, volume_frac_gen, cluster_phi,
+									  generate_init);
 	} else {
 #ifdef SIGINT_CATCH
 		std::signal(SIGINT, sigint_handler);
@@ -207,9 +238,10 @@ int main(int argc, char **argv)
 												 control_variable, control_value,
 												 simu_identifier);
 			} else {
-				simulation.simulationPipeFlow(in_args.str(), input_files, binary_conf,
-											  control_variable, control_value,
-											  simu_identifier);
+				simulation.simulationFlowField(simulation_type,
+											   in_args.str(), input_files, binary_conf,
+											   control_variable, control_value,
+											   simu_identifier);
 			}
 		} catch (runtime_error& e) {
 			cerr << e.what() << endl;

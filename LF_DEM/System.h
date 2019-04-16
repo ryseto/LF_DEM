@@ -42,20 +42,19 @@
 #include "VelocityComponent.h"
 #include "ForceComponent.h"
 #include "cholmod.h"
-
+#include "SolventFlow.h"
 class MTRand;
 
 #ifdef USE_DSFMT
 #include "dSFMT-src-2.2.3/dSFMT.h"
 #endif
 
-
-
 class Simulation;
 // class Interaction;
 class BoxSet;
+class SolventFlow;
 
-class System{
+class System {
 private:
 
 	int np; ///< number of particles
@@ -125,6 +124,7 @@ private:
 	void computeBrownianVelocities();
 	void tmpMixedProblemSetVelocities();
 	void adjustVelocityPeriodicBoundary();
+	void adjustVelocitySolventFlow();
 	void rushWorkFor2DBrownian(std::vector<vec3d> &vel, std::vector<vec3d> &ang_vel); // We need to implement real 2D simulation.
 	void computeUInf();
 	void computeShearRate();
@@ -161,6 +161,10 @@ private:
 	std::vector<double> stokesdrag_coeff_t_sqrt;
 	std::vector <struct DBlock> resistance_matrix_dblock;
 
+	std::vector<vec3d> u_local;
+	std::vector<vec3d> omega_local;
+	std::vector<Sym2Tensor> E_local;
+	
 	void adjustContactModelParameters();
 	Averager<double> kn_avg;
 	Averager<double> kt_avg;
@@ -186,9 +190,8 @@ private:
 	System(struct State::BasicCheckpoint = State::zero_time_basicchkp);
 
 	Parameters::ParameterSet p;
-	
 	int np_mobile; ///< number of mobile particles
-	enum SimulationType { simple_shear, extensional_flow, pipe_flow } simu_type;
+	enum SimulationType { simple_shear, extensional_flow, solvent_flow } simu_type;
 	//	bool ext_flow;
 	// Interaction types
 	bool brownian;
@@ -201,6 +204,7 @@ private:
 	bool brownian_dominated;
 	bool lubrication;
 	bool pairwise_resistance;
+	bool body_force;
 	// Simulation parameters
 	bool twodimension;
 	Parameters::ControlVariable control;
@@ -221,6 +225,8 @@ private:
 	std::vector<vec3d> rate_proportional_wall_torque;
 
 	BoxSet boxset;
+	SolventFlow *sflow;
+
 	std::vector<double> radius;
 	std::vector<double> angle; // for 2D visualization
 
@@ -322,7 +328,7 @@ private:
 	double effective_coordination_number;
 	double stress_transition_target;
 	/**** pipe flow setup ***********/
-	double force_pipe_flow;
+	double pressure_difference;
 	/****************************************************************************************************
 	 * Extensional flow using Kraynik-Reinelt Method was originally implemented                         *
 	 * by Antonio Martiniello and Giulio Giuseppe Giusteri from Auguest to November 2016 at OIST.       *
@@ -393,6 +399,7 @@ private:
 						  double &stress_rtheta);
 	StokesSolver stokes_solver;
 	void initializeBoxing();
+
 	/*************************************************************/
 	double calcInteractionRangeDefault(int, int);
 	double calcLubricationRange(int, int);
@@ -402,9 +409,13 @@ private:
 	void retrim(vec3d&); // Extensional flow Periodic Boundary condition
 	void updateH(); // Extensional flow Periodic Boundary condition
 	void yaplotBoxing(std::ofstream &fout_boxing); // Extensional flow Periodic Boundary condition
+
 	void countContactNumber();
 	void checkStaticForceBalance();
-
+	void initSolventFlow(std::string simulation_type);
+	vec3d meanParticleVelocity();
+	vec3d meanParticleAngVelocity();
+	
 	void setBoxSize(double lx_, double ly_, double lz_)
 	{
 		lx = lx_;

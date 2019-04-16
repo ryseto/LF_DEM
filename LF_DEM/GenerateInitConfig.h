@@ -67,6 +67,7 @@ private:
 	bool parallel_wall_config;
 	bool winding_wall_config;
 	bool bottom_wall_config;
+	bool filter_mesh_config;
 	double cg_radius_in;
 	double cg_radius_out;
 	double cg_ratio_radii;
@@ -75,7 +76,7 @@ private:
 	int np_fix;
 	int np_movable;
 	double radius_wall_particle;
-	int wall_pin_interval;
+	int nb_pin;
 #ifndef USE_DSFMT
 	MTRand rand_gen;
 #endif
@@ -92,7 +93,9 @@ private:
 	int np1;
 	int np2;
 	int max_iteration;
+	double cluster_phi;
 	vec3d dr;
+	bool symmetry_check;
 	inline vec3d randUniformSphere(double r);
 	inline vec3d randUniformCircle(double r);
 	double sqContactDistance(int i, int j, double contact_distance);
@@ -102,7 +105,8 @@ private:
 	template<typename T> void baseSetup(T &conf, bool is2d, double inflate_ratio);
 public:
 	GenerateInitConfig();
-	int generate(int rand_seed_, double volume_frac_gen_, int config_type);
+	int generate(int rand_seed_, double volume_frac_gen_, double cluster_phi_,
+				 int config_type);
 	/* config_type = 1 -- noraml
 	 * config_type = 2 -- circular wide gap
 	 * config_type = 3 -- simple shear with wall

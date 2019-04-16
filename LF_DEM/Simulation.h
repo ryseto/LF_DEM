@@ -32,8 +32,7 @@
 #include "Timer.h"
 #include "gsd.h"
 
-class Simulation
-{
+class Simulation {
 private:
 	Parameters::ParameterSet p_initial;
 	std::string header_imported_configulation[2];
@@ -78,6 +77,8 @@ private:
 	OutputData outdata_par;
 	OutputData outdata_int;
 	std::ofstream fout_boxing;
+	std::ofstream fout_flow;
+	std::ofstream fout_fprofile;
 	gsd_handle gsdOut;
 	int np1;
 	Dimensional::Unit determineUnit(Parameters::ParameterSetFactory &PFact);
@@ -105,12 +106,13 @@ public:
 							   Parameters::ControlVariable control_variable_,
 							   Dimensional::DimensionalQty<double> control_value_,
 							   std::string simu_identifier);
-	void simulationPipeFlow(std::string in_args,
-							std::vector<std::string>& input_files,
-							bool binary_conf,
-							Parameters::ControlVariable control_variable_,
-							Dimensional::DimensionalQty<double> control_value_,
-							std::string simu_identifier);
+	void simulationFlowField(std::string simulation_type,
+							 std::string in_args,
+							 std::vector<std::string>& input_files,
+							 bool binary_conf,
+							 Parameters::ControlVariable control_variable_,
+							 Dimensional::DimensionalQty<double> control_value_,
+							 std::string simu_identifier);
 	void setupSimulation(std::string in_args,
 						 std::vector<std::string>& input_files,
 						 bool binary_conf,
@@ -152,6 +154,7 @@ public:
 	void createDataHeader(std::stringstream& data_header);
 	void getSnapshotHeader(std::stringstream& snapshot_header);
 	void outputData();
+	void outputDataSedimentatioin();
 	void outputConfigurationData();
 	void outputFinalConfiguration(const std::string&);
 	void outputIntFileTxt();

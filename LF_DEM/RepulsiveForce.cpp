@@ -92,7 +92,6 @@ void RepulsiveForce::calcForce()
 		\exp(-h/\lambda) \f$ if \f$h>0\f$ and \f$ f_{R} = f_{R}^0 \f$
 		if \f$h<0\f$, where \f$h\f$ is the interparticle gap.
 	*/
-
 	calcReducedForceNorm();
 	calcScaledForce();
 }

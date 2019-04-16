@@ -121,6 +121,8 @@ ConfFileFormat getTxtConfigurationFileFormat(const std::string& filename_import_
 		return ConfFileFormat::txt_format_circular_couette;
 	} else if (meta_data.find("z_bot") != meta_data.end()) {
 		return ConfFileFormat::txt_format_fixed_vel;
+	} else if (meta_data.find("np_wall1") != meta_data.end()) {
+		return ConfFileFormat::txt_format_fixed_vel;
 	} else {
 		return ConfFileFormat::txt_format_base_old;
 	}

@@ -67,6 +67,10 @@ private:
 	std::tuple<vec3d, vec3d, vec3d, vec3d> getRFU_Uinf(const vec3d &u_inf_p0,
 													   const vec3d &u_inf_p1,
 													   const vec3d &omega_inf) const;
+	std::tuple<vec3d, vec3d, vec3d, vec3d> getRFU_Ulocal(const vec3d &u_local_p0,
+														 const vec3d &u_local_p1,
+														 const vec3d &omega_local_p0,
+														 const vec3d &omega_local_p1) const;
 	vec3d getForceOnP0(const vec3d &vel_p0,
 					   const vec3d &vel_p1,
 					   const vec3d &ang_vel_p0,
