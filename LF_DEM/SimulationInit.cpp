@@ -356,7 +356,7 @@ void Simulation::setupSimulation(string in_args,
 		sys.target_stress = target_stress_input/6/M_PI; //@@@
 	}
 	sys.p = PFactory.getParameterSet();
-	if (shear_rheology) {
+	if (sys.shear_rheology) {
 		if (sys.p.flow_type == "extension") {
 			sys.simu_type = sys.SimulationType::extensional_flow;
 		} else {
@@ -410,7 +410,6 @@ void Simulation::setupSimulation(string in_args,
 	openOutputFiles();
 	echoInputFiles(in_args, input_files);
 	checkDispersionType();
-	cerr << "@2 = " << sys.p.repulsion << endl;
 	cout << indent << "Simulation setup [ok]" << endl;
 }
 
@@ -507,7 +506,7 @@ string Simulation::prepareSimulationName(bool binary_conf,
 	// }
 	string_control_parameters << control_value.value << Dimensional::unit2suffix(control_value.unit);
 	ss_simu_name << string_control_parameters.str();
-	if (shear_rheology) {
+	if (sys.shear_rheology) {
 		ss_simu_name << "_" << sys.p.flow_type;
 	}
 	if (simu_identifier != "") {

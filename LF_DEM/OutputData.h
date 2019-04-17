@@ -73,6 +73,8 @@ public:
 	void writeColsToFile();
 	void writeToFile(std::string header);
 	void writeToFile();
+	template<typename T>
+	T convertToOutput(Dimensional::Dimension dimension, T value);
 };
 
 
@@ -101,6 +103,19 @@ inline void OutputData::entryData(std::string name,
 		str_value << std::setprecision(output_precision) << value;
 	}
 	output_data[name].push_back(str_value.str());
+}
+
+template<typename T>
+inline T OutputData::convertToOutput(Dimensional::Dimension dimension,
+									 T value)
+{
+	if (dimension != Dimensional::Dimension::none) {
+		Dimensional::DimensionalQty<T> qty = {dimension, value, internal_unit};
+		units.convertFromInternalUnit(qty, out_unit);
+		return qty.value;
+	} else {
+		return value;
+	}
 }
 
 #endif

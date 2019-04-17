@@ -67,6 +67,7 @@ System::System(State::BasicCheckpoint chkp):
 np(0),
 pairwise_resistance_changed(true),
 clk(chkp.clock),
+shear_rheology(true),
 shear_rate(0),
 omega_inf(0),
 simu_type(simple_shear),
@@ -1155,6 +1156,13 @@ void System::adaptTimeStep()
 			dt = p.dt_max;
 		}
 	}
+	if (p.solvent_flow) {
+		computeMaxVelocity();
+		double dt_sflow = p.disp_max/max_velocity;
+		if (dt_sflow < dt) {
+			dt = dt_sflow;
+		}
+	}
 }
 
 void System::adaptTimeStep(double time_end, double strain_end)
@@ -2012,10 +2020,9 @@ void System::setBodyForce(vector<vec3d> &force,
 	for (auto &t: torque) {
 		t.reset();
 	}
-	double body_force = 1;
 	double angle = M_PI*p.body_force_angle/180;
-	double bf_x = body_force*cos(angle); // cos(angle);
-	double bf_z = -body_force*sin(angle);
+	double bf_x = p.body_force*cos(angle); // cos(angle);
+	double bf_z = -p.body_force*sin(angle);
 	for (int i=0; i<np_mobile; i++) {
 		force[i].set(radius_cubed[i]*bf_x, 0 , radius_cubed[i]*bf_z);
 	}
@@ -2088,6 +2095,7 @@ void System::computeMaxNAVelocity()
 
 	 Note: it does \b not compute the velocities, just takes the maximum.
 	 */
+
 	double sq_max_na_velocity = 0;
 	for (int i=0; i<np; i++) {
 		auto sq_na_velocity = na_velocity[i].sq_norm();
@@ -2096,6 +2104,24 @@ void System::computeMaxNAVelocity()
 		}
 	}
 	max_na_velocity = sqrt(sq_max_na_velocity);
+}
+
+void System::computeMaxVelocity()
+{
+	/**
+	 \brief Compute the maximum non-affine velocity
+	 
+	 Note: it does \b not compute the velocities, just takes the maximum.
+	 */
+	
+	double sq_max_velocity = 0;
+	for (int i=0; i<np; i++) {
+		auto sq_velocity = velocity[i].sq_norm();
+		if (sq_velocity > sq_max_velocity) {
+			sq_max_velocity = sq_velocity;
+		}
+	}
+	max_velocity = sqrt(sq_max_velocity);
 }
 
 void System::computeVelocityWithoutComponents()

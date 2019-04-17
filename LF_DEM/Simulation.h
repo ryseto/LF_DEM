@@ -43,7 +43,6 @@ private:
 	 */
 	Dimensional::Unit output_unit;
 	Dimensional::UnitSystem system_of_units;
-	bool shear_rheology;
 	double target_stress_input;
 	double input_rate;
 	double dimensionless_rate;

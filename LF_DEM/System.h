@@ -138,6 +138,7 @@ private:
 	void addUpInteractionStressME(std::vector<Sym2Tensor> &stress_comp);
 
 	void computeMaxNAVelocity();
+	void computeMaxVelocity();
 	double (System::*calcInteractionRange)(int, int);
 	void forceResultantReset();
 	void forceResultantLubricationForce();
@@ -193,6 +194,7 @@ private:
 	int np_mobile; ///< number of mobile particles
 	enum SimulationType { simple_shear, extensional_flow, solvent_flow } simu_type;
 	//	bool ext_flow;
+	bool shear_rheology;
 	// Interaction types
 	bool brownian;
 	bool friction;
@@ -295,6 +297,7 @@ private:
 	double system_volume;
 	vec3d shear_disp; // lees-edwards shift between top and bottom. only shear_disp.x, shear_disp.y is used
 	double max_na_velocity;
+	double max_velocity;
 	double max_force_imbalance;
 	double target_stress;
 	double init_strain_shear_rate_limit;

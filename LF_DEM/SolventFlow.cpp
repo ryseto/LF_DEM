@@ -46,10 +46,22 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 	}
 	viscosity = 1;
 	nx = sys->p.sflow_nx;
-	nz = sys->p.sflow_nz;
-	n = nx*nz;
 	dx = sys->get_lx()/nx;
+	if (sys->p.sflow_nz == -1) {
+		std::cerr << std::setprecision(16) << (sys->get_lz()/dx) << std::endl;
+		nz = std::lround(sys->get_lz()/dx);
+		std::cerr << "nz = " << nz << std::endl;
+	} else {
+		nz = sys->p.sflow_nz;
+	}
 	dz = sys->get_lz()/nz;
+	n = nx*nz;
+	if (abs(dx-dz) > 1e-8) {
+		std::ostringstream error_str;
+		error_str << "dx = " << dx << "  dz = " << dz << "\n";
+		error_str << "dx != dz. Modify sflow_nx or sflow_nz\n";
+		throw std::runtime_error(error_str.str());
+	}
 	cell_area = dx*dz;
 	smooth_length = dx/2;
 	sq_smooth_length = smooth_length*smooth_length;
@@ -292,8 +304,9 @@ double SolventFlow::porousResistance(double area_fraction)
 	/*
 	 * 27/8=3.375
 	 */
-	double porosity = (1-area_fraction)/(1-average_area_fraction);
-	double poro_factor = 1;
+	//double porosity = (1-area_fraction)/(1-average_area_fraction);
+	double porosity = (1-area_fraction);
+	double poro_factor = sys->p.sflow_Darcy_coeff;
 	for (int k=0; k<sys->p.sflow_Darcy_power; k++) {
 		poro_factor *= porosity;
 	}
@@ -652,6 +665,30 @@ void SolventFlow::localFlow(const vec3d &p,
 
 	//e_local[0] = 0;
 	//e_local[2] = 0;
+}
+
+double SolventFlow::flowFiledDissipation()
+{
+	double energy_dissipation = 0;
+	for (int j=0; j<nz; j++) {
+		for (int i=0; i<nx; i++) {
+			int k = i+j*nx;
+			energy_dissipation += strain_rate_xx[k]*strain_rate_xx[k];
+			energy_dissipation += 2*strain_rate_xz[k]*strain_rate_xz[k];
+			energy_dissipation += strain_rate_zz[k]*strain_rate_zz[k];
+		}
+	}
+	return viscosity*energy_dissipation/sys->get_lx()/sys->get_lz();
+}
+
+double SolventFlow::particleDissipation()
+{
+	double energy_dissipation = 0;
+	vec3d u, omega;
+	for (int i=0; i<sys->np_mobile; i++) {
+		energy_dissipation += 0.5*(sys->na_velocity[i].sq_norm()+ sys->na_ang_velocity[i].sq_norm());
+	}
+	return energy_dissipation/sys->get_lx()/sys->get_lz();
 }
 
 double SolventFlow::meanVelocity()

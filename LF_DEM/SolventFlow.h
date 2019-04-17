@@ -103,5 +103,7 @@ public:
 	void outputYaplot(std::ofstream &fout_flow);
 	void velocityProfile(std::ofstream &fout_fp);
 	vec3d calcAverageUsol();
+	double flowFiledDissipation();
+	double particleDissipation();
 };
 #endif /* SolventFlow_hpp */

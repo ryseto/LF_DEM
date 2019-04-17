@@ -47,6 +47,7 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(output.out_data_interaction, true),
 		PARAM_INIT(output.out_data_particle, true),
 		PARAM_INIT(output.out_gsd, true),
+		PARAM_INIT(output.out_gsd_na_velocity, true),
 		PARAM_INIT(output.origin_zero_flow, true),
 		PARAM_INIT(output.relative_position_view, false),
 		PARAM_INIT(output.log_time_interval, false),
@@ -94,8 +95,10 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(sj_disp_max_goal, 1e-6),
 		PARAM_INIT(sj_shear_rate, 0),
 		PARAM_INIT(sj_velocity, 1e-3),
+		PARAM_INIT(body_force, 1),
 		PARAM_INIT(body_force_angle, 0),
 		PARAM_INIT(sflow_re, 0.01),
+		PARAM_INIT(sflow_Darcy_coeff, 1),
 		PARAM_INIT(sflow_pcontrol_increment, 1e-4),
 		PARAM_INIT(sflow_pcontrol_rtime, 0.1),
 		PARAM_INIT(sflow_pcontrol_damper, 100),
@@ -118,7 +121,7 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(sj_reversal_repetition, 10),
 		PARAM_INIT(sflow_boundary_conditions, 0),
 		PARAM_INIT(sflow_nx, 20),
-		PARAM_INIT(sflow_nz, 20),
+		PARAM_INIT(sflow_nz, -1),
 		PARAM_INIT(sflow_Darcy_power, 0)
 	};
 

@@ -19,7 +19,6 @@
 using namespace std;
 
 Simulation::Simulation(State::BasicCheckpoint chkp):
-shear_rheology(true),
 target_stress_input(0),
 restart_from_chkp(false),
 jamming_strain(0),
@@ -178,7 +177,7 @@ void Simulation::generateOutput(const set<string> &output_events, int& binconf_c
 		sys.checkStaticForceBalance();
 	}
 	if (output_events.find("data") != output_events.end()) {
-		if (shear_rheology) {
+		if (sys.shear_rheology) {
 			sys.calcStressPerParticle();
 			sys.calcStress();
 			outputData();
@@ -335,7 +334,7 @@ void Simulation::simulationSteadyShear(string in_args,
 									   string simu_identifier)
 {
 	indent = "  Simulation::\t";
-	shear_rheology = true;
+	sys.shear_rheology = true;
 	setupControl(control_variable_,	control_value = control_value_);
 	setupSimulation(in_args, input_files, binary_conf, simu_identifier);
 	time_t now;
@@ -405,7 +404,7 @@ void Simulation::simulationFlowField(std::string simulation_type,
 									 std::string simu_identifier)
 {
 	indent = "  Simulation::PipeFlow\t";
-	shear_rheology = false;
+	sys.shear_rheology = false;
 	control_var = control_variable_;
 	control_value = control_value_;
 	if (simulation_type == "sedimentation") {
@@ -869,7 +868,8 @@ void Simulation::outputDataSedimentatioin()
 	outdata.entryData("frictional contact number", Dimensional::Dimension::none, 1, frictional_contact_nb_per_particle);
 	outdata.entryData("number of interaction", Dimensional::Dimension::none, 1, sys.get_nb_interactions());
 	outdata.entryData("dt", Dimensional::Dimension::Time, 1, sys.avg_dt);
-	
+	outdata.entryData("flow dissipation", Dimensional::Dimension::none, 1, sys.sflow->flowFiledDissipation());
+	outdata.entryData("particle dissipation", Dimensional::Dimension::none, 1, sys.sflow->particleDissipation());
 	outdata.writeToFile();
 }
 
@@ -1310,7 +1310,6 @@ void Simulation::outputGSD()
 	vec3d shear_strain;
 
 	dataAdjustGSD(pos, vel, shear_strain, lx, ly, lz);
-	
 	vector<int> eff_contact;
 	for (unsigned k=0; k<sys.interaction.size(); k++) {
 		unsigned int i, j;
@@ -1440,9 +1439,15 @@ void Simulation::outputGSD()
 		float* fptr = vectorBuffer.data();
 		for (int i=0; i<np; i++) {
 			int i3= i*3;
-			fptr[i3  ] = sys.na_velocity[i].x;
-			fptr[i3+1] = sys.na_velocity[i].z;
-			fptr[i3+2] = sys.na_velocity[i].y;
+			vec3d v_out;
+			if (sys.p.output.out_gsd_na_velocity) {
+				v_out = outdata.convertToOutput(Dimensional::Dimension::Velocity, sys.na_velocity[i]);
+			} else {
+				v_out = outdata.convertToOutput(Dimensional::Dimension::Velocity, sys.velocity[i]);
+			}
+			fptr[i3  ] = v_out.x;
+			fptr[i3+1] = v_out.z;
+			fptr[i3+2] = v_out.y;
 		}
 		gsd_write_chunk(&gsdOut, "particles/velocity", GSD_TYPE_FLOAT, np, 3, 0, fptr);
 	}
