@@ -144,13 +144,11 @@ inline double getPotentialEnergy(const System &sys)
 
 inline void isInContact(const System &sys, std::vector<int> &isincontact)
 {
-	isincontact.resize(sys.get_np());
+	isincontact.resize(sys.get_np(), 0);
 	for (unsigned i=0; i<sys.get_np(); i ++) {
 		for (auto& inter : sys.interaction_list[i]) {
 			if (inter->contact.is_active()) {
 				isincontact[i] = 1;
-			} else {
-				isincontact[i] = 0;
 			}
 		}
 	}
