@@ -359,6 +359,32 @@ std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze(const Sym2Tensor& E_inf) co
 	return std::make_tuple(GEi, GEj);
 }
 
+std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze(const Sym2Tensor& E0, const Sym2Tensor& E1) const
+{
+	/* NOTE:
+	 * Calculation of XG and YG needs to be done before that.
+	 *
+	 * mode normal
+	 * 1/xi level
+	 *
+	 * GE1 = (nvecnvec:E)*(XG11+XG21)*nvec
+	 * GE2 = (nvecnvec:E)*(XG12+XG22)*nvec
+	 */
+	double nnE0, nnE1;
+	nnE0 = dot(nvec, dot(E0, *nvec));
+	nnE1 = dot(nvec, dot(E1, *nvec));
+	double cGE_p0 = (XG[0]+XG[2])*nnE0;
+	double cGE_p1 = (XG[1]+XG[3])*nnE1;
+	vec3d GEi, GEj;
+	GEi.x = cGE_p0*nvec->x;
+	GEi.y = cGE_p0*nvec->y;
+	GEi.z = cGE_p0*nvec->z;
+	GEj.x = cGE_p1*nvec->x;
+	GEj.y = cGE_p1*nvec->y;
+	GEj.z = cGE_p1*nvec->z;
+	return std::make_tuple(GEi, GEj);
+}
+
 std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze_tangential(const Sym2Tensor& E_inf)  const
 {
 	/*
@@ -377,6 +403,29 @@ std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze_tangential(const Sym2Tensor
 	vec3d GEi = cGE_i*(*nvec) + (YG0_YG2*2)*Einf_nvec;
 	vec3d GEj = cGE_j*(*nvec) + (YG1_YG3*2)*Einf_nvec;
 
+	return std::make_tuple(GEi, GEj);
+}
+
+std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze_tangential(const Sym2Tensor& E0, const Sym2Tensor& E1)  const
+{
+	/*
+	 * mode normal+tangential
+	 * upto log(1/xi) level
+	 *
+	 * GE1 = (nvecnvec:E)*(XG11+XG21-2*(YG11+YG21))*nvec+(YG11+YG21)*(E+tE).nvec;
+	 * GE2 = (nvecnvec:E)*(XG12+XG22-2*(YG12+YG22))*nvec+(YG12+YG22)*(E+tE).nvec;
+	 */
+	double nnE0 = dot(nvec, dot(E0, *nvec));
+	double nnE1 = dot(nvec, dot(E1, *nvec));
+	double YG0_YG2 = YG[0]+YG[2];
+	double YG1_YG3 = YG[1]+YG[3];
+	double cGE_i = (XG[0]+XG[2]-2*YG0_YG2)*nnE0;
+	double cGE_j = (XG[1]+XG[3]-2*YG1_YG3)*nnE1;
+	vec3d E0_nvec = dot(E0, *nvec);
+	vec3d E1_nvec = dot(E1, *nvec);
+	vec3d GEi = cGE_i*(*nvec) + (YG0_YG2*2)*E0_nvec;
+	vec3d GEj = cGE_j*(*nvec) + (YG1_YG3*2)*E1_nvec;
+	
 	return std::make_tuple(GEi, GEj);
 }
 
@@ -407,6 +456,34 @@ std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE_squeeze_tangential(
 	return std::make_tuple(GEi, GEj, HEi, HEj);
 }
 
+std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE_squeeze_tangential(const Sym2Tensor& E0, const Sym2Tensor& E1) const
+{
+	/*
+	 * mode normal+tangential
+	 * upto log(1/xi) level
+	 *
+	 * GE1 = (nvecnvec:E)*(XG11+XG21-2*(YG11+YG21))*nvec+(YG11+YG21)*(E+tE).nvec;
+	 * GE2 = (nvecnvec:E)*(XG12+XG22-2*(YG12+YG22))*nvec+(YG12+YG22)*(E+tE).nvec;
+	 */
+	double nnE0 = dot(nvec, dot(E0, *nvec));
+	double nnE1 = dot(nvec, dot(E1, *nvec));
+	double YG0_YG2 = YG[0]+YG[2];
+	double YG1_YG3 = YG[1]+YG[3];
+	double cGE_i = (XG[0]+XG[2]-2*YG0_YG2)*nnE0;
+	double cGE_j = (XG[1]+XG[3]-2*YG1_YG3)*nnE1;
+	double cHE_i = YH[0]+YH[2];
+	double cHE_j = YH[1]+YH[3];
+	vec3d E0_nvec = dot(E0, *nvec);
+	vec3d E1_nvec = dot(E1, *nvec);
+	vec3d GEi = cGE_i*(*nvec) + (YG0_YG2*2)*E0_nvec;
+	vec3d GEj = cGE_j*(*nvec) + (YG1_YG3*2)*E1_nvec;
+	vec3d nvec_E0_x_nvec = cross(dot(*nvec, E0), (*nvec));
+	vec3d nvec_E1_x_nvec = cross(dot(*nvec, E1), (*nvec));
+	vec3d HEi = -2*cHE_i*nvec_E0_x_nvec;
+	vec3d HEj = -2*cHE_j*nvec_E1_x_nvec;
+	return std::make_tuple(GEi, GEj, HEi, HEj);
+}
+
 // for FT/UW version
 struct ODBlock Lubrication::RFU_ODBlock_squeeze() const
 {
@@ -432,7 +509,7 @@ struct ODBlock Lubrication::RFU_ODBlock_squeeze() const
 	// column 4
 	block.col4[0] = 0;
 	block.col4[1] = 0;
-	block.col4[2] = -0;
+	block.col4[2] = 0;
 	// column 5
 	block.col5[0] = 0;
 	return block;
@@ -694,6 +771,18 @@ vec3d Lubrication::getTotalForce() const
 		}
 		/* XGE_i */
 		lubforce_p0 += GEi;
+	} else {
+		if (sys->p.solvent_flow) {
+			
+			vec3d GEi, GEj;
+			if (!tangential) {
+				std::tie(GEi, GEj) = calcGE_squeeze(0.5*(sys->E_local[p0]+ sys->E_local[p1]));
+			} else {
+				std::tie(GEi, GEj) = calcGE_squeeze_tangential(0.5*(sys->E_local[p0]+ sys->E_local[p1]));
+			}
+			/* XGE_i */
+			lubforce_p0 += GEi;
+		}
 	}
 	return lubforce_p0;
 }

@@ -140,8 +140,12 @@ private:
 	void calcXFunctionsStress();
 	void calcXYFunctionsStress();
 	std::tuple<vec3d,vec3d> calcGE_squeeze(const Sym2Tensor& E_inf) const;
+	std::tuple<vec3d, vec3d> calcGE_squeeze(const Sym2Tensor& E0, const Sym2Tensor& E1) const;
+
 	std::tuple<vec3d,vec3d> calcGE_squeeze_tangential(const Sym2Tensor& E_inf) const;
+	std::tuple<vec3d,vec3d> calcGE_squeeze_tangential(const Sym2Tensor& E0, const Sym2Tensor& E1) const;
 	std::tuple<vec3d,vec3d,vec3d,vec3d> calcGEHE_squeeze_tangential(const Sym2Tensor& E_inf) const;
+	std::tuple<vec3d,vec3d,vec3d,vec3d> calcGEHE_squeeze_tangential(const Sym2Tensor& E0, const Sym2Tensor& E1) const;
 
 	struct ODBlock RFU_ODBlock_squeeze_tangential() const;
 	struct ODBlock RFU_ODBlock_squeeze() const;

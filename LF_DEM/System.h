@@ -114,9 +114,9 @@ private:
 	void setBrownianForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setSolverRHS(const ForceComponent &fc);
 	void addToSolverRHS(const ForceComponent &fc);
-	void computeVelocities(bool divided_velocities);
+	void computeVelocities(bool divided_velocities, bool mat_rebuild);
 	void computeVelocitiesStokesDrag();
-	void computeVelocityWithoutComponents();
+	void computeVelocityWithoutComponents(bool rebuild);
 	void computeVelocityByComponents();
 	void computeVelocityByComponentsFixedParticles();
 	void sumUpVelocityComponents();
@@ -136,7 +136,7 @@ private:
 								  const std::vector<vec3d> &non_affine_vel,
 								  const std::vector<vec3d> &non_affine_ang_vel);
 	void addUpInteractionStressME(std::vector<Sym2Tensor> &stress_comp);
-
+	void sflowIteration(bool calc_stress);
 	void computeMaxNAVelocity();
 	void computeMaxVelocity();
 	double (System::*calcInteractionRange)(int, int);
@@ -164,7 +164,6 @@ private:
 
 	std::vector<vec3d> u_local;
 	std::vector<vec3d> omega_local;
-	std::vector<Sym2Tensor> E_local;
 	
 	void adjustContactModelParameters();
 	Averager<double> kn_avg;
@@ -219,6 +218,7 @@ private:
 	bool in_corrector;
 	bool retrim_ext_flow;
 	std::vector<vec3d> position;
+	std::vector<Sym2Tensor> E_local;
 	std::vector<vec3d> forceResultant;
 	std::vector<vec3d> torqueResultant;
 	std::vector<vec3d> non_rate_proportional_wall_force;

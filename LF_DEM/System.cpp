@@ -954,19 +954,28 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	 */
 	in_predictor = true;
 	in_corrector = true;
-	if (!pairwise_resistance) {
-		computeVelocitiesStokesDrag();
-	} else {
-		computeVelocities(calc_stress);
-	}
-	if (!p.fixed_dt) {
-		adaptTimeStep(time_end, strain_end);
-	}
 	if (!p.solvent_flow) {
+		if (!pairwise_resistance) {
+			computeVelocitiesStokesDrag();
+		} else {
+			computeVelocities(calc_stress, true);
+		}
+		if (!p.fixed_dt) {
+			adaptTimeStep(time_end, strain_end);
+		}
 		adjustVelocityPeriodicBoundary();
 	} else {
-		sflow->update(pressure_difference);
-		adjustVelocitySolventFlow();
+		if (p.sflow_iter_goal == -1) {
+			if (!pairwise_resistance) {
+				computeVelocitiesStokesDrag();
+			} else {
+				computeVelocities(calc_stress, true);
+			}
+			sflow->update(pressure_difference);
+			adjustVelocitySolventFlow();
+		} else {
+			sflowIteration(calc_stress);
+		}
 	}
 	if (wall_rheology && calc_stress) { // @@@@ calc_stress remove????
 		forceResultantReset();
@@ -991,17 +1000,28 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	if (eventLookUp != NULL) {
 		(this->*eventLookUp)();
 	}
-	//	static int cnt = 0;
-	//	if (cnt ++ % 50 == 0) {
-	//		for (int i=0; i< np; i++) {
-	//			cout << "c"  << position[i].x << ' ';
-	//			cout << position[i].y << ' ';
-	//			cout << position[i].z << endl;
-	//		}
-	//		cout << endl;
-	//	}
 }
 
+void System::sflowIteration(bool calc_stress)
+{
+	//static ofstream fdebug("debug2.dat");
+	static int cnt= 0;
+	double error = 999;
+	bool new_time_step = true;
+	while (error > p.sflow_iter_goal) {
+		if (!pairwise_resistance) {
+			computeVelocitiesStokesDrag();
+		} else {
+			computeVelocities(calc_stress, new_time_step);
+		}
+		error = sflow->update(pressure_difference);
+		adjustVelocitySolventFlow();
+		//if (error != 0) {
+		//fdebug << cnt++ << ' ' << error << ' ' << sflow->pressure_difference_x << endl;
+		//}
+		new_time_step = false;
+	}
+}
 /****************************************************************************************************
  ******************************************** Mid-Point Scheme ***************************************
  ****************************************************************************************************/
@@ -1062,7 +1082,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	in_corrector = false;
 
 	if (pairwise_resistance) {
-		computeVelocities(calc_stress); // divided velocities for stress calculation
+		computeVelocities(calc_stress, true); // divided velocities for stress calculation
 	} else {
 		computeVelocitiesStokesDrag();
 	}
@@ -1086,7 +1106,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	in_predictor = false;
 	in_corrector = true;
 	if (pairwise_resistance) {
-		computeVelocities(calc_stress);
+		computeVelocities(calc_stress, true);
 	} else {
 		computeVelocitiesStokesDrag();
 	}
@@ -1920,8 +1940,11 @@ void System::setHydroForceToParticle_squeeze(vector<vec3d> &force,
 		for (const auto &inter: interaction) {
 			if (inter.lubrication.is_active()) {
 				std::tie(i, j) = inter.get_par_num();
-				//std::tie(GEi, GEj) = inter.lubrication.calcGE_squeeze(E_local[i], E_local[j]); // G*E_\infty term
-				std::tie(GEi, GEj) = inter.lubrication.calcGE_squeeze(0.5*(E_local[i]+E_local[j])); // G*E_\infty term
+				/*
+				 * "calcGEHE(E0, E1)" does not work. I don't know why...
+				 */
+				//std::tie(GEi, GEj) = inter.lubrication.calcGE_squeeze(E_local[i], E_local[j]);
+				std::tie(GEi, GEj) = inter.lubrication.calcGE_squeeze(0.5*(E_local[i]+E_local[j]));
 				force[i] += GEi;
 				force[j] += GEj;
 			}
@@ -1957,8 +1980,11 @@ void System::setHydroForceToParticle_squeeze_tangential(vector<vec3d> &force,
 		for (const auto &inter: interaction) {
 			if (inter.lubrication.is_active()) {
 				std::tie(i, j) = inter.get_par_num();
-				//std::tie(GEi, GEj, HEi, HEj) = inter.lubrication.calcGEHE_squeeze_tangential(E_local[i], E_local[j]); // G*E_\infty term, no gamma dot
-				std::tie(GEi, GEj, HEi, HEj) = inter.lubrication.calcGEHE_squeeze_tangential(0.5*(E_local[i]+E_local[j])); // G*E_\infty term, no gamma dot
+				/*
+				 * "calcGEHE(E0, E1)" does not work. I don't know why...
+				 */
+				//std::tie(GEi, GEj, HEi, HEj) = inter.lubrication.calcGEHE_squeeze_tangential(E_local[i], E_local[j]);
+				std::tie(GEi, GEj, HEi, HEj) = inter.lubrication.calcGEHE_squeeze_tangential(0.5*(E_local[i]+E_local[j]));
 				force[i] += GEi;
 				force[j] += GEj;
 				torque[i] += HEi;
@@ -2124,9 +2150,11 @@ void System::computeMaxVelocity()
 	max_velocity = sqrt(sq_max_velocity);
 }
 
-void System::computeVelocityWithoutComponents()
+void System::computeVelocityWithoutComponents(bool rebuild)
 {
-	buildResistanceMatrix();
+	if (rebuild) {
+		buildResistanceMatrix();
+	}
 	for (auto &fc: force_components) {
 		if (fc.first != "brownian" || in_predictor) {
 			CALL_MEMBER_FN(*this, fc.second.getForceTorque)(fc.second.force, fc.second.torque);
@@ -2479,7 +2507,7 @@ void System::rescaleVelHydroStressControlled()
 	}
 }
 
-void System::computeVelocities(bool divided_velocities)
+void System::computeVelocities(bool divided_velocities, bool mat_rebuild)
 {
 	/**
 	 \brief Compute velocities in the current configuration.
@@ -2510,7 +2538,7 @@ void System::computeVelocities(bool divided_velocities)
 		sumUpVelocityComponents();
 	} else {
 		setFixedParticleVelocities();
-		computeVelocityWithoutComponents();
+		computeVelocityWithoutComponents(mat_rebuild);
 	}
 	if (in_predictor) {
 		if (eventLookUp != NULL) {
@@ -2543,14 +2571,14 @@ void System::computeVelocitiesStokesDrag()
 		}
 		if (fc.first != "brownian") {
 			for (unsigned int i=0; i<na_velocity.size(); i++) {
-				na_velocity[i] += fc.second.force[i]/stokesdrag_coeff_f[i];
+				na_velocity[i]     += fc.second.force[i] /stokesdrag_coeff_f[i];
 				na_ang_velocity[i] += fc.second.torque[i]/stokesdrag_coeff_t[i];
 			}
 		} else {
 			for (unsigned int i=0; i<na_velocity.size(); i++) {
 				/* See the comment given in generateBrownianForces()
 				 */
-				na_velocity[i] += fc.second.force[i]/stokesdrag_coeff_f_sqrt[i];
+				na_velocity[i]     += fc.second.force[i] /stokesdrag_coeff_f_sqrt[i];
 				na_ang_velocity[i] += fc.second.torque[i]/stokesdrag_coeff_t_sqrt[i];
 			}
 		}
@@ -2600,9 +2628,8 @@ void System::adjustVelocitySolventFlow()
 	vector<double> st_tens(3);
 	for (int i=0; i<np_mobile; i++) {
 		sflow->localFlow(position[i], u_local[i], omega_local[i], st_tens);
-		E_local[i].set(st_tens[0], 0, st_tens[1], 0, 0, st_tens[2]);
+		E_local[i].set(st_tens[0], 0, st_tens[1], 0, 0, st_tens[2]);// xx xy xz yz yy zz
 	}
-	
 	for (int i=0; i<np_mobile; i++) {
 		velocity[i] = na_velocity[i] + u_local[i];
 		ang_velocity[i] = na_ang_velocity[i] + omega_local[i];
