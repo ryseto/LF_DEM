@@ -25,6 +25,9 @@ SolventFlow::~SolventFlow()
 void SolventFlow::init(System* sys_, std::string simulation_type)
 {
 	sys = sys_;
+	length_scale = 10;
+	conv_factor = length_scale; // for d = 2 (square if d = 3)
+	six_pi = 6*M_PI;
 	if (simulation_type == "sedimentation") {
 		sedimentation = true;
 	} else if (simulation_type == "channel flow") {
@@ -44,7 +47,6 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 		pressure_difference_x = 0;
 		sys->body_force = false;
 	}
-	viscosity = 1;
 	nx = sys->p.sflow_nx;
 	dx = sys->get_lx()/nx;
 	if (sys->p.sflow_nz == -1) {
@@ -68,14 +70,17 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 	pressure.resize(n, 0);
 	u_diff_x.resize(n, 0);
 	u_sol_x.resize(n, 0);
+	u_x.resize(n, 0);
 	u_sol_ast_x.resize(n, 0);
 	div_u_sol_ast.resize(n, 0);
+	gr_phi_Ud_phi_div_Ud.resize(n, 0);
 	phi_ux.resize(n,0);
 	
 	if (sys->p.sflow_boundary_conditions == 0) {
 		pos.resize(n);
 		jmax_uz = nz;
 		u_diff_z.resize(n, 0);
+		u_z.resize(n, 0);
 		u_sol_z.resize(n, 0);
 		u_sol_ast_z.resize(n, 0);
 		phi_uz.resize(n, 0);
@@ -287,20 +292,23 @@ void SolventFlow::particleVelocityDiffToMesh()
 		for (int m=0; m< mesh_nb.size(); m++) {
 			int k = mesh_nb[m];
 			if (k < n) {
-				u_diff_x[k] += udx_values[m]/total_weight_udx;
+				u_diff_x[k] += udx_values[m]/(total_weight_udx);
 				phi_ux[k] += (particle_volume*phi_ux_values[m]/cell_area)/total_weight_udx;
 			}
-			u_diff_z[k] += udz_values[m]/total_weight_udz;
+			u_diff_z[k] += udz_values[m]/(total_weight_udz);
 			phi_uz[k] += (particle_volume*phi_uz_values[m]/cell_area)/total_weight_udz;
 		}
 	}
+	for (int k=0; k<n; k++) {
+		u_diff_x[k] *= 1/conv_factor;
+		u_diff_z[k] *= 1/conv_factor;
+	}
 }
 
-double SolventFlow::update(double pressure_difference_)
+void SolventFlow::pressureController()
 {
-	//static std::ofstream fout_tmp("debug.dat");
-	u_sol_ave = calcAverageUsol();
-	average_pressure_x.update(pressure_difference_x, sys->get_time());
+	u_sol_ave = calcAverageU();
+	average_pressure_x.update(pressure_difference_x, sys->dt);
 	if (channel_flow) {
 		//pressure_difference = 10*pressure_difference_;
 		if (u_sol_ave.x < sys->p.sflow_target_flux) {
@@ -310,61 +318,31 @@ double SolventFlow::update(double pressure_difference_)
 		}
 	} else {
 		//double pd_increment = sys->p.sflow_pcontrol_increment;
-		double diff_x = abs(u_sol_ave.x-target_flux);
-		if (u_sol_ave.x < target_flux) {
-			pressure_difference_x += diff_x*diff_x*sys->p.sflow_pcontrol_increment;
-		} else {
-			pressure_difference_x -= diff_x*diff_x*sys->p.sflow_pcontrol_increment;
-		}
+		double diff_x = u_sol_ave.x-target_flux;
+		//if (u_sol_ave.x < target_flux) {
+		pressure_difference_x += -diff_x*sys->p.sflow_pcontrol_increment*sys->dt;
+		//		} else {
+		//		pressure_difference_x -= diff_x*sys->p.sflow_pcontrol_increment*sys->dt;
+		//}
 		pressure_difference_x += - sys->p.sflow_pcontrol_damper*(pressure_difference_x - average_pressure_x.get())*sys->dt;
 		// pressure_difference_x -= (pressure_difference_x-average_pressure.get());
 	}
+}
+
+void SolventFlow::update(double pressure_difference_)
+{
+	//static std::ofstream fout_tmp("debug.dat");
 	d_tau = sys->dt/sys->p.sflow_re;
 	particleVelocityDiffToMesh();
-
 	predictorStep();
 	calcVelocityDivergence();
 	solvePressure();
 	correctorStep();
-	calcVelocityGradients();
-	//static std::ofstream fout("field.yap");
-	double total = 0;
-	static int cnt = 0;
-	if (true) {
-		double dx2 = dx*dx;
-		double dz2 = dz*dz;
-		for (int j=0; j<nz; j++) {
-			int jp1 = (j == nz-1 ? 0 : j+1);
-			int jm1 = (j == 0 ? nz-1 : j-1);
-			for (int i=0; i<nx; i++) {
-				double pd_x = (i == 0 ? pressure_difference_x : 0);
-				int k= i+j*nx;
-				int ip1 = (i == nx-1 ? 0 : i+1);
-				int im1 = (i == 0 ? nx-1 : i-1);
-				int ir = ip1 + j  *nx; //right
-				int il = im1 + j  *nx; //left
-				int ju = i   + jp1*nx; //up
-				int jd = i   + jm1*nx; //down
-				double nabla_p_x = (pressure[k]-(pressure[il]+pd_x))/dx;
-				double dd_ux = (u_sol_x[ir]-2*u_sol_x[k]+u_sol_x[il])/dx2+(u_sol_x[ju]-2*u_sol_x[k]+u_sol_x[jd])/dz2;
-				double res_coeff_ux = porousResistance(phi_ux[k]);
-				double error = -nabla_p_x+viscosity*dd_ux + res_coeff_ux*u_diff_x[k];
-				total += abs(error);
-//				if (error > 0 ) {
-//					fout << "@ 4" << std::endl;
-//				} else {
-//					fout << "@ 6" << std::endl;
-//				}
-//				fout << "r " << 0.01*abs(error) << std::endl;
-//				fout << "c "  << i-0.5*nx << " 0 "  << j -0.5*nz<< std::endl;
-			}
-		}
-//		fout << std::endl;
+	for (int k=0; k<n; k++) {
+		u_x[k] = conv_factor*(u_sol_x[k] + phi_ux[k]*u_diff_x[k]);
+		u_z[k] = conv_factor*(u_sol_z[k] + phi_uz[k]*u_diff_z[k]);
 	}
-	cnt ++;
-	//fout_tmp << sys->get_time() << ' ' << total << std::endl;
-	//fout_tmp << std::endl;
-	return total/n;
+	calcVelocityGradients();
 }
 
 double SolventFlow::porousResistance(double area_fraction)
@@ -385,6 +363,7 @@ void SolventFlow::predictorStep()
 {
 	double dx2 = dx*dx;
 	double dz2 = dz*dz;
+	double scalefactor = length_scale*length_scale;
 	for (int j=0; j<nz; j++) {
 		int jp1, jm1;
 		if (sys->p.sflow_boundary_conditions == 0) {
@@ -402,15 +381,19 @@ void SolventFlow::predictorStep()
 			int il = im1 + j  *nx; //left
 			int ju = i   + jp1*nx; //up
 			int jd = i   + jm1*nx; //down
-			double res_coeff_ux = porousResistance(phi_ux[k]);
-			double res_coeff_uz = porousResistance(phi_uz[k]);
+			double res_coeff_ux = scalefactor*porousResistance(phi_ux[k]);
+			double res_coeff_uz = scalefactor*porousResistance(phi_uz[k]);
 			if (sys->p.sflow_boundary_conditions == 0) {
 				/* periodic boundary condtions in x and z directions.
 				 */
 				double dd_ux = (u_sol_x[ir]-2*u_sol_x[k]+u_sol_x[il])/dx2+(u_sol_x[ju]-2*u_sol_x[k]+u_sol_x[jd])/dz2;
 				double dd_uz = (u_sol_z[ir]-2*u_sol_z[k]+u_sol_z[il])/dx2+(u_sol_z[ju]-2*u_sol_z[k]+u_sol_z[jd])/dz2;
-				double fx = viscosity*dd_ux + res_coeff_ux*u_diff_x[k];
-				double fz = viscosity*dd_uz + res_coeff_uz*u_diff_z[k];
+				double ux_duxdx = u_sol_x[k]*(u_sol_x[ir]-u_sol_x[il])/(2*dx);
+				double uz_duxdz = 0.25*(u_sol_z[k]+u_sol_z[il]+u_sol_z[ju]+u_sol_z[im1+jp1*nx])*(u_sol_x[ju]-u_sol_x[jd])/(2*dz);
+				double uz_duzdz = u_sol_z[k]*(u_sol_z[ju]-u_sol_z[jd])/(2*dz);
+				double uz_duzdx = 0.25*(u_sol_x[k]+u_sol_x[ir]+u_sol_x[jd]+u_sol_x[ip1+jm1*nx])*(u_sol_z[ir]-u_sol_z[il])/(2*dx);
+				double fx = dd_ux + ux_duxdx + uz_duxdz + res_coeff_ux*u_diff_x[k];
+				double fz = dd_uz + uz_duzdz + uz_duzdx + res_coeff_uz*u_diff_z[k];
 				u_sol_ast_x[k] = u_sol_x[k] + d_tau*fx;
 				u_sol_ast_z[k] = u_sol_z[k] + d_tau*fz;
 				// - sys->p.sf_zfriction*u_sol_ave.z);
@@ -429,7 +412,7 @@ void SolventFlow::predictorStep()
 					// bottom
 					double ux_bot_m1 = 2*ux_bot - u_sol_x[k]; // (ux(i,-1)+ux(i,0))/2 = ux_bot
 					double dd_ux = (u_sol_x[ir]-2*u_sol_x[k]+u_sol_x[il])/dx2+(u_sol_x[ju]-2*u_sol_x[k]+ux_bot_m1)/dz2;
-					double fx = viscosity*dd_ux + res_coeff_ux*u_diff_x[k];
+					double fx = dd_ux + res_coeff_ux*u_diff_x[k];
 					u_sol_ast_x[k] = u_sol_x[k] + d_tau*fx;
 					u_sol_ast_z[k] = 0; // Just on the bottom wall
 				} else {
@@ -446,8 +429,8 @@ void SolventFlow::predictorStep()
 						dd_ux = (u_sol_x[ir]-2*u_sol_x[k]+u_sol_x[il])/dx2+(u_sol_x[ju]-2*u_sol_x[k]+u_sol_x[jd])/dz2;
 					}
 					dd_uz = (u_sol_z[ir]-2*u_sol_z[k]+u_sol_z[il])/dx2+(u_sol_z[ju]-2*u_sol_z[k]+u_sol_z[jd])/dz2;
-					double fx = viscosity*dd_ux + res_coeff_ux*u_diff_x[k];
-					double fz = viscosity*dd_uz + res_coeff_uz*u_diff_z[k];
+					double fx = dd_ux + res_coeff_ux*u_diff_x[k];
+					double fz = dd_uz + res_coeff_uz*u_diff_z[k];
 					u_sol_ast_x[k] = u_sol_x[k] + d_tau*fx;
 					u_sol_ast_z[k] = u_sol_z[k] + d_tau*fz;
 				}
@@ -490,12 +473,35 @@ void SolventFlow::calcVelocityDivergence()
 			}
 		}
 	}
+	// Grad phi . (U-u_s)
+	if (sys->p.sflow_boundary_conditions == 0) {
+		for (int j=0; j<nz; j++) {
+			int jp1 = (j == nz-1 ? 0 : j+1);
+			for (int i=0; i<nx; i++) {
+				int ip1 = (i == nx-1 ? 0 : i+1);
+				int k = i + j*nx;
+				int k_r = ip1+j*nx; // right
+				int k_u = i+jp1*nx; // up
+				double dphix = (phi_ux[k_r] - phi_ux[k])/dx;
+				double dphiz = (phi_uz[k_u] - phi_uz[k])/dz;
+				double u_diff_x_c = (u_diff_x[k_r]+u_diff_x[k])/2;
+				double u_diff_z_c = (u_diff_z[k_u]+u_diff_z[k])/2;
+				double d_udiffx_x = (u_diff_x[k_r]-u_diff_x[k])/dx;
+				double d_udiffz_z = (u_diff_z[k_u]-u_diff_z[k])/dz;
+				double phi_c = (phi_ux[k_r] + phi_ux[k] + phi_uz[k] + phi_uz[k])/4;
+				gr_phi_Ud_phi_div_Ud[k] = dphix*u_diff_x_c + dphiz*u_diff_z_c + phi_c*(d_udiffx_x+d_udiffz_z);
+				//gr_phi_Ud_phi_div_Ud[k] = 0;
+			}
+		}
+	} else {
+		// @@@
+	}
 }
 
 void SolventFlow::solvePressure()
 {
 	for (int k=0; k<n; k++) {
-		rhs_vector(k) = (1/d_tau)*div_u_sol_ast[k];
+		rhs_vector(k) = (div_u_sol_ast[k]+gr_phi_Ud_phi_div_Ud[k])/(six_pi*d_tau);
 	}
 	if (pressure_difference_x != 0) {
 		double delta_P_dxdx = pressure_difference_x/(dx*dx);
@@ -524,16 +530,16 @@ void SolventFlow::correctorStep()
 	if (sys->p.sflow_boundary_conditions == 0) {
 		/* periodic boundary condtions in x and z directions.
 		 */
-		double d_tau_dx = d_tau/dx;
-		double d_tau_dz = d_tau/dz;
+		double sixpi_d_tau_dx = six_pi*d_tau/dx;
+		double sixpi_d_tau_dz = six_pi*d_tau/dz;
 		for (int i=0; i<nx; i++) {
 			int im1 = (i == 0 ? nx-1 : i-1);
 			double pd_x = (i == 0 ? pressure_difference_x : 0);
 			for (int j=0; j<nz; j++) {
 				int k = i+nx*j;
 				int jm1 = (j == 0 ? nz-1 : j-1);
-				u_sol_x[k] = u_sol_ast_x[k] - d_tau_dx*(pressure[k] - (pressure[im1+j*nx]+pd_x));
-				u_sol_z[k] = u_sol_ast_z[k] - d_tau_dz*(pressure[k] - pressure[i+jm1*nx]);
+				u_sol_x[k] = u_sol_ast_x[k] - sixpi_d_tau_dx*(pressure[k] - (pressure[im1+j*nx]+pd_x));
+				u_sol_z[k] = u_sol_ast_z[k] - sixpi_d_tau_dz*(pressure[k] - pressure[i+jm1*nx]);
 			}
 		}
 	} else {
@@ -550,8 +556,8 @@ void SolventFlow::correctorStep()
 			}
 			for (int j=1; j<nz; j++) {
 				int k = i+nx*j;
-				u_sol_x[k] = u_sol_ast_x[k] - d_tau*(pressure[k] - (pressure[im1+j*nx]+pd_x))/dx;
-				u_sol_z[k] = u_sol_ast_z[k] - d_tau*(pressure[k] - pressure[i+(j-1)*nx])/dz;
+				u_sol_x[k] = u_sol_ast_x[k] - six_pi*d_tau*(pressure[k] - (pressure[im1+j*nx]+pd_x))/dx;
+				u_sol_z[k] = u_sol_ast_z[k] - six_pi*d_tau*(pressure[k] - pressure[i+(j-1)*nx])/dz;
 			}
 			{// top
 				int j=nz;
@@ -571,10 +577,10 @@ void SolventFlow::calcVelocityGradients()
 				int k = i+nx*j;
 				int im1 = (i == 0 ? nx-1 : i-1);
 				int ip1 = (i == nx-1 ? 0 : i+1);
-				strain_rate_xx[k] = (u_sol_x[ip1+j*nx]-u_sol_x[k])/dx; // center d_ux_d_x
-				strain_rate_zz[k] = (u_sol_z[i+jp1*nx]-u_sol_z[k])/dz; // center d_uz_d_z
-				double d_ux_d_z   = (u_sol_x[k]-u_sol_x[i+jm1*nx])/dz; // left_bottom
-				double d_uz_d_x   = (u_sol_z[k]-u_sol_z[im1+j*nx])/dx; // left_bottom
+				strain_rate_xx[k] = (u_x[ip1+j*nx]-u_x[k]       )/dx; // center d_ux_d_x
+				strain_rate_zz[k] = (u_z[i+jp1*nx]-u_z[k]       )/dz; // center d_uz_d_z
+				double d_uz_d_x   = (u_z[k]       -u_z[im1+j*nx])/dx; // left_bottom
+				double d_ux_d_z   = (u_x[k]       -u_x[i+jm1*nx])/dz; // left_bottom
 				omega[k]          = (d_ux_d_z - d_uz_d_x)/2; // left_bottom
 				strain_rate_xz[k] = (d_ux_d_z + d_uz_d_x)/2; // left_bottom
 			}
@@ -665,10 +671,10 @@ void SolventFlow::localFlow(const vec3d &p,
 		kk[2] = i   + jp1nx;
 		kk[3] = ip1 + jp1nx;
 	}
-	u_local.x = u_sol_x[kk[0]];
-	u_local.x += (u_sol_x[kk[1]]-u_sol_x[kk[0]])*x_diff;
-	u_local.x += (u_sol_x[kk[2]]-u_sol_x[kk[0]])*z_diffS;
-	u_local.x += (u_sol_x[kk[3]]-u_sol_x[kk[2]]-u_sol_x[kk[1]]+u_sol_x[kk[0]])*x_diff*z_diffS;
+	u_local.x = u_x[kk[0]];
+	u_local.x += (u_x[kk[1]]-u_x[kk[0]])*x_diff;
+	u_local.x += (u_x[kk[2]]-u_x[kk[0]])*z_diffS;
+	u_local.x += (u_x[kk[3]]-u_x[kk[2]]-u_x[kk[1]]+u_x[kk[0]])*x_diff*z_diffS;
 	/********************************************************
 	 * uz interpolation
 	 * (dx/2, 0)
@@ -688,10 +694,10 @@ void SolventFlow::localFlow(const vec3d &p,
 		kk[2] = i   + jp1nx;
 		kk[3] = ip1 + jp1nx;
 	}
-	u_local.z = u_sol_z[kk[0]];
-	u_local.z += (u_sol_z[kk[1]]-u_sol_z[kk[0]])*x_diffS;
-	u_local.z += (u_sol_z[kk[2]]-u_sol_z[kk[0]])*z_diff;
-	u_local.z += (u_sol_z[kk[3]]-u_sol_z[kk[2]]-u_sol_z[kk[1]]+u_sol_z[kk[0]])*x_diffS*z_diff;
+	u_local.z = u_z[kk[0]];
+	u_local.z += (u_z[kk[1]]-u_z[kk[0]])*x_diffS;
+	u_local.z += (u_z[kk[2]]-u_z[kk[0]])*z_diff;
+	u_local.z += (u_z[kk[3]]-u_z[kk[2]]-u_z[kk[1]]+u_z[kk[0]])*x_diffS*z_diff;
 	/********************************************************
 	 * omega interpolation
 	 * (0, 0)
@@ -748,7 +754,7 @@ double SolventFlow::flowFiledDissipation()
 			energy_dissipation += strain_rate_zz[k]*strain_rate_zz[k];
 		}
 	}
-	return viscosity*energy_dissipation/sys->get_lx()/sys->get_lz();
+	return energy_dissipation/sys->get_lx()/sys->get_lz();
 }
 
 double SolventFlow::particleDissipation()
@@ -770,21 +776,22 @@ double SolventFlow::meanVelocity()
 	return mean_velocity/n;
 }
 
-vec3d SolventFlow::calcAverageUsol()
+vec3d SolventFlow::calcAverageU()
 {
+	//int i = std::lround(0.5*nx);
 	int i = std::lround(0.5*nx);
-	double u_sol_x_total = 0;
+	double u_x_total = 0;
 	for (int j=0; j<nz; j++) {
 		int k = i + nx*j;
-		u_sol_x_total += u_sol_x[k];
+		u_x_total += u_sol_x[k] + phi_ux[k]*u_diff_x[k];
 	}
 	int j = std::lround(0.5*nz);
-	double u_sol_z_total = 0;
+	double u_z_total = 0;
 	for (int i=0; i<nx; i++) {
 		int k = i + nx*j;
-		u_sol_z_total += u_sol_z[k];
+		u_z_total += u_sol_z[k] + phi_uz[k]*u_diff_z[k];
 	}
-	return vec3d(u_sol_x_total/nz, 0 , u_sol_z_total/nx);
+	return vec3d(u_x_total/nz, 0 , u_z_total/nx);
 }
 
 void SolventFlow::velocityProfile(std::ofstream &fout_fp)
@@ -799,7 +806,7 @@ void SolventFlow::velocityProfile(std::ofstream &fout_fp)
 		double total_phi = 0;
 		for (int i=0; i<nx; i++){
 			int k = i+nx*j;
-			total_ux_sol += u_sol_x[k];
+			total_ux_sol += u_sol_x[k] + phi_ux[k]*u_diff_x[k];
 			total_ux_na += u_diff_x[k];
 			total_phi += phi_ux[k];
 		}
@@ -809,7 +816,7 @@ void SolventFlow::velocityProfile(std::ofstream &fout_fp)
 		phi(j) = total_phi/nx;
 		// na + us = up - us + us = up
 	}
-	
+
 	double mean_ux_sol = ux_sol.mean();
 	/*
 	 * F_bf = up - u
@@ -875,7 +882,7 @@ void SolventFlow::outputYaplot(std::ofstream &fout_flow)
 		}
 	}
 	
-	double vfactor = 0.1;
+	double vfactor = 1;
 	vec3d o_shift(sys->get_lx()/2, 0, sys->get_lz()/2);
 	if (0) {
 		fout_flow << "y 2" << std::endl;
@@ -930,8 +937,8 @@ void SolventFlow::outputYaplot(std::ofstream &fout_flow)
 			for (int i=0; i<nx; i++){
 				vec3d po = pos[i + nx*j] - o_shift;
 				int k = i+j*nx;
-				double vx = vfactor*(u_sol_x[k] +u_sol_x[meshNb(i+1,j)]);
-				double vz = vfactor*(u_sol_z[k] +u_sol_z[meshNb(i,j+1)]);
+				double vx = vfactor*(u_sol_x[k] +u_sol_x[meshNb(i+1,j)])/2;
+				double vz = vfactor*(u_sol_z[k] +u_sol_z[meshNb(i,j+1)])/2;
 				fout_flow << "s ";
 				fout_flow << po.x      << ' ' << -0.02 << ' ' << po.z << ' ';
 				fout_flow << po.x + vx << ' ' << -0.02 << ' ' << po.z + vz << std::endl;
@@ -944,8 +951,8 @@ void SolventFlow::outputYaplot(std::ofstream &fout_flow)
 			for (int i=0; i<nx; i++){
 				vec3d po = pos[i + nx*j] - o_shift;
 				int k = meshNb(i,j);
-				double udx = vfactor*(u_diff_x[k] +u_diff_x[meshNb(i+1,j)]);
-				double udz = vfactor*(u_diff_z[k] +u_diff_z[meshNb(i,j+1)]);
+				double udx = vfactor*(u_diff_x[k] +u_diff_x[meshNb(i+1,j)])/2;
+				double udz = vfactor*(u_diff_z[k] +u_diff_z[meshNb(i,j+1)])/2;
 				fout_flow << "s ";
 				fout_flow << po.x      << ' ' << -0.02 << ' ' << po.z << ' ';
 				fout_flow << po.x + udx << ' ' << -0.02 << ' ' << po.z + udz << std::endl;
@@ -957,12 +964,18 @@ void SolventFlow::outputYaplot(std::ofstream &fout_flow)
 		fout_flow << "y 5" << std::endl;
 //		double cell_area = dx*dz;
 		fout_flow << "@ 10" << std::endl;
-		
 		for (int j=0; j<nz; j++){
 			for (int i=0; i<nx; i++){
 				vec3d po = pos[i + nx*j] - o_shift;
 				// double r = sqrt(cell_area*phi[i + nx*j]/M_PI);
-				double r = porousResistance(phi_ux[i + nx*j]);
+				int ip1 = (i == nx-1 ? 0 : i+1);
+				int jp1 = (j == nz-1 ? 0 : j+1);
+				double r0 = porousResistance(phi_ux[i + nx*j]);
+				double r1 = porousResistance(phi_ux[ip1 + nx*j]);
+				double r2 = porousResistance(phi_uz[i + nx*j]);
+				double r3 = porousResistance(phi_uz[i + nx*jp1]);
+//				double r = (r0 + r1 + r2 +r3)/4;
+				double r = 	0.01*gr_phi_Ud_phi_div_Ud[i + nx*j];
 				//double s = 100*div_u_sol_ast[i+nx*j];
 				//if (r > 0 ) {
 				//					fout_flow << "@ 4" << std::endl;

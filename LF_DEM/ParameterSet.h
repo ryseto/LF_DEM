@@ -217,13 +217,10 @@ namespace Parameters {
 		int sflow_Darcy_power; // lambda for phi/(1-phi)^{lambda} (Modified Darcy's law) [0]
 		double sflow_Darcy_coeff; // [1]
 		double sflow_re; // [0.1]
-		double sflow_iter_goal; // [-1]
 		double sflow_pcontrol_increment; // To adjust pressure diffrence to fix flux value along x-direction [1e-4]
 		double sflow_pcontrol_rtime; // [0.1]
 		double sflow_pcontrol_damper; // [0.1]
 		double sflow_target_flux; // Target flux along x-direction controlled by pressure difference [0]
-		double sf_zfriction; // To stabilize the frame along z-direction when the peridoic boundary condition along z-direction is used.
-
 	};
 	
 } // namespace Parameters

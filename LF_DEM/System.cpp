@@ -965,17 +965,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		}
 		adjustVelocityPeriodicBoundary();
 	} else {
-		if (p.sflow_iter_goal == -1) {
-			if (!pairwise_resistance) {
-				computeVelocitiesStokesDrag();
-			} else {
-				computeVelocities(calc_stress, true);
-			}
-			sflow->update(pressure_difference);
-			adjustVelocitySolventFlow();
-		} else {
-			sflowIteration(calc_stress);
-		}
+		sflowFiniteRe(calc_stress);
 	}
 	if (wall_rheology && calc_stress) { // @@@@ calc_stress remove????
 		forceResultantReset();
@@ -1002,26 +992,18 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	}
 }
 
-void System::sflowIteration(bool calc_stress)
+void System::sflowFiniteRe(bool calc_stress)
 {
-	//static ofstream fdebug("debug2.dat");
-	static int cnt= 0;
-	double error = 999;
-	bool new_time_step = true;
-	while (error > p.sflow_iter_goal) {
-		if (!pairwise_resistance) {
-			computeVelocitiesStokesDrag();
-		} else {
-			computeVelocities(calc_stress, new_time_step);
-		}
-		error = sflow->update(pressure_difference);
-		adjustVelocitySolventFlow();
-		//if (error != 0) {
-		//fdebug << cnt++ << ' ' << error << ' ' << sflow->pressure_difference_x << endl;
-		//}
-		new_time_step = false;
+	if (!pairwise_resistance) {
+		computeVelocitiesStokesDrag();
+	} else {
+		computeVelocities(calc_stress, true);
 	}
+	sflow->pressureController();
+	sflow->update(pressure_difference);
+	adjustVelocitySolventFlow();
 }
+
 /****************************************************************************************************
  ******************************************** Mid-Point Scheme ***************************************
  ****************************************************************************************************/

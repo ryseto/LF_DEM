@@ -36,16 +36,18 @@ private:
 	int nz;
 	int n;
 	int jmax_uz;
+	double six_pi;
 	double dx;
 	double dz;
 	double ux_bot;
 	double ux_top;
 	double d_tau;
+	double length_scale;
+	double conv_factor;
 	double smooth_length;
 	double sq_smooth_length;
 	double cell_area;
 	double target_flux;
-	double viscosity;
 	double average_area_fraction;
 	bool sedimentation;
 	bool channel_flow;
@@ -54,6 +56,10 @@ private:
 	// - the velocities at the cell faces.
 	std::vector<double> pressure;
 	std::vector<double> div_u_sol_ast;
+	std::vector<double> gr_phi_Ud_phi_div_Ud;
+	std::vector<double> u_x;
+	std::vector<double> u_z;
+
 	std::vector<double> u_sol_x;
 	std::vector<double> u_sol_z;
 	std::vector<double> u_sol_ast_x;
@@ -80,7 +86,6 @@ private:
 	Eigen::VectorXd rhs_vector;
 	Eigen::VectorXd pressure_vector;
 	Eigen::SimplicialLDLT <SpMat> *psolver;
-	void particleVelocityDiffToMesh();
 	double weightFunc(double r_sq);
 	void predictorStep();
 	void calcVelocityDivergence();
@@ -92,18 +97,21 @@ public:
 	SolventFlow();
 	~SolventFlow();
 	double pressure_difference_x;
+	double tau;
 	vec3d u_sol_ave;
 	Averager<double> average_pressure_x;
 	void init(System* sys_, std::string simulation_type);
-	double update(double pressure_difference);
+	void particleVelocityDiffToMesh();
+	void update(double pressure_difference);
 	void initPoissonSolver();
 	void localFlow(const vec3d &p, vec3d &u_local, vec3d &omega_local,
 				   std::vector<double> &e_local);
 	double meanVelocity();
 	void outputYaplot(std::ofstream &fout_flow);
 	void velocityProfile(std::ofstream &fout_fp);
-	vec3d calcAverageUsol();
+	vec3d calcAverageU();
 	double flowFiledDissipation();
 	double particleDissipation();
+	void pressureController();
 };
 #endif /* SolventFlow_hpp */
