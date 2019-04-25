@@ -846,11 +846,12 @@ void Simulation::outputDataSedimentatioin()
 	
 	
 	outdata.entryData("time", Dimensional::Dimension::Time, 1, sys.get_time()); // 1
-	outdata.entryData("suspension velocity", Dimensional::Dimension::none, 3, sys.sflow->u_sol_ave); // 2,3,4
+	outdata.entryData("tau", Dimensional::Dimension::Time, 1, sys.get_time()/sys.p.sflow_re); // 1
+	outdata.entryData("suspension velocity", Dimensional::Dimension::none, 3, sys.sflow->u_ave); // 2,3,4
 	outdata.entryData("pressure difference x", Dimensional::Dimension::Stress, 1, sys.sflow->pressure_difference_x); // 5
 	outdata.entryData("ave pressure difference x", Dimensional::Dimension::Stress, 1, sys.sflow->average_pressure_x.get()); //6
 //@@@@ sys.meanParticleVelocity() - sys.sflow->calcAverageUsol()
-	outdata.entryData("relative particle velocity", Dimensional::Dimension::Velocity, 3, sys.meanParticleVelocity()-sys.sflow->u_sol_ave);//7 8 9
+	outdata.entryData("relative particle velocity", Dimensional::Dimension::Velocity, 3, sys.meanParticleVelocity()-sys.sflow->u_ave);//7 8 9
 	outdata.entryData("relative particle angvelocity", Dimensional::Dimension::Velocity, 3, sys.meanParticleAngVelocity());
 	
 	

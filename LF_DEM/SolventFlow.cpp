@@ -307,18 +307,18 @@ void SolventFlow::particleVelocityDiffToMesh()
 
 void SolventFlow::pressureController()
 {
-	u_sol_ave = calcAverageU();
-	average_pressure_x.update(pressure_difference_x, sys->dt);
+	u_ave = calcAverageU();
+	average_pressure_x.update(pressure_difference_x, sys->get_time()/sys->p.sflow_re);
 	if (channel_flow) {
 		//pressure_difference = 10*pressure_difference_;
-		if (u_sol_ave.x < sys->p.sflow_target_flux) {
+		if (u_ave.x < sys->p.sflow_target_flux) {
 			pressure_difference_x += sys->p.sflow_pcontrol_increment;
 		} else {
 			pressure_difference_x -= sys->p.sflow_pcontrol_increment;
 		}
 	} else {
 		//double pd_increment = sys->p.sflow_pcontrol_increment;
-		double diff_x = u_sol_ave.x-target_flux;
+		double diff_x = u_ave.x-target_flux;
 		//if (u_sol_ave.x < target_flux) {
 		pressure_difference_x += -diff_x*sys->p.sflow_pcontrol_increment*sys->dt;
 		//		} else {
@@ -392,8 +392,8 @@ void SolventFlow::predictorStep()
 				double uz_duxdz = 0.25*(u_sol_z[k]+u_sol_z[il]+u_sol_z[ju]+u_sol_z[im1+jp1*nx])*(u_sol_x[ju]-u_sol_x[jd])/(2*dz);
 				double uz_duzdz = u_sol_z[k]*(u_sol_z[ju]-u_sol_z[jd])/(2*dz);
 				double uz_duzdx = 0.25*(u_sol_x[k]+u_sol_x[ir]+u_sol_x[jd]+u_sol_x[ip1+jm1*nx])*(u_sol_z[ir]-u_sol_z[il])/(2*dx);
-				double fx = dd_ux + ux_duxdx + uz_duxdz + res_coeff_ux*u_diff_x[k];
-				double fz = dd_uz + uz_duzdz + uz_duzdx + res_coeff_uz*u_diff_z[k];
+				double fx = dd_ux - ux_duxdx - uz_duxdz + res_coeff_ux*u_diff_x[k];
+				double fz = dd_uz - uz_duzdz - uz_duzdx + res_coeff_uz*u_diff_z[k];
 				u_sol_ast_x[k] = u_sol_x[k] + d_tau*fx;
 				u_sol_ast_z[k] = u_sol_z[k] + d_tau*fz;
 				// - sys->p.sf_zfriction*u_sol_ave.z);
@@ -778,46 +778,44 @@ double SolventFlow::meanVelocity()
 
 vec3d SolventFlow::calcAverageU()
 {
-	//int i = std::lround(0.5*nx);
 	int i = std::lround(0.5*nx);
 	double u_x_total = 0;
 	for (int j=0; j<nz; j++) {
 		int k = i + nx*j;
-		u_x_total += u_sol_x[k] + phi_ux[k]*u_diff_x[k];
+		u_x_total += u_x[k];
 	}
 	int j = std::lround(0.5*nz);
 	double u_z_total = 0;
 	for (int i=0; i<nx; i++) {
 		int k = i + nx*j;
-		u_z_total += u_sol_z[k] + phi_uz[k]*u_diff_z[k];
+		u_z_total += u_z[k];
 	}
 	return vec3d(u_x_total/nz, 0 , u_z_total/nx);
 }
 
 void SolventFlow::velocityProfile(std::ofstream &fout_fp)
 {
-	Eigen::VectorXd ux_sol(nz);
+	Eigen::VectorXd ux(nz);
 	Eigen::VectorXd ux_na(nz);
 	Eigen::VectorXd phi(nz);
 
 	for (int j=0; j<nz; j++) {
-		double total_ux_sol = 0;
+		double total_ux = 0;
 		double total_ux_na = 0;
 		double total_phi = 0;
 		for (int i=0; i<nx; i++){
 			int k = i+nx*j;
-			total_ux_sol += u_sol_x[k] + phi_ux[k]*u_diff_x[k];
-			total_ux_na += u_diff_x[k];
+			total_ux    += u_x[k];
+			total_ux_na += conv_factor*u_diff_x[k];
 			total_phi += phi_ux[k];
 		}
-		ux_sol(j) = total_ux_sol/nx;
+		ux(j) = total_ux/nx;
 		ux_na(j) = total_ux_na/nx;
 		// na = up - us
 		phi(j) = total_phi/nx;
 		// na + us = up - us + us = up
 	}
-
-	double mean_ux_sol = ux_sol.mean();
+	double mean_ux = ux.mean();
 	/*
 	 * F_bf = up - u
 	 * ux_na is the distributed up-u on mesh points.
@@ -827,10 +825,10 @@ void SolventFlow::velocityProfile(std::ofstream &fout_fp)
 	 */
 	std::cerr << "<up-u> = " << ux_na.mean()*nx*nz/sys->np_mobile << std::endl;
 	for (int j=0; j<nz; j++) {
-		double ux_solvent = ux_sol(j)-mean_ux_sol;
+		double ux_out = ux(j) - mean_ux;
 		fout_fp << pos[meshNb(0,j)].z << ' '; // 1: z
-		fout_fp << ux_solvent << ' '; // 2: total velocity profile
-		fout_fp << ux_na(j) + ux_solvent << ' '; // 3: u_particle
+		fout_fp << ux_out << ' '; // 2: total velocity profile
+		fout_fp << ux_na(j) + ux_out << ' '; // 3: u_particle
 		fout_fp << phi(j); // 4: volume fraction
 		fout_fp << std::endl;
 	}

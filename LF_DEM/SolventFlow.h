@@ -98,7 +98,7 @@ public:
 	~SolventFlow();
 	double pressure_difference_x;
 	double tau;
-	vec3d u_sol_ave;
+	vec3d u_ave;
 	Averager<double> average_pressure_x;
 	void init(System* sys_, std::string simulation_type);
 	void particleVelocityDiffToMesh();
