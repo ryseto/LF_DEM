@@ -26,6 +26,7 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 {
 	sys = sys_;
 	length_scale = 10;
+	re_num = sys->p.sflow_re;
 	conv_factor = length_scale; // for d = 2 (square if d = 3)
 	six_pi = 6*M_PI;
 	if (simulation_type == "sedimentation") {
@@ -332,7 +333,6 @@ void SolventFlow::pressureController()
 void SolventFlow::update(double pressure_difference_)
 {
 	//static std::ofstream fout_tmp("debug.dat");
-	d_tau = sys->dt/sys->p.sflow_re;
 	particleVelocityDiffToMesh();
 	predictorStep();
 	calcVelocityDivergence();
@@ -392,10 +392,10 @@ void SolventFlow::predictorStep()
 				double uz_duxdz = 0.25*(u_sol_z[k]+u_sol_z[il]+u_sol_z[ju]+u_sol_z[im1+jp1*nx])*(u_sol_x[ju]-u_sol_x[jd])/(2*dz);
 				double uz_duzdz = u_sol_z[k]*(u_sol_z[ju]-u_sol_z[jd])/(2*dz);
 				double uz_duzdx = 0.25*(u_sol_x[k]+u_sol_x[ir]+u_sol_x[jd]+u_sol_x[ip1+jm1*nx])*(u_sol_z[ir]-u_sol_z[il])/(2*dx);
-				double fx = dd_ux - ux_duxdx - uz_duxdz + res_coeff_ux*u_diff_x[k];
-				double fz = dd_uz - uz_duzdz - uz_duzdx + res_coeff_uz*u_diff_z[k];
-				u_sol_ast_x[k] = u_sol_x[k] + d_tau*fx;
-				u_sol_ast_z[k] = u_sol_z[k] + d_tau*fz;
+				double fx = dd_ux + res_coeff_ux*u_diff_x[k];
+				double fz = dd_uz + res_coeff_uz*u_diff_z[k];
+				u_sol_ast_x[k] = u_sol_x[k] + sys->dt*(fx/re_num - ux_duxdx - uz_duxdz);
+				u_sol_ast_z[k] = u_sol_z[k] + sys->dt*(fz/re_num - uz_duzdz - uz_duzdx);
 				// - sys->p.sf_zfriction*u_sol_ave.z);
 				/* sf_zfriction*u_sol_z[k] term is added
 				 * to stabilize view center along z direction.
@@ -413,7 +413,7 @@ void SolventFlow::predictorStep()
 					double ux_bot_m1 = 2*ux_bot - u_sol_x[k]; // (ux(i,-1)+ux(i,0))/2 = ux_bot
 					double dd_ux = (u_sol_x[ir]-2*u_sol_x[k]+u_sol_x[il])/dx2+(u_sol_x[ju]-2*u_sol_x[k]+ux_bot_m1)/dz2;
 					double fx = dd_ux + res_coeff_ux*u_diff_x[k];
-					u_sol_ast_x[k] = u_sol_x[k] + d_tau*fx;
+					u_sol_ast_x[k] = u_sol_x[k] + sys->dt*(fx/re_num);
 					u_sol_ast_z[k] = 0; // Just on the bottom wall
 				} else {
 					double dd_ux, dd_uz;
@@ -431,8 +431,8 @@ void SolventFlow::predictorStep()
 					dd_uz = (u_sol_z[ir]-2*u_sol_z[k]+u_sol_z[il])/dx2+(u_sol_z[ju]-2*u_sol_z[k]+u_sol_z[jd])/dz2;
 					double fx = dd_ux + res_coeff_ux*u_diff_x[k];
 					double fz = dd_uz + res_coeff_uz*u_diff_z[k];
-					u_sol_ast_x[k] = u_sol_x[k] + d_tau*fx;
-					u_sol_ast_z[k] = u_sol_z[k] + d_tau*fz;
+					u_sol_ast_x[k] = u_sol_x[k] + sys->dt*(fx/re_num);
+					u_sol_ast_z[k] = u_sol_z[k] + sys->dt*(fz/re_num);
 				}
 			}
 		}
@@ -500,8 +500,9 @@ void SolventFlow::calcVelocityDivergence()
 
 void SolventFlow::solvePressure()
 {
+	double rhs_coeff = re_num/(six_pi*sys->dt);
 	for (int k=0; k<n; k++) {
-		rhs_vector(k) = (div_u_sol_ast[k]+gr_phi_Ud_phi_div_Ud[k])/(six_pi*d_tau);
+		rhs_vector(k) = (div_u_sol_ast[k]+gr_phi_Ud_phi_div_Ud[k])*rhs_coeff;
 	}
 	if (pressure_difference_x != 0) {
 		double delta_P_dxdx = pressure_difference_x/(dx*dx);
@@ -530,8 +531,8 @@ void SolventFlow::correctorStep()
 	if (sys->p.sflow_boundary_conditions == 0) {
 		/* periodic boundary condtions in x and z directions.
 		 */
-		double sixpi_d_tau_dx = six_pi*d_tau/dx;
-		double sixpi_d_tau_dz = six_pi*d_tau/dz;
+		double sixpi_d_tau_dx = six_pi*sys->dt/(dx*re_num);
+		double sixpi_d_tau_dz = six_pi*sys->dt/(dz*re_num);
 		for (int i=0; i<nx; i++) {
 			int im1 = (i == 0 ? nx-1 : i-1);
 			double pd_x = (i == 0 ? pressure_difference_x : 0);
@@ -547,17 +548,19 @@ void SolventFlow::correctorStep()
 		 * Non-slip boundy conditions at z = 0 and z=Lz.
 		 * (uz[i, j = nz] = 0,)
 		 */
+		double cx = six_pi*sys->dt/(re_num*dx);
+		double cz = six_pi*sys->dt/(re_num*dz);
 		for (int i=0; i<nx; i++) {
 			int im1 = (i == 0 ? nx-1 : i-1);
 			double pd_x = (i == 0 ? pressure_difference_x : 0);
 			{// bottom
-				u_sol_x[i] = u_sol_ast_x[i] - d_tau*(pressure[i] - (pressure[im1]+pd_x))/dx;
+				u_sol_x[i] = u_sol_ast_x[i] - cx*(pressure[i] - (pressure[im1]+pd_x));
 				u_sol_z[i] = 0;
 			}
 			for (int j=1; j<nz; j++) {
 				int k = i+nx*j;
-				u_sol_x[k] = u_sol_ast_x[k] - six_pi*d_tau*(pressure[k] - (pressure[im1+j*nx]+pd_x))/dx;
-				u_sol_z[k] = u_sol_ast_z[k] - six_pi*d_tau*(pressure[k] - pressure[i+(j-1)*nx])/dz;
+				u_sol_x[k] = u_sol_ast_x[k] - cx*(pressure[k] - (pressure[im1+j*nx]+pd_x));
+				u_sol_z[k] = u_sol_ast_z[k] - cz*(pressure[k] - pressure[i+(j-1)*nx]);
 			}
 			{// top
 				int j=nz;

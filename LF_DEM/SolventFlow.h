@@ -36,12 +36,13 @@ private:
 	int nz;
 	int n;
 	int jmax_uz;
+	double re_num;
 	double six_pi;
 	double dx;
 	double dz;
 	double ux_bot;
 	double ux_top;
-	double d_tau;
+	//double d_tau;
 	double length_scale;
 	double conv_factor;
 	double smooth_length;
