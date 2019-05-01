@@ -67,8 +67,11 @@ private:
 	std::vector<double> u_sol_ast_z;
 	std::vector<double> u_particle_x;
 	std::vector<double> u_particle_z;
-	std::vector<double> u_diff_x;
-	std::vector<double> u_diff_z;
+	std::vector<double> Urel_x;
+	std::vector<double> Urel_z;
+	//std::vector<double> U_u_x;
+	//std::vector<double> U_u_z;
+
 	std::vector<double> omega;
 	std::vector<double> strain_rate_xx;
 	std::vector<double> strain_rate_xz;
@@ -107,7 +110,6 @@ public:
 	void initPoissonSolver();
 	void localFlow(const vec3d &p, vec3d &u_local, vec3d &omega_local,
 				   std::vector<double> &e_local);
-	double meanVelocity();
 	void outputYaplot(std::ofstream &fout_flow);
 	void velocityProfile(std::ofstream &fout_fp);
 	vec3d calcAverageU();

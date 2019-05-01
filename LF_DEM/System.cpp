@@ -168,6 +168,7 @@ void System::allocateRessources()
 		u_local.resize(np);
 		omega_local.resize(np);
 		E_local.resize(np);
+		phi_local.resize(np);
 	}
 }
 

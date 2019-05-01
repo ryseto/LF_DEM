@@ -163,8 +163,7 @@ private:
 	std::vector<double> stokesdrag_coeff_t_sqrt;
 	std::vector <struct DBlock> resistance_matrix_dblock;
 
-	std::vector<vec3d> u_local;
-	std::vector<vec3d> omega_local;
+	
 	
 	void adjustContactModelParameters();
 	Averager<double> kn_avg;
@@ -219,7 +218,10 @@ private:
 	bool in_corrector;
 	bool retrim_ext_flow;
 	std::vector<vec3d> position;
+	std::vector<vec3d> u_local;
+	std::vector<vec3d> omega_local;
 	std::vector<Sym2Tensor> E_local;
+	std::vector<double> phi_local;
 	std::vector<vec3d> forceResultant;
 	std::vector<vec3d> torqueResultant;
 	std::vector<vec3d> non_rate_proportional_wall_force;
