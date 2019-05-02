@@ -97,6 +97,8 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(sj_velocity, 1e-3),
 		PARAM_INIT(body_force, 1),
 		PARAM_INIT(body_force_angle, 0),
+		PARAM_INIT(sflow_dx, 5),
+		PARAM_INIT(sflow_smooth_length, 3),
 		PARAM_INIT(sflow_re, 0.1),
 		PARAM_INIT(sflow_Darcy_coeff, 1),
 		PARAM_INIT(sflow_pcontrol_increment, 1e-4),
@@ -119,8 +121,6 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(sj_check_count, 500),
 		PARAM_INIT(sj_reversal_repetition, 10),
 		PARAM_INIT(sflow_boundary_conditions, 0),
-		PARAM_INIT(sflow_nx, 20),
-		PARAM_INIT(sflow_nz, -1),
 		PARAM_INIT(sflow_Darcy_power, 0)
 	};
 

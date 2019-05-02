@@ -69,15 +69,14 @@ private:
 	std::vector<double> u_particle_z;
 	std::vector<double> Urel_x;
 	std::vector<double> Urel_z;
-	//std::vector<double> U_u_x;
-	//std::vector<double> U_u_z;
-
 	std::vector<double> omega;
 	std::vector<double> strain_rate_xx;
 	std::vector<double> strain_rate_xz;
 	std::vector<double> strain_rate_zz;
 	std::vector<double> phi_ux;
 	std::vector<double> phi_uz;
+	std::vector<double> phi_ux2;
+	std::vector<double> phi_uz2;
 	std::vector<vec3d> pos;
 	std::vector <int> mesh_nb;
 	std::vector <double> udx_values;
@@ -97,6 +96,9 @@ private:
 	void correctorStep();
 	double porousResistance(double volume_fraction);
 	void calcVelocityGradients();
+	/*** debug functions ***/
+	void doctor_phi();
+	
 public:
 	SolventFlow();
 	~SolventFlow();

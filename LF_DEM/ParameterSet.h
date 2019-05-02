@@ -212,8 +212,8 @@ namespace Parameters {
 		bool check_static_force_balance;
 		double body_force;  ///< body force [1]
 		double body_force_angle;  ///< parallel to wall 0 and vertical to wall 90 [0]
-		int sflow_nx; // solvent_flow [20]
-		int sflow_nz; // solvent_flow [-1]
+		double sflow_dx; // mesh size in unit of particle radius [5]
+		double sflow_smooth_length; // mesh size in unit of particle radius [3]
 		int sflow_Darcy_power; // lambda for phi/(1-phi)^{lambda} (Modified Darcy's law) [0]
 		double sflow_Darcy_coeff; // [1]
 		double sflow_re; // [0.1]
