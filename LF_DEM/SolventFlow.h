@@ -43,13 +43,15 @@ private:
 	double ux_bot;
 	double ux_top;
 	//double d_tau;
-	double length_scale;
 	double conv_factor;
+	double length_scale;
 	double smooth_length;
 	double sq_smooth_length;
+	double pressure_grad_x;
 	double cell_area;
 	double target_flux;
 	double average_area_fraction;
+	double system_volume;
 	bool sedimentation;
 	bool channel_flow;
 	// Staggered grid stores
@@ -102,8 +104,10 @@ private:
 public:
 	SolventFlow();
 	~SolventFlow();
-	double pressure_difference_x;
+
 	double tau;
+
+
 	vec3d u_ave;
 	Averager<double> average_pressure_x;
 	void init(System* sys_, std::string simulation_type);
@@ -118,5 +122,12 @@ public:
 	double flowFiledDissipation();
 	double particleDissipation();
 	void pressureController();
+	double get_pressure_grad_x()
+	{
+		/* flow unit --> particle dynamics unit
+		 * grad p in PD unit = (grad p in SF unit) * (a/R0)^{3-d}
+		 */
+		return pressure_grad_x/conv_factor;
+	}
 };
 #endif /* SolventFlow_hpp */

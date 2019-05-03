@@ -846,16 +846,14 @@ void Simulation::outputDataSedimentatioin()
 	
 	
 	outdata.entryData("time", Dimensional::Dimension::Time, 1, sys.get_time()); // 1
-	outdata.entryData("tau", Dimensional::Dimension::Time, 1, sys.get_time()/sys.p.sflow_re); // 1
-	outdata.entryData("suspension velocity", Dimensional::Dimension::none, 3, sys.sflow->u_ave); // 2,3,4
-	outdata.entryData("pressure difference x", Dimensional::Dimension::Stress, 1, sys.sflow->pressure_difference_x); // 5
-	outdata.entryData("ave pressure difference x", Dimensional::Dimension::Stress, 1, sys.sflow->average_pressure_x.get()); //6
-//@@@@ sys.meanParticleVelocity() - sys.sflow->calcAverageUsol()
-	outdata.entryData("relative particle velocity", Dimensional::Dimension::Velocity, 3, sys.meanParticleVelocity()-sys.sflow->u_ave);//7 8 9
-	outdata.entryData("relative particle angvelocity", Dimensional::Dimension::Velocity, 3, sys.meanParticleAngVelocity());
-	
-	
-	outdata.entryData("min gap", Dimensional::Dimension::none, 1, evaluateMinGap(sys));
+	outdata.entryData("tau", Dimensional::Dimension::Time, 1, sys.get_time()/sys.p.sflow_ReNum); // 2
+	outdata.entryData("suspension velocity", Dimensional::Dimension::none, 3, sys.sflow->u_ave); // 3,4,5 //
+	outdata.entryData("pressure gradient x", Dimensional::Dimension::Stress, 1, sys.sflow->get_pressure_grad_x()); // 6
+	outdata.entryData("relative particle velocity", Dimensional::Dimension::Velocity, 3, sys.meanParticleVelocity()-sys.sflow->u_ave);// 7 8 9
+	outdata.entryData("relative particle angvelocity", Dimensional::Dimension::Velocity, 3, sys.meanParticleAngVelocity()); // 10
+	outdata.entryData("flow dissipation", Dimensional::Dimension::none, 1, sys.sflow->flowFiledDissipation()); // 11
+	outdata.entryData("particle dissipation", Dimensional::Dimension::none, 1, sys.sflow->particleDissipation()); //12
+	outdata.entryData("min gap", Dimensional::Dimension::none, 1, evaluateMinGap(sys)); //13
 	if (sys.adhesion) {
 		outdata.entryData("max gap", Dimensional::Dimension::none, 1, evaluateMaxContactGap(sys));
 	}
@@ -869,8 +867,6 @@ void Simulation::outputDataSedimentatioin()
 	outdata.entryData("frictional contact number", Dimensional::Dimension::none, 1, frictional_contact_nb_per_particle);
 	outdata.entryData("number of interaction", Dimensional::Dimension::none, 1, sys.get_nb_interactions());
 	outdata.entryData("dt", Dimensional::Dimension::Time, 1, sys.avg_dt);
-	outdata.entryData("flow dissipation", Dimensional::Dimension::none, 1, sys.sflow->flowFiledDissipation());
-	outdata.entryData("particle dissipation", Dimensional::Dimension::none, 1, sys.sflow->particleDissipation());
 	outdata.writeToFile();
 }
 

@@ -25,8 +25,17 @@ SolventFlow::~SolventFlow()
 void SolventFlow::init(System* sys_, std::string simulation_type)
 {
 	sys = sys_;
-	length_scale = 5;
-	re_num = sys->p.sflow_re;
+	re_num = sys->p.sflow_ReNum;
+	if (sys->twodimension) {
+		length_scale = sqrt(sys->p.sflow_ReNum/sys->p.sflow_ReNum_p);
+	} else {
+		//length_scale = pow(sys->p.sflow_ReNum/sys->p.sflow_ReNum_p, 0.3333);
+		exit(1);
+	}
+	std::cerr << "Ro/a = " << length_scale << std::endl;
+	/* flow unit --> particle dynamics unit
+	 * u in PD unit = (u in SF unit) * (R0/a)^{d-1}
+	 */
 	conv_factor = length_scale; // for d = 2 (square if d = 3)
 	six_pi = 6*M_PI;
 	if (simulation_type == "sedimentation") {
@@ -41,11 +50,11 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 	average_pressure_x.setRelaxationTime(sys->p.sflow_pcontrol_rtime);
 	if (sedimentation) {
 		std::cerr << "sedimentation simulation" << std::endl;
-		pressure_difference_x = 0;
+		pressure_grad_x = 0;
 		sys->body_force = true;
 	}
 	if (channel_flow) {
-		pressure_difference_x = 0;
+		pressure_grad_x = 0;
 		sys->body_force = false;
 	}
 	nx = (int)(sys->get_lx()/sys->p.sflow_dx);
@@ -68,6 +77,7 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 		throw std::runtime_error(error_str.str());
 	}
 	cell_area = dx*dz;
+	system_volume = sys->get_lx()*sys->get_lz()*2;
 	smooth_length = sys->p.sflow_smooth_length;
 	sq_smooth_length = smooth_length*smooth_length;
 	pressure.resize(n, 0);
@@ -329,25 +339,19 @@ void SolventFlow::doctor_phi()
 
 void SolventFlow::pressureController()
 {
-	u_ave = calcAverageU();
-	average_pressure_x.update(pressure_difference_x, sys->get_time()/sys->p.sflow_re);
+	u_ave = calcAverageU(); // fluid unit
+	vec3d u_ave_funit = u_ave/conv_factor;
+	average_pressure_x.update(pressure_grad_x, sys->get_time()/sys->p.sflow_ReNum);
 	if (channel_flow) {
-		//pressure_difference = 10*pressure_difference_;
-		if (u_ave.x < sys->p.sflow_target_flux) {
-			pressure_difference_x += sys->p.sflow_pcontrol_increment;
+		if (u_ave_funit.x < sys->p.sflow_target_flux) {
+			pressure_grad_x += sys->p.sflow_pcontrol_increment;
 		} else {
-			pressure_difference_x -= sys->p.sflow_pcontrol_increment;
+			pressure_grad_x -= sys->p.sflow_pcontrol_increment;
 		}
 	} else {
-		//double pd_increment = sys->p.sflow_pcontrol_increment;
-		double diff_x = u_ave.x-target_flux;
-		//if (u_sol_ave.x < target_flux) {
-		pressure_difference_x += -diff_x*sys->p.sflow_pcontrol_increment*sys->dt;
-		//		} else {
-		//		pressure_difference_x -= diff_x*sys->p.sflow_pcontrol_increment*sys->dt;
-		//}
-		pressure_difference_x += - sys->p.sflow_pcontrol_damper*(pressure_difference_x - average_pressure_x.get())*sys->dt;
-		// pressure_difference_x -= (pressure_difference_x-average_pressure.get());
+		double diff_x = u_ave_funit.x-target_flux;
+		pressure_grad_x += -diff_x*sys->p.sflow_pcontrol_increment*sys->dt;
+		pressure_grad_x += - sys->p.sflow_pcontrol_damper*(pressure_grad_x - average_pressure_x.get())*sys->dt;
 	}
 }
 
@@ -361,8 +365,8 @@ void SolventFlow::update(double pressure_difference_)
 	correctorStep();
 	for (int k=0; k<n; k++) {
 		/* u = suspension total velocity */
-		u_x[k] = conv_factor*(u_sol_x[k] + Urel_x[k]*phi_ux2[k]);
-		u_z[k] = conv_factor*(u_sol_z[k] + Urel_z[k]*phi_uz2[k]);
+		u_x[k] = conv_factor*(u_sol_x[k] + Urel_x[k]*phi_ux2[k]);// particle unit
+		u_z[k] = conv_factor*(u_sol_z[k] + Urel_z[k]*phi_uz2[k]);// particle unit
 	}
 	calcVelocityGradients();
 }
@@ -518,8 +522,8 @@ void SolventFlow::solvePressure()
 		rhs_vector(k) = (div_u_sol_ast[k])*rhs_coeff;
 		//rhs_vector(k) = (div_u_sol_ast[k]+gr_phi_Ud_phi_div_Ud[k])*rhs_coeff;
 	}
-	if (pressure_difference_x != 0) {
-		double delta_P_dxdx = pressure_difference_x/(dx*dx);
+	if (pressure_grad_x != 0) {
+		double delta_P_dxdx = pressure_grad_x*sys->get_lx()/(dx*dx);
 		for (int j=0; j<nz; j++) {
 			int j_nx = j*nx;
 			// i = 0 --> k = j*nx
@@ -547,6 +551,7 @@ void SolventFlow::correctorStep()
 		 */
 		double sixpi_dt_Re_dx = six_pi*sys->dt/(dx*re_num);
 		double sixpi_dt_Re_dz = six_pi*sys->dt/(dz*re_num);
+		double pressure_difference_x = pressure_grad_x*sys->get_lx();
 		for (int i=0; i<nx; i++) {
 			int im1 = (i == 0 ? nx-1 : i-1);
 			double pd_x = (i == 0 ? pressure_difference_x : 0);
@@ -566,7 +571,7 @@ void SolventFlow::correctorStep()
 		double cz = six_pi*sys->dt/(re_num*dz);
 		for (int i=0; i<nx; i++) {
 			int im1 = (i == 0 ? nx-1 : i-1);
-			double pd_x = (i == 0 ? pressure_difference_x : 0);
+			double pd_x = (i == 0 ? pressure_grad_x : 0);
 			{// bottom
 				u_sol_x[i] = u_sol_ast_x[i] - cx*(pressure[i] - (pressure[im1]+pd_x));
 				u_sol_z[i] = 0;
@@ -772,34 +777,33 @@ void SolventFlow::localFlow(const vec3d &p,
 double SolventFlow::flowFiledDissipation()
 {
 	double energy_dissipation = 0;
-	for (int j=0; j<nz; j++) {
-		for (int i=0; i<nx; i++) {
-			int k = i+j*nx;
-			energy_dissipation +=   strain_rate_xx[k]*strain_rate_xx[k];
-			energy_dissipation += 2*strain_rate_xz[k]*strain_rate_xz[k];
-			energy_dissipation +=   strain_rate_zz[k]*strain_rate_zz[k];
-		}
+	for (int k = 0; k<n; k++) {
+		energy_dissipation +=   strain_rate_xx[k]*strain_rate_xx[k];
+		energy_dissipation += 2*strain_rate_xz[k]*strain_rate_xz[k];
+		energy_dissipation +=   strain_rate_zz[k]*strain_rate_zz[k];
 	}
-	return energy_dissipation/sys->get_lx()/sys->get_lz();
+	return energy_dissipation/system_volume; // particle dynamic unit
 }
 
 double SolventFlow::particleDissipation()
 {
+	/*
+	 * lubrication force x velocity need to be calculate.
+	 */
 	double energy_dissipation = 0;
-	vec3d u, omega;
 	for (int i=0; i<sys->np_mobile; i++) {
-		energy_dissipation += 0.5*(sys->na_velocity[i].sq_norm() + sys->na_ang_velocity[i].sq_norm());
+		energy_dissipation += 0.5*sys->na_velocity[i].sq_norm(); // W = F*U  (lu
 	}
-	return energy_dissipation/sys->get_lx()/sys->get_lz();
+	return energy_dissipation/system_volume;
 }
 
 vec3d SolventFlow::calcAverageU()
 {
+	// particle unit.
 	int i = std::lround(0.5*nx);
 	double u_x_total = 0;
 	for (int j=0; j<nz; j++) {
 		int k = i + nx*j;
-		//u_x_total += u_x[k];
 		u_x_total += u_x[k];//  + phi_ux[k]*Urel_x[k];
 	}
 	
@@ -822,7 +826,6 @@ vec3d SolventFlow::calcAverageU()
 	double u_z_total = 0;
 	for (int i=0; i<nx; i++) {
 		int k = i + nx*j;
-		//u_z_total += u_z[k];
 		u_z_total += u_z[k];// + phi_uz[k]*Urel_z[k];
 	}
 	return vec3d(u_x_total/nz, 0 , u_z_total/nx);
@@ -830,6 +833,7 @@ vec3d SolventFlow::calcAverageU()
 
 void SolventFlow::velocityProfile(std::ofstream &fout_fp)
 {
+	// particle unit.
 	Eigen::VectorXd ux(nz);
 	Eigen::VectorXd ux_na(nz);
 	Eigen::VectorXd phi(nz);
@@ -839,9 +843,7 @@ void SolventFlow::velocityProfile(std::ofstream &fout_fp)
 		double total_phi = 0;
 		for (int i=0; i<nx; i++) {
 			int k = i+nx*j;
-			//total_ux    += u_x[k];
 			total_ux    += u_x[k];//         n + phi_ux[k]*Urel_x[k];
-			//total_ux_na += conv_factor*Urel_x[k];
 			total_ux_na += conv_factor*Urel_x[k];
 			total_phi   += phi_ux[k];
 		}
