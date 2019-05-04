@@ -25,18 +25,19 @@ SolventFlow::~SolventFlow()
 void SolventFlow::init(System* sys_, std::string simulation_type)
 {
 	sys = sys_;
-	re_num = sys->p.sflow_ReNum;
-	if (sys->twodimension) {
-		length_scale = sqrt(sys->p.sflow_ReNum/sys->p.sflow_ReNum_p);
-	} else {
-		//length_scale = pow(sys->p.sflow_ReNum/sys->p.sflow_ReNum_p, 0.3333);
-		exit(1);
-	}
-	std::cerr << "Ro/a = " << length_scale << std::endl;
+	re_num = sys->p.sflow_ReNum_p;
+	//	if (sys->twodimension) {
+	//		length_scale = sqrt(sys->p.sflow_ReNum/sys->p.sflow_ReNum_p);
+	//	} else {
+	//		//length_scale = pow(sys->p.sflow_ReNum/sys->p.sflow_ReNum_p, 0.3333);
+	//		exit(1);
+	//	}
+	//std::cerr << "Ro/a = " << length_scale << std::endl;
 	/* flow unit --> particle dynamics unit
 	 * u in PD unit = (u in SF unit) * (R0/a)^{d-1}
 	 */
-	conv_factor = length_scale; // for d = 2 (square if d = 3)
+	//conv_factor = length_scale; // for d = 2 (square if d = 3)
+	//alpha = re_num/length_scale;
 	six_pi = 6*M_PI;
 	if (simulation_type == "sedimentation") {
 		sedimentation = true;
@@ -316,8 +317,6 @@ void SolventFlow::particleVelocityDiffToMesh()
 	}
 	// Here, from U-u to U - us by the factor 1/(1-phi)
 	for (int k=0; k<n; k++) {
-		Urel_x[k] *= 1/conv_factor;
-		Urel_z[k] *= 1/conv_factor;
 		phi_ux2[k] = phi_ux[k]/(1-phi_ux[k]);
 		phi_uz2[k] = phi_uz[k]/(1-phi_uz[k]);
 	}
@@ -340,16 +339,15 @@ void SolventFlow::doctor_phi()
 void SolventFlow::pressureController()
 {
 	u_ave = calcAverageU(); // fluid unit
-	vec3d u_ave_funit = u_ave/conv_factor;
-	average_pressure_x.update(pressure_grad_x, sys->get_time()/sys->p.sflow_ReNum);
+	average_pressure_x.update(pressure_grad_x, sys->get_time());
 	if (channel_flow) {
-		if (u_ave_funit.x < sys->p.sflow_target_flux) {
+		if (u_ave.x < sys->p.sflow_target_flux) {
 			pressure_grad_x += sys->p.sflow_pcontrol_increment;
 		} else {
 			pressure_grad_x -= sys->p.sflow_pcontrol_increment;
 		}
 	} else {
-		double diff_x = u_ave_funit.x-target_flux;
+		double diff_x = u_ave.x-target_flux;
 		pressure_grad_x += -diff_x*sys->p.sflow_pcontrol_increment*sys->dt;
 		pressure_grad_x += - sys->p.sflow_pcontrol_damper*(pressure_grad_x - average_pressure_x.get())*sys->dt;
 	}
@@ -365,8 +363,8 @@ void SolventFlow::update(double pressure_difference_)
 	correctorStep();
 	for (int k=0; k<n; k++) {
 		/* u = suspension total velocity */
-		u_x[k] = conv_factor*(u_sol_x[k] + Urel_x[k]*phi_ux2[k]);// particle unit
-		u_z[k] = conv_factor*(u_sol_z[k] + Urel_z[k]*phi_uz2[k]);// particle unit
+		u_x[k] = u_sol_x[k] + Urel_x[k]*phi_ux2[k];// particle unit
+		u_z[k] = u_sol_z[k] + Urel_z[k]*phi_uz2[k];// particle unit
 	}
 	calcVelocityGradients();
 }
@@ -389,7 +387,6 @@ void SolventFlow::predictorStep()
 {
 	double dx2 = dx*dx;
 	double dz2 = dz*dz;
-	double scalefactor = length_scale*length_scale;
 	for (int j=0; j<nz; j++) {
 		int jp1, jm1;
 		if (sys->p.sflow_boundary_conditions == 0) {
@@ -407,8 +404,9 @@ void SolventFlow::predictorStep()
 			int il = im1 + j  *nx; //left
 			int ju = i   + jp1*nx; //up
 			int jd = i   + jm1*nx; //down
-			double res_coeff_ux = scalefactor*porousResistance(phi_ux[k]);
-			double res_coeff_uz = scalefactor*porousResistance(phi_uz[k]);
+			double res_coeff_ux = porousResistance(phi_ux[k]);
+			double res_coeff_uz = porousResistance(phi_uz[k]);
+			
 			if (sys->p.sflow_boundary_conditions == 0) {
 				/* periodic boundary condtions in x and z directions.
 				 */
@@ -420,9 +418,8 @@ void SolventFlow::predictorStep()
 				double ux_duzdx = 0.25*(u_sol_x[k]+u_sol_x[ir]+u_sol_x[jd]+u_sol_x[ip1+jm1*nx])*(u_sol_z[ir]-u_sol_z[il])/(2*dx);
 				double fx = dd_ux + res_coeff_ux*Urel_x[k];
 				double fz = dd_uz + res_coeff_uz*Urel_z[k];
-
-				u_sol_ast_x[k] = u_sol_x[k] + sys->dt*(fx/re_num - ux_duxdx - uz_duxdz);
-				u_sol_ast_z[k] = u_sol_z[k] + sys->dt*(fz/re_num - uz_duzdz - ux_duzdx);
+				u_sol_ast_x[k] = u_sol_x[k] + sys->dt*(fx/re_num - (ux_duxdx + uz_duxdz));
+				u_sol_ast_z[k] = u_sol_z[k] + sys->dt*(fz/re_num - (uz_duzdz + ux_duzdx));
 
 				// - sys->p.sf_zfriction*u_sol_ave.z);
 				/* sf_zfriction*u_sol_z[k] term is added
@@ -519,7 +516,7 @@ void SolventFlow::solvePressure()
 	double rhs_coeff = re_num/(six_pi*sys->dt);
 	for (int k=0; k<n; k++) {
 		//rhs_vector(k) = (div_u_sol_ast[k]-gr_phi_Ud_phi_div_Ud[k])*rhs_coeff; // it works...
-		rhs_vector(k) = (div_u_sol_ast[k])*rhs_coeff;
+		rhs_vector(k) = div_u_sol_ast[k]*rhs_coeff;
 		//rhs_vector(k) = (div_u_sol_ast[k]+gr_phi_Ud_phi_div_Ud[k])*rhs_coeff;
 	}
 	if (pressure_grad_x != 0) {
@@ -844,7 +841,7 @@ void SolventFlow::velocityProfile(std::ofstream &fout_fp)
 		for (int i=0; i<nx; i++) {
 			int k = i+nx*j;
 			total_ux    += u_x[k];//         n + phi_ux[k]*Urel_x[k];
-			total_ux_na += conv_factor*Urel_x[k];
+			total_ux_na += Urel_x[k];
 			total_phi   += phi_ux[k];
 		}
 		ux(j) = total_ux/nx;
@@ -909,7 +906,7 @@ void SolventFlow::outputYaplot(std::ofstream &fout_flow)
 		double x = sys->position[i].x-sys->get_lx()/2;
 		double z = sys->position[i].z-sys->get_lz()/2;
 		double a = sys->radius[i];
-		vec3d v = sys->u_local[i]/conv_factor;
+		vec3d v = sys->u_local[i];
 		fout_flow << "l " << x  << ' ' << 0 << ' ' << z ;
 		fout_flow << ' ' << x + v.x << ' ' << 0 << ' ' << z + v.z << std::endl;
 	}

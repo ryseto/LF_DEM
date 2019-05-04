@@ -37,14 +37,15 @@ private:
 	int n;
 	int jmax_uz;
 	double re_num;
+	//double alpha;
 	double six_pi;
 	double dx;
 	double dz;
 	double ux_bot;
 	double ux_top;
 	//double d_tau;
-	double conv_factor;
-	double length_scale;
+	//double conv_factor;
+	//double length_scale;
 	double smooth_length;
 	double sq_smooth_length;
 	double pressure_grad_x;
@@ -127,7 +128,7 @@ public:
 		/* flow unit --> particle dynamics unit
 		 * grad p in PD unit = (grad p in SF unit) * (a/R0)^{3-d}
 		 */
-		return pressure_grad_x/conv_factor;
+		return pressure_grad_x;
 	}
 };
 #endif /* SolventFlow_hpp */
