@@ -101,6 +101,8 @@ private:
 	double sqContactDistance(int i, int j, double contact_distance);
 	std::pair<std::vector<vec3d>, std::vector<double>>  putRandom(bool twodimension);
 	void setParameters(Simulation &simu, double volume_frac_init);
+	void setParametersBasic(Simulation &simu, double volume_frac, unsigned N, bool bidimensional);
+
 	void outputPositionData(const System &sys);
 	template<typename T> void baseSetup(T &conf, bool is2d, double inflate_ratio);
 public:
@@ -111,5 +113,6 @@ public:
 	 * config_type = 2 -- circular wide gap
 	 * config_type = 3 -- simple shear with wall
 	 */
+	void generateBasic(int rand_seed_, double volume_frac, unsigned N, bool bidimensional);
 };
 #endif /* defined(__LF_DEM__GenerateInitConfig__) */

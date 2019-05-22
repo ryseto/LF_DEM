@@ -40,6 +40,18 @@ std::string prepareSimulationNameFromChkp(const std::string& filename_chkp)
 	return filename_chkp.substr(chkp_name_start, chkp_name_end-chkp_name_start);
 }
 
+std::vector<std::string> split(const std::string& s, char delimiter)
+{
+   std::vector<std::string> tokens;
+   std::string token;
+   std::istringstream tokenStream(s);
+   while (std::getline(tokenStream, token, delimiter))
+   {
+      tokens.push_back(token);
+   }
+   return tokens;
+}
+
 int main(int argc, char **argv)
 {
 	cout << endl << "LF_DEM version " << GIT_VERSION << endl << endl;
@@ -68,6 +80,7 @@ int main(int argc, char **argv)
 	Dimensional::DimensionalQty<double> control_value;
 	Parameters::ControlVariable control_variable = Parameters::ControlVariable::rate;
 	string simu_identifier = "";
+	vector<string> str_vec;
 	const struct option longopts[] = {
 		{"rate-controlled",   required_argument, 0, 'r'},
 		{"rate-infty",        required_argument, 0, '8'},
@@ -75,6 +88,7 @@ int main(int argc, char **argv)
 		{"channel-flow",      required_argument, 0, 'C'},
 		{"sedimentation",     required_argument, 0, 'S'},
 		{"generate",          optional_argument, 0, 'g'},
+		{"generate_basic",    optional_argument, 0, 'G'},
 		{"random-seed",       required_argument, 0, 'a'},
 		{"cluster-radius",    required_argument, 0, 'b'},
 		{"volume-fraction",   required_argument, 0, 'p'},
@@ -90,7 +104,7 @@ int main(int argc, char **argv)
 	};
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hn80fds:t:r:C:S:g::p:a:b:k:i:v:c:N:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hn80fds:t:r:C:S:g::G:p:a:b:k:i:v:c:N:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
 				simulation_type = "shear rheology";
@@ -157,6 +171,10 @@ int main(int argc, char **argv)
 					}
 				}
 				break;
+			case 'G':
+				generate_init = 7;
+				str_vec = split(optarg, ':');
+				break;
 			case 'p':
 				volume_frac_gen = atof(optarg);
 				break;
@@ -203,8 +221,12 @@ int main(int argc, char **argv)
 	}
 	if (generate_init >= 1) {
 		GenerateInitConfig generate_init_config;
-		generate_init_config.generate(random_seed, volume_frac_gen, cluster_phi,
-									  generate_init);
+		if (generate_init != 7) {
+			generate_init_config.generate(random_seed, volume_frac_gen, cluster_phi,
+										  generate_init);
+		} else {
+			generate_init_config.generateBasic(random_seed, stof(str_vec[0]), stoi(str_vec[1]), stoi(str_vec[2]) == 2);
+		}
 	} else {
 #ifdef SIGINT_CATCH
 		std::signal(SIGINT, sigint_handler);
