@@ -56,7 +56,8 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(output.effective_coordination_number, false),
 		PARAM_INIT(check_static_force_balance, false),
 		PARAM_INIT(smooth_lubrication, false),
-		PARAM_INIT(solvent_flow, false)
+		PARAM_INIT(solvent_flow, false),
+		PARAM_INIT(confinement.on, false)
 	};
 
 	/*===========================================
@@ -105,7 +106,9 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(sflow_pcontrol_increment, 1e-4),
 		PARAM_INIT(sflow_pcontrol_rtime, 0.1),
 		PARAM_INIT(sflow_pcontrol_damper, 100),
-		PARAM_INIT(sflow_target_flux, 0)
+		PARAM_INIT(sflow_target_flux, 0),
+		PARAM_INIT(confinement.y_min, 0),
+		PARAM_INIT(confinement.y_max, 0)
 	};
 
 	/*================================
@@ -210,6 +213,7 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 	default_qty = {Dimensional::Dimension::Time, 0, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(TA_adhesion.activation_time, default_qty));
 
+	
 	/*----------  True dim vals  ----------*/
 	
 	default_qty = {Dimensional::Dimension::TimeOrStrain, 10, guarranted_unit};
@@ -223,6 +227,10 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 
 	default_qty = {Dimensional::Dimension::TimeOrStrain, 1e-3, guarranted_unit};
 	TrueDimValDblParams.push_back(PARAM_INIT(output.initial_log_time, default_qty));
+
+	default_qty = {Dimensional::Dimension::Force, 0, guarranted_unit};
+	TrueDimValDblParams.push_back(PARAM_INIT(confinement.k, default_qty));
+
 }
 
 void ParameterSetFactory::setFromFile(const std::string& filename_parameters)

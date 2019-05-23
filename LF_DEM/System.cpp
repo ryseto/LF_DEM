@@ -227,6 +227,10 @@ void System::declareForceComponents()
 			force_components["from_fixed"] = ForceComponent(np, RATE_PROPORTIONAL, torque, &System::setFixedParticleForceToParticle);
 		}
 	}
+	if (p.confinement.on) {
+		force_components["confinement"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setConfinementForce);
+	}
+
 }
 
 void System::declareVelocityComponents()
@@ -2037,6 +2041,23 @@ void System::setBodyForce(vector<vec3d> &force,
 	}
 	for (int i=np_mobile; i<np; i++) {
 		force[i].reset();
+	}
+}
+
+void System::setConfinementForce(vector<vec3d> &force,
+								  vector<vec3d> &torque)
+{
+	for (auto &t: torque) {
+		t.reset();
+	}
+	for (int i=0; i<np_mobile; i++) {
+		if (position[i].y > p.confinement.y_max) {
+			force[i].set(0, -p.confinement.k.value*(position[i].y-p.confinement.y_max), 0);
+		} else if (position[i].y < p.confinement.y_min) {
+			force[i].set(0, -p.confinement.k.value*(position[i].y-p.confinement.y_min), 0);
+		} else {
+			force[i].reset();
+		}
 	}
 }
 

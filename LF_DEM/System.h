@@ -110,6 +110,7 @@ private:
 	void setHydroForceToParticle_squeeze(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setHydroForceToParticle_squeeze_tangential(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setBodyForce(std::vector<vec3d> &force, std::vector<vec3d> &torque);
+	void setConfinementForce(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void buildResistanceMatrix();
 	void setBrownianForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setSolverRHS(const ForceComponent &fc);

@@ -8,6 +8,7 @@
 #define __LF_DEM__ParameterSet__
 #include <string>
 #include "TimeActivatedAdhesion_Params.h"
+#include "ConfinementParams.h"
 #include "DimensionalQty.h"
 
 /*===================================================
@@ -222,6 +223,8 @@ namespace Parameters {
 		double sflow_pcontrol_rtime; // [0.1]
 		double sflow_pcontrol_damper; // [0.1]
 		double sflow_target_flux; // Target flux along x-direction controlled by pressure difference [0]
+
+		Confinement::Parameters confinement;
 	};
 	
 } // namespace Parameters

@@ -61,6 +61,10 @@ void System::declareStressComponents()
 		stress_components["xF_delayed_adhesion"] = StressComponent(XF_STRESS, np, RATE_INDEPENDENT, "delayed_adhesion");
 	}
 
+	if (p.confinement.on) {
+		stress_components["xF_confinement"] = StressComponent(XF_STRESS, np, RATE_INDEPENDENT, "confinement");
+	}
+
 	if (control == Parameters::ControlVariable::stress) {
 		for (const auto &sc: stress_components) {
 			if (sc.second.rate_dependence == RATE_DEPENDENT) {
@@ -278,6 +282,20 @@ void System::calcStressPerParticle()
 			unsigned int i, j;
 			std::tie(i, j) = inter.get_par_num();
 			inter.delayed_adhesion->addUpStressXF(rstress_XF[i], rstress_XF[j], inter.rvec); // - rF_rep
+		}
+	}
+
+	if (p.confinement.on) {
+		vec3d yvec = {0, 1, 0};
+		auto &stress_XF = stress_components.at("xF_confinement").particle_stress;
+		auto &force = force_components.at("confinement").force;
+
+		for (unsigned i=0; i<stress_XF.size(); i++) {
+			if (force[i].y > 0) { // boundary at y_min
+				stress_XF[i] += outer_sym(-radius[i]*yvec, force[i]);
+			} else {                                       // boundary at y_max
+				stress_XF[i] += outer_sym(radius[i]*yvec, force[i]);
+			}
 		}
 	}
 
