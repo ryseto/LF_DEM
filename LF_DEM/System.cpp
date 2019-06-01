@@ -98,6 +98,7 @@ vel_difference(0),
 z_bot(-1),
 z_top(-1),
 eventLookUp(NULL)
+//forbid_displacement(false)
 {
 	lx = 0;
 	ly = 0;
@@ -169,6 +170,7 @@ void System::allocateRessources()
 		omega_local.resize(np);
 		E_local.resize(np);
 		phi_local.resize(np);
+		//forbid_displacement = true;
 	}
 }
 
@@ -511,6 +513,7 @@ void System::setupGenericConfiguration(T conf, Parameters::ControlVariable contr
 	allocateRessources();
 
 	if (brownian) {
+		cerr << " @@@ Brownian " << endl;
 		setupBrownian();
 	}
 
@@ -966,7 +969,11 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		}
 		adjustVelocityPeriodicBoundary();
 	} else {
-		sflowFiniteRe(calc_stress);
+		if (0) {
+			sflowFiniteRe(calc_stress);
+		} else {
+			sflowIteration(calc_stress);
+		}
 	}
 	if (wall_rheology && calc_stress) { // @@@@ calc_stress remove????
 		forceResultantReset();
@@ -993,6 +1000,28 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	}
 }
 
+double System::sflowIteration(bool calc_stress)
+{
+	double diff_u = 0;
+	int cnt = 0;
+	do {
+		if (!pairwise_resistance) {
+			computeVelocitiesStokesDrag();
+		} else {
+			computeVelocities(calc_stress, true);
+		}
+		sflow->pressureController();
+		diff_u = sflow->update(pressure_difference);
+		cnt++;
+	} while (diff_u > 1e-5);
+	if (cnt > 1) {
+		cerr << cnt << ' ';
+	}
+	adjustVelocitySolventFlow();
+	
+	return ;
+}
+
 void System::sflowFiniteRe(bool calc_stress)
 {
 	if (!pairwise_resistance) {
@@ -1003,6 +1032,12 @@ void System::sflowFiniteRe(bool calc_stress)
 	sflow->pressureController();
 	sflow->update(pressure_difference);
 	adjustVelocitySolventFlow();
+	static int cnt = 0;
+//	if (cnt ++ > 1000 && forbid_displacement && abs(sflow->u_ave.x) < 1e-3) {
+//		forbid_displacement = false;
+//		cerr << cnt << ' ' << sflow->u_ave.x << ' ' << sflow->get_pressure_grad_x() << endl;
+//		cerr << "allow displacmenet" << endl;
+//	}
 }
 
 /****************************************************************************************************
@@ -1218,12 +1253,14 @@ void System::timeStepMove(double time_end, double strain_end)
 	/* Adapt dt to get desired p.disp_max	 */
 
 	//	cerr << dt << ' ' << p.critical_load  << endl;
+
 	clk.time_ += dt;
 	total_num_timesteps ++;
 	/* evolve PBC */
 	timeStepBoxing();
-
+	
 	/* move particles */
+	//	if (!forbid_displacement) {
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
@@ -1232,6 +1269,7 @@ void System::timeStepMove(double time_end, double strain_end)
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
+	//	}
 	if (retrim_ext_flow) {
 		cerr << "clk.cumulated_strain = " << clk.cumulated_strain << endl;
 		retrimProcess();
@@ -1250,6 +1288,7 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
 			adaptTimeStep(time_end, strain_end);
 		}
 	}
+
 	clk.time_ += dt;
 	total_num_timesteps ++;
 	/* evolve PBC
@@ -1260,6 +1299,7 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
+	
 	if (angle_output) {
 		for (int i=0; i<np; i++) {
 			angle[i] += ang_velocity[i].y*dt;

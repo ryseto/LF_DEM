@@ -62,6 +62,7 @@ private:
 	std::vector<unsigned int> nb_blocks_mf;
 	std::vector<unsigned int> nb_blocks_ff;
 	bool pairwise_resistance_changed;
+	//bool forbid_displacement;
 	int total_num_timesteps;
 	double lx;
 	double ly;

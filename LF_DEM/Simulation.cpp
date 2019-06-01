@@ -844,7 +844,6 @@ void Simulation::outputDataSedimentatioin()
 	double contact_nb_per_particle = (double)2*contact_nb/sys.get_np();
 	double frictional_contact_nb_per_particle = (double)2*frictional_contact_nb/sys.get_np();
 	
-	
 	outdata.entryData("time", Dimensional::Dimension::Time, 1, sys.get_time()); // 1
 	outdata.entryData("tau", Dimensional::Dimension::Time, 1, sys.get_time()/sys.p.sflow_ReNum); // 2
 	outdata.entryData("suspension velocity", Dimensional::Dimension::none, 3, sys.sflow->u_ave); // 3,4,5 //
@@ -868,6 +867,7 @@ void Simulation::outputDataSedimentatioin()
 	outdata.entryData("number of interaction", Dimensional::Dimension::none, 1, sys.get_nb_interactions());
 	outdata.entryData("dt", Dimensional::Dimension::Time, 1, sys.avg_dt);
 	outdata.writeToFile();
+	
 }
 
 void Simulation::getSnapshotHeader(stringstream& snapshot_header)

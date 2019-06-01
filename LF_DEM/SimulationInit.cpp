@@ -80,7 +80,8 @@ Dimensional::Unit Simulation::determineUnit(Parameters::ParameterSetFactory &PFa
 					internal_unit = fs.type;
 				}
 			}
-			if (internal_unit == Dimensional::Unit::brownian) {
+			if (control_value.unit == Dimensional::Unit::brownian) {
+				//if (internal_unit == Dimensional::Unit::brownian)  // @@@
 				sys.brownian = true; // @@@@ to be checked
 				sys.brownian_dominated = true;
 			}

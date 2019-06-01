@@ -4,8 +4,7 @@
 #include "System.h"
 #include "States.h"
 
-namespace State {
-	
+namespace State {	
 	void outputStateBinary(std::string state_filename, const System &sys)
 	{
 		/**

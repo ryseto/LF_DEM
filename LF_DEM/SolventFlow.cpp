@@ -84,6 +84,7 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 	pressure.resize(n, 0);
 	Urel_x.resize(n, 0);
 	u_sol_x.resize(n, 0);
+	u_sol_x_old.resize(n, 0);
 	u_x.resize(n, 0);
 	u_sol_ast_x.resize(n, 0);
 	div_u_sol_ast.resize(n, 0);
@@ -96,6 +97,7 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 		Urel_z.resize(n, 0);
 		u_z.resize(n, 0);
 		u_sol_z.resize(n, 0);
+		u_sol_z_old.resize(n, 0);
 		u_sol_ast_z.resize(n, 0);
 		phi_uz.resize(n, 0);
 		phi_uz2.resize(n, 0);
@@ -349,11 +351,11 @@ void SolventFlow::pressureController()
 	} else {
 		double diff_x = u_ave.x-target_flux;
 		pressure_grad_x += -diff_x*sys->p.sflow_pcontrol_increment*sys->dt;
-		pressure_grad_x += - sys->p.sflow_pcontrol_damper*(pressure_grad_x - average_pressure_x.get())*sys->dt;
+		pressure_grad_x += -sys->p.sflow_pcontrol_damper*(pressure_grad_x - average_pressure_x.get())*sys->dt;
 	}
 }
 
-void SolventFlow::update(double pressure_difference_)
+double SolventFlow::update(double pressure_difference_)
 {
 	//static std::ofstream fout_tmp("debug.dat");
 	particleVelocityDiffToMesh();
@@ -367,6 +369,20 @@ void SolventFlow::update(double pressure_difference_)
 		u_z[k] = u_sol_z[k] + Urel_z[k]*phi_uz2[k];// particle unit
 	}
 	calcVelocityGradients();
+	
+	double u_change_max = 0;
+	for (int k=0; k<n; k++) {
+		double dux = u_sol_x[k]-u_sol_x_old[k];
+		double duz = u_sol_z[k]-u_sol_z_old[k];
+		double u_change = dux*dux + duz*duz;
+		if (u_change_max < u_change) {
+			u_change_max = u_change;
+		}
+		u_sol_x_old[k] = u_sol_x[k];
+		u_sol_z_old[k] = u_sol_z[k];
+	}
+
+	return sqrt(u_change_max);
 }
 
 double SolventFlow::porousResistance(double phi)
@@ -420,6 +436,8 @@ void SolventFlow::predictorStep()
 				double fz = dd_uz + res_coeff_uz*Urel_z[k];
 				u_sol_ast_x[k] = u_sol_x[k] + sys->dt*(fx/re_num - (ux_duxdx + uz_duxdz));
 				u_sol_ast_z[k] = u_sol_z[k] + sys->dt*(fz/re_num - (uz_duzdz + ux_duzdx));
+				//u_sol_ast_x[k] = u_sol_x[k] + sys->dt*(fx/re_num);
+				//u_sol_ast_z[k] = u_sol_z[k] + sys->dt*(fz/re_num);
 
 				// - sys->p.sf_zfriction*u_sol_ave.z);
 				/* sf_zfriction*u_sol_z[k] term is added
@@ -546,8 +564,9 @@ void SolventFlow::correctorStep()
 	if (sys->p.sflow_boundary_conditions == 0) {
 		/* periodic boundary condtions in x and z directions.
 		 */
-		double sixpi_dt_Re_dx = six_pi*sys->dt/(dx*re_num);
-		double sixpi_dt_Re_dz = six_pi*sys->dt/(dz*re_num);
+		double sixpi_dt_Re = six_pi*sys->dt/re_num;
+		double sixpi_dt_Re_dx = sixpi_dt_Re/dx;
+		double sixpi_dt_Re_dz = sixpi_dt_Re/dz;
 		double pressure_difference_x = pressure_grad_x*sys->get_lx();
 		for (int i=0; i<nx; i++) {
 			int im1 = (i == 0 ? nx-1 : i-1);
