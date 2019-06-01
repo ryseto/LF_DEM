@@ -61,6 +61,49 @@ void GenerateInitConfig::baseSetup(T &conf, bool is2d, double inflate_ratio)
 	conf.volume_or_area_fraction = volume_fraction;
 }
 
+void GenerateInitConfig::generateBasic(int rand_seed_, double volume_frac, unsigned N, bool bidimensional)
+{
+	Simulation simu;
+	setParametersBasic(simu, volume_frac, N, bidimensional);
+	rand_seed = rand_seed_;
+	cerr << "rand_seed = " << rand_seed_ << endl;
+	auto &sys = simu.getSys();
+	double contact_ratio = 0.05;
+	double min_gap = -0.01;
+	double inflate_ratio = 1-min_gap;
+	struct base_shear_configuration c;
+	np_movable = np;
+	baseSetup(c, sys.twodimension, inflate_ratio);
+	sys.setupConfiguration(c, Parameters::ControlVariable::rate);
+	sys.checkNewInteraction();
+	sys.updateInteractions();
+	auto contact_nb = countNumberOfContact(sys);
+	int cnt_iteration = 0;
+	while(((double)contact_nb.first)/sys.get_np() > contact_ratio && evaluateMinGap(sys) < min_gap) {
+		sys.timeEvolution(sys.get_time()+2, -1);
+		std::cout << "." << cnt_iteration << std::flush;
+		contact_nb = countNumberOfContact(sys);
+		std::cerr << (double)contact_nb.first << std::endl;
+		if (max_iteration > 0
+			&& cnt_iteration++ > max_iteration) {
+			std::cout << "max iteration " << std::flush;
+			break;
+		}
+	}
+	
+	for (int i=0; i<np_movable; i++) {
+		if (i < np1) {
+			sys.radius[i] = a1;
+		} else {
+			sys.radius[i] = a2;
+		}
+	}
+	for (int i=np_movable; i<np; i++) {
+		sys.radius[i] = radius_wall_particle;
+	}
+	outputPositionData(sys);
+}
+
 int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, double cluster_phi_,
 								 int config_type)
 {
@@ -806,4 +849,86 @@ void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init
 	cerr << "vf2 = " << volume_fraction2 << endl;
 	cerr << "box =" << lx << ' ' << ly << ' ' << lz << endl;
 	cerr << "radius_wall_particle =" << radius_wall_particle << endl;
+}
+
+
+void GenerateInitConfig::setParametersBasic(Simulation &simu, double volume_frac, unsigned N, bool bidimensional)
+{
+	/*
+	 *  Read parameters from standard input
+	 *
+	 */
+	Parameters::ParameterSetFactory PFactory(Dimensional::Unit::hydro);
+	simu.sys.p = PFactory.getParameterSet();
+	
+	auto &sys = simu.getSys();
+	sys.zero_shear = true;
+	simu.sys.p.kn = 1;
+	simu.sys.p.friction_model = 0;
+	simu.sys.p.integration_method = 0;
+	simu.sys.p.disp_max = 5e-3;
+	simu.sys.p.lubrication_model = "none";
+	simu.sys.p.contact_relaxation_time_tan = 1e-4;
+	np = N;
+	sys.twodimension = bidimensional;
+	
+	volume_fraction = volume_frac;
+
+	lx_lz = 1;
+	ly_lz = 1;
+
+	disperse_type = 'b';
+	a1 = 1;
+	a2 = 1.4;
+	vf_ratio = 0.5;
+	volume_fraction1 = volume_fraction; // mono
+	
+	//rand_seed = readStdinDefault(1, "random seed");
+	/*
+	 *  Calculate parameters
+	 */
+	
+	double total_volume;
+	double pvolume1, pvolume2;
+	if (sys.twodimension) {
+		pvolume1 = M_PI*a1*a1;
+		pvolume2 = M_PI*a2*a2;
+	} else {
+		pvolume1 = (4.0/3)*M_PI*a1*a1*a1;
+		pvolume2 = (4.0/3)*M_PI*a2*a2*a2;
+	}
+	
+	volume_fraction1 = volume_fraction*vf_ratio;
+	volume_fraction2 = volume_fraction-volume_fraction1;
+	if (np > 0) {
+		total_volume = np/(volume_fraction1/pvolume1+volume_fraction2/pvolume2);
+		double np1_tmp = volume_fraction1*total_volume/pvolume1;
+		if (np1_tmp-(int)np1_tmp <= 0.5) {
+			np1 = (int)np1_tmp;
+		} else {
+			np1 = (int)np1_tmp+1;
+		}
+		np2 = np-np1;
+		double pvolume = np1*pvolume1+np2*pvolume2;
+		if (sys.twodimension) {
+			lz = sqrt(pvolume/(lx_lz*volume_fraction));
+			lx = lz*lx_lz;
+			ly = 0;
+		} else {
+			lz = pow(pvolume/(lx_lz*ly_lz*volume_fraction), 1.0/3);
+			lx = lz*lx_lz;
+			ly = lz*ly_lz;
+		}
+	}
+	lx_half = lx/2;
+	ly_half = ly/2;
+	lz_half = lz/2;
+	
+	max_iteration = -1;
+	
+	cerr << "np = " << np1+np2 << endl;
+	cerr << "np1 : np2 " << np1 << ":" << np2 << endl;
+	cerr << "vf1 = " << volume_fraction << endl;
+	cerr << "vf2 = " << volume_fraction2 << endl;
+	cerr << "box =" << lx << ' ' << ly << ' ' << lz << endl;
 }
