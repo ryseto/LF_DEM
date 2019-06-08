@@ -72,6 +72,11 @@ void Contact::setInteractionData()
 		if (sys->rolling_friction) {
 			mu_rolling = sys->p.mu_rolling;
 		}
+		/* This commented part is experimental.
+		 * mu_static = 0.5*(sys->mu[p0]+sys->mu[p1]);
+		 * mu_dynamic = mu_static;
+		 * mu_rolling = 0.1*mu_static;
+		 */
 	}
 	dashpot.setParticleData();
 	setDashpotConstants();

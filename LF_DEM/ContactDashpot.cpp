@@ -65,11 +65,14 @@ void ContactDashpot::deactivate()
 void ContactDashpot::setDashpotResistanceCoeffs(double kn, double kt,
 												double rtime_normal, double rtime_tan)
 {
-	if (rtime_normal > 0) {
+	if (rtime_normal >= 0) {
 		/* t = beta/kn
 		 *  beta = t*kn
 		 * normal_coeff = 4*beta = 4*kn*rtime_normal
 		 */
+		if (rtime_normal == 0) {
+			std::cerr << "WARNING: The relaxation time is set to zero, which set the dashpot resistance zero.\n" ;
+		}
 		normal_coeff = 4*kn*rtime_normal;
 	} else {
 		if (sys->lubrication) {// take the same resistance as lubrication
@@ -83,7 +86,10 @@ void ContactDashpot::setDashpotResistanceCoeffs(double kn, double kt,
 	if (sys->friction == false && sys->p.lubrication_model != "tangential") {
 		tangential_coeff = 0;
 	} else {
-		if (rtime_tan > 0) {
+		if (rtime_tan >= 0) {
+			if (rtime_tan == 0) {
+				std::cerr << "WARNING: The relaxation time is set to zero, which set the dashpot resistance zero.\n" ;
+			}
 			if (sys->lubrication) { // the contact can get unstable if the tangential resistance difference is too big between with and wihout contact
 				throw std::runtime_error(" ContactDashpot:: Error: with lubrication, tangential relaxation time cannot be set positive.");
 			}

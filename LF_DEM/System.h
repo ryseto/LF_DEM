@@ -235,7 +235,7 @@ private:
 
 	std::vector<double> radius;
 	std::vector<double> angle; // for 2D visualization
-
+	// std::vector<double> mu; // friction coeffient
 	std::vector<vec3d> velocity;
 	std::vector<vec3d> velocity_predictor;
 	std::vector<vec3d> na_velocity;

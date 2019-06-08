@@ -275,6 +275,7 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	}
 	position.resize(np);
 	radius.resize(np);
+	//	mu.resize(np);
 	for (int i=0; i<np; i++) {
 		position[i] = initial_positions[i];
 		radius[i] = radii[i];
@@ -300,6 +301,26 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 		}
 		particle_volume *= 4*M_PI/3.;
 	}
+	
+//	if (true) {
+//		vec3d p_center(lx_half, 0, 0);
+//		//	mu.resize(np);
+//		for (int i=0; i< np; i++) {
+//			vec3d pos_center = (position[i]-p_center);
+//			periodizeDiff(pos_center);
+//			//			if (pos_center.norm() < 30) {
+//			//				mu[i] = 0.5;
+//			//			} else {
+//			//				mu[i] = 0.1;
+//			//			}
+//			if (position[i].z > 3*lz/4 || position[i].z < lz/4) {
+//				mu[i] = 0.5;
+//			} else {
+//				mu[i] = 0.1;
+//			}
+//
+//		}
+//	}
 }
 
 void System::setFixedVelocities(const vector <vec3d>& vel)

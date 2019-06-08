@@ -1413,6 +1413,14 @@ void Simulation::outputGSD()
 			} else {
 				uptr[i] = 2;
 			}
+
+			/* 
+			 * if (sys.mu[i] > 0.2) {
+			 * uptr[i] = 0;
+			 * } else {
+			 * uptr[i] = 1;
+			 * }
+			 */
 			fptr[i] = 2*sys.radius[i];
 		}
 		gsd_write_chunk(&gsdOut, "particles/typeid", GSD_TYPE_UINT32, np, 1, 0, uptr);
