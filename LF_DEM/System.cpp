@@ -1112,7 +1112,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	 + \f$ \bm{U}^{-} = \bm{A}^{-1}( \bm{X}(t) )( \bm{F}_\mathrm{B} + \bm{F} ( \bm{X}(t) ) )  \f$
 	 + \f$ \bm{X}' = \bm{X}(t) + \bm{U}^{-}dt \f$
 		- 2nd step:
-	 + \f$ \bm{U}^{+} = \bm{A}^{-1}( \bm{X}^{-} ) ( \bm{F}_\mathrm{B} + \bm{F} ( \bm{X}^{-} ) )  \f$ (\b same \f$\bm{F}_\mathrm{B}\f$ as in the first step)
+	 + \f$ \bm{U}^{+} = \bm{A}^{-1}( \bm{X}' ) ( \bm{F}_\mathrm{B} + \bm{F} ( \bm{X}' ) )  \f$ (\b same \f$\bm{F}_\mathrm{B}\f$ as in the first step)
 	 + \f$ \bm{X}(t + dt) = \bm{X}(t) + \frac{1}{2}(\bm{U}^{+}+\bm{U}^{-})dt =  \bm{X}' + \frac{1}{2}(\bm{U}^{+}-\bm{U}^{-})dt \f$
 
 	 */
