@@ -1021,7 +1021,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	}
 }
 
-double System::sflowIteration(bool calc_stress)
+void System::sflowIteration(bool calc_stress)
 {
 	double diff_u = 0;
 	int cnt = 0;
@@ -1034,12 +1034,17 @@ double System::sflowIteration(bool calc_stress)
 		sflow->pressureController();
 		diff_u = sflow->update(pressure_difference);
 		cnt++;
-	} while (diff_u > 1e-5);
+		if (cnt > 5000) {
+			break;
+		}
+		if (cnt % 100 == 1) {
+			cerr << "@ " << diff_u << ' '  << sflow->get_pressure_grad_x() << endl;
+		}
+	} while (diff_u > 1e-2);
 	if (cnt > 1) {
-		cerr << cnt << ' ';
+		cerr << cnt << endl;
 	}
 	adjustVelocitySolventFlow();
-	
 	return ;
 }
 
@@ -1053,8 +1058,8 @@ void System::sflowFiniteRe(bool calc_stress)
 	sflow->pressureController();
 	sflow->update(pressure_difference);
 	adjustVelocitySolventFlow();
-	static int cnt = 0;
-//	if (cnt ++ > 1000 && forbid_displacement && abs(sflow->u_ave.x) < 1e-3) {
+	//static int cnt = 0;
+//	if (cnt ++ > 1000 && forbid_displacement && fabs(sflow->u_ave.x) < 1e-3) {
 //		forbid_displacement = false;
 //		cerr << cnt << ' ' << sflow->u_ave.x << ' ' << sflow->get_pressure_grad_x() << endl;
 //		cerr << "allow displacmenet" << endl;

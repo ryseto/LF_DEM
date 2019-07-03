@@ -138,7 +138,7 @@ private:
 								  const std::vector<vec3d> &non_affine_ang_vel);
 	void addUpInteractionStressME(std::vector<Sym2Tensor> &stress_comp);
 	void sflowFiniteRe(bool calc_stress);
-	double sflowIteration(bool calc_stress);
+	void sflowIteration(bool calc_stress);
 	void computeMaxNAVelocity();
 	void computeMaxVelocity();
 	double (System::*calcInteractionRange)(int, int);

@@ -845,7 +845,7 @@ void Simulation::outputDataSedimentatioin()
 	double frictional_contact_nb_per_particle = (double)2*frictional_contact_nb/sys.get_np();
 	
 	outdata.entryData("time", Dimensional::Dimension::Time, 1, sys.get_time()); // 1
-	outdata.entryData("tau", Dimensional::Dimension::Time, 1, sys.get_time()/sys.p.sflow_ReNum); // 2
+	outdata.entryData("tau", Dimensional::Dimension::Time, 1, sys.get_time()/sys.p.sflow_ReNum_p); // 2
 	outdata.entryData("suspension velocity", Dimensional::Dimension::none, 3, sys.sflow->u_ave); // 3,4,5 //
 	outdata.entryData("pressure gradient x", Dimensional::Dimension::Stress, 1, sys.sflow->get_pressure_grad_x()); // 6
 	outdata.entryData("relative particle velocity", Dimensional::Dimension::Velocity, 3, sys.meanParticleVelocity()-sys.sflow->u_ave);// 7 8 9

@@ -100,7 +100,7 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(sflow_dx, 5),
 		PARAM_INIT(sflow_smooth_length, 3),
 		PARAM_INIT(sflow_ReNum_p, 0.001),
-		PARAM_INIT(sflow_ReNum, 0.1),
+		//PARAM_INIT(sflow_ReNum, 0.1),
 		PARAM_INIT(sflow_Darcy_coeff, 1),
 		PARAM_INIT(sflow_pcontrol_increment, 1e-4),
 		PARAM_INIT(sflow_pcontrol_rtime, 0.1),
@@ -192,7 +192,7 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 	default_qty = {Dimensional::Dimension::Time, 1e-3, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(contact_relaxation_time, default_qty));
 
-	default_qty = {Dimensional::Dimension::Time, 0, guarranted_unit};
+	default_qty = {Dimensional::Dimension::Time, -1, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(contact_relaxation_time_tan, default_qty));
 	
 	default_qty = {Dimensional::Dimension::Force, 0.1, Dimensional::Unit::kn};

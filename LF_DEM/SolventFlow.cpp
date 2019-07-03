@@ -43,6 +43,12 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 		sedimentation = true;
 	} else if (simulation_type == "channel flow") {
 		channel_flow = true;
+	} else if (simulation_type == "simple shear") {
+		simple_shear = true;
+		std::ostringstream error_str;
+		error_str << "Solvent flow algoritm for simple shear is not implemented yet. \n";
+		error_str << "Lees--Edwards boundary condtions is complicated.\n";
+		throw std::runtime_error(error_str.str());
 	} else {
 		std::ostringstream error_str;
 		error_str << "Incorrect simulation type\n";
@@ -227,8 +233,8 @@ void SolventFlow::particleVelocityDiffToMesh()
 		double Uus_z = sys->na_velocity[i].z; // This is U - u
 		double radius = sys->radius[i];
 		double particle_volume = M_PI*radius*radius;
-		int ix = x/dx;
-		int iz = z/dz;
+		int ix = (int)(x/dx);
+		int iz = (int)(z/dz);
 		mesh_nb.clear();
 		udx_values.clear();
 		udz_values.clear();
@@ -348,7 +354,7 @@ void SolventFlow::pressureController()
 		} else {
 			pressure_grad_x -= sys->p.sflow_pcontrol_increment;
 		}
-	} else {
+	} else if (sedimentation) {
 		double diff_x = u_ave.x-target_flux;
 		pressure_grad_x += -diff_x*sys->p.sflow_pcontrol_increment*sys->dt;
 		pressure_grad_x += -sys->p.sflow_pcontrol_damper*(pressure_grad_x - average_pressure_x.get())*sys->dt;
@@ -924,7 +930,7 @@ void SolventFlow::outputYaplot(std::ofstream &fout_flow)
 	for (int i=0; i < sys->np_mobile; i++) {
 		double x = sys->position[i].x-sys->get_lx()/2;
 		double z = sys->position[i].z-sys->get_lz()/2;
-		double a = sys->radius[i];
+	//	double a = sys->radius[i];
 		vec3d v = sys->u_local[i];
 		fout_flow << "l " << x  << ' ' << 0 << ' ' << z ;
 		fout_flow << ' ' << x + v.x << ' ' << 0 << ' ' << z + v.z << std::endl;

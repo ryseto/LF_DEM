@@ -55,6 +55,7 @@ private:
 	double system_volume;
 	bool sedimentation;
 	bool channel_flow;
+	bool simple_shear; // not yet implemented
 	// Staggered grid stores
 	// - the pressure at the cell center
 	// - the velocities at the cell faces.
@@ -107,9 +108,6 @@ private:
 public:
 	SolventFlow();
 	~SolventFlow();
-
-	double tau;
-
 
 	vec3d u_ave;
 	Averager<double> average_pressure_x;

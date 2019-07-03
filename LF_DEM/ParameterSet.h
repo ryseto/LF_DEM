@@ -135,10 +135,14 @@ namespace Parameters {
 		 ********************************************************/
 		/*
 		 * 0 No friction
-		 * 1 Linear friction law Ft < mu Fn
-		 * 2 Threshold friction without repulsive force
+		 * 1 Coulomb's friction law Ft < mu Fn
+		 * 2 Critical load model (Threshold friction without repulsive force)
+		 * 3 Critical load model with mu = infinity
+		 * 4 Coulomb's friction law with mu = infinity
+		 * 5 Constant maximum tangenetial force (no normal force dependence)
+		 * 6 Coulomb's friction law with a maximum tangential force.
 		 */
-		int friction_model;		///< Friction model. 0: No friction. 1: Coulomb. 2: Coulomb with threshold. [1]
+		int friction_model;		///< Friction model from the list above  [1]
 		double mu_static;		///< friction coefficient (static) [1]
 		double mu_dynamic;		///< friction coefficient (dynamic). If -1, mu_dynamic = mu_static [-1]
 		double mu_rolling;		///< friction coefficient (rolling) [0]
@@ -216,7 +220,7 @@ namespace Parameters {
 		double sflow_smooth_length; // mesh size in unit of particle radius [3]
 		int sflow_Darcy_power; // lambda for phi/(1-phi)^{lambda} (Modified Darcy's law) [0]
 		double sflow_Darcy_coeff; // [1]
-		double sflow_ReNum; // [0.1]
+//		double sflow_ReNum; // [0.1]
 		double sflow_ReNum_p; // [0.001]
 		double sflow_pcontrol_increment; // To adjust pressure diffrence to fix flux value along x-direction [1e-4]
 		double sflow_pcontrol_rtime; // [0.1]
