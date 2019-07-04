@@ -1276,10 +1276,11 @@ void System::timeStepMove(double time_end, double strain_end)
 	 * dot_epsion = shear_rate / 2 is always true.
 	 * clk.cumulated_strain = shear_rate * t for both simple shear and extensional flow.
 	 */
-	/* Adapt dt to get desired p.disp_max	 */
-
+//	/* Adapt dt to get desired p.disp_max	 */
+//	if (!p.fixed_dt) {
+//		adaptTimeStep(time_end, strain_end);
+//	}
 	//	cerr << dt << ' ' << p.critical_load  << endl;
-
 	clk.time_ += dt;
 	total_num_timesteps ++;
 	/* evolve PBC */
@@ -2566,13 +2567,11 @@ void System::computeVelocities(bool divided_velocities, bool mat_rebuild)
 	 simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
 	 */
 	stokes_solver.resetRHS();
-	if (!p.solvent_flow) {
-		computeUInf();
-	}
 	if (divided_velocities || control == Parameters::ControlVariable::stress) {
 		if (control == Parameters::ControlVariable::stress) {
 			set_shear_rate(1);
 		}
+		computeUInf();
 		setFixedParticleVelocities();
 		computeVelocityByComponents();
 		if (control == Parameters::ControlVariable::stress) {
@@ -2586,6 +2585,7 @@ void System::computeVelocities(bool divided_velocities, bool mat_rebuild)
 		}
 		sumUpVelocityComponents();
 	} else {
+		computeUInf();
 		setFixedParticleVelocities();
 		computeVelocityWithoutComponents(mat_rebuild);
 	}

@@ -138,6 +138,10 @@ void Lubrication::deactivate()
 
 void Lubrication::updateActivationState(bool contact_active)
 {
+	/* Lubrication is active when
+	 * (1) h < h_max
+	 * (2) not contact (when contact dashpot instead of lubrication)
+	 */
 	if (interaction->separation_distance() < range
 		&& !contact_active) {
 		if (!is_active()) {
@@ -773,7 +777,6 @@ vec3d Lubrication::getTotalForce() const
 		lubforce_p0 += GEi;
 	} else {
 		if (sys->p.solvent_flow) {
-			
 			vec3d GEi, GEj;
 			if (!tangential) {
 				std::tie(GEi, GEj) = calcGE_squeeze(0.5*(sys->E_local[p0]+ sys->E_local[p1]));

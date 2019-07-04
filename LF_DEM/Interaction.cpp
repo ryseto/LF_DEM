@@ -151,6 +151,7 @@ void Interaction::activateForceMembers()
 	// deal with contact
 	contact.setInteractionData();
 	if (reduced_gap <= 0) {
+		cerr << "reduced_gap =" << reduced_gap << endl;
 		contact.activate();
 	}
 	contact_state_changed_after_predictor = false;
