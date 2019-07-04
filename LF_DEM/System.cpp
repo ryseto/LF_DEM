@@ -1276,10 +1276,6 @@ void System::timeStepMove(double time_end, double strain_end)
 	 * dot_epsion = shear_rate / 2 is always true.
 	 * clk.cumulated_strain = shear_rate * t for both simple shear and extensional flow.
 	 */
-//	/* Adapt dt to get desired p.disp_max	 */
-//	if (!p.fixed_dt) {
-//		adaptTimeStep(time_end, strain_end);
-//	}
 	//	cerr << dt << ' ' << p.critical_load  << endl;
 	clk.time_ += dt;
 	total_num_timesteps ++;
@@ -2571,7 +2567,7 @@ void System::computeVelocities(bool divided_velocities, bool mat_rebuild)
 		if (control == Parameters::ControlVariable::stress) {
 			set_shear_rate(1);
 		}
-		computeUInf();
+		computeUInf(); // note: after set_shear_rate(1);
 		setFixedParticleVelocities();
 		computeVelocityByComponents();
 		if (control == Parameters::ControlVariable::stress) {
