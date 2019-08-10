@@ -463,6 +463,10 @@ void Simulation::openOutputFiles()
 		string flowprofile_filename = "fp_"+simu_name+".dat";
 		fout_fprofile.open(flowprofile_filename.c_str());
 	}
+	if (sys.p.output.recording_interaction_history) {
+		string rec_filename = "rec_"+simu_name+".dat";
+		sys.openHistoryFile(rec_filename);
+	}
 
 	//string box_name = "box_"+simu_name+".dat";
 	//fout_boxing.open(box_name);

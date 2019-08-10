@@ -41,6 +41,7 @@ private:
 	double reduced_force_norm;
 	void calcReducedForceNorm();
 	void calcScaledForce();
+	void calcForce_NottBrady();
 public:
 	RepulsiveForce():
 	p0(0),

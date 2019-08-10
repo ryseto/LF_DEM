@@ -492,6 +492,13 @@ void System::setupParameters()
 	}
 }
 
+void System::openHistoryFile(std::string rec_filename)
+{
+	if (p.output.recording_interaction_history) {
+		fout_history.open(rec_filename.c_str());
+	}
+}
+
 void System::setupBrownian()
 {
 #ifdef DEV
@@ -1011,6 +1018,9 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		if (!p.output.out_particle_stress.empty() || couette_stress || p.output.out_gsd) {
 			calcTotalStressPerParticle();
 		}
+	}
+	if (p.output.recording_interaction_history) {
+		recordHistory();
 	}
 	timeStepMove(time_end, strain_end);
 	for (int i=0; i<np; i++) {
@@ -3065,6 +3075,18 @@ void System::yaplotBoxing(std::ofstream &fout_boxing)
 	}
 
 	fout_boxing << endl;
+}
+
+void System::recordHistory()
+{
+	for (unsigned int k=0; k<interaction.size(); k++) {
+		if (interaction[k].lubrication.is_active()) {
+			interaction[k].lubrication.calcLubricationForce();
+		} else {
+			interaction[k].lubrication.force = 0;
+		}
+		interaction[k].recordHistory();
+	}
 }
 
 void System::countContactNumber()

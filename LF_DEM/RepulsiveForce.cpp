@@ -71,6 +71,30 @@ void RepulsiveForce::calcReducedForceNorm()
 	}
 }
 
+void RepulsiveForce::calcForce_NottBrady()
+{
+	/**
+	 \brief Compute the repulsive force in its own units.
+	 
+	 The force is normal and has an amplitude \f$ f_{R} = f_{R}^0
+	 \exp(-h/\lambda) \f$ if \f$h>0\f$ and \f$ f_{R} = f_{R}^0 \f$
+	 if \f$h<0\f$, where \f$h\f$ is the interparticle gap.
+	 
+	 This method returns an amplitude \f$ \hat{f}_{R} = \exp(-h/\lambda)\f$.
+	 */
+	double gap = interaction->get_gap();
+	double tau = 100;
+	double f0 = 1/tau;
+	if (gap > 0) {
+		reduced_force_norm = f0*exp(-tau*gap)/gap;
+		//reduced_force_norm = f0/gap;
+		reduced_force_norm *= geometric_factor;
+	} else {
+		/* contacting */
+		reduced_force_norm = geometric_factor;
+	}
+}
+
 void RepulsiveForce::calcScaledForce()
 {
 	/**
@@ -93,6 +117,7 @@ void RepulsiveForce::calcForce()
 		if \f$h<0\f$, where \f$h\f$ is the interparticle gap.
 	*/
 	calcReducedForceNorm();
+	// calcForce_NottBrady();
 	calcScaledForce();
 }
 

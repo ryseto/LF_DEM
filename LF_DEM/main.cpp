@@ -235,7 +235,7 @@ int main(int argc, char **argv)
 			config_filename = argv[optind++];
 			param_filename = argv[optind++];
 		} else {
-			cerr << usage << endl;
+			cout << usage << endl;
 			exit(1);
 		}
 		vector <string> input_files(5, "not_given");
@@ -270,10 +270,10 @@ int main(int argc, char **argv)
 											   simu_identifier);
 			}
 		} catch (runtime_error& e) {
-			cerr << e.what() << endl;
+			cout << e.what() << endl;
 			return 1;
 		}
 	}
-	cerr << " Job done ok" << endl;
+	cout << " Job done ok" << endl;
 	return 0;
 }

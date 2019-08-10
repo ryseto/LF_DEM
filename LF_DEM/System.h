@@ -247,6 +247,7 @@ private:
 	std::vector<std::complex<double>> phi6;
 	Sym2Tensor total_stress;
 	std::vector<int> n_contact;
+	std::ofstream fout_history;
 
 	/**************** Interaction machinery ***************************/
 	/* We hold the Interaction instances in a std::vector */
@@ -416,6 +417,8 @@ private:
 	void retrim(vec3d&); // Extensional flow Periodic Boundary condition
 	void updateH(); // Extensional flow Periodic Boundary condition
 	void yaplotBoxing(std::ofstream &fout_boxing); // Extensional flow Periodic Boundary condition
+	void recordHistory();
+	void openHistoryFile(std::string rec_filename);
 
 	void countContactNumber();
 	void checkStaticForceBalance();

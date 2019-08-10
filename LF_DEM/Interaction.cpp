@@ -32,7 +32,31 @@ z_offset(0)
 	sys->interaction_list[i].insert(this);
 	sys->interaction_list[j].insert(this);
 	activateForceMembers();
+	if (sys->p.output.recording_interaction_history) {
+		initHistoryRecord();
+	}
 }
+
+void Interaction::initHistoryRecord()
+{
+	if (sys->get_cumulated_strain() > sys->p.output.recording_start) {
+		double ang = atan2(nvec.x, nvec.z)-sys->p.magic_angle;
+		if (abs(ang-0.1) < 0.01 || abs(ang+0.1) < 0.01 ||
+			abs(ang-(M_PI-0.1)) < 0.01 || abs(ang+(M_PI-0.1)) < 0.01) {
+			record = true;
+		} else {
+			record = false;
+		}
+		birth_strain = sys->get_cumulated_strain();
+		strain_history.clear();
+		angle_history.clear();
+		normalforce_history.clear();
+		gap_history.clear();
+	} else {
+		record = false;
+	}
+}
+
 
 Interaction::Interaction(const Interaction &other):
 sys(other.sys),
@@ -45,6 +69,12 @@ interaction_range(other.interaction_range),
 contact_state_changed_after_predictor(other.contact_state_changed_after_predictor),
 rvec(other.rvec),
 nvec(other.nvec),
+record(other.record),
+birth_strain(other.birth_strain),
+strain_history(other.strain_history),
+angle_history(other.angle_history),
+normalforce_history(other.normalforce_history),
+gap_history(other.gap_history),
 z_offset(other.z_offset)
 {
 	init();
@@ -96,6 +126,14 @@ void Interaction::swap(Interaction& other)
 	sys->interaction_list[p1].insert(this);
 	sys->interaction_list[other.p0].insert(&other);
 	sys->interaction_list[other.p1].insert(&other);
+	std::swap(record, other.record);
+	if (sys->p.output.recording_interaction_history) {
+		std::swap(birth_strain, other.birth_strain);
+		std::swap(strain_history, other.strain_history);
+		std::swap(angle_history, other.angle_history);
+		std::swap(normalforce_history, other.normalforce_history);
+		std::swap(gap_history, other.gap_history);
+	}
 }
 
 void Interaction::init()
@@ -182,30 +220,27 @@ void Interaction::deactivate()
 	if (sys->delayed_adhesion) {
 		delayed_adhesion->deactivate();
 	}
+	if (sys->p.output.recording_interaction_history) {
+		outputHisotry();
+	}
 }
 
 void Interaction::outputHisotry()
 {
 	if (record) {
 		unsigned dk = 20;
+		
+		
 		for (unsigned k=0; k < strain_history.size(); k += dk) {
 			double ang = angle_history[k];
-			if (sys->simu_type == sys->SimulationType::extensional_flow) {
-				ang += sys->p.magic_angle;
-			} else {
-				ang -= M_PI/4;
-			}
-			if (ang < 0) {
-				ang += M_PI;
-			} else if (ang > M_PI) {
-				ang -= M_PI;
-			}
-			cerr << strain_history[k] << ' ';
-			cerr << ang << ' ';
-			cerr << normalforce_history[k] <<' ';
-			cerr << gap_history[k] << endl;
+			sys->fout_history << strain_history[k] << ' ';
+			sys->fout_history << ang <<	' ';
+			sys->fout_history << normalforce_history[k] <<' ';
+			sys->fout_history << gap_history[k] << endl;
 		}
-		cerr << endl;
+		sys->fout_history << endl;
+		sys->fout_history << endl;
+
 	}
 	record = false;
 	strain_history.clear();
@@ -377,9 +412,15 @@ void Interaction::recordHistory()
 				total_normal_force += -lubrication.force;
 			}
 		}
+		double ang;
+		if (sys->simu_type == sys->SimulationType::extensional_flow) {
+			ang = atan2(nvec.x, nvec.z)-sys->p.magic_angle;
+		} else {
+			ang = atan2(nvec.x, nvec.z);
+		}
 		double interaction_strain = sys->get_cumulated_strain()-birth_strain;
 		strain_history.push_back(interaction_strain);
-		angle_history.push_back(nvec.angle_0_pi());
+		angle_history.push_back(ang);
 		normalforce_history.push_back(total_normal_force);
 		gap_history.push_back(reduced_gap);
 	}

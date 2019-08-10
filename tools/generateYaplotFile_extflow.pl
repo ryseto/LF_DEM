@@ -331,7 +331,7 @@ sub OutYaplotData{
 	printf OUT "y 1\n";
 	printf OUT "@ 8\n";
 	## visualize particles
-    #$epsilondot = 1;
+	$epsilondot = 1;
 	$ax = exp( $epsilondot*($timeper))*$cos_ma*$cos_ma+exp(-$epsilondot*($timeper))*$sin_ma*$sin_ma;
 	$az = exp(-$epsilondot*($timeper))*$cos_ma*$sin_ma-exp( $epsilondot*($timeper))*$sin_ma*$cos_ma;
 	$bx = exp(-$epsilondot*($timeper))*$cos_ma*$sin_ma-exp( $epsilondot*($timeper))*$sin_ma*$cos_ma;
