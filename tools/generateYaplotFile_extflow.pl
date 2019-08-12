@@ -302,7 +302,7 @@ sub InInteractions{
 				$fn = $fc_norm + $f_lub_norm + $fr_norm;
 				#$force[$k] = $fc_norm;
 			} else {
-				$fn = $fc_norm + $f_lub_norm;
+				$fn = $fc_norm + $f_lub_norm + $fr_norm;
 				#$force[$k] = $f_lub_norm + $fr_norm;
 				#$force[$k] = 0;
 			}

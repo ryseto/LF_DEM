@@ -3080,11 +3080,11 @@ void System::yaplotBoxing(std::ofstream &fout_boxing)
 void System::recordHistory()
 {
 	for (unsigned int k=0; k<interaction.size(); k++) {
-		if (interaction[k].lubrication.is_active()) {
-			interaction[k].lubrication.calcLubricationForce();
-		} else {
-			interaction[k].lubrication.force = 0;
-		}
+//		if (interaction[k].lubrication.is_active()) {
+//			interaction[k].lubrication.calcLubricationForce();
+//		} else {
+//			interaction[k].lubrication.force = 0;
+//		}
 		interaction[k].recordHistory();
 	}
 }

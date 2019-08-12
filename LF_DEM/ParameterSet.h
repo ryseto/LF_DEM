@@ -89,11 +89,12 @@ namespace Parameters {
 		double critical_load;			///< Amplitude of the critical load [0]
 		double adhesion;				///< Amplitude of the adhesion [0 guarranted_unit]
 		double brownian;				///< Amplitude of the Brownian force [0]
+		int repulsive_force_type;       ///< type of repulsive force [1]
 		double repulsive_length;		///< "Debye" screering length for the repulsive force [0.05]
 		double repulsive_max_length;	///< Maximum length until which the repulsive force can reach. If -1, no limit. (e.g. length of polymer brush) [-1]
 		double interaction_range;		///< maximum range (center-to-center) for interactions (repulsive force, etc.). If -1, lub_max_gap is used as cutoff [-1]
-		double vdW_coeffient; ///< [-1]
-		double vdW_singularity_cutoff; ///< [0.1]
+		//		double vdW_coeffient; ///< [-1]
+		//	double vdW_singularity_cutoff; ///< [0.1]
 		double bodyforce;              ///< Amplitude of the body force [0]
 		int np_fixed;
 		struct TActAdhesion::Parameters TA_adhesion; ///< Time delayed adhesion params (.adhesion_range [1e-2], .adhesion_max_force [0h], .activation_time [0h])

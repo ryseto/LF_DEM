@@ -70,7 +70,7 @@ private:
 	double birth_strain;
 	std::vector<double> strain_history;
 	std::vector<double> angle_history;
-	std::vector<double> normalforce_history;
+//	std::vector<double> normalforce_history;
 	std::vector<double> gap_history;
 	
 public:

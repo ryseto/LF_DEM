@@ -664,7 +664,7 @@ void Simulation::outputData()
 	std::tie(contact_nb, frictional_contact_nb) = countNumberOfContact(sys);
 	double contact_nb_per_particle = (double)2*contact_nb/sys.get_np();
 	double frictional_contact_nb_per_particle = (double)2*frictional_contact_nb/sys.get_np();
-
+	int dimension = (!sys.twodimension ? 3 : 2);
 	outdata.entryData("time", Dimensional::Dimension::Time, 1, sys.get_time());
 	if (sys.wall_rheology == false || sys.get_omega_wheel() == 0) {
 		// Simple shear geometry
@@ -700,8 +700,8 @@ void Simulation::outputData()
 	//outdata.entryData("shear stress", Dimensional::Dimension::Stress, 1, shear_stress);
 	auto stress_diag = sys.total_stress.diag();
 	/************** isotropic stress (particle pressure) **************************************/
-	outdata.entryData("particle pressure", Dimensional::Dimension::Stress, 1, -sys.total_stress.trace()/3);
-	outdata.entryData("particle pressure contact", Dimensional::Dimension::Stress, 1, -sys.total_stress_groups["contact"].trace()/3);
+	outdata.entryData("particle pressure", Dimensional::Dimension::Stress, 1, -sys.total_stress.trace()/dimension);
+	outdata.entryData("particle pressure contact", Dimensional::Dimension::Stress, 1, -sys.total_stress_groups["contact"].trace()/dimension);
 	/************** normal stress anisotropy  *************************************************/
 	if (sys.p.output.new_material_functions) {
 		/************** material function lambda0 *********************************************
