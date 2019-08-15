@@ -135,10 +135,10 @@ void Contact::deactivate()
 vec3d Contact::getSlidingVelocity() const
 {
 	vec3d vel_offset;
-	if (sys->simple_shear == sys->SimulationType::simple_shear) {
+	if (sys->simu_type == sys->SimulationType::simple_shear) {
 		// simple shear
 		vel_offset = interaction->z_offset*sys->get_vel_difference();
-	} else if (sys->simple_shear == sys->SimulationType::extensional_flow) {
+	} else if (sys->simu_type == sys->SimulationType::extensional_flow) {
 		// extensional flow
 		vel_offset = sys->get_vel_difference_extension(interaction->pd_shift);
 	}
@@ -324,6 +324,9 @@ void Contact::frictionlaw_infinity()
 	 \brief Friction law
 	 */
 	state = 2; // static friction
+	if (sys->adhesion) {
+		normal_load += sys->p.adhesion;
+	}
 }
 
 void Contact::setTangentialForceNorm(double current_force_norm,

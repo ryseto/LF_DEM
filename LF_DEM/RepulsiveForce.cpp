@@ -94,9 +94,13 @@ void RepulsiveForce::calcForce_Jenkins()
 	/**
 	 \brief repulsive force used in J.T. Jenkins and L. La Ragione.
 	 */
-
 	double gap = interaction->get_gap();
-	reduced_force_norm = (f0_NottBrady/gap)*0.5*(1 + tanh(-(gap - 0.9)/0.05));
+//	reduced_force_norm = (f0_NottBrady/gap);
+	if (gap < 0.85) {
+		reduced_force_norm = f0_NottBrady/gap;
+	} else {
+		reduced_force_norm = (f0_NottBrady/gap)*0.5*(1 + tanh(-(gap - 0.95)/0.025));
+	}
 }
 
 void RepulsiveForce::calcScaledForce()

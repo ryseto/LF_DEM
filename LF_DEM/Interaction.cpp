@@ -38,10 +38,14 @@ record(false)
 void Interaction::initHistoryRecord()
 {
 	if (sys->get_cumulated_strain() > sys->p.output.recording_start) {
-		if (reduced_gap < 0.5 && reduced_gap > 0.48) {
+		if (reduced_gap < 0.5 && reduced_gap > 0.498) {
 			double ang = atan2(nvec.x, nvec.z)-sys->p.magic_angle;
-			if (abs(ang-0.1) < 0.01 || abs(ang+0.1) < 0.01 ||
-				abs(ang-(M_PI-0.1)) < 0.01 || abs(ang+(M_PI-0.1)) < 0.01) {
+			if (abs(ang-0.1) < 0.02 || abs(ang+0.1) < 0.02 ||
+				abs(ang-(M_PI-0.1)) < 0.02 || abs(ang-(-M_PI+0.1)) < 0.02) {
+				// ang = 0.1
+				// ang = -0.1
+				// ang = pi - 0.1
+				// ang = -pi + 0.1
 				record = true;
 				birth_strain = sys->get_cumulated_strain();
 				strain_history.clear();

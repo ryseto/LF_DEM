@@ -23,7 +23,7 @@ my $timeper=0;
 my $scale=0.5;
 my $axisrotation=1;
 my $pd_color = 0;
-my $draw_cross = 1;
+my $draw_cross = 0;
 my $flow_type = "shear";
 my $draw_trajectory = 0;
 my $phi6_data = 1;
@@ -423,8 +423,34 @@ sub OutYaplotData{
 	#			}
 	#		}
 	#	}
-	## visualize force chain network
 	if (1) {
+		printf OUT "y 4\n";
+		printf OUT "@ 7\n";
+		$cont_bond = 0;
+		for ($k = 0; $k < $num_interaction; $k ++) {
+			#$forcetmp = $force[$k];
+			#$forcetmp = $F_lub[$k];
+			if ($contactstate[$k] >= 1) {
+				$w = $force_factor*$forcetmp;
+				for ($ii = $ii_min; $ii <= $ii_max; $ii++) {
+					for ($jj = $jj_min; $jj <= $jj_max; $jj++) {
+						$pd_xshift = $Lx*$ax*($ii)+$Lz*$bx*($jj);
+						$pd_zshift = $Lx*$az*($ii)+$Lz*$bz*($jj);
+						$bulk = 1;
+						&OutString_width($int0[$k], $int1[$k], 0.2, 0.01, $pd_xshift, $pd_zshift);
+						$cont_bond++ ;
+						#						if ($bulk == 0) {
+						#	&OutString_width_nvec($i, $j, $nrvec_x[$k], $nrvec_y[$k], $nrvec_z[$k], $Gap[$k], $w, 0.01, $pd_xshift, $pd_zshift);
+						#}
+					}
+				}
+			}
+		}
+		printf "$cont_bond\n";
+	}
+	
+	## visualize force chain network
+	if (0) {
 		printf OUT "y 4\n";
 		printf OUT "@ 7\n";
 		for ($k = 0; $k < $num_interaction; $k ++) {
