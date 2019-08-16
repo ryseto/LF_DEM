@@ -325,6 +325,7 @@ void Contact::frictionlaw_infinity()
 	 */
 	state = 2; // static friction
 	if (sys->adhesion) {
+		normal_load = f_spring_normal_norm;
 		normal_load += sys->p.adhesion;
 	}
 }

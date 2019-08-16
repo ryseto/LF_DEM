@@ -75,7 +75,10 @@ strain_history(other.strain_history),
 angle_history(other.angle_history),
 //normalforce_history(other.normalforce_history),
 gap_history(other.gap_history),
-z_offset(other.z_offset)
+z_offset(other.z_offset),
+contact(other.contact),
+lubrication(other.lubrication),
+repulsion(other.repulsion)
 {
 	init();
 	sys->interaction_list[p0].insert(this);
