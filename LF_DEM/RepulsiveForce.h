@@ -47,6 +47,7 @@ private:
 	void calcReducedForceNorm(); // forceType 1
 	void calcForce_NottBrady(); // forceType 2
 	void calcForce_Jenkins(); // forceType 3
+	void calcForce_longrange();// forceType4
 public:
 	RepulsiveForce():
 	p0(0),

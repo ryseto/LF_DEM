@@ -28,6 +28,11 @@ void RepulsiveForce::init(System* sys_, Interaction* interaction_)
 	} else if (sys->p.repulsive_force_type == 3) {
 		forceType = &RepulsiveForce::calcForce_Jenkins;
 		f0_NottBrady = 1;
+	} else if (sys->p.repulsive_force_type == 4) {
+		forceType = &RepulsiveForce::calcForce_longrange;
+		f0_NottBrady = 1;
+	} else {
+		exit(1);
 	}
 }
 
@@ -95,13 +100,22 @@ void RepulsiveForce::calcForce_Jenkins()
 	 \brief repulsive force used in J.T. Jenkins and L. La Ragione.
 	 */
 	double gap = interaction->get_gap();
-//	reduced_force_norm = (f0_NottBrady/gap);
 	if (gap < 0.85) {
 		reduced_force_norm = f0_NottBrady/gap;
 	} else {
 		reduced_force_norm = (f0_NottBrady/gap)*0.5*(1 + tanh(-(gap - 0.95)/0.025));
 	}
 }
+
+void RepulsiveForce::calcForce_longrange()
+{
+	/**
+	 \brief repulsive force used in J.T. Jenkins and L. La Ragione.
+	 */
+	double gap = interaction->get_gap();
+	reduced_force_norm = f0_NottBrady/gap;
+}
+
 
 void RepulsiveForce::calcScaledForce()
 {

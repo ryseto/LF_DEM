@@ -103,7 +103,7 @@ while (1) {
 		}
 	}
 	$shear_strain_previous = $shear_strain;
-	if (1) {
+	if (0) {
 		&InInteractions;
 	}
 	
@@ -161,6 +161,7 @@ sub readHeader {
 		printf "$line";
 	}
 	printf "=====\n";
+
 }
 
 sub InParticles {
@@ -247,24 +248,24 @@ sub InInteractions{
 	# printf "int $buf $shear_strain_i $num_interaction\n";
 	
 	if ($strainIntFile < 0) {
-		$line = <IN_interaction>;
+		$lineInt = <IN_interaction>;
 		if ( $strainIntFile == -1) {
-			($buf, $strainIntFile) = split(" : ", $line);
+			($buf, $strainIntFile) = split(" : ", $lineInt);
 			printf "ssint = $strainIntFile\n" ;
 		} else {
-			($buf, $val) = split(" : ", $line);
+			($buf, $val) = split(" : ", $lineInt);
 		}
 		
 		while (1) {
-			$line = <IN_interaction>;
-			($buf, $val) = split(" : ", $line);
+			$lineInt = <IN_interaction>;
+			($buf, $val) = split(" : ", $lineInt);
 			($buf1) = split(/\s+/, $buf);
 			if ($buf1 ne '#') {
 				last;
 			} else {
 				$ssHeader[$j++] = $val;
 			}
-			last unless defined $line;
+			last unless defined $lineInt;
 		}
 	}
 	if ($strainIntFile <= $shear_strain || $strainIntFile == -2) {
@@ -273,31 +274,27 @@ sub InInteractions{
 		$k = 0;
 		while (true) {
 			if ($k > 0) {
-				$line = <IN_interaction>;
+				$lineInt = <IN_interaction>;
 			}
 			($i, $j, $contact, $nx, $ny, $nz, #1---6
 			$gap, $f_lub_norm, # 7, 8
 			$f_lub_tan_x, $f_lub_tan_y, $f_lub_tan_z, # 9, 10, 11
 			$fc_norm, # 12
 			$fc_tan_x, $fc_tan_y, $fc_tan_z, # 13, 14, 15
-			$fr_norm, $s_xF) = split(/\s+/, $line);
+			$fr_norm, $s_xF) = split(/\s+/, $lineInt);
 			#			printf "k = $k \n" ;
 			if ($i eq '#' || $i eq NU) {
-				#   ($buf, $shear_strain) = split(" : ", $line);
+				#   ($buf, $shear_strain) = split(" : ", $lineInt);
 				$val =~ s/(\n|\r)//g;
 				#				$shear_strain = $val;
-				
 				printf "A $shear_strain \n" ;
 				last;
 			}
 			if (! defined $i) {
-				printf "$line";
+				printf "$lineInt";
 				printf "B $k $i \n" ;
 				last;
 			}
-
-			
-			
 			#		last unless defined $line;
 			#1: particle 1 label
 			#2: particle 2 label
@@ -448,28 +445,32 @@ sub OutYaplotData{
 	#			}
 	#		}
 	#	}
-	if (1) {
+	if (0) {
 		printf OUT "y 4\n";
-		printf OUT "@ 7\n";
+
 		$cont_bond = 0;
 		for ($k = 0; $k < $num_interaction; $k ++) {
 			#$forcetmp = $force[$k];
 			#$forcetmp = $F_lub[$k];
-			if ($contactstate[$k] >= 1) {
-				$w = $force_factor*$forcetmp;
+			if ($contactstate[$k] == 0) {
+				# $w = $force_factor*$forcetmp;
 				$cont_bond++ ;
-				for ($ii = $ii_min; $ii <= $ii_max; $ii++) {
-					for ($jj = $jj_min; $jj <= $jj_max; $jj++) {
-						$pd_xshift = $Lx*$ax*($ii)+$Lz*$bx*($jj);
-						$pd_zshift = $Lx*$az*($ii)+$Lz*$bz*($jj);
-						$bulk = 1;
-						&OutString_width($int0[$k], $int1[$k], 0.2, 0.01, $pd_xshift, $pd_zshift);
-						#						if ($bulk == 0) {
-						#	&OutString_width_nvec($i, $j, $nrvec_x[$k], $nrvec_y[$k], $nrvec_z[$k], $Gap[$k], $w, 0.01, $pd_xshift, $pd_zshift);
-						#}
-					}
+				printf OUT "@ 7\n";
+			} else {
+				printf OUT "@ 5\n";
+			}
+			for ($ii = $ii_min; $ii <= $ii_max; $ii++) {
+				for ($jj = $jj_min; $jj <= $jj_max; $jj++) {
+					$pd_xshift = $Lx*$ax*($ii)+$Lz*$bx*($jj);
+					$pd_zshift = $Lx*$az*($ii)+$Lz*$bz*($jj);
+					$bulk = 1;
+					&OutString_width($int0[$k], $int1[$k], 0.2, 0.01, $pd_xshift, $pd_zshift);
+					#						if ($bulk == 0) {
+					#	&OutString_width_nvec($i, $j, $nrvec_x[$k], $nrvec_y[$k], $nrvec_z[$k], $Gap[$k], $w, 0.01, $pd_xshift, $pd_zshift);
+					#}
 				}
 			}
+
 		}
 		printf "$cont_bond $num_interaction\n";
 	}
