@@ -116,7 +116,6 @@ void RepulsiveForce::calcForce_longrange()
 	reduced_force_norm = f0_NottBrady/gap;
 }
 
-
 void RepulsiveForce::calcScaledForce()
 {
 	/**

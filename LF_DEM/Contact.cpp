@@ -30,6 +30,8 @@ void Contact::init(System* sys_, Interaction* interaction_)
 		} else if (sys->p.friction_model == 6) {
 			frictionlaw = &Contact::frictionlaw_coulomb_max;
 			ft_max = sys->p.ft_max;
+		} else if (sys->p.friction_model == 7) {
+			frictionlaw = &Contact::frictionlaw_adhesion;
 		}
 	}
 }
@@ -273,6 +275,14 @@ vec3d Contact::getSpringForce() const
 		return f_spring_total;
 	} else {
 		return vec3d();
+	}
+}
+
+void Contact::frictionlaw_adhesion()
+{
+	normal_load = f_spring_normal_norm;
+	if (sys->adhesion) {
+		normal_load += sys->p.adhesion;
 	}
 }
 

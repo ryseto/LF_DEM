@@ -73,7 +73,6 @@ record(other.record),
 birth_strain(other.birth_strain),
 strain_history(other.strain_history),
 angle_history(other.angle_history),
-//normalforce_history(other.normalforce_history),
 gap_history(other.gap_history),
 z_offset(other.z_offset),
 contact(other.contact),
@@ -134,7 +133,6 @@ void Interaction::swap(Interaction& other)
 		std::swap(birth_strain, other.birth_strain);
 		std::swap(strain_history, other.strain_history);
 		std::swap(angle_history, other.angle_history);
-//		std::swap(normalforce_history, other.normalforce_history);
 		std::swap(gap_history, other.gap_history);
 	}
 }
@@ -236,7 +234,6 @@ void Interaction::outputHisotry()
 			double ang = angle_history[k];
 			sys->fout_history << strain_history[k] << ' ';
 			sys->fout_history << ang <<	' ';
-//			sys->fout_history << normalforce_history[k] <<' ';
 			sys->fout_history << gap_history[k] << ' ';
 			sys->fout_history << endl;
 		}
@@ -245,7 +242,6 @@ void Interaction::outputHisotry()
 	record = false;
 	strain_history.clear();
 	angle_history.clear();
-//	normalforce_history.clear();
 	gap_history.clear();
 }
 
@@ -406,15 +402,6 @@ void Interaction::recordHistory()
 		initHistoryRecord();
 	}
 	if (record) {
-//		double total_normal_force = 0;
-//		if (contact.is_active()) {
-//			total_normal_force += contact.getNormalForceValue();
-//		}
-//		if (sys->lubrication) {
-//			if (lubrication.is_active()) {
-//				total_normal_force += -lubrication.force;
-//			}
-//		}
 		double ang;
 		if (sys->simu_type == sys->SimulationType::extensional_flow) {
 			ang = atan2(nvec.x, nvec.z)-sys->p.magic_angle;
@@ -424,7 +411,6 @@ void Interaction::recordHistory()
 		double interaction_strain = sys->get_cumulated_strain()-birth_strain;
 		strain_history.push_back(interaction_strain);
 		angle_history.push_back(ang);
-//		normalforce_history.push_back(total_normal_force);
 		gap_history.push_back(reduced_gap);
 	}
 }

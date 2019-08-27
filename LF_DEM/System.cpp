@@ -419,6 +419,9 @@ void System::setupParametersContacts()
 	} else if (p.friction_model == 6) {
 		cout << indent+"friction_model: Coulomb law + Max tangential force" << endl;
 		friction = true;
+	} else if (p.friction_model == 7) {
+		cout << indent+"friction_model: infinite mu + adhesion" << endl;
+		friction = true;
 	} else {
 		throw runtime_error(indent+"Error: unknown friction model\n");
 	}
