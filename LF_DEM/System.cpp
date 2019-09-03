@@ -98,6 +98,7 @@ vel_difference(0),
 z_bot(-1),
 z_top(-1),
 eventLookUp(NULL)
+//forbid_displacement(false)
 {
 	lx = 0;
 	ly = 0;
@@ -169,6 +170,7 @@ void System::allocateRessources()
 		omega_local.resize(np);
 		E_local.resize(np);
 		phi_local.resize(np);
+		//forbid_displacement = true;
 	}
 }
 
@@ -277,6 +279,7 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	}
 	position.resize(np);
 	radius.resize(np);
+	//	mu.resize(np);
 	for (int i=0; i<np; i++) {
 		position[i] = initial_positions[i];
 		radius[i] = radii[i];
@@ -302,6 +305,26 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 		}
 		particle_volume *= 4*M_PI/3.;
 	}
+	
+//	if (true) {
+//		vec3d p_center(lx_half, 0, 0);
+//		//	mu.resize(np);
+//		for (int i=0; i< np; i++) {
+//			vec3d pos_center = (position[i]-p_center);
+//			periodizeDiff(pos_center);
+//			//			if (pos_center.norm() < 30) {
+//			//				mu[i] = 0.5;
+//			//			} else {
+//			//				mu[i] = 0.1;
+//			//			}
+//			if (position[i].z > 3*lz/4 || position[i].z < lz/4) {
+//				mu[i] = 0.5;
+//			} else {
+//				mu[i] = 0.1;
+//			}
+//
+//		}
+//	}
 }
 
 void System::setFixedVelocities(const vector <vec3d>& vel)
@@ -400,6 +423,9 @@ void System::setupParametersContacts()
 	} else if (p.friction_model == 6) {
 		cout << indent+"friction_model: Coulomb law + Max tangential force" << endl;
 		friction = true;
+	} else if (p.friction_model == 7) {
+		cout << indent+"friction_model: infinite mu + adhesion" << endl;
+		friction = true;
 	} else {
 		throw runtime_error(indent+"Error: unknown friction model\n");
 	}
@@ -473,6 +499,13 @@ void System::setupParameters()
 	}
 }
 
+void System::openHistoryFile(std::string rec_filename)
+{
+	if (p.output.recording_interaction_history) {
+		fout_history.open(rec_filename.c_str());
+	}
+}
+
 void System::setupBrownian()
 {
 #ifdef DEV
@@ -515,6 +548,7 @@ void System::setupGenericConfiguration(T conf, Parameters::ControlVariable contr
 	allocateRessources();
 
 	if (brownian) {
+		cerr << " @@@ Brownian " << endl;
 		setupBrownian();
 	}
 
@@ -970,7 +1004,11 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		}
 		adjustVelocityPeriodicBoundary();
 	} else {
-		sflowFiniteRe(calc_stress);
+		if (0) {
+			sflowFiniteRe(calc_stress);
+		} else {
+			sflowIteration(calc_stress);
+		}
 	}
 	if (wall_rheology && calc_stress) { // @@@@ calc_stress remove????
 		forceResultantReset();
@@ -988,6 +1026,9 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 			calcTotalStressPerParticle();
 		}
 	}
+	if (p.output.recording_interaction_history) {
+		recordHistory();
+	}
 	timeStepMove(time_end, strain_end);
 	for (int i=0; i<np; i++) {
 		na_disp[i] += na_velocity[i]*dt;
@@ -995,6 +1036,33 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	if (eventLookUp != NULL) {
 		(this->*eventLookUp)();
 	}
+}
+
+void System::sflowIteration(bool calc_stress)
+{
+	double diff_u = 0;
+	int cnt = 0;
+	do {
+		if (!pairwise_resistance) {
+			computeVelocitiesStokesDrag();
+		} else {
+			computeVelocities(calc_stress, true);
+		}
+		sflow->pressureController();
+		diff_u = sflow->update(pressure_difference);
+		cnt++;
+		if (cnt > 5000) {
+			break;
+		}
+		if (cnt % 100 == 1) {
+			cerr << "@ " << diff_u << ' '  << sflow->get_pressure_grad_x() << endl;
+		}
+	} while (diff_u > 1e-2);
+	if (cnt > 1) {
+		cerr << cnt << endl;
+	}
+	adjustVelocitySolventFlow();
+	return ;
 }
 
 void System::sflowFiniteRe(bool calc_stress)
@@ -1007,6 +1075,12 @@ void System::sflowFiniteRe(bool calc_stress)
 	sflow->pressureController();
 	sflow->update(pressure_difference);
 	adjustVelocitySolventFlow();
+	//static int cnt = 0;
+//	if (cnt ++ > 1000 && forbid_displacement && fabs(sflow->u_ave.x) < 1e-3) {
+//		forbid_displacement = false;
+//		cerr << cnt << ' ' << sflow->u_ave.x << ' ' << sflow->get_pressure_grad_x() << endl;
+//		cerr << "allow displacmenet" << endl;
+//	}
 }
 
 /****************************************************************************************************
@@ -1060,7 +1134,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	 + \f$ \bm{U}^{-} = \bm{A}^{-1}( \bm{X}(t) )( \bm{F}_\mathrm{B} + \bm{F} ( \bm{X}(t) ) )  \f$
 	 + \f$ \bm{X}' = \bm{X}(t) + \bm{U}^{-}dt \f$
 		- 2nd step:
-	 + \f$ \bm{U}^{+} = \bm{A}^{-1}( \bm{X}^{-} ) ( \bm{F}_\mathrm{B} + \bm{F} ( \bm{X}^{-} ) )  \f$ (\b same \f$\bm{F}_\mathrm{B}\f$ as in the first step)
+	 + \f$ \bm{U}^{+} = \bm{A}^{-1}( \bm{X}' ) ( \bm{F}_\mathrm{B} + \bm{F} ( \bm{X}' ) )  \f$ (\b same \f$\bm{F}_\mathrm{B}\f$ as in the first step)
 	 + \f$ \bm{X}(t + dt) = \bm{X}(t) + \frac{1}{2}(\bm{U}^{+}+\bm{U}^{-})dt =  \bm{X}' + \frac{1}{2}(\bm{U}^{+}-\bm{U}^{-})dt \f$
 
 	 */
@@ -1219,15 +1293,14 @@ void System::timeStepMove(double time_end, double strain_end)
 	 * dot_epsion = shear_rate / 2 is always true.
 	 * clk.cumulated_strain = shear_rate * t for both simple shear and extensional flow.
 	 */
-	/* Adapt dt to get desired p.disp_max	 */
-
 	//	cerr << dt << ' ' << p.critical_load  << endl;
 	clk.time_ += dt;
 	total_num_timesteps ++;
 	/* evolve PBC */
 	timeStepBoxing();
-
+	
 	/* move particles */
+	//	if (!forbid_displacement) {
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
@@ -1236,6 +1309,7 @@ void System::timeStepMove(double time_end, double strain_end)
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
+	//	}
 	if (retrim_ext_flow) {
 		cerr << "clk.cumulated_strain = " << clk.cumulated_strain << endl;
 		retrimProcess();
@@ -1254,6 +1328,7 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
 			adaptTimeStep(time_end, strain_end);
 		}
 	}
+
 	clk.time_ += dt;
 	total_num_timesteps ++;
 	/* evolve PBC
@@ -1264,6 +1339,7 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
+	
 	if (angle_output) {
 		for (int i=0; i<np; i++) {
 			angle[i] += ang_velocity[i].y*dt;
@@ -2521,13 +2597,11 @@ void System::computeVelocities(bool divided_velocities, bool mat_rebuild)
 	 simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
 	 */
 	stokes_solver.resetRHS();
-	if (!p.solvent_flow) {
-		computeUInf();
-	}
 	if (divided_velocities || control == Parameters::ControlVariable::stress) {
 		if (control == Parameters::ControlVariable::stress) {
 			set_shear_rate(1);
 		}
+		computeUInf(); // note: after set_shear_rate(1);
 		setFixedParticleVelocities();
 		computeVelocityByComponents();
 		if (control == Parameters::ControlVariable::stress) {
@@ -2541,6 +2615,7 @@ void System::computeVelocities(bool divided_velocities, bool mat_rebuild)
 		}
 		sumUpVelocityComponents();
 	} else {
+		computeUInf();
 		setFixedParticleVelocities();
 		computeVelocityWithoutComponents(mat_rebuild);
 	}
@@ -3024,6 +3099,18 @@ void System::yaplotBoxing(std::ofstream &fout_boxing)
 	}
 
 	fout_boxing << endl;
+}
+
+void System::recordHistory()
+{
+	for (unsigned int k=0; k<interaction.size(); k++) {
+//		if (interaction[k].lubrication.is_active()) {
+//			interaction[k].lubrication.calcLubricationForce();
+//		} else {
+//			interaction[k].lubrication.force = 0;
+//		}
+		interaction[k].recordHistory();
+	}
 }
 
 void System::countContactNumber()

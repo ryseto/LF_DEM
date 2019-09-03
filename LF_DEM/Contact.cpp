@@ -30,6 +30,8 @@ void Contact::init(System* sys_, Interaction* interaction_)
 		} else if (sys->p.friction_model == 6) {
 			frictionlaw = &Contact::frictionlaw_coulomb_max;
 			ft_max = sys->p.ft_max;
+		} else if (sys->p.friction_model == 7) {
+			frictionlaw = &Contact::frictionlaw_adhesion;
 		}
 	}
 }
@@ -72,6 +74,11 @@ void Contact::setInteractionData()
 		if (sys->rolling_friction) {
 			mu_rolling = sys->p.mu_rolling;
 		}
+		/* This commented part is experimental.
+		 * mu_static = 0.5*(sys->mu[p0]+sys->mu[p1]);
+		 * mu_dynamic = mu_static;
+		 * mu_rolling = 0.1*mu_static;
+		 */
 	}
 	dashpot.setParticleData();
 	setDashpotConstants();
@@ -130,10 +137,10 @@ void Contact::deactivate()
 vec3d Contact::getSlidingVelocity() const
 {
 	vec3d vel_offset;
-	if (sys->simple_shear == sys->SimulationType::simple_shear) {
+	if (sys->simu_type == sys->SimulationType::simple_shear) {
 		// simple shear
 		vel_offset = interaction->z_offset*sys->get_vel_difference();
-	} else if (sys->simple_shear == sys->SimulationType::extensional_flow) {
+	} else if (sys->simu_type == sys->SimulationType::extensional_flow) {
 		// extensional flow
 		vel_offset = sys->get_vel_difference_extension(interaction->pd_shift);
 	}
@@ -271,6 +278,14 @@ vec3d Contact::getSpringForce() const
 	}
 }
 
+void Contact::frictionlaw_adhesion()
+{
+	normal_load = f_spring_normal_norm;
+	if (sys->adhesion) {
+		normal_load += sys->p.adhesion;
+	}
+}
+
 void Contact::frictionlaw_standard()
 {
 	/**
@@ -319,6 +334,10 @@ void Contact::frictionlaw_infinity()
 	 \brief Friction law
 	 */
 	state = 2; // static friction
+	if (sys->adhesion) {
+		normal_load = f_spring_normal_norm;
+		normal_load += sys->p.adhesion;
+	}
 }
 
 void Contact::setTangentialForceNorm(double current_force_norm,

@@ -634,7 +634,7 @@ void StokesSolver::compute_LTRHS(vector<vec3d> &F, vector<vec3d> &T)
 
 	 So for a rhs Y:
 	 X = L*Y = P^T*Lc*Y
-		*/
+	 */
 	if (!chol_L->is_ll) {
 		cerr << " The factorization is LDL^T. compute_LTRHS(F, T) only works for LL^T factorization." << endl;
 	}

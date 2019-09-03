@@ -80,7 +80,8 @@ Dimensional::Unit Simulation::determineUnit(Parameters::ParameterSetFactory &PFa
 					internal_unit = fs.type;
 				}
 			}
-			if (internal_unit == Dimensional::Unit::brownian) {
+			if (control_value.unit == Dimensional::Unit::brownian) {
+				//if (internal_unit == Dimensional::Unit::brownian)  // @@@
 				sys.brownian = true; // @@@@ to be checked
 				sys.brownian_dominated = true;
 			}
@@ -461,6 +462,10 @@ void Simulation::openOutputFiles()
 	if (sys.p.solvent_flow) {
 		string flowprofile_filename = "fp_"+simu_name+".dat";
 		fout_fprofile.open(flowprofile_filename.c_str());
+	}
+	if (sys.p.output.recording_interaction_history) {
+		string rec_filename = "rec_"+simu_name+".dat";
+		sys.openHistoryFile(rec_filename);
 	}
 
 	//string box_name = "box_"+simu_name+".dat";

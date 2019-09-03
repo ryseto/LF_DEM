@@ -62,6 +62,7 @@ private:
 	std::vector<unsigned int> nb_blocks_mf;
 	std::vector<unsigned int> nb_blocks_ff;
 	bool pairwise_resistance_changed;
+	//bool forbid_displacement;
 	int total_num_timesteps;
 	double lx;
 	double ly;
@@ -138,7 +139,7 @@ private:
 								  const std::vector<vec3d> &non_affine_ang_vel);
 	void addUpInteractionStressME(std::vector<Sym2Tensor> &stress_comp);
 	void sflowFiniteRe(bool calc_stress);
-	double sflowIteration(bool calc_stress);
+	void sflowIteration(bool calc_stress);
 	void computeMaxNAVelocity();
 	void computeMaxVelocity();
 	double (System::*calcInteractionRange)(int, int);
@@ -235,7 +236,7 @@ private:
 
 	std::vector<double> radius;
 	std::vector<double> angle; // for 2D visualization
-
+	// std::vector<double> mu; // friction coeffient
 	std::vector<vec3d> velocity;
 	std::vector<vec3d> velocity_predictor;
 	std::vector<vec3d> na_velocity;
@@ -247,6 +248,7 @@ private:
 	std::vector<std::complex<double>> phi6;
 	Sym2Tensor total_stress;
 	std::vector<int> n_contact;
+	std::ofstream fout_history;
 
 	/**************** Interaction machinery ***************************/
 	/* We hold the Interaction instances in a std::vector */
@@ -416,6 +418,8 @@ private:
 	void retrim(vec3d&); // Extensional flow Periodic Boundary condition
 	void updateH(); // Extensional flow Periodic Boundary condition
 	void yaplotBoxing(std::ofstream &fout_boxing); // Extensional flow Periodic Boundary condition
+	void recordHistory();
+	void openHistoryFile(std::string rec_filename);
 
 	void countContactNumber();
 	void checkStaticForceBalance();

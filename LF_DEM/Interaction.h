@@ -59,7 +59,7 @@ private:
 	void deactivate();
 	void init();
 	void swap(Interaction& other); // used by assignment operator
-
+	void initHistoryRecord();
 	struct ODBlock (Lubrication::*RFU_ODBlock_lub)() const;
 	std::pair<struct DBlock, struct DBlock> (Lubrication::*RFU_DBlocks_lub)() const;
 	//===== forces/stresses  ========================== //
@@ -70,7 +70,6 @@ private:
 	double birth_strain;
 	std::vector<double> strain_history;
 	std::vector<double> angle_history;
-	std::vector<double> normalforce_history;
 	std::vector<double> gap_history;
 	
 public:

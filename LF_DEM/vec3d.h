@@ -164,10 +164,10 @@ public:
 	
 	inline double angle_0_pi()
 	{
-		if (z > 0) {
-			return atan2(z, x);
+		if (x > 0) {
+			return atan2(x, z);
 		} else {
-			return atan2(-z, -x);
+			return atan2(-x, z);
 		}
 	}
 	

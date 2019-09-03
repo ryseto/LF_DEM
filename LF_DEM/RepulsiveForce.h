@@ -30,7 +30,7 @@ private:
 	Interaction* interaction;
 	unsigned int p0;
 	unsigned int p1;
-	bool vdW;
+	//bool vdW;
 	//===== forces and stresses ==================== //
 	double geometric_factor;
 	double screening_length;
@@ -39,8 +39,15 @@ private:
 	vec3d force_vector; // normal contact force
 	double force_norm;
 	double reduced_force_norm;
-	void calcReducedForceNorm();
+	double f0_NottBrady;
+	double tau_NottBrady;
 	void calcScaledForce();
+	
+	void (RepulsiveForce::*forceType)();
+	void calcReducedForceNorm(); // forceType 1
+	void calcForce_NottBrady();  // forceType 2
+	void calcForce_Jenkins();    // forceType 3
+	void calcForce_longrange();  // forceType 4
 public:
 	RepulsiveForce():
 	p0(0),

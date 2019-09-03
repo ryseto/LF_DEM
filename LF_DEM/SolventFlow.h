@@ -55,6 +55,7 @@ private:
 	double system_volume;
 	bool sedimentation;
 	bool channel_flow;
+	bool simple_shear; // not yet implemented
 	// Staggered grid stores
 	// - the pressure at the cell center
 	// - the velocities at the cell faces.
@@ -66,6 +67,8 @@ private:
 
 	std::vector<double> u_sol_x;
 	std::vector<double> u_sol_z;
+	std::vector<double> u_sol_x_old;
+	std::vector<double> u_sol_z_old;
 	std::vector<double> u_sol_ast_x;
 	std::vector<double> u_sol_ast_z;
 	std::vector<double> u_particle_x;
@@ -106,14 +109,11 @@ public:
 	SolventFlow();
 	~SolventFlow();
 
-	double tau;
-
-
 	vec3d u_ave;
 	Averager<double> average_pressure_x;
 	void init(System* sys_, std::string simulation_type);
 	void particleVelocityDiffToMesh();
-	void update(double pressure_difference);
+	double update(double pressure_difference);
 	void initPoissonSolver();
 	void localFlow(const vec3d &p, vec3d &u_local, vec3d &omega_local,
 				   std::vector<double> &e_local);

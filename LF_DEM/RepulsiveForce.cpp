@@ -13,10 +13,26 @@ void RepulsiveForce::init(System* sys_, Interaction* interaction_)
 	sys = sys_;
 	interaction = interaction_;
 	force_norm = 0;
-	if (sys->p.vdW_coeffient > 0) {
-		vdW = true;
+	if (sys->p.repulsive_force_type == 1) {
+		forceType = &RepulsiveForce::calcReducedForceNorm;
+		screening_length = sys->p.repulsive_length;
+		max_length = sys->p.repulsive_max_length;
+		if (max_length != -1) {
+			std::cerr << "Do we need this?" << std::endl;
+			exit(1);
+		}
+	} else if (sys->p.repulsive_force_type == 2) {
+		forceType = &RepulsiveForce::calcForce_NottBrady;
+		tau_NottBrady = 1000;
+		f0_NottBrady = 1/tau_NottBrady;
+	} else if (sys->p.repulsive_force_type == 3) {
+		forceType = &RepulsiveForce::calcForce_Jenkins;
+		f0_NottBrady = 1;
+	} else if (sys->p.repulsive_force_type == 4) {
+		forceType = &RepulsiveForce::calcForce_longrange;
+		f0_NottBrady = 1;
 	} else {
-		vdW = false;
+		exit(1);
 	}
 }
 
@@ -30,8 +46,6 @@ void RepulsiveForce::activate()
 	double a0 = sys->radius[p0];
 	double a1 = sys->radius[p1];
 	geometric_factor = a0*a1/(a0+a1);
-	screening_length = sys->p.repulsive_length;
-	max_length = sys->p.repulsive_max_length;
 	force_vector.reset();
 	force_norm = 0;
 	reduced_force_norm = 0;
@@ -57,18 +71,49 @@ void RepulsiveForce::calcReducedForceNorm()
 		} else {
 			reduced_force_norm = exp(-gap/screening_length)*0.5*(1+tanh(-(gap-max_length)/cutoff_roundlength));
 		}
-		if (vdW) {
-			/* van del Waals attraction */
-			double hh = gap+sys->p.vdW_singularity_cutoff;
-			reduced_force_norm += -sys->p.vdW_coeffient/hh/hh;
-			double f_tmp = 1-sys->p.vdW_coeffient/sys->p.vdW_singularity_cutoff/sys->p.vdW_singularity_cutoff;
-			reduced_force_norm /= f_tmp;
-		}
 		reduced_force_norm *= geometric_factor;
 	} else {
 		/* contacting */
 		reduced_force_norm = geometric_factor;
 	}
+}
+
+void RepulsiveForce::calcForce_NottBrady()
+{
+	/**
+	 \brief repulsive force used in Stokesian Dynamics
+	 */
+	double gap = interaction->get_gap();
+
+	if (gap > 0) {
+		reduced_force_norm = f0_NottBrady*exp(-tau_NottBrady*gap)/gap;
+		reduced_force_norm *= geometric_factor;
+	} else {
+		/* contacting */
+		reduced_force_norm = geometric_factor;
+	}
+}
+
+void RepulsiveForce::calcForce_Jenkins()
+{
+	/**
+	 \brief repulsive force used in J.T. Jenkins and L. La Ragione.
+	 */
+	double gap = interaction->get_gap();
+	if (gap < 0.85) {
+		reduced_force_norm = f0_NottBrady/gap;
+	} else {
+		reduced_force_norm = (f0_NottBrady/gap)*0.5*(1 + tanh(-(gap - 0.95)/0.025));
+	}
+}
+
+void RepulsiveForce::calcForce_longrange()
+{
+	/**
+	 \brief repulsive force used in J.T. Jenkins and L. La Ragione.
+	 */
+	double gap = interaction->get_gap();
+	reduced_force_norm = f0_NottBrady/gap;
 }
 
 void RepulsiveForce::calcScaledForce()
@@ -92,7 +137,7 @@ void RepulsiveForce::calcForce()
 		\exp(-h/\lambda) \f$ if \f$h>0\f$ and \f$ f_{R} = f_{R}^0 \f$
 		if \f$h<0\f$, where \f$h\f$ is the interparticle gap.
 	*/
-	calcReducedForceNorm();
+	(this->*forceType)();
 	calcScaledForce();
 }
 

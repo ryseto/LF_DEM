@@ -53,6 +53,7 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(output.log_time_interval, false),
 		PARAM_INIT(output.out_na_vel, false),
 		PARAM_INIT(output.out_na_disp, false),
+		PARAM_INIT(output.recording_interaction_history, false),
 		PARAM_INIT(output.effective_coordination_number, false),
 		PARAM_INIT(check_static_force_balance, false),
 		PARAM_INIT(smooth_lubrication, false),
@@ -84,8 +85,8 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(interaction_range, -1),
 		PARAM_INIT(repulsive_length, 0.05),
 		PARAM_INIT(repulsive_max_length, -1),
-		PARAM_INIT(vdW_coeffient, -1),
-		PARAM_INIT(vdW_singularity_cutoff, 0.1),
+		//PARAM_INIT(vdW_coeffient, -1),
+		//PARAM_INIT(vdW_singularity_cutoff, 0.1),
 		PARAM_INIT(magic_angle, 0),
 		PARAM_INIT(mu_static, 1),
 		PARAM_INIT(mu_dynamic, -1),
@@ -101,7 +102,7 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(sflow_dx, 5),
 		PARAM_INIT(sflow_smooth_length, 3),
 		PARAM_INIT(sflow_ReNum_p, 0.001),
-		PARAM_INIT(sflow_ReNum, 0.1),
+		//PARAM_INIT(sflow_ReNum, 0.1),
 		PARAM_INIT(sflow_Darcy_coeff, 1),
 		PARAM_INIT(sflow_pcontrol_increment, 1e-4),
 		PARAM_INIT(sflow_pcontrol_rtime, 0.1),
@@ -122,6 +123,7 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(friction_model, 1),
 		PARAM_INIT(np_fixed, 0),
 		PARAM_INIT(simulation_mode, 0),
+		PARAM_INIT(repulsive_force_type, 1),
 		PARAM_INIT(sj_check_count, 500),
 		PARAM_INIT(sj_reversal_repetition, 10),
 		PARAM_INIT(sflow_boundary_conditions, 0),
@@ -195,7 +197,7 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 	default_qty = {Dimensional::Dimension::Time, 1e-3, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(contact_relaxation_time, default_qty));
 
-	default_qty = {Dimensional::Dimension::Time, 0, guarranted_unit};
+	default_qty = {Dimensional::Dimension::Time, -1, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(contact_relaxation_time_tan, default_qty));
 	
 	default_qty = {Dimensional::Dimension::Force, 0.1, Dimensional::Unit::kn};

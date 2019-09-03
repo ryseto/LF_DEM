@@ -664,7 +664,7 @@ void Simulation::outputData()
 	std::tie(contact_nb, frictional_contact_nb) = countNumberOfContact(sys);
 	double contact_nb_per_particle = (double)2*contact_nb/sys.get_np();
 	double frictional_contact_nb_per_particle = (double)2*frictional_contact_nb/sys.get_np();
-
+	int dimension = (!sys.twodimension ? 3 : 2);
 	outdata.entryData("time", Dimensional::Dimension::Time, 1, sys.get_time());
 	if (sys.wall_rheology == false || sys.get_omega_wheel() == 0) {
 		// Simple shear geometry
@@ -700,8 +700,8 @@ void Simulation::outputData()
 	//outdata.entryData("shear stress", Dimensional::Dimension::Stress, 1, shear_stress);
 	auto stress_diag = sys.total_stress.diag();
 	/************** isotropic stress (particle pressure) **************************************/
-	outdata.entryData("particle pressure", Dimensional::Dimension::Stress, 1, -sys.total_stress.trace()/3);
-	outdata.entryData("particle pressure contact", Dimensional::Dimension::Stress, 1, -sys.total_stress_groups["contact"].trace()/3);
+	outdata.entryData("particle pressure", Dimensional::Dimension::Stress, 1, -sys.total_stress.trace()/dimension);
+	outdata.entryData("particle pressure contact", Dimensional::Dimension::Stress, 1, -sys.total_stress_groups["contact"].trace()/dimension);
 	/************** normal stress anisotropy  *************************************************/
 	if (sys.p.output.new_material_functions) {
 		/************** material function lambda0 *********************************************
@@ -844,9 +844,8 @@ void Simulation::outputDataSedimentatioin()
 	double contact_nb_per_particle = (double)2*contact_nb/sys.get_np();
 	double frictional_contact_nb_per_particle = (double)2*frictional_contact_nb/sys.get_np();
 	
-	
 	outdata.entryData("time", Dimensional::Dimension::Time, 1, sys.get_time()); // 1
-	outdata.entryData("tau", Dimensional::Dimension::Time, 1, sys.get_time()/sys.p.sflow_ReNum); // 2
+	outdata.entryData("tau", Dimensional::Dimension::Time, 1, sys.get_time()/sys.p.sflow_ReNum_p); // 2
 	outdata.entryData("suspension velocity", Dimensional::Dimension::none, 3, sys.sflow->u_ave); // 3,4,5 //
 	outdata.entryData("pressure gradient x", Dimensional::Dimension::Stress, 1, sys.sflow->get_pressure_grad_x()); // 6
 	outdata.entryData("relative particle velocity", Dimensional::Dimension::Velocity, 3, sys.meanParticleVelocity()-sys.sflow->u_ave);// 7 8 9
@@ -868,6 +867,7 @@ void Simulation::outputDataSedimentatioin()
 	outdata.entryData("number of interaction", Dimensional::Dimension::none, 1, sys.get_nb_interactions());
 	outdata.entryData("dt", Dimensional::Dimension::Time, 1, sys.avg_dt);
 	outdata.writeToFile();
+	
 }
 
 void Simulation::getSnapshotHeader(stringstream& snapshot_header)
@@ -1413,6 +1413,14 @@ void Simulation::outputGSD()
 			} else {
 				uptr[i] = 2;
 			}
+
+			/* 
+			 * if (sys.mu[i] > 0.2) {
+			 * uptr[i] = 0;
+			 * } else {
+			 * uptr[i] = 1;
+			 * }
+			 */
 			fptr[i] = 2*sys.radius[i];
 		}
 		gsd_write_chunk(&gsdOut, "particles/typeid", GSD_TYPE_UINT32, np, 1, 0, uptr);

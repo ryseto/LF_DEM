@@ -68,6 +68,7 @@ namespace Parameters {
 		bool out_data_vel_components;		///< Output velocity components in the par* file [false]
 		bool out_na_vel;					///< Output non-affine velocity components in the par* file [false]
 		bool out_na_disp;					///< Output non-affine displacements since last time step in the par* file [false]
+		bool recording_interaction_history;	///< Output all histories of interactions (time_end should be short enough) [false]
 		double recording_start;				///< Hisotry is recorded after this strain [1]
 		bool effective_coordination_number; ///< Count and output effective coordination number [false]
 	};
@@ -89,11 +90,12 @@ namespace Parameters {
 		double critical_load;			///< Amplitude of the critical load [0]
 		double adhesion;				///< Amplitude of the adhesion [0 guarranted_unit]
 		double brownian;				///< Amplitude of the Brownian force [0]
+		int repulsive_force_type;       ///< type of repulsive force [1]
 		double repulsive_length;		///< "Debye" screering length for the repulsive force [0.05]
 		double repulsive_max_length;	///< Maximum length until which the repulsive force can reach. If -1, no limit. (e.g. length of polymer brush) [-1]
 		double interaction_range;		///< maximum range (center-to-center) for interactions (repulsive force, etc.). If -1, lub_max_gap is used as cutoff [-1]
-		double vdW_coeffient; ///< [-1]
-		double vdW_singularity_cutoff; ///< [0.1]
+		//		double vdW_coeffient; ///< [-1]
+		//	double vdW_singularity_cutoff; ///< [0.1]
 		double bodyforce;              ///< Amplitude of the body force [0]
 		int np_fixed;
 		struct TActAdhesion::Parameters TA_adhesion; ///< Time delayed adhesion params (.adhesion_range [1e-2], .adhesion_max_force [0h], .activation_time [0h])
@@ -136,10 +138,14 @@ namespace Parameters {
 		 ********************************************************/
 		/*
 		 * 0 No friction
-		 * 1 Linear friction law Ft < mu Fn
-		 * 2 Threshold friction without repulsive force
+		 * 1 Coulomb's friction law Ft < mu Fn
+		 * 2 Critical load model (Threshold friction without repulsive force)
+		 * 3 Critical load model with mu = infinity
+		 * 4 Coulomb's friction law with mu = infinity
+		 * 5 Constant maximum tangenetial force (no normal force dependence)
+		 * 6 Coulomb's friction law with a maximum tangential force.
 		 */
-		int friction_model;		///< Friction model. 0: No friction. 1: Coulomb. 2: Coulomb with threshold. [1]
+		int friction_model;		///< Friction model from the list above  [1]
 		double mu_static;		///< friction coefficient (static) [1]
 		double mu_dynamic;		///< friction coefficient (dynamic). If -1, mu_dynamic = mu_static [-1]
 		double mu_rolling;		///< friction coefficient (rolling) [0]
@@ -217,7 +223,7 @@ namespace Parameters {
 		double sflow_smooth_length; // mesh size in unit of particle radius [3]
 		int sflow_Darcy_power; // lambda for phi/(1-phi)^{lambda} (Modified Darcy's law) [0]
 		double sflow_Darcy_coeff; // [1]
-		double sflow_ReNum; // [0.1]
+//		double sflow_ReNum; // [0.1]
 		double sflow_ReNum_p; // [0.001]
 		double sflow_pcontrol_increment; // To adjust pressure diffrence to fix flux value along x-direction [1e-4]
 		double sflow_pcontrol_rtime; // [0.1]

@@ -520,7 +520,7 @@ void BoxSet::updateExtFlow()
 	set <unsigned int> bottom_edge;
 	/* Top edge */
 	vec3d pos = origin_ext_flow+sys->box_axis2;
-	int jmax = l1/delta;
+	int jmax = (int)(l1/delta);
 	for (int j=0; j<2*jmax; j++) {
 		unsigned int box_label = whichBoxLabel(pos);
 		if (box_labels[box_label]->type == 0) {

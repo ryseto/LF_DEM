@@ -43,6 +43,12 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 		sedimentation = true;
 	} else if (simulation_type == "channel flow") {
 		channel_flow = true;
+	} else if (simulation_type == "simple shear") {
+		simple_shear = true;
+		std::ostringstream error_str;
+		error_str << "Solvent flow algoritm for simple shear is not implemented yet. \n";
+		error_str << "Lees--Edwards boundary condtions is complicated.\n";
+		throw std::runtime_error(error_str.str());
 	} else {
 		std::ostringstream error_str;
 		error_str << "Incorrect simulation type\n";
@@ -84,6 +90,7 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 	pressure.resize(n, 0);
 	Urel_x.resize(n, 0);
 	u_sol_x.resize(n, 0);
+	u_sol_x_old.resize(n, 0);
 	u_x.resize(n, 0);
 	u_sol_ast_x.resize(n, 0);
 	div_u_sol_ast.resize(n, 0);
@@ -96,6 +103,7 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 		Urel_z.resize(n, 0);
 		u_z.resize(n, 0);
 		u_sol_z.resize(n, 0);
+		u_sol_z_old.resize(n, 0);
 		u_sol_ast_z.resize(n, 0);
 		phi_uz.resize(n, 0);
 		phi_uz2.resize(n, 0);
@@ -225,8 +233,8 @@ void SolventFlow::particleVelocityDiffToMesh()
 		double Uus_z = sys->na_velocity[i].z; // This is U - u
 		double radius = sys->radius[i];
 		double particle_volume = M_PI*radius*radius;
-		int ix = x/dx;
-		int iz = z/dz;
+		int ix = (int)(x/dx);
+		int iz = (int)(z/dz);
 		mesh_nb.clear();
 		udx_values.clear();
 		udz_values.clear();
@@ -346,14 +354,14 @@ void SolventFlow::pressureController()
 		} else {
 			pressure_grad_x -= sys->p.sflow_pcontrol_increment;
 		}
-	} else {
+	} else if (sedimentation) {
 		double diff_x = u_ave.x-target_flux;
 		pressure_grad_x += -diff_x*sys->p.sflow_pcontrol_increment*sys->dt;
-		pressure_grad_x += - sys->p.sflow_pcontrol_damper*(pressure_grad_x - average_pressure_x.get())*sys->dt;
+		pressure_grad_x += -sys->p.sflow_pcontrol_damper*(pressure_grad_x - average_pressure_x.get())*sys->dt;
 	}
 }
 
-void SolventFlow::update(double pressure_difference_)
+double SolventFlow::update(double pressure_difference_)
 {
 	//static std::ofstream fout_tmp("debug.dat");
 	particleVelocityDiffToMesh();
@@ -367,6 +375,20 @@ void SolventFlow::update(double pressure_difference_)
 		u_z[k] = u_sol_z[k] + Urel_z[k]*phi_uz2[k];// particle unit
 	}
 	calcVelocityGradients();
+	
+	double u_change_max = 0;
+	for (int k=0; k<n; k++) {
+		double dux = u_sol_x[k]-u_sol_x_old[k];
+		double duz = u_sol_z[k]-u_sol_z_old[k];
+		double u_change = dux*dux + duz*duz;
+		if (u_change_max < u_change) {
+			u_change_max = u_change;
+		}
+		u_sol_x_old[k] = u_sol_x[k];
+		u_sol_z_old[k] = u_sol_z[k];
+	}
+
+	return sqrt(u_change_max);
 }
 
 double SolventFlow::porousResistance(double phi)
@@ -420,6 +442,8 @@ void SolventFlow::predictorStep()
 				double fz = dd_uz + res_coeff_uz*Urel_z[k];
 				u_sol_ast_x[k] = u_sol_x[k] + sys->dt*(fx/re_num - (ux_duxdx + uz_duxdz));
 				u_sol_ast_z[k] = u_sol_z[k] + sys->dt*(fz/re_num - (uz_duzdz + ux_duzdx));
+				//u_sol_ast_x[k] = u_sol_x[k] + sys->dt*(fx/re_num);
+				//u_sol_ast_z[k] = u_sol_z[k] + sys->dt*(fz/re_num);
 
 				// - sys->p.sf_zfriction*u_sol_ave.z);
 				/* sf_zfriction*u_sol_z[k] term is added
@@ -546,8 +570,9 @@ void SolventFlow::correctorStep()
 	if (sys->p.sflow_boundary_conditions == 0) {
 		/* periodic boundary condtions in x and z directions.
 		 */
-		double sixpi_dt_Re_dx = six_pi*sys->dt/(dx*re_num);
-		double sixpi_dt_Re_dz = six_pi*sys->dt/(dz*re_num);
+		double sixpi_dt_Re = six_pi*sys->dt/re_num;
+		double sixpi_dt_Re_dx = sixpi_dt_Re/dx;
+		double sixpi_dt_Re_dz = sixpi_dt_Re/dz;
 		double pressure_difference_x = pressure_grad_x*sys->get_lx();
 		for (int i=0; i<nx; i++) {
 			int im1 = (i == 0 ? nx-1 : i-1);
@@ -905,7 +930,7 @@ void SolventFlow::outputYaplot(std::ofstream &fout_flow)
 	for (int i=0; i < sys->np_mobile; i++) {
 		double x = sys->position[i].x-sys->get_lx()/2;
 		double z = sys->position[i].z-sys->get_lz()/2;
-		double a = sys->radius[i];
+	//	double a = sys->radius[i];
 		vec3d v = sys->u_local[i];
 		fout_flow << "l " << x  << ' ' << 0 << ' ' << z ;
 		fout_flow << ' ' << x + v.x << ' ' << 0 << ' ' << z + v.z << std::endl;
