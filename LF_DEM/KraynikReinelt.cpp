@@ -81,11 +81,41 @@ void KraynikReineltBC::retrimProcess(std::vector<vec3d> &position,
 	boxset.updateExtFlow(container_ext_flow, ext_ax);
 }
 
-void KraynikReineltBC::periodize(unsigned i, vec3d &pos, bool &pd_transport, std::shared_ptr<Boxing::ExtensionalShearBoxSet> boxset) const
+void KraynikReineltBC::periodize(unsigned i, vec3d &pos, bool &pd_transport, Boxing::BoxSet *boxset) const
 {
 	if (boxset->boxType(i) != 1) {
 		vec3d s = deform_backward*pos;
 		pd_transport = false;
+		if (s.z >= container.lz) {
+			s.z -= container.lz;
+			pd_transport = true;
+		} else if (s.z < 0) {
+			s.z += container.lz;
+			pd_transport = true;
+		}
+		if (s.x >= container.lx) {
+			s.x -= container.lx;
+			pd_transport = true;
+		} else if (s.x < 0) {
+			s.x += container.lx;
+			pd_transport = true;
+		}
+		if (pd_transport) {
+			pos = deform_forward*s;
+		}
+	}
+	if (pos.y >= container.ly) {
+		pos.y -= container.ly;
+	} else if (pos.y < 0) {
+		pos.y += container.ly;
+	}
+}
+
+void KraynikReineltBC::periodize(unsigned i, vec3d &pos, Boxing::BoxSet *boxset) const
+{
+	if (boxset->boxType(i) != 1) {
+		vec3d s = deform_backward*pos;
+		bool pd_transport = false;
 		if (s.z >= container.lz) {
 			s.z -= container.lz;
 			pd_transport = true;

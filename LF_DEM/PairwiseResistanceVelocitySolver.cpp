@@ -1,5 +1,5 @@
 #include "PairwiseResistanceVelocitySolver.h"
-#include "InteractionSet.h"
+#include "InteractionManager.h"
 
 namespace Dynamics {
 
@@ -61,15 +61,8 @@ void PairwiseResistanceVelocitySolver::eraseResistance(unsigned p0, unsigned p1)
 	pairwise_resistance_changed = true;
 }
 
-void PairwiseResistanceVelocitySolver::buildResistanceMatrix(const Interactions::InteractionSet &interactions)
+void PairwiseResistanceVelocitySolver::buildDiagonalBlocks()
 {
-	/**
-	 \brief Builds the resistance matrix
-
-	 The built matrix \f$R_{\mathrm{FU}}\f$ (in Bossis and Brady \cite
-	 brady_stokesian_1988 notations) contains pairwise resistances,
-	 coming from lubrication or contact dashpots.
-	 */
 	unsigned int size_mm = 0;
 	for (auto bnb: nb_blocks_mm) {
 		size_mm += bnb;
@@ -102,16 +95,63 @@ void PairwiseResistanceVelocitySolver::buildResistanceMatrix(const Interactions:
 	stokes_solver.resetResistanceMatrix(size_mm, size_mf, size_ff,
 										resistance_matrix_dblock, pairwise_resistance_changed);
 	pairwise_resistance_changed = false;
+}
+
+void PairwiseResistanceVelocitySolver::buildResistanceMatrix(const Interactions::StdInteractionManager &interaction_manager)
+{
+	/**
+	 \brief Builds the resistance matrix
+
+	 The built matrix \f$R_{\mathrm{FU}}\f$ (in Bossis and Brady \cite
+	 brady_stokesian_1988 notations) contains pairwise resistances,
+	 coming from lubrication or contact dashpots.
+	 */
+	buildDiagonalBlocks();
 	for (unsigned i=0; i<np-1; i ++) {
 		stokes_solver.startNewColumn();
-		for (auto it : interactions.std_interactions) {
+		for (auto it : interaction_manager.interactions) {
 			auto j = it->partner(i);
 			if (j > i) {
-				if (it->hasPairwiseResistance()) { // Range of interaction can be larger than range of lubrication
+				if (it->hasPairwiseResistance()) {
 					stokes_solver.addResistanceBlocks(i, j,
 													  it->RFU_DBlocks(),
 													  it->RFU_ODBlock());
 				}
+			}
+		}
+	}
+	stokes_solver.matrixFillingDone();
+}
+
+void PairwiseResistanceVelocitySolver::buildResistanceMatrix(const Interactions::StdInteractionManager &interaction_manager,
+															 const Interactions::DimerManager &dimer_manager)
+{
+	/**
+	 \brief Builds the resistance matrix
+
+	 The built matrix \f$R_{\mathrm{FU}}\f$ (in Bossis and Brady \cite
+	 brady_stokesian_1988 notations) contains pairwise resistances,
+	 coming from lubrication or contact dashpots.
+	 */
+	buildDiagonalBlocks();
+	for (unsigned i=0; i<np-1; i ++) {
+		stokes_solver.startNewColumn();
+		for (auto it : interaction_manager.interactions) {
+			auto j = it->partner(i);
+			if (j > i) {
+				if (it->hasPairwiseResistance()) {
+					stokes_solver.addResistanceBlocks(i, j,
+													  it->RFU_DBlocks(),
+													  it->RFU_ODBlock());
+				}
+			}
+		}
+		for (auto it : dimer_manager.interactions) {
+			auto j = it->partner(i);
+			if (j > i) {
+				stokes_solver.addResistanceBlocks(i, j,
+												  it->RFU_DBlocks(),
+												  it->RFU_ODBlock());
 			}
 		}
 	}
@@ -173,6 +213,11 @@ void PairwiseResistanceVelocitySolver::solve(vector<vec3d> &na_velocity,
 											 vector<vec3d> &na_ang_velocity)
 {
 	stokes_solver.solve(na_velocity, na_ang_velocity);
+}
+
+void PairwiseResistanceVelocitySolver::solvingIsDone()
+{
+	stokes_solver.solvingIsDone();
 }
 
 

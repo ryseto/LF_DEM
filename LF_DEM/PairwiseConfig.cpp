@@ -32,8 +32,17 @@ lees(lebc)
 void LeesEdwardsPairwiseConfig::updateAfterParticleMove()
 {
 	for (unsigned i=0; i<conf->position.size(); i++) {
-		boxset->box(i, conf->position[i]);
+		updateAfterParticleMove(i);
 	}
+} 
+
+void LeesEdwardsPairwiseConfig::updateAfterParticleMove(unsigned i)
+{
+	boxset->box(i, conf->position[i]);
+} 
+
+void LeesEdwardsPairwiseConfig::updateAfterDeformation()
+{
 	boxset->update(*lees);
 } 
 
@@ -69,15 +78,6 @@ void LeesEdwardsPairwiseConfig::getVelocities(unsigned i, unsigned j, struct Pai
 	k.O[1] = velo->ang_vel[j];
 }
 
-// void LeesEdwardsPairwiseConfig::getBackgroundVelocities(unsigned i, unsigned j, struct PairVelocity &k) const
-// {
-// 	auto pbc_vel_offset = getVelOffset(i, j);
-// 	k.U[0] = backgroung_velo->vel[i];
-// 	k.U[1] = backgroung_velo->vel[j] + pbc_vel_offset;
-// 	k.O[0] = backgroung_velo->ang_vel[i];
-// 	k.O[1] = backgroung_velo->ang_vel[j];
-// }
-
 KraynikReineltPairwiseConfig::KraynikReineltPairwiseConfig(std::shared_ptr<ParticleConfig> config,
 															std::shared_ptr<BC::KraynikReineltBC> krbc,
 															double max_interaction_range) :
@@ -104,8 +104,17 @@ twodimension(krbc->getContainer().ly == 0)
 void KraynikReineltPairwiseConfig::updateAfterParticleMove()
 {
 	for (unsigned i=0; i<conf->position.size(); i++) {
-		boxset->box(i, conf->position[i]);
+		updateAfterParticleMove(i);
 	}
+} 
+
+void KraynikReineltPairwiseConfig::updateAfterParticleMove(unsigned i)
+{
+	boxset->box(i, conf->position[i]);
+} 
+
+void KraynikReineltPairwiseConfig::updateAfterDeformation(unsigned i)
+{
 	boxset->updateExtFlow(container_ext_flow, kr->ext_ax);	
 } 
 
@@ -148,6 +157,5 @@ void KraynikReineltPairwiseConfig::periodizeDiffExtFlow(vec3d& pos_diff, unsigne
 		pos_diff += pd_shift;
 	}
 }
-
 
 } // namespace Geometry

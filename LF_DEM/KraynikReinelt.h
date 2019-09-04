@@ -8,7 +8,7 @@
 #include "ImposedDeformation.h"
 
 namespace Boxing {
-	class ExtensionalShearBoxSet;
+	class BoxSet;
 }
 
 namespace BC {
@@ -34,8 +34,12 @@ public:
 	struct ExtFlowAxis ext_ax;
 
 	struct Geometry::box3d getContainer() const {return container;};
-	void periodize(unsigned i, vec3d &pos, bool &pd_transport, std::shared_ptr<Boxing::ExtensionalShearBoxSet> boxset) const;
+	void periodize(unsigned i, vec3d &pos, bool &pd_transport, Boxing::BoxSet *boxset) const;
+	void periodize(unsigned i, vec3d &pos, Boxing::BoxSet *boxset) const;
+
 	vec3d getVelDifference(const vec3d &separation) const;
+	double getStrainRetrim() const {return strain_retrim;};
+	void retrimProcess(std::vector<vec3d> &position, double cumulated_strain);
 
 private:
 	/*****************************
@@ -57,7 +61,6 @@ private:
 	void updateH(double cumulated_strain);
 	struct Geometry::box3d container;
 	void retrim(vec3d& pos);
-	void retrimProcess(std::vector<vec3d> &position, double cumulated_strain);
 };
 
 

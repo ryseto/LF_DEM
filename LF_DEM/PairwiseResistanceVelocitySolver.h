@@ -5,11 +5,12 @@
 #include <memory>
 
 #include "VelocityAssignor.h"
-#include "ForceComponent.h"
+#include "ParticleConfig.h"
 #include "StokesSolver.h"
 
 namespace Interactions {
-	class InteractionSet;
+	class StdInteractionManager;
+	class DimerManager;
 }
 
 namespace Dynamics {
@@ -25,22 +26,27 @@ public:
 
 	void declareResistance(unsigned p0, unsigned p1);
 	void eraseResistance(unsigned p0, unsigned p1);
-	void buildResistanceMatrix(const Interactions::InteractionSet &interactions);
+	void buildResistanceMatrix(const Interactions::StdInteractionManager &interaction_manager);
+	void buildResistanceMatrix(const Interactions::StdInteractionManager &interaction_manager,
+							   const Interactions::DimerManager &dimer_manager);
 	void setSolverRHS(const ForceComponent &fc);
 	void addToSolverRHS(const ForceComponent &fc);
 
-	void setSolverRHS(vector<vec3d> &force,
-					  vector<vec3d> &torque);
+	void setSolverRHS(std::vector<vec3d> &force,
+					  std::vector<vec3d> &torque);
 	void resetRHS();
-	void compute_LTRHS(vector<vec3d> &force,
-					   vector<vec3d> &torque);
-	void solve(vector<vec3d> &na_velocity, 
-				vector<vec3d> &na_ang_velocity); // get V
+	void compute_LTRHS(std::vector<vec3d> &force,
+					   std::vector<vec3d> &torque);
+	void solve(std::vector<vec3d> &na_velocity, 
+				std::vector<vec3d> &na_ang_velocity); // get V
 
 	void computeVelocity(std::vector<vec3d> &vel, std::vector<vec3d> &ang_vel,
 						 const std::vector<vec3d> &force, const std::vector<vec3d> &torque);
+	void solvingIsDone();
 private:
 	PairwiseResistanceVelocitySolver(double stokes_coeff);
+	void buildDiagonalBlocks();
+
 	unsigned np_mobile;
 	double sd_coeff;
 	std::vector<double> radius;

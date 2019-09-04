@@ -148,6 +148,24 @@ void StdInteractionManager::updateInteractions(double dt, ParticleVelocity *vel)
 	}
 }
 
+void StdInteractionManager::saveState()
+{
+	for (auto &inter: interactions) {
+		if (inter->contact) {
+			inter->contact.saveState();
+		}
+	}
+}
+
+void StdInteractionManager::restoreState()
+{
+	for (auto &inter: interactions) {
+		if (inter->contact) {
+			inter->contact.restoreState();
+		}
+	}
+}
+
 double StdInteractionManager::getMaxRelativeVelocity(ParticleVelocity *vel)
 {
 	/**
@@ -160,7 +178,7 @@ double StdInteractionManager::getMaxRelativeVelocity(ParticleVelocity *vel)
 	bool friction = has_friction(p->contact.friction_model);
 	bool rolling = has_rolling_friction(p->contact);
 
-	for (const auto &inter: sys.interactions) {
+	for (const auto &inter: interactions) {
 		std::tie(i, j) = inter->get_par_num();
 		pdist->getVelocities(i, j, pvel);
 

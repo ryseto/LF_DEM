@@ -65,7 +65,6 @@ wagnerhash(time_t t, clock_t c)
 
 System::System(State::BasicCheckpoint chkp):
 np(0),
-pairwise_resistance_changed(true),
 clk(chkp.clock),
 shear_rheology(true),
 shear_type(ShearType::simple_shear),
@@ -328,10 +327,6 @@ void System::setupGenericConfiguration(T config, Parameters::ControlVariable con
 
 	total_num_timesteps = 0;
 
-	angle_output = false;
-	if (twodimension) {
-		angle_output = true;
-	}
 	cout << indent << "Setting up System... [ok]" << endl;
 	
 	interaction = std::make_shared<Interactions::StdInteractionManager>(np, conf, &vel_bg, &velgrad_bg, pairconf, p,
@@ -468,11 +463,11 @@ void System::timeStepBoxing()
 		if (wall_rheology || p->simulation_mode == 31) {
 			vec3d strain_increment = 2*dot(imposed_flow->sym_grad_u, {0, 0, 1})*dt;
 			clk.cumulated_strain += strain_increment.norm();
-			shear_strain += strain_increment;
+			// shear_strain += strain_increment;
 			angle_wheel += dt*(omega_wheel_in-omega_wheel_out);
 		}
 	}
-	pairconf->updateAfterParticleMove();
+	pairconf->updateAfterDeformation();
 }
 
 void System::eventShearJamming()
@@ -481,7 +476,7 @@ void System::eventShearJamming()
 	 \brief Create an event when the shear rate is less than p->sj_shear_rate
 	*/
 	static int cnt_jamming = 0;
-	if (abs(shear_rate) < p->sj_shear_rate && max_na_velocity < p->sj_velocity) {
+	if (abs(imposed_flow->shear_rate) < p->sj_shear_rate && max_na_velocity < p->sj_velocity) {
 		cnt_jamming ++;
 		if (cnt_jamming > p->sj_check_count) {
 			Event ev;
@@ -670,9 +665,6 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 			computeNonAffineVelocitiesStokesDrag();
 		} else {
 			computeNonAffineVelocities(calc_stress, true);
-		}
-		if (!p->fixed_dt) {
-			adaptTimeStep(time_end, strain_end);
 		}
 		computeTotalVelocity();
 	} else {
@@ -864,7 +856,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	}
 }
 
-void System::adaptTimeStep()
+void System::adaptTimeStepWithVelocities()
 {
 	/**
 	 \brief Adapt the time step so that the maximum relative displacement is p->disp_max .
@@ -887,10 +879,10 @@ void System::adaptTimeStep()
 			dt = p->disp_max/max_interaction_vel;
 		}
 	} else {
-		dt = p->disp_max/shear_rate;
+		dt = p->disp_max/imposed_flow->shear_rate;
 	}
-	if (dt*shear_rate > p->disp_max) { // cases where na_velocity < \dotgamma*radius
-		dt = p->disp_max/shear_rate;
+	if (dt*imposed_flow->shear_rate > p->disp_max) { // cases where na_velocity < \dotgamma*radius
+		dt = p->disp_max/imposed_flow->shear_rate;
 	}
 	if (p->dt_max > 0) {
 		if (dt > p->dt_max) {
@@ -906,18 +898,17 @@ void System::adaptTimeStep()
 	}
 }
 
-void System::adaptTimeStep(double time_end, double strain_end)
+void System::adaptTimeStepWithBounds(double time_end, double strain_end)
 {
 	/**
 	 \brief Adapt the time step so that (a) the maximum relative displacement is p->disp_max, and (b) time or strain does not get passed the end value.
 	 */
-	adaptTimeStep();
 	// To stop exactly at t == time_end or strain == strain_end,
 	// whatever comes first
 	if (shear_type != ShearType::solvent_flow) {
 		if (strain_end >= 0) {
-			if (fabs(dt*shear_rate) > strain_end-clk.cumulated_strain) {
-				dt = fabs((strain_end-clk.cumulated_strain)/shear_rate);
+			if (fabs(dt*imposed_flow->shear_rate) > strain_end-clk.cumulated_strain) {
+				dt = fabs((strain_end-clk.cumulated_strain)/imposed_flow->shear_rate);
 			}
 		}
 		if (time_end >= 0) {
@@ -934,11 +925,16 @@ void System::timeStepMove(double time_end, double strain_end)
 	 \brief Moves particle positions according to previously computed velocities, Euler method step.
 	 */
 	/* @@@@ NOTE
-	 * shear_rate = 1 for both simple shear and extensional flow
+	 * shear_rate = 1 for both simple shear and extensional flow (???)
 	 * dot_epsion = shear_rate / 2 is always true.
 	 * clk.cumulated_strain = shear_rate * t for both simple shear and extensional flow.
 	 */
 	//	cerr << dt << ' ' << p->critical_load  << endl;
+	if (!p->fixed_dt) {
+		adaptTimeStepWithVelocities();
+	}
+	adaptTimeStepWithBounds(time_end, strain_end);
+
 	clk.time_ += dt;
 	total_num_timesteps ++;
 	/* evolve PBC */
@@ -947,20 +943,21 @@ void System::timeStepMove(double time_end, double strain_end)
 	/* move particles */
 	//	if (!forbid_displacement) {
 	for (int i=0; i<np; i++) {
-		displacement(i, velocity[i]*dt);
+		displacement(i, velocity.vel[i]*dt);
 	}
-	if (angle_output) {
+	if (twodimension) {
 		for (int i=0; i<np; i++) {
-			angle[i] += ang_velocity[i].y*dt;
+			conf->angle[i] += velocity.ang_vel[i].y*dt;
 		}
 	}
-	//	}
-	// if (retrim_ext_flow) {
-	// 	cerr << "clk.cumulated_strain = " << clk.cumulated_strain << endl;
-	// 	retrimProcess();
-	// }
-	interaction->checkNewInteraction();
-	interaction->updateInteractions();
+	if (shear_type == ShearType::extensional_flow) {
+		if (almost_equal(clk.cumulated_strain, kr->getStrainRetrim(), 2)) {
+			cerr << "clk.cumulated_strain = " << clk.cumulated_strain << endl;
+			kr->retrimProcess(conf->position, clk.cumulated_strain);
+		}
+	}
+	interaction->checkNewInteractions();
+	interaction->updateInteractions(dt, &velocity);
 }
 
 void System::timeStepMovePredictor(double time_end, double strain_end)
@@ -968,11 +965,10 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
 	/**
 	 \brief Moves particle positions according to previously computed velocities, predictor step.
 	 */
-	if (!brownian) { // adaptative time-step for non-Brownian cases
-		if (!p->fixed_dt) {
-			adaptTimeStep(time_end, strain_end);
-		}
+	if (!p->fixed_dt) {
+		adaptTimeStepWithVelocities();
 	}
+	adaptTimeStepWithBounds(time_end, strain_end);
 
 	clk.time_ += dt;
 	total_num_timesteps ++;
@@ -982,21 +978,22 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
 	 */
 	timeStepBoxing();
 	for (int i=0; i<np; i++) {
-		displacement(i, velocity[i]*dt);
+		displacement(i, velocity.vel[i]*dt);
 	}
 	
-	if (angle_output) {
+	if (twodimension) {
 		for (int i=0; i<np; i++) {
-			angle[i] += ang_velocity[i].y*dt;
+			conf->angle[i] += velocity.ang_vel[i].y*dt;
 		}
 	}
-	interaction->updateInteractions();
+	interaction->saveState();
+	interaction->updateInteractions(dt, &velocity);
 	/*
 	 * Keep V^{-} to use them in the corrector.
 	 */
 	for (int i=0; i<np; i++) {
-		velocity_predictor[i] = velocity[i];
-		ang_velocity_predictor[i] = ang_velocity[i];
+		velocity_predictor.vel[i] = velocity.vel[i];
+		velocity_predictor.ang_vel[i] = velocity.ang_vel[i];
 	}
 }
 
@@ -1006,23 +1003,26 @@ void System::timeStepMoveCorrector()
 	 \brief Moves particle positions according to previously computed velocities, corrector step.
 	 */
 	for (int i=0; i<np; i++) {
-		velocity[i] = 0.5*(velocity[i]+velocity_predictor[i]); // real velocity, in predictor and in corrector
-		ang_velocity[i] = 0.5*(ang_velocity[i]+ang_velocity_predictor[i]);
+		velocity.vel[i] = 0.5*(velocity.vel[i]+velocity_predictor.vel[i]); // real velocity, in predictor and in corrector
+		velocity.ang_vel[i] = 0.5*(velocity.ang_vel[i]+velocity_predictor.ang_vel[i]);
 	}
 	for (int i=0; i<np; i++) {
-		displacement(i, (velocity[i]-velocity_predictor[i])*dt);
+		displacement(i, (velocity.vel[i]-velocity_predictor.vel[i])*dt);
 	}
-	if (angle_output) {
+	if (twodimension) {
 		for (int i=0; i<np; i++) {
-			angle[i] += (ang_velocity[i].y-ang_velocity_predictor[i].y)*dt; // no cross_shear in 2d
+			conf->angle[i] += (velocity.ang_vel[i].y-velocity_predictor.ang_vel[i].y)*dt; // no cross_shear in 2d
 		}
 	}
-	if (retrim_ext_flow) {
-		cerr << "clk.cumulated_strain = " << clk.cumulated_strain << endl;
-		retrimProcess();
+	if (shear_type == ShearType::extensional_flow) {
+		if (almost_equal(clk.cumulated_strain, kr->getStrainRetrim(), 2)) {
+			cerr << "clk.cumulated_strain = " << clk.cumulated_strain << endl;
+			kr->retrimProcess(conf->position, clk.cumulated_strain);
+		}
 	}
-	interaction->checkNewInteraction();
-	interaction->updateInteractions();
+	interaction->restoreState();
+	interaction->checkNewInteractions();
+	interaction->updateInteractions(dt, &velocity);
 }
 
 bool System::keepRunning(double time_end, double strain_end)
@@ -1041,13 +1041,10 @@ bool System::keepRunning(double time_end, double strain_end)
 
 void System::calculateForces()
 {
-	double dt_bak = dt; // to avoid stretching contact spring
-	dt = 0;
-	interaction->checkNewInteraction();
+	interaction->checkNewInteractions();
 	in_predictor = true;
-	interaction->updateInteractions();
+	interaction->updateInteractions(0, &velocity);
 	in_predictor = false;
-	dt = dt_bak;
 }
 
 void System::timeEvolution(double time_end, double strain_end)
@@ -1078,39 +1075,33 @@ void System::timeEvolution(double time_end, double strain_end)
 		firsttime = false;
 	}
 	bool calc_stress = false;
-	if (p.brownian > 0) {
+	if (p->brownian > 0) {
 		calc_stress = true;
 	}
-	retrim_ext_flow = false;
 	avg_dt = 0;
 	avg_dt_nb = 0;
-	double dt_bak = -1;
-
 	while (keepRunning(time_end-loop_time_adjust, strain_end-loop_time_adjust)) {
-		retrim_ext_flow = false; // used in ext_flow simulation
-		if (!brownian && !p->fixed_dt) { // adaptative time-step for non-Brownian cases
-			adaptTimeStep(time_end, strain_end);
+		if (p->fixed_dt) {
+			dt = p->dt;
 		}
-		if (shear_type == ShearType::extensional_flow) {
-			if (clk.cumulated_strain+shear_rate*dt > strain_retrim) {
-				cerr << "strain_retrim = " << strain_retrim << endl;
-				dt_bak = dt;
-				dt = (strain_retrim-clk.cumulated_strain)/shear_rate;
-				retrim_ext_flow = true;
-				strain_end = strain_retrim;
-				calc_stress = true;
-			}
+		double time_bound, strain_bound;
+		if (p->brownian > 0) {
+			time_bound = -1;
+			strain_bound = -1;
+		} else if (shear_type == ShearType::extensional_flow) {
+			time_bound = -1;
+			strain_bound = kr->getStrainRetrim();
+		} else {
+			time_bound = time_end;
+			strain_bound = strain_end;
 		}
 		if (p->integration_method == 0) {
-			timeEvolutionEulersMethod(calc_stress, time_end, strain_end);
+			timeEvolutionEulersMethod(calc_stress, time_bound, strain_bound);
 		} else if (p->integration_method == 1) {
-			timeEvolutionPredictorCorrectorMethod(calc_stress, time_end, strain_end);
+			timeEvolutionPredictorCorrectorMethod(calc_stress, time_bound, strain_bound);
 		}
 		avg_dt += dt;
 		avg_dt_nb++;
-		if (dt_bak != -1){
-			dt = dt_bak;
-		}
 #ifdef SIGINT_CATCH
 		if (sig_caught == SIGINT) { // return to Simulation immediatly for checkpointing
 			return;
@@ -1122,8 +1113,8 @@ void System::timeEvolution(double time_end, double strain_end)
 	} else {
 		avg_dt = dt;
 	}
-	if (events.empty() && retrim_ext_flow == false) {
-		if (shear_type != solvent_flow) {
+	if (events.empty() && !almost_equal(clk.cumulated_strain, kr->getStrainRetrim(), 2)) {
+		if (shear_type != ShearType::solvent_flow) {
 			calc_stress = true;
 		}
 		if (p->integration_method == 0) {
@@ -1380,7 +1371,7 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 	if (hasPairwiseResistance()) {
 		/* L*L^T = RFU
 		 */
-		res_solver->setRHS(force, torque);
+		res_solver->setSolverRHS(force, torque);
 		res_solver->compute_LTRHS(force, torque); // F_B = \sqrt(2kT/dt) * L^T * A
 		res_solver->resetRHS();
 	} else {
@@ -1425,10 +1416,10 @@ void System::setConfinementForce(vector<vec3d> &force,
 		t.reset();
 	}
 	for (int i=0; i<np_mobile; i++) {
-		if (position[i].y > p->confinement.y_max) {
-			force[i].set(0, -p->confinement.k.value*(position[i].y-p->confinement.y_max), 0);
-		} else if (position[i].y < p->confinement.y_min) {
-			force[i].set(0, -p->confinement.k.value*(position[i].y-p->confinement.y_min), 0);
+		if (conf->position[i].y > p->confinement.y_max) {
+			force[i].set(0, -p->confinement.k.value*(conf->position[i].y-p->confinement.y_max), 0);
+		} else if (conf->position[i].y < p->confinement.y_min) {
+			force[i].set(0, -p->confinement.k.value*(conf->position[i].y-p->confinement.y_min), 0);
 		} else {
 			force[i].reset();
 		}
@@ -1492,7 +1483,7 @@ void System::computeMaxVelocity()
 	
 	double sq_max_velocity = 0;
 	for (int i=0; i<np; i++) {
-		auto sq_velocity = velocity[i].sq_norm();
+		auto sq_velocity = velocity.vel[i].sq_norm();
 		if (sq_velocity > sq_max_velocity) {
 			sq_max_velocity = sq_velocity;
 		}
@@ -1503,16 +1494,20 @@ void System::computeMaxVelocity()
 void System::computeVelocityWithoutComponents(bool rebuild)
 {
 	if (rebuild) {
-		buildResistanceMatrix();
+		res_solver->buildResistanceMatrix(*interaction);
 	}
-	for (auto &fc: force_components) {
-		if (fc.first != "brownian" || in_predictor) {
-			CALL_MEMBER_FN(*this, fc.second.getForceTorque)(fc.second.force, fc.second.torque);
+	for (const auto &component: interaction->declared_forces) {
+		interaction->setForceToParticle(component, force_components[component].force, force_components[component].torque);
+		res_solver->addToSolverRHS(force_components[component]);
+	}
+	for (const auto &component: declared_forces) {
+		if (component != "brownian" || in_predictor) {
+			setForceToParticle(component, force_components[component].force, force_components[component].torque);
 		}
-		res_solver->addToSolverRHS(fc.second);
+		res_solver->addToSolverRHS(force_components[component]);
 	}
 	res_solver->solve(na_velocity.vel, na_velocity.ang_vel); // get V
-	if (brownian && twodimension) {
+	if (p->brownian > 0 && twodimension) {
 		rushWorkFor2DBrownian(na_velocity.vel, na_velocity.ang_vel);
 	}
 }
@@ -1522,16 +1517,22 @@ void System::computeVelocityByComponents()
 	/**
 	 \brief Compute velocities component by component.
 	 */
-	buildResistanceMatrix();
-	for (auto &fc: force_components) {
-		if (fc.first != "brownian" || in_predictor) {
-			CALL_MEMBER_FN(*this, fc.second.getForceTorque)(fc.second.force, fc.second.torque);
-		}
-		res_solver->setSolverRHS(fc.second);
-		res_solver->solve(na_velo_components[fc.first].vel,
-							na_velo_components[fc.first].ang_vel);
+	res_solver->buildResistanceMatrix(*interaction);
+	for (const auto &component: interaction->declared_forces) {
+		interaction->setForceToParticle(component, force_components[component].force, force_components[component].torque);
+		res_solver->setSolverRHS(force_components[component]);
+		res_solver->solve(na_velo_components[component].vel,
+							na_velo_components[component].ang_vel);
 	}
-	if (brownian && twodimension) {
+	for (const auto &component: declared_forces) {
+		if (component != "brownian" || in_predictor) {
+			setForceToParticle(component, force_components[component].force, force_components[component].torque);
+		}
+		res_solver->setSolverRHS(force_components[component]);
+		res_solver->solve(na_velo_components[component].vel,
+							na_velo_components[component].ang_vel);
+	}
+	if (p->brownian > 0 && twodimension) {
 		rushWorkFor2DBrownian(na_velo_components["brownian"].vel,
 							  na_velo_components["brownian"].ang_vel);
 	}
@@ -1542,7 +1543,7 @@ void System::computeShearRate()
 	/**
 	 \brief Compute the shear rate under stress control conditions.
 	 */
-	assert(abs(shear_rate-1) < 1e-15);
+	assert(abs(imposed_flow->shear_rate-1) < 1e-15);
 	calcStressPerParticle();
 	Sym2Tensor rate_prop_stress;
 	Sym2Tensor rate_indep_stress;
@@ -1558,9 +1559,9 @@ void System::computeShearRate()
 	 *  sigma_target = rate_prop_shearstress(rate=1)*(rate/1) + rate_indep_shearstress
 	 *  rate = (sigma_target - rate_indep_shearstress) / rate_prop_shearstress(rate=1)
 	 */
-	double rate_prop_shearstress_rate1 = doubledot(rate_prop_stress, getEinfty()); // computed with rate=1, o here it is also the viscosity.
-	double rate_indep_shearstress = doubledot(rate_indep_stress, getEinfty());
-	if (brownian) {
+	double rate_prop_shearstress_rate1 = doubledot(rate_prop_stress, imposed_flow->sym_grad_u); // computed with rate=1, o here it is also the viscosity.
+	double rate_indep_shearstress = doubledot(rate_indep_stress, imposed_flow->sym_grad_u);
+	if (p->brownian > 0) {
 		rate_prop_shearstress_rate1_ave.update(rate_prop_shearstress_rate1, get_time());
 		rate_indep_shearstress_ave.update(rate_indep_shearstress, get_time());
 		rate_prop_shearstress_rate1 = rate_prop_shearstress_rate1_ave.get();
@@ -1568,14 +1569,14 @@ void System::computeShearRate()
 	}
 	if (rate_prop_shearstress_rate1 != 0) {
 		double rate = (target_stress-rate_indep_shearstress)/rate_prop_shearstress_rate1;
-		set_shear_rate(rate);
+		imposed_flow->setRate(rate);
 	} else {
 		cerr << "rate_prop_shearstress_rate1 = 0 ???" << endl;
 		exit (1);
 	}
 	if (clk.cumulated_strain < init_strain_shear_rate_limit) {
-		if (shear_rate > init_shear_rate_limit) {
-			set_shear_rate(init_shear_rate_limit);
+		if (imposed_flow->shear_rate > init_shear_rate_limit) {
+			imposed_flow->setRate(init_shear_rate_limit);
 		}
 	}
 }
@@ -1606,11 +1607,11 @@ void System::computeShearRate()
 // 	total_rate_indep_wall_shear_stress /= wall_surface;
 
 // 	// // the total_rate_dep_wall_shear_stress is computed above with shear_rate=1, so here it is also a viscosity.
-// 	set_shear_rate((-target_stress-total_rate_indep_wall_shear_stress)/total_rate_dep_wall_shear_stress);
+// 	imposed_flow->setRate((-target_stress-total_rate_indep_wall_shear_stress)/total_rate_dep_wall_shear_stress);
 
 // 	if (clk.cumulated_strain < init_strain_shear_rate_limit) {
 // 		if (shear_rate > init_shear_rate_limit) {
-// 			set_shear_rate(init_shear_rate_limit);
+// 			imposed_flow->setRate(init_shear_rate_limit);
 // 		}
 // 	}
 // 	if (p->simulation_mode == 31) {
@@ -1786,7 +1787,7 @@ void System::rescaleVelHydroStressControlled()
 {
 	for (auto &vc: na_velo_components) {
 		if (vc.second.rate_dependence == RateDependence::proportional) {
-			vc.second *= shear_rate;
+			vc.second *= imposed_flow->shear_rate;
 		}
 	}
 }
@@ -1800,12 +1801,12 @@ void System::computeNonAffineVelocities(bool divided_velocities, bool mat_rebuil
 	 (hydro, contacts, Brownian, ...). (Note that in Brownian
 	 simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
 	 */
-	stokes_solver.resetRHS();
+	res_solver->resetRHS();
 	if (divided_velocities || control == Parameters::ControlVariable::stress) {
 		if (control == Parameters::ControlVariable::stress) {
-			set_shear_rate(1);
+			imposed_flow->setRate(1);
 		}
-		computeUInf(); // note: after set_shear_rate(1);
+		computeUInf(); // note: after imposed_flow->setRate(1);
 		setFixedParticleVelocities();
 		computeVelocityByComponents();
 		if (control == Parameters::ControlVariable::stress) {
@@ -1833,7 +1834,7 @@ void System::computeNonAffineVelocities(bool divided_velocities, bool mat_rebuil
 			forceResultantLubricationForce();
 		}
 	}
-	stokes_solver.solvingIsDone();
+	res_solver->solvingIsDone();
 }
 
 void System::computeNonAffineVelocitiesStokesDrag()
@@ -1848,25 +1849,25 @@ void System::computeNonAffineVelocitiesStokesDrag()
 		na_velocity.vel[i].reset();
 		na_velocity.ang_vel[i].reset();
 	}
-	for (auto &fc: force_components) {
-		if (fc.first != "brownian" || in_predictor) {
-			CALL_MEMBER_FN(*this, fc.second.getForceTorque)(fc.second.force, fc.second.torque);
+	for (const auto &component: interaction->declared_forces) {
+		interaction->setForceToParticle(component, force_components[component].force, force_components[component].torque);
+		for (unsigned int i=0; i<na_velocity.vel.size(); i++) {
+				na_velocity.vel[i]     += force_components[component].force[i] /stokesdrag_coeff_f[i];
+				na_velocity.ang_vel[i] += force_components[component].torque[i]/stokesdrag_coeff_t[i];
+		} 
+	}
+	for (const auto &component: declared_forces) {
+		if (component != "brownian" || in_predictor) {
+			setForceToParticle(component, force_components[component].force, force_components[component].torque);
 		}
-		if (fc.first != "brownian") {
-			for (unsigned int i=0; i<na_velocity.vel.size(); i++) {
-				na_velocity.vel[i]     += fc.second.force[i] /stokesdrag_coeff_f[i];
-				na_velocity.ang_vel[i] += fc.second.torque[i]/stokesdrag_coeff_t[i];
-			}
-		} else {
-			for (unsigned int i=0; i<na_velocity.vel.size(); i++) {
-				/* See the comment given in generateBrownianForces()
-				 */
-				na_velocity.vel[i]     += fc.second.force[i] /stokesdrag_coeff_f_sqrt[i];
-				na_velocity.ang_vel[i] += fc.second.torque[i]/stokesdrag_coeff_t_sqrt[i];
-			}
+		for (unsigned i=0; i<na_velocity.vel.size(); i++) {
+			/* See the comment given in generateBrownianForces()
+			 */
+			na_velocity.vel[i]     += force_components[component].force[i] /stokesdrag_coeff_f_sqrt[i];
+			na_velocity.ang_vel[i] += force_components[component].torque[i]/stokesdrag_coeff_t_sqrt[i];
 		}
 	}
-	if (brownian && twodimension) {
+	if (p->brownian > 0 && twodimension) {
 		rushWorkFor2DBrownian(na_velocity.vel, na_velocity.ang_vel);
 	}
 }
@@ -1877,9 +1878,11 @@ void System::computeUInf()
 		vel_bg.vel[i].reset();
 		vel_bg.ang_vel[i].reset();
 	}
-	if (!zero_shear) {
+	if (!imposed_flow->zero_shear()) {
 		for (int i=0; i<np; i++) {
-			vel_bg.vel[i] = dot(imposed_flow->sym_grad_u, position[i]) + cross(imposed_flow->antisym_grad_u, position[i]);
+			vel_bg.vel[i] = dot(imposed_flow->sym_grad_u, conf->position[i]) + cross(imposed_flow->antisym_grad_u, conf->position[i]);
+			vel_bg.ang_vel[i] = imposed_flow->antisym_grad_u;
+			velgrad_bg.E[i] = imposed_flow->sym_grad_u;
 		}
 	}
 }
@@ -1890,8 +1893,8 @@ void System::computeTotalVelocity()
 		computeUInf();
 	}
 	for (int i=0; i<np; i++) {
-		velocity[i] = na_velocity.vel[i] + vel_bg.vel[i];
-		ang_velocity[i] = na_velocity.ang_vel[i] + vel_bg.ang_vel[i];
+		velocity.vel[i] = na_velocity.vel[i] + vel_bg.vel[i];
+		velocity.ang_vel[i] = na_velocity.ang_vel[i] + vel_bg.ang_vel[i];
 	}
 }
 
@@ -1899,12 +1902,12 @@ void System::adjustVelocitySolventFlow()
 {
 	vector<double> st_tens(3);
 	for (int i=0; i<np_mobile; i++) {
-		sflow->localFlow(position[i], vel_bg.vel[i], vel_bg.ang_vel[i], st_tens);
-		E_local[i].set(st_tens[0], 0, st_tens[1], 0, 0, st_tens[2]);// xx xy xz yz yy zz
+		sflow->localFlow(conf->position[i], vel_bg.vel[i], vel_bg.ang_vel[i], st_tens);
+		velgrad_bg.E[i].set(st_tens[0], 0, st_tens[1], 0, 0, st_tens[2]);// xx xy xz yz yy zz
 	}
 	for (int i=0; i<np_mobile; i++) {
-		velocity[i] = na_velocity.vel[i] + vel_bg.vel[i];
-		ang_velocity[i] = na_ang_velocity[i] + vel_bg.ang_vel[i];
+		velocity.vel[i] = na_velocity.vel[i] + vel_bg.vel[i];
+		velocity.ang_vel[i] = na_velocity.ang_vel[i] + vel_bg.ang_vel[i];
 	}
 }
 
@@ -1934,7 +1937,7 @@ void System::rushWorkFor2DBrownian(vector<vec3d> &vel, vector<vec3d> &ang_vel)
 
 void System::displacement(int i, const vec3d& dr)
 {
-	position[i] += dr;
+	conf->position[i] += dr;
 	/* Note:
 	 * When the position of the particle is periodized,
 	 * we need to modify the velocity, which was already evaluated.
@@ -1942,142 +1945,20 @@ void System::displacement(int i, const vec3d& dr)
 	 */
 	if (shear_type != ShearType::extensional_flow) {
 		/**** simple shear flow ****/
-		int z_shift = periodize(position[i]);
-		if (z_shift != 0) {
-			velocity[i] += z_shift*vel_difference;
-		}
+		lees->periodize(conf->position[i]);
 	} else {
 		/**** extensional flow ****/
-		bool pd_transport = false;
-		periodizeExtFlow(i, pd_transport);
-		if (!zero_shear && pd_transport) {
-			velocity[i] -= u_inf[i];
-			u_inf[i] = grad_u*position[i];
-			velocity[i] +=  u_inf[i];
-		}
+		kr->periodize(i, conf->position[i], pairconf->boxset.get());
 	}
-	boxset.box(i);
-}
+	pairconf->updateAfterParticleMove(i);
 
-void System::periodizeExtFlow(const int &i, bool &pd_transport)
-{
-	if (boxset.boxType(i) != 1) {
-		vec3d s = deform_backward*position[i];
-		pd_transport = false;
-		if (s.z >= lz) {
-			s.z -= lz;
-			pd_transport = true;
-		} else if (s.z < 0) {
-			s.z += lz;
-			pd_transport = true;
-		}
-		if (s.x >= lx) {
-			s.x -= lx;
-			pd_transport = true;
-		} else if (s.x < 0) {
-			s.x += lx;
-			pd_transport = true;
-		}
-		if (pd_transport) {
-			position[i] = deform_forward*s;
-		}
-	}
-	if (!twodimension) {
-		if (position[i].y >= ly) {
-			position[i].y -= ly;
-		} else if (position[i].y < 0) {
-			position[i].y += ly;
-		}
+	if (!imposed_flow->zero_shear()) {
+		velocity.vel[i] -= vel_bg.vel[i];
+		vel_bg.vel[i] = imposed_flow->grad_u*conf->position[i];
+		velocity.vel[i] +=  vel_bg.vel[i];
 	}
 }
 
-// [0,l]
-int System::periodize(vec3d& pos)
-{
-	/* Lees-Edwards boundary condition
-	 *
-	 */
-	int z_shift = 0;
-	if (pos.z >= lz) {
-		pos.z -= lz;
-		pos -= shear_disp;
-		z_shift = -1;
-	} else if (pos.z < 0) {
-		pos.z += lz;
-		pos += shear_disp;
-		z_shift = 1;
-	}
-	while (pos.x >= lx) {
-		pos.x -= lx;
-	}
-	while (pos.x < 0) {
-		pos.x += lx;
-	}
-	if (!twodimension) {
-		if (pos.y >= ly) {
-			pos.y -= ly;
-		} else if (pos.y < 0) {
-			pos.y += ly;
-		}
-	}
-	return z_shift;
-}
-
-// [0,l]
-vec3d System::periodized(const vec3d &pos)
-{
-	vec3d periodized_pos = pos;
-	periodize(periodized_pos);
-	return periodized_pos;
-}
-
-int System::periodizeDiff(vec3d& pos_diff)
-{
-	/** Periodize a separation vector with Lees-Edwards boundary condition
-
-		On return pos_diff is the separation vector corresponding to the closest copies,
-		and velocity_offset contains the velocity difference produced by Lees-Edwards between the 2 points.
-	 */
-	int zshift = 0;
-	if (pos_diff.z > lz_half) {
-		pos_diff.z -= lz;
-		pos_diff -= shear_disp;
-		zshift = -1;
-	} else if (pos_diff.z < -lz_half) {
-		pos_diff.z += lz;
-		pos_diff += shear_disp;
-		zshift = 1;
-	}
-	while (pos_diff.x > lx_half) {
-		pos_diff.x -= lx;
-	}
-	while (pos_diff.x < -lx_half) {
-		pos_diff.x += lx;
-	}
-	if (!twodimension) {
-		if (pos_diff.y > ly_half) {
-			pos_diff.y -= ly;
-		} else if (pos_diff.y < -ly_half) {
-			pos_diff.y += ly;
-		}
-	}
-	return zshift;
-}
-
-void System::periodizeDiffExtFlow(vec3d& pos_diff, vec3d& pd_shift, const int &i, const int &j)
-{
-	pd_shift = boxset.periodicDiffShift(i, j);
-	if (twodimension == false) {
-		if (pos_diff.y > ly_half) {
-			pd_shift.y -= ly;
-		} else if (pos_diff.y < -ly_half) {
-			pd_shift.y += ly;
-		}
-	}
-	if (pd_shift.is_nonzero()) {
-		pos_diff += pd_shift;
-	}
-}
 
 void System::setSystemVolume()
 {
@@ -2156,7 +2037,7 @@ void System::adjustContactModelParameters()
 	} else {
 		p->kt = p->kn;
 	}
-	adaptTimeStep();
+	adaptTimeStepWithVelocities();
 	if (dt < p->min_dt_auto_det) {
 		dt = p->min_dt_auto_det;
 	}
@@ -2321,7 +2202,7 @@ vec3d System::meanParticleVelocity()
 {
 	vec3d mean_velocity(0);
 	for (int i=0; i<np_mobile; i++) {
-		mean_velocity += velocity[i];
+		mean_velocity += velocity.vel[i];
 	}
 	return mean_velocity/np_mobile;
 }

@@ -44,6 +44,7 @@
 #include "ParticleConfig.h"
 #include "ShearType.h"
 #include "StdInteractionManager.h"
+#include "PairwiseResistanceVelocitySolver.h"
 
 
 class MTRand;
@@ -64,14 +65,11 @@ private:
 	std::vector<unsigned int> nb_blocks_mm;
 	std::vector<unsigned int> nb_blocks_mf;
 	std::vector<unsigned int> nb_blocks_ff;
-	bool pairwise_resistance_changed;
 	//bool forbid_displacement;
 	int total_num_timesteps;
 	Geometry::box3d container;
 	struct State::Clock clk;
-	vec3d shear_strain;
 	double angle_wheel; // rotational angle of rotary couette geometory
-	double shear_rate; //@@@ In the extensional-flow simulation, shear_rate is extensional rate.
 	double particle_volume;
 	std::vector <vec3d> na_disp;
 	std::vector< std::string > declared_forces;
@@ -89,8 +87,8 @@ private:
 	void timeStepMoveCorrector();
 	void timeStepMovePredictor(double time_end, double strain_end);
 	void timeStepBoxing();
-	void adaptTimeStep();
-	void adaptTimeStep(double time_end, double strain_end);
+	void adaptTimeStepWithVelocities();
+	void adaptTimeStepWithBounds(double time_end, double strain_end);
 	void setBodyForce(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setConfinementForce(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setBrownianForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
@@ -134,7 +132,6 @@ private:
 #ifdef USE_DSFMT
 	dsfmt_t r_gen;
 #endif
-	bool angle_output;
 	std::vector<double> radius_cubed;
 	std::vector<double> stokesdrag_coeff_f;
 	std::vector<double> stokesdrag_coeff_t;
@@ -346,7 +343,13 @@ private:
 
 	vec3d get_shear_strain()
 	{
-		return shear_strain;
+		if (shear_type == ShearType::simple_shear) {
+			return lees->getShearStrain();
+		}
+		if (shear_type == ShearType::extensional_flow) {
+			throw std::runtime_error("getShearStrain for Kraynik-Reinelt?");
+		}
+		return 0;
 	}
 
 	double get_cumulated_strain() const

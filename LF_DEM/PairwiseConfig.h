@@ -14,20 +14,24 @@ namespace BC {
 }
 
 namespace Boxing {
-	class SimpleShearBoxSet;
-	class ExtensionalShearBoxSet;
+	class BoxSet;
+	// class SimpleShearBoxSet;
+	// class ExtensionalShearBoxSet;
 }
 namespace Geometry {
 
 class PairwiseConfig {
 public:
 	virtual void updateAfterParticleMove() = 0;
+	virtual void updateAfterParticleMove(unsigned i) = 0;
+	virtual void updateAfterDeformation() = 0;
+
 	virtual vec3d getSeparation(unsigned i, unsigned j) const = 0;
 	virtual const std::vector <int>& neighborhood(unsigned i) const = 0;
 
 	virtual void getVelocities(unsigned i, unsigned j, struct PairVelocity &k) const = 0;
-	// virtual void getBackgroundVelocities(unsigned i, unsigned j, struct PairVelocity &k) const = 0;
 	void setVelocityState(ParticleVelocity *vel);
+	std::unique_ptr<Boxing::BoxSet> boxset;
 protected:
 	PairwiseConfig(std::shared_ptr<ParticleConfig> config); 
 	std::shared_ptr<ParticleConfig> conf;
@@ -40,14 +44,16 @@ public:
 							  std::shared_ptr<BC::LeesEdwardsBC> lebc,
 							  double max_interaction_range);
 	void updateAfterParticleMove();
+	void updateAfterParticleMove(unsigned i);
+	void updateAfterDeformation();
+
 	vec3d getSeparation(unsigned i, unsigned j) const;
 	const std::vector <int>& neighborhood(unsigned i) const;
 	void getVelocities(unsigned i, unsigned j, struct PairVelocity &k) const;
-	// void getBackgroundVelocities(unsigned i, unsigned j, struct PairVelocity &k) const;
 
 private:
 	std::shared_ptr<BC::LeesEdwardsBC> lees;
-	std::unique_ptr<Boxing::SimpleShearBoxSet> boxset;
+	// std::unique_ptr<Boxing::SimpleShearBoxSet> boxset;
 	vec3d getVelOffset(unsigned i, unsigned j) const;
 };
 
@@ -57,10 +63,13 @@ public:
 								 std::shared_ptr<BC::KraynikReineltBC> krbc,
 								 double max_interaction_range);
 	void updateAfterParticleMove();
+	void updateAfterParticleMove(unsigned i);
+	void updateAfterDeformation();
+
 	vec3d getSeparation(unsigned i, unsigned j) const;
 	const std::vector <int>& neighborhood(unsigned i) const;
 	void getVelocities(unsigned i, unsigned j, struct PairVelocity &k) const;
-	// void getBackgroundVelocities(unsigned i, unsigned j, struct PairVelocity &k) const;
+	// std::unique_ptr<Boxing::ExtensionalShearBoxSet> boxset;
 
 private:
 	std::shared_ptr<BC::KraynikReineltBC> kr;
@@ -71,7 +80,6 @@ private:
 	void periodizeExtFlow(unsigned i, bool &pd_transport) const;
 	vec3d pdShiftExtFlow(vec3d pos_diff, unsigned i, unsigned j) const;
 	void periodizeDiffExtFlow(vec3d& pos_diff, unsigned i, unsigned j) const;
-	std::unique_ptr<Boxing::ExtensionalShearBoxSet> boxset;
 };
 
 

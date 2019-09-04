@@ -54,6 +54,8 @@ public:
 	void setContacts(const std::vector <struct contact_state>& cs);
 
 	std::vector <struct contact_state> getContacts() const;
+	void saveState();
+	void restoreState();
 
 	
 private:
