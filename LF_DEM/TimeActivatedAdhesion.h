@@ -19,6 +19,8 @@
 #include "Sym2Tensor.h"
 #include "TimeActivatedAdhesion_Params.h"
 
+namespace Interactions {
+
 namespace TActAdhesion {
 
 // explicit numbering as it is used in output file
@@ -66,5 +68,7 @@ private:
 };
 
 } // namespace TActAdhesion
+
+}
 
 #endif // ifndef __LF_DEM__TimeActivatedAdhesion__

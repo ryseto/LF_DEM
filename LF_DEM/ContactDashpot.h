@@ -25,28 +25,22 @@
 #include "vec3d.h"
 #include "Sym2Tensor.h"
 #include "MatrixBlocks.h"
+#include "PairwiseInteraction.h"
+#include "PairVelocity.h"
 
-class System;
-class Interaction;
+
+namespace Interactions
+{
 
 class ContactDashpot{
 private:
 	/*********************************
 	 *        Members                *
 	 *********************************/
-	System *sys;
-	Interaction *interaction;
-	bool _active;
+	PairwiseInteraction *interaction;
 	//======= particles data  ====================//
-	unsigned int p0;
-	unsigned int p1;
-	unsigned int p0_6;
-	unsigned int p1_6;
-	double a0;
-	double a1;
 	double ro;
 	double ro_12; // = ro/2
-	vec3d *nvec;
 	double normal_coeff;
 	double tangential_coeff;
 	double XA[4]; // ii ij ji jj
@@ -54,35 +48,18 @@ private:
 	double YB[4]; // ii ij ji jj
 	double YC[4]; // ii ij ji jj
 	void calcDashpotResistances();
-
+	void setDashpotResistanceCoeffs(double normal, double tangential);
  public:
-	ContactDashpot();
+	ContactDashpot(PairwiseInteraction *inter, double norm_coeff, double tan_coeff);
 
-	void init(System *sys_, Interaction *int_);
-	bool is_active() const {return _active;};
-	void activate();
-	void deactivate();
-	void setParticleData();
 	//===== forces/stresses  ==========================
-	std::tuple<vec3d, vec3d, vec3d, vec3d> getRFU_Uinf(const vec3d &u_inf_p0,
-													   const vec3d &u_inf_p1,
-													   const vec3d &omega_inf) const;
-	std::tuple<vec3d, vec3d, vec3d, vec3d> getRFU_Ulocal(const vec3d &u_local_p0,
-														 const vec3d &u_local_p1,
-														 const vec3d &omega_local_p0,
-														 const vec3d &omega_local_p1) const;
-	vec3d getForceOnP0(const vec3d &vel_p0,
-					   const vec3d &vel_p1,
-					   const vec3d &ang_vel_p0,
-					   const vec3d &ang_vel_p1) const;
-	vec3d getForceOnP0_nonaffine(const vec3d &na_vel_p0,
-								 const vec3d &na_vel_p1,
-								 const vec3d &na_ang_vel_p0,
-								 const vec3d &na_ang_vel_p1) const;
-	void setDashpotResistanceCoeffs(double kn, double kt,
-									double rtime_normal, double rtime_tan);
+	std::tuple<vec3d, vec3d, vec3d, vec3d> getForcesTorques(const struct PairVelocity &pvel) const;	
+	vec3d getForceOnP0(const struct PairVelocity &pvel) const;
+	
 	//=============  Resistance Matrices ====================/
 	struct ODBlock RFU_ODBlock() const;
 	std::pair<struct DBlock, struct DBlock> RFU_DBlocks() const;
 };
+
+} // namespace Interactions
 #endif /* defined(__LF_DEM__ContactDashpot__) */

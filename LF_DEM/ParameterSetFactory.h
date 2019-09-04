@@ -30,6 +30,7 @@ private:
 	std::vector<InputParameter<bool>> BoolParams;
 	std::vector<InputParameter<double>> DoubleParams;
 	std::vector<InputParameter<int>> IntParams;
+	std::vector<InputParameter<unsigned>> UIntParams;
 	std::vector<InputParameter<std::string>> StrParams;
 	std::vector<InputParameter<Dimensional::ForceScale>> ForceScaleParams;
 	std::vector<InputParameter<Dimensional::DimensionalQty<double>>> DimValDblParams;

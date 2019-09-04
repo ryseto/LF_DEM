@@ -1,5 +1,6 @@
 #include "Box.h"
-using namespace std;
+
+namespace Boxing {
 
 Box::~Box()
 {
@@ -85,3 +86,5 @@ void Box::buildNeighborhoodContainer()
 		}
 	}
 }
+
+} // namespace Boxing

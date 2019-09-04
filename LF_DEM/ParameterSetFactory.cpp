@@ -6,6 +6,10 @@
 #include "global.h"
 #include "ParameterSetFactory.h"
 #define PARAM_INIT(name, default_value) {#name,  [](ParameterSet &p, InputParameter<decltype(ParameterSet::name)> in) {p.name = in.value;}, default_value}
+#define PARAM_INIT_ENUMCLASS(name, default_value) {#name,\
+												   [](ParameterSet &p, InputParameter<std::underlying_type<decltype(ParameterSet::name)>::type> in) {p.name = static_cast<decltype(ParameterSet::name)>(in.value);},\
+													static_cast<std::underlying_type<decltype(ParameterSet::name)>::type>(default_value)}
+
 #define PARAM_INIT_DIMQTY(name, default_value) {#name,  [](ParameterSet &p, InputParameter<Dimensional::DimensionalQty<decltype(ParameterSet::name)>> in) {p.name = in.value.value;}, default_value}
 #define PARAM_INIT_FORCESCALE(name, default_value) {#name,  [](ParameterSet &p, InputParameter<Dimensional::ForceScale> in) {p.name = in.value.dim_qty.value;}, default_value}
 
@@ -53,10 +57,8 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(output.log_time_interval, false),
 		PARAM_INIT(output.out_na_vel, false),
 		PARAM_INIT(output.out_na_disp, false),
-		PARAM_INIT(output.recording_interaction_history, false),
 		PARAM_INIT(output.effective_coordination_number, false),
 		PARAM_INIT(check_static_force_balance, false),
-		PARAM_INIT(smooth_lubrication, false),
 		PARAM_INIT(solvent_flow, false),
 		PARAM_INIT(confinement.on, false)
 	};
@@ -79,18 +81,20 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(disp_tan_target, 0.05),
 		PARAM_INIT(overlap_target, 0.05),
 		PARAM_INIT(disp_max, 2e-3),
-		PARAM_INIT(lub_max_gap, 0.5),
-		PARAM_INIT(lub_reduce_parameter, 1e-3),
+		PARAM_INIT(lub.max_gap, 0.5),
+		PARAM_INIT(lub.regularization_length, 1e-3),
 		PARAM_INIT(sd_coeff, 1),
 		PARAM_INIT(interaction_range, -1),
-		PARAM_INIT(repulsive_length, 0.05),
-		PARAM_INIT(repulsive_max_length, -1),
-		//PARAM_INIT(vdW_coeffient, -1),
-		//PARAM_INIT(vdW_singularity_cutoff, 0.1),
+		PARAM_INIT(repulsion.screening_length, 0.05),
+		PARAM_INIT(repulsion.max_length, -1),
+		PARAM_INIT(repulsion.smoothing, 5e-3),
+		PARAM_INIT(vdw.coefficient, -1),
+		PARAM_INIT(vdw.singularity_cutoff, 0.1),
+		PARAM_INIT(vdw.amplitude, 0),
 		PARAM_INIT(magic_angle, 0),
-		PARAM_INIT(mu_static, 1),
-		PARAM_INIT(mu_dynamic, -1),
-		PARAM_INIT(mu_rolling, 0),
+		PARAM_INIT(contact.mu_static, 1),
+		PARAM_INIT(contact.mu_dynamic, -1),
+		PARAM_INIT(contact.mu_rolling, 0),
 		PARAM_INIT(TA_adhesion.adhesion_range, 1e-2),
 		PARAM_INIT(output.recording_start, 1),
 		PARAM_INIT(sj_disp_max_shrink_factor, 1.1),
@@ -109,7 +113,7 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(sflow_pcontrol_damper, 100),
 		PARAM_INIT(sflow_target_flux, 0),
 		PARAM_INIT(confinement.y_min, 0),
-		PARAM_INIT(confinement.y_max, 0)
+		PARAM_INIT(confinement.y_max, 0),
 	};
 
 	/*================================
@@ -120,14 +124,17 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(output.nb_output_data_log_time, 100),
 		PARAM_INIT(output.nb_output_config_log_time, 100),
 		PARAM_INIT(integration_method, 1),
-		PARAM_INIT(friction_model, 1),
 		PARAM_INIT(np_fixed, 0),
 		PARAM_INIT(simulation_mode, 0),
-		PARAM_INIT(repulsive_force_type, 1),
 		PARAM_INIT(sj_check_count, 500),
 		PARAM_INIT(sj_reversal_repetition, 10),
 		PARAM_INIT(sflow_boundary_conditions, 0),
 		PARAM_INIT(sflow_Darcy_power, 0)
+	};
+
+	UIntParams = \
+	{
+		PARAM_INIT_ENUMCLASS(contact.friction_model, Interactions::FrictionModel::Coulomb)
 	};
 
 	/*===============================
@@ -138,7 +145,7 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(flow_type, "shear"),
 		PARAM_INIT(event_handler, ""),
 		PARAM_INIT(output.out_particle_stress, ""),
-		PARAM_INIT(lubrication_model, "tangential"),
+		PARAM_INIT(lub.model, "tangential"),
 		PARAM_INIT(sj_program_file, "")
 	};
 
@@ -148,25 +155,30 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 	Dimensional::ForceScale default_val;
 
 	default_val = {Dimensional::Unit::kn, {Dimensional::Dimension::Force, 0, guarranted_unit}};
-	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(kn, default_val));
+	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(contact.kn, default_val));
 
 	default_val = {Dimensional::Unit::kt, {Dimensional::Dimension::Force, 0, Dimensional::Unit::kn}};
-	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(kt, default_val));
+	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(contact.kt, default_val));
 
 	default_val = {Dimensional::Unit::kr, {Dimensional::Dimension::Force, 0, Dimensional::Unit::kn}};
-	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(kr, default_val));
+	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(contact.kr, default_val));
+
+	default_val = {Dimensional::Unit::kn, {Dimensional::Dimension::Force, 0, guarranted_unit}};
+	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(contact.ft_max, default_val));
+
+	default_val = {Dimensional::Unit::critical_load, {Dimensional::Dimension::Force, 0, guarranted_unit}};
+	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(contact.critical_load, default_val));
+
+	default_val = {Dimensional::Unit::adhesion, {Dimensional::Dimension::Force, 0, guarranted_unit}};
+	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(contact.adhesion, default_val));
 
 	default_val = {Dimensional::Unit::delayed_adhesion, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(TA_adhesion.adhesion_max_force, default_val));
 
 	default_val = {Dimensional::Unit::repulsion, {Dimensional::Dimension::Force, 0, guarranted_unit}};
-	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(repulsion, default_val));
+	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(repulsion.repulsion, default_val));
 
-	default_val = {Dimensional::Unit::critical_load, {Dimensional::Dimension::Force, 0, guarranted_unit}};
-	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(critical_load, default_val));
-
-	default_val = {Dimensional::Unit::adhesion, {Dimensional::Dimension::Force, 0, guarranted_unit}};
-	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(adhesion, default_val));
+	
 
 	default_val = {Dimensional::Unit::brownian, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(brownian, default_val));
@@ -195,10 +207,10 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(dt_jamming, default_qty));
 	
 	default_qty = {Dimensional::Dimension::Time, 1e-3, guarranted_unit};
-	DimValDblParams.push_back(PARAM_INIT_DIMQTY(contact_relaxation_time, default_qty));
+	DimValDblParams.push_back(PARAM_INIT_DIMQTY(contact.relaxation_time, default_qty));
 
 	default_qty = {Dimensional::Dimension::Time, -1, guarranted_unit};
-	DimValDblParams.push_back(PARAM_INIT_DIMQTY(contact_relaxation_time_tan, default_qty));
+	DimValDblParams.push_back(PARAM_INIT_DIMQTY(contact.relaxation_time_tan, default_qty));
 	
 	default_qty = {Dimensional::Dimension::Force, 0.1, Dimensional::Unit::kn};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(min_kn_auto_det, default_qty));
@@ -355,6 +367,12 @@ void ParameterSetFactory::setParameterFromKeyValue(const std::string &keyword,
 			return;
 		}
 	}
+	for (auto &inp: UIntParams) {
+		if (inp.name_str == keyword) {
+			inp.value = stoi(value);
+			return;
+		}
+	}
 	for (auto &inp: StrParams) {
 		if (inp.name_str == keyword) {
 			inp.value = value;
@@ -452,6 +470,10 @@ ParameterSet ParameterSetFactory::getParameterSet() const
 	for (auto &inp: ForceScaleParams) {
 		inp.exportToParameterSet(p, inp);
 	}
+
+	Interactions::setupLubricationParameters(p.lub);
+	Interactions::setupContactParameters(p.contact);
+
 	return p;
 }
 

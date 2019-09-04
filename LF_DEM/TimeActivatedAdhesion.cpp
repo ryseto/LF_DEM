@@ -8,6 +8,8 @@
 
 #include "TimeActivatedAdhesion.h"
 
+namespace Interactions {
+
 namespace TActAdhesion {
 
 void TimeActivatedAdhesion::update(double time_now, double gap, vec3d &nvec)
@@ -90,3 +92,5 @@ double TimeActivatedAdhesion::getForceNorm() const
 }
 
 } // namespace TActAdhesion
+
+}

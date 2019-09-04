@@ -30,19 +30,22 @@
 #include "Configuration.h"
 #include "States.h"
 #include "Sym2Tensor.h"
-#include "Interaction.h"
 #include "vec3d.h"
 #include "Matrix.h"
-#include "BoxSet.h"
-#include "StokesSolver.h"
 #include "ParameterSet.h"
 #include "Averager.h"
 #include "Events.h"
 #include "StressComponent.h"
-#include "VelocityComponent.h"
-#include "ForceComponent.h"
-#include "cholmod.h"
 #include "SolventFlow.h"
+#include "Box3d.h"
+#include "KraynikReinelt.h"
+#include "LeesEdwards.h"
+#include "PairwiseConfig.h"
+#include "ParticleConfig.h"
+#include "ShearType.h"
+#include "StdInteractionManager.h"
+
+
 class MTRand;
 
 #ifdef USE_DSFMT
@@ -64,33 +67,18 @@ private:
 	bool pairwise_resistance_changed;
 	//bool forbid_displacement;
 	int total_num_timesteps;
-	double lx;
-	double ly;
-	double lz;
-	double lx_half; // =lx/2
-	double ly_half; // =ly/2
-	double lz_half; // =lz/2
-	double lx_ext_flow;
-	double ly_ext_flow;
-	double lz_ext_flow;
+	Geometry::box3d container;
 	struct State::Clock clk;
 	vec3d shear_strain;
 	double angle_wheel; // rotational angle of rotary couette geometory
 	double shear_rate; //@@@ In the extensional-flow simulation, shear_rate is extensional rate.
-	Sym2Tensor Ehat_infinity; // E/shear_rate: "shape" of the flow
-	vec3d omegahat_inf;  // omega/shear_rate: "shape" of the flow
-	Sym2Tensor E_infinity;
-	vec3d omega_inf;
 	double particle_volume;
-	std::vector <vec3d> u_inf;
 	std::vector <vec3d> na_disp;
-	double sq_cos_ma; // magic angle @@@@
-	double sq_sin_ma; // magic angle @@@@
-	double cos_ma_sin_ma; // magic angle @@@@
+	std::vector< std::string > declared_forces;
+
 	/* data */
 	bool keepRunning(double time_end, double strain_end);
 	bool keepRunning(const std::string& time_or_strain, const double& value_end);
-	void (System::*timeEvolutionDt)(bool, double, double);
 	void timeEvolutionEulersMethod(bool calc_stress,
 								   double time_end,
 								   double strain_end);
@@ -103,21 +91,12 @@ private:
 	void timeStepBoxing();
 	void adaptTimeStep();
 	void adaptTimeStep(double time_end, double strain_end);
-	void setContactForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
-	void setRepulsiveForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
-	void setTActAdhesionForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
-	void setFixedParticleForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
-	void setDashpotForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
-	void setHydroForceToParticle_squeeze(std::vector<vec3d> &force, std::vector<vec3d> &torque);
-	void setHydroForceToParticle_squeeze_tangential(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setBodyForce(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setConfinementForce(std::vector<vec3d> &force, std::vector<vec3d> &torque);
-	void buildResistanceMatrix();
 	void setBrownianForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
-	void setSolverRHS(const ForceComponent &fc);
-	void addToSolverRHS(const ForceComponent &fc);
-	void computeVelocities(bool divided_velocities, bool mat_rebuild);
-	void computeVelocitiesStokesDrag();
+	void setForceToParticle(const std::string &component, std::vector<vec3d> &force, std::vector<vec3d> &torque);
+	void computeNonAffineVelocities(bool divided_velocities, bool mat_rebuild);
+	void computeNonAffineVelocitiesStokesDrag();
 	void computeVelocityWithoutComponents(bool rebuild);
 	void computeVelocityByComponents();
 	void computeVelocityByComponentsFixedParticles();
@@ -125,7 +104,7 @@ private:
 	void setFixedParticleVelocities();
 	void computeBrownianVelocities();
 	void tmpMixedProblemSetVelocities();
-	void adjustVelocityPeriodicBoundary();
+	void computeTotalVelocity();
 	void adjustVelocitySolventFlow();
 	void rushWorkFor2DBrownian(std::vector<vec3d> &vel, std::vector<vec3d> &ang_vel); // We need to implement real 2D simulation.
 	void computeUInf();
@@ -148,7 +127,6 @@ private:
 	void forceResultantInterpaticleForces();
 	void checkForceBalance();
 	void wallForces();
-	bool hasNeighbor(int i, int j);
 	void smoothStressTransition();
 #ifndef USE_DSFMT
 	MTRand *r_gen;
@@ -158,14 +136,10 @@ private:
 #endif
 	bool angle_output;
 	std::vector<double> radius_cubed;
-	std::vector<double> radius_squared;
 	std::vector<double> stokesdrag_coeff_f;
 	std::vector<double> stokesdrag_coeff_t;
 	std::vector<double> stokesdrag_coeff_f_sqrt;
 	std::vector<double> stokesdrag_coeff_t_sqrt;
-	std::vector <struct DBlock> resistance_matrix_dblock;
-
-	
 	
 	void adjustContactModelParameters();
 	Averager<double> kn_avg;
@@ -180,49 +154,42 @@ private:
 	template<typename T> void setupGenericConfiguration(T conf, Parameters::ControlVariable control_);
 	void setupBrownian();
 	void setupParameters();
-	void setupParametersContacts();
-	void setupParametersLubrication();
-	void setupParametersIntegrator();
 	void setupSystemPostConfiguration();
 	void setConfiguration(const std::vector <vec3d>& initial_positions,
 						  const std::vector <double>& radii,
 						  const std::vector <double>& angles);
+	bool hasPairwiseResistance();
+
  protected:
  public:
 	System(struct State::BasicCheckpoint = State::zero_time_basicchkp);
 
-	Parameters::ParameterSet p;
+	std::shared_ptr<Parameters::ParameterSet> p;
 	int np_mobile; ///< number of mobile particles
-	enum SimulationType { simple_shear, extensional_flow, solvent_flow } simu_type;
+	ShearType shear_type;
+	std::shared_ptr<BC::LeesEdwardsBC> lees;
+	std::shared_ptr<BC::KraynikReineltBC> kr;
+	std::shared_ptr<Geometry::ImposedDeformation> imposed_flow;
+	std::shared_ptr<Geometry::PairwiseConfig> pairconf;
+	std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> res_solver;
+
 	//	bool ext_flow;
 	bool shear_rheology;
-	// Interaction types
-	bool brownian;
-	bool friction;
-	bool rolling_friction;
-	bool repulsiveforce;
-	bool delayed_adhesion;
-	bool adhesion;
-	bool critical_load_model;
-	bool brownian_dominated;
-	bool lubrication;
-	bool pairwise_resistance;
-	bool body_force;
+
 	// Simulation parameters
 	bool twodimension;
 	Parameters::ControlVariable control;
-	bool zero_shear;
 	bool wall_rheology;
 	bool mobile_fixed;
 	bool couette_stress;
 	double system_height;
 	bool in_predictor;
 	bool in_corrector;
-	bool retrim_ext_flow;
-	std::vector<vec3d> position;
-	std::vector<vec3d> u_local;
-	std::vector<vec3d> omega_local;
-	std::vector<Sym2Tensor> E_local;
+
+	std::shared_ptr<ParticleConfig> conf;
+	ParticleVelocity vel_bg; // u_inf or u_local -> solvent velocity at particle center if particle was absent
+	ParticleVelocityGrad velgrad_bg; // solvent velocity gradient at particle center if particle was absent
+
 	std::vector<double> phi_local;
 	std::vector<vec3d> forceResultant;
 	std::vector<vec3d> torqueResultant;
@@ -231,69 +198,25 @@ private:
 	std::vector<vec3d> rate_proportional_wall_force;
 	std::vector<vec3d> rate_proportional_wall_torque;
 
-	BoxSet boxset;
 	SolventFlow *sflow;
 
-	std::vector<double> radius;
-	std::vector<double> angle; // for 2D visualization
 	// std::vector<double> mu; // friction coeffient
-	std::vector<vec3d> velocity;
-	std::vector<vec3d> velocity_predictor;
-	std::vector<vec3d> na_velocity;
-	std::vector<vec3d> ang_velocity;
-	std::vector<vec3d> ang_velocity_predictor;
-	std::vector<vec3d> na_ang_velocity;
-	std::vector<vec3d> fixed_velocities;
+	ParticleVelocity velocity;
+	ParticleVelocity velocity_predictor;
+	ParticleVelocity na_velocity;
 	std::vector<Sym2Tensor> total_stress_pp; // per particle
 	std::vector<std::complex<double>> phi6;
 	Sym2Tensor total_stress;
 	std::vector<int> n_contact;
 	std::ofstream fout_history;
 
-	/**************** Interaction machinery ***************************/
-	/* We hold the Interaction instances in a std::vector */
-	std::vector<Interaction> interaction;
-	/*
-	 * Interactions are used throughout the System class to access all the
-	 * data relative to pairwise forces. Most interaction operations are performed
-	 * as loops over the Interaction vector.
-	 * They are basically containing all the information relative to the forces
-	 * exchanged between a pair of particles i and j.
-	 * An Interaction contains typically a Lubrication object, a Contact object,
-	 * a RepulsiveForce object, etc.
-	 *
-	 * For some interaction operations, it is more convenient to loop over the particles
-	 * rather than the interactions (for instance to build the resistance matrix).
-	 * So we need to keep track of the set of Interaction instances each particle is involved in.
-	 * This is done by a vector of set of pointers to Interaction of size np, called interaction_list.
-	 * Each set is tied to a particle i.
-	 * It is convenient to order the sets of interaction with the label of the other particle involved,
-	 * so that the matrix filling in the StokesSolver can be made more efficiently.
-	 * That's the purpose of the custom comparator compare_interaction.
-	 */
-	std::vector < std::set <Interaction*, compare_interaction> > interaction_list;
-	 /*
-	 * These pointers are pointers to
-	 * elements of std::vector<Interaction> interaction defined above.
-	 * But here we have to be very careful, because the pointers need to keep track of what happens in the
-	 * vector<Interaction>. For instance, a interaction.push_bacK(inter) can trigger a reallocation of
-	 * the interaction container, in which case all the pointers in interaction_list are rendered invalid.
-	 * The solution to this problem is to give Interaction instances responsability for declaring themselved in
-	 * interaction_list, through appropriate constructor, destructor, copy constructor and assignment operator.
-	 * Note that the Interaction move constructor is explicitely deleted for now, to prevent
-	 * flawed implicit implementation by the compiler.
-	 */
-	 /* Besides the Interaction instances, the particles also more trivially know their neighbor.
-	 * This is not strictly necessary but can optimize some operations.
-	 * The responsability for the correctness of interaction_partners is left to System
-	 * (not delegated any more to Interaction, like it used to).*/
-	std::vector < std::vector<int> > interaction_partners;
+	std::shared_ptr<Interactions::StdInteractionManager> interaction;
 	void gatherStressesByRateDependencies(Sym2Tensor &rate_prop_stress,
 										  Sym2Tensor &rate_indep_stress);
 	std::map<std::string, ForceComponent> force_components;
 	std::map<std::string, Sym2Tensor> total_stress_groups;
 	std::map<std::string, StressComponent> stress_components;
-	std::map<std::string, VelocityComponent> na_velo_components;
+	std::map<std::string, ParticleVelocity> na_velo_components;
 	Averager<Sym2Tensor> stress_avg;
 	Averager<double> rate_prop_shearstress_rate1_ave;
 	Averager<double> rate_indep_shearstress_ave;
@@ -308,11 +231,7 @@ private:
 	double target_stress;
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;
-	/* Velocity difference between top and bottom
-	 * in Lees-Edwards boundary condition
-	 * vel_difference = shear_rate * lz
-	 */
-	vec3d vel_difference;
+
 	/**** temporal circular gap setup ***********/
 	vec3d origin_of_rotation;
 	double omega_wheel_in;
@@ -342,38 +261,17 @@ private:
 	 * Extensional flow using Kraynik-Reinelt Method was originally implemented                         *
 	 * by Antonio Martiniello and Giulio Giuseppe Giusteri from Auguest to November 2016 at OIST.       *
 	 ****************************************************************************************************/
-	matrix deform_forward; // Extension flow
-	matrix deform_backward; // Extension flow
-	//matrix dot_deform_forward; // Extension flow
-	matrix grad_u; // = L Extension flow
-	matrix grad_u_hat; // = L Extension flow (1/rate)*grad_u
-	/*****************************
-	 * Domains in the simulation box are numbered as follows.
-	 *    10 - 8 --11
-	 *    |         |
-	 *    2    1    3
-	 *    |         |
-	 *    6 -- 4 ---7
-	 *************************/
-	vec3d box_axis1;  // x (6--7)
-	vec3d box_axis2;  // z (6--10)
-	vec3d box_diagonal_7_10; //
-	vec3d box_diagonal_6_11;
-	double strain_retrim; // APR
-	double strain_retrim_interval; // APR
+
 	std::vector <int> overlap_particles;
 
 	std::list <Event> events;
 	
 	/****************************************/
-	void setVelocityDifference(); // Lees-Edwards boundary condition
 	void setSystemVolume();
-	void setFixedVelocities(const std::vector <vec3d>& vel);
 	void setContacts(const std::vector <struct contact_state>& cs);
 	std::vector <struct contact_state> getContacts() const;
 	struct base_configuration getBaseConfiguration() const;
 
-	void setInteractions_GenerateInitConfig();
 	void setupConfiguration(struct base_shear_configuration c, Parameters::ControlVariable control_);
 	void setupConfiguration(struct fixed_velo_configuration c, Parameters::ControlVariable control_);
 	void setupConfiguration(struct circular_couette_configuration c, Parameters::ControlVariable control_);
@@ -382,18 +280,7 @@ private:
 	void allocateRessources();
 	void timeEvolution(double time_end, double strain_end);
 	void displacement(int i, const vec3d& dr);
-	void checkNewInteraction();
-	void createNewInteraction(int i, int j, double scaled_interaction_range);
-	void removeNeighbors(int i, int j);
-	void declareResistance(int p0, int p1);
-	void eraseResistance(int p0, int p1);
-	void updateInteractions();
 	void calculateForces(); //
-	int periodize(vec3d& pos);
-	void periodizeExtFlow(const int &i, bool &pd_transport);
-	vec3d periodized(const vec3d& pos_diff);
-	int periodizeDiff(vec3d& pos_diff);
-	void periodizeDiffExtFlow(vec3d& pos_diff, vec3d& pd_shift, const int &i, const int &j);
 	void calcStress();
 	void calcStressPerParticle();
 	void calcContactXFPerParticleStressControlled();
@@ -406,20 +293,15 @@ private:
 						  double &stress_rr,
 						  double &stress_thetatheta,
 						  double &stress_rtheta);
-	StokesSolver stokes_solver;
 	void initializeBoxing();
 
 	/*************************************************************/
-	double calcInteractionRangeDefault(int, int);
 	double calcLubricationRange(int, int);
 	void (System::*eventLookUp)();
 	void eventShearJamming();
-	void retrimProcess(); // Extensional flow Periodic Boundary condition
-	void retrim(vec3d&); // Extensional flow Periodic Boundary condition
-	void updateH(); // Extensional flow Periodic Boundary condition
-	void yaplotBoxing(std::ofstream &fout_boxing); // Extensional flow Periodic Boundary condition
-	void recordHistory();
-	void openHistoryFile(std::string rec_filename);
+	// void yaplotBoxing(std::ofstream &fout_boxing); // Extensional flow Periodic Boundary condition
+	// void recordHistory();
+	// void openHistoryFile(std::string rec_filename);
 
 	void countContactNumber();
 	void checkStaticForceBalance();
@@ -427,66 +309,24 @@ private:
 	vec3d meanParticleVelocity();
 	vec3d meanParticleAngVelocity();
 	
-	void setBoxSize(double lx_, double ly_, double lz_)
-	{
-		lx = lx_;
-		lx_half = 0.5*lx;
-		ly = ly_;
-		ly_half = 0.5*ly;
-		lz = lz_;
-		lz_half = 0.5*lz;
-	}
-
 	double get_lx() const
 	{
-		return lx;
+		return container.lx;
 	}
 
 	double get_ly() const
 	{
-		return ly;
+		return container.ly;
 	}
 
 	double get_lz() const
 	{
-		return lz;
-	}
-
-	double get_lx_ext_flow() const
-	{
-		return lx_ext_flow;
-	}
-
-	double get_ly_ext_flow() const
-	{
-		return ly_ext_flow;
-	}
-
-	double get_lz_ext_flow() const
-	{
-		return lz_ext_flow;
+		return container.lz;
 	}
 
 	double get_time() const
 	{
 		return clk.time_;
-	}
-
-	double get_shear_rate() const
-	{
-		return shear_rate;
-	}
-
-	void set_shear_rate(double shear_rate);
-
-	vec3d get_vel_difference()
-	{
-		return vel_difference;
-	}
-
-	vec3d get_vel_difference_extension(const vec3d &pos_shift)
-	{
-		return grad_u*pos_shift;
 	}
 
 	void set_np(int val)
@@ -531,27 +371,13 @@ private:
 
 	std::size_t get_nb_interactions() const
 	{
-		return interaction.size();
+		return interaction->size();
 	}
 
 	int get_total_num_timesteps()
 	{
 		return total_num_timesteps;
 	}
-
-	Sym2Tensor getEinfty()
-	{
-		return E_infinity;
-	}
-
-	Sym2Tensor getEhatinfity()
-	{
-		return Ehat_infinity;
-	}
-
-	void setShearDirection(double theta_shear); // @@@@@ This function should be removed in future
-
-	void setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty);
 
 	const std::vector <vec3d> & getNonAffineDisp()
 	{

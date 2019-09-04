@@ -9,6 +9,9 @@
 
 #include <assert.h>
 #include "TimeActivatedAdhesion_io.h"
+#include "StdInteractionManager.h"
+
+namespace Interactions {
 
 namespace TActAdhesion {
 
@@ -34,7 +37,7 @@ std::vector <struct State> readStatesBStream(std::istream &input)
 }
 
 void writeStatesBStream(std::ostream &output,
-						const std::vector<Interaction> &interactions)
+						const Interactions::StdInteractionManager &interactions)
 {
 	std::vector<State> adhesion_states;
 	for (auto &inter: interactions) {
@@ -54,7 +57,7 @@ void writeStatesBStream(std::ostream &output,
 	}
 }
 
-void setupInteractions(std::vector<Interaction> &interactions, 
+void setupInteractions(Interactions::StdInteractionManager &interactions, 
 					   const std::vector <struct State> &adhesion_states,
 					   double time_now)
 {
@@ -78,3 +81,5 @@ void setupInteractions(std::vector<Interaction> &interactions,
 }
 
 } //namespace TActAdhesion
+
+}

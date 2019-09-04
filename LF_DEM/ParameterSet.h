@@ -9,6 +9,10 @@
 #include <string>
 #include "TimeActivatedAdhesion_Params.h"
 #include "ConfinementParams.h"
+#include "LubricationParams.h"
+#include "RepulsiveForceParams.h"
+#include "ContactParams.h"
+#include "VanDerWaalsParams.h"
 #include "DimensionalQty.h"
 
 /*===================================================
@@ -68,7 +72,6 @@ namespace Parameters {
 		bool out_data_vel_components;		///< Output velocity components in the par* file [false]
 		bool out_na_vel;					///< Output non-affine velocity components in the par* file [false]
 		bool out_na_disp;					///< Output non-affine displacements since last time step in the par* file [false]
-		bool recording_interaction_history;	///< Output all histories of interactions (time_end should be short enough) [false]
 		double recording_start;				///< Hisotry is recorded after this strain [1]
 		bool effective_coordination_number; ///< Count and output effective coordination number [false]
 	};
@@ -86,19 +89,12 @@ namespace Parameters {
 		/*******************************************************
 		 INTERACTIONS
 		 ********************************************************/
-		double repulsion;				///< Amplitude of the repulsive force [0]
-		double critical_load;			///< Amplitude of the critical load [0]
-		double adhesion;				///< Amplitude of the adhesion [0 guarranted_unit]
 		double brownian;				///< Amplitude of the Brownian force [0]
-		int repulsive_force_type;       ///< type of repulsive force [1]
-		double repulsive_length;		///< "Debye" screering length for the repulsive force [0.05]
-		double repulsive_max_length;	///< Maximum length until which the repulsive force can reach. If -1, no limit. (e.g. length of polymer brush) [-1]
-		double interaction_range;		///< maximum range (center-to-center) for interactions (repulsive force, etc.). If -1, lub_max_gap is used as cutoff [-1]
-		//		double vdW_coeffient; ///< [-1]
-		//	double vdW_singularity_cutoff; ///< [0.1]
+		struct Interactions::RepulsiveForceParams repulsion;
+		struct Interactions::vanDerWaalsForceParams vdw;
 		double bodyforce;              ///< Amplitude of the body force [0]
 		int np_fixed;
-		struct TActAdhesion::Parameters TA_adhesion; ///< Time delayed adhesion params (.adhesion_range [1e-2], .adhesion_max_force [0h], .activation_time [0h])
+		struct Interactions::TActAdhesion::Parameters TA_adhesion; ///< Time delayed adhesion params (.adhesion_range [1e-2], .adhesion_max_force [0h], .activation_time [0h])
 		/*******************************************************
 		 HYDRODYNAMICS
 		 ********************************************************/
@@ -119,20 +115,8 @@ namespace Parameters {
 		 * 3 dashpot in the contact model (not implemented yet)
 		 *   In this case lub_max_gap should be automatically zero. (not yet implemented)
 		 */
-		std::string lubrication_model;                   ///< Lubrication type. "none": no lubrication, "normal": 1/xi lubrication (only squeeze mode), "tangential": "normal" plus log(1/xi) terms (shear and pump modes) ["tangential"]
-		/*
-		 * Leading term of lubrication force is 1/reduced_gap,
-		 * with reduced_gap the gap
-		 * reduced_gap = 2r/(a0+a1) - 2.
-		 * we set a cutoff for the lubrication interaction,
-		 * such that the lub term is proportional to:
-		 *
-		 * 1/(reduced_gap+lub_reduce_parameter)
-		 * when reduced_gap > 0.
-		 */
-		double lub_reduce_parameter;	///< Lubrication regularization length ("roughness length") [1e-3]
-		double lub_max_gap;				///< Lubrication range (in interparticle gap distance) [0.5]
-		bool smooth_lubrication;        ///< 1/h - 1/h_max, giving 0 at h=hmax [false]
+		Interactions::Lub::LubParams lub;         ///< see LubricationParams.h
+		
 		/*******************************************************
 		 CONTACTS
 		 ********************************************************/
@@ -145,28 +129,8 @@ namespace Parameters {
 		 * 5 Constant maximum tangenetial force (no normal force dependence)
 		 * 6 Coulomb's friction law with a maximum tangential force.
 		 */
-		int friction_model;		///< Friction model from the list above  [1]
-		double mu_static;		///< friction coefficient (static) [1]
-		double mu_dynamic;		///< friction coefficient (dynamic). If -1, mu_dynamic = mu_static [-1]
-		double mu_rolling;		///< friction coefficient (rolling) [0]
-		double ft_max;			///< max tangential force in friction_model = 5 [1]
-		/*
-		 * Contact force parameters
-		 * kn: normal spring constant
-		 * kt: tangential spring constant
-		 */
-		double kn;				///< Particle stiffness: normal spring constant [0h]
-		double kt;				///< Particle stiffness: tangential spring constant [0kn]
-		double kr;				///< Particle stiffness: rolling spring constant [0kn]
-		/*
-		 * contact_relaxation_factor:
-		 *
-		 * This gives the coeffient of the resistance term for h < 0.
-		 * - If the value is negative, the value of 1/lub_reduce_parameter is used.
-		 *
-		 */
-		double contact_relaxation_time;			///< Relaxation time (normal) of the contact model. Sets the normal dashpot. If <0, use normal lubrication at contact as normal dashpot. [1e-3input_unit]
-		double contact_relaxation_time_tan;		///< Relaxation time (tangential) of the contact model. Sets the tangential dashpot. If <0, use tangential lubrication at contact as tangential dashpot. [-1input_unit]
+		struct Interactions::ContactParams contact;
+
 		/*******************************************************
 		 INTEGRATOR
 		 ********************************************************/
@@ -217,7 +181,7 @@ namespace Parameters {
 		bool keep_input_strain;  ///< Use as initial strain value the strain from initial Lees-Edwards displacement [false]
 		double brownian_relaxation_time; ///< Averaging time scale in the stress controlled simulation for Brownian [1]
 		bool check_static_force_balance;
-		double body_force;  ///< body force [1]
+		double body_force;  ///< body force [0 guarranted unit]
 		double body_force_angle;  ///< parallel to wall 0 and vertical to wall 90 [0]
 		double sflow_dx; // mesh size in unit of particle radius [5]
 		double sflow_smooth_length; // mesh size in unit of particle radius [3]

@@ -22,6 +22,9 @@
 #include <set>
 #include <vector>
 
+namespace Boxing
+{
+
 class Box{
 private:
 	std::vector <Box*> static_neighbors;
@@ -81,5 +84,7 @@ public:
 	int type;
 	int type_neighborhood;
 };
+
+} // namespace Boxing
 
 #endif /* defined(__LF_DEM__Box__) */

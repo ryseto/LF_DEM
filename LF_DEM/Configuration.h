@@ -5,13 +5,13 @@
 #include <type_traits>
 #include "vec3d.h"
 #include "Contact.h"
-#include "System.h"
 #include "TimeActivatedAdhesion_io.h"
 #include "TimeActivatedAdhesion.h"
 
 #ifndef __LF_DEM__Configuration__
 #define __LF_DEM__Configuration__
 
+class System;
 
 enum struct ConfFileFormat : int { // assign values as it is for output and otherwise may be compiler dependent.
 	// Deprecated formats are not output anymore by LF_DEM, but should still be readable
@@ -69,7 +69,7 @@ struct fixed_velo_configuration {
 struct delayed_adhesion_configuration {
 	struct base_configuration base;
 	vec3d lees_edwards_disp;
-	std::vector <struct TActAdhesion::State> adhesion_states;
+	std::vector <struct Interactions::TActAdhesion::State> adhesion_states;
 };
 
 struct circular_couette_configuration {

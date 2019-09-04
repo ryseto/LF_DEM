@@ -12,54 +12,6 @@
 using namespace std;
 
 
-double evaluateMaxInterNormalVelocity(const System & sys)
-{
-	double max_normal_velocity = 0;
-	for (const auto &inter: sys.interaction) {
-		double normal_velocity = std::abs(inter.getNormalVelocity());
-		if (normal_velocity > max_normal_velocity) {
-			max_normal_velocity = normal_velocity;
-		}
-	}
-	return max_normal_velocity;
-}
-
-double evaluateMaxContactSlidingVelocity(const System & sys)
-{
-	if (sys.friction) {
-		double sq_max_sliding_velocity = 0;
-		for (const auto &inter: sys.interaction) {
-			if (inter.contact.is_active()) {
-				double sq_sliding_velocity = inter.contact.getSlidingVelocity().sq_norm();
-				if (sq_sliding_velocity > sq_max_sliding_velocity) {
-					sq_max_sliding_velocity = sq_sliding_velocity;
-				}
-			}
-		}
-		return std::sqrt(sq_max_sliding_velocity);
-	} else {
-		return 0;
-	}
-}
-
-double evaluateMaxContactRollingVelocity(const System & sys)
-{
-	if (sys.rolling_friction) {
-		double sq_max_rolling_velocity = 0;
-		for (const auto &inter: sys.interaction) {
-			if (inter.contact.is_active()) {
-				double sq_rolling_velocity = inter.contact.getRollingVelocity().sq_norm();
-				if (sq_rolling_velocity > sq_max_rolling_velocity) {
-					sq_max_rolling_velocity = sq_rolling_velocity;
-				}
-			}
-		}
-		return std::sqrt(sq_max_rolling_velocity);
-	} else {
-		return 0;
-	}
-}
-
 double evaluateMaxNAVelocityComponent(const System & sys, std::string component)
 {
 	double sq_max_na_velocity = 0;
@@ -70,4 +22,155 @@ double evaluateMaxNAVelocityComponent(const System & sys, std::string component)
 		}
 	}
 	return std::sqrt(sq_max_na_velocity);
+}
+
+double evaluateMaxAngVelocity(const System & sys)
+{
+	double _max_ang_velocity = 0;
+	for (unsigned i = 0; i < sys.get_np(); i++) {
+		vec3d na_ang_velocity_tmp = sys.na_ang_velocity[i];
+		if (na_ang_velocity_tmp.norm() > _max_ang_velocity) {
+			_max_ang_velocity = na_ang_velocity_tmp.norm();
+		}
+	}
+	return _max_ang_velocity;
+}
+
+
+double evaluateMinGap(const System & sys)
+{
+	double _min_reduced_gap = sys.p.interaction_range;
+	unsigned int p0, p1;
+	for (const auto &inter: sys.interactions) {
+		std::tie(p0, p1) = inter->get_par_num();
+		if ((int)p0 < sys.np_mobile && // exclude fixed-fixed
+			inter->getReducedGap() < _min_reduced_gap) {
+			_min_reduced_gap = inter->getReducedGap();
+		}
+	}
+	return _min_reduced_gap;
+}
+
+double evaluateAvgContactGap(const System & sys)
+{
+	double _avg_reduced_gap = 0;
+	int nb=0;
+	for (const auto &inter: sys.interactions) {
+		if (inter->contact.is_active()) {
+			_avg_reduced_gap += inter->getReducedGap();
+			nb++;
+		}
+	}
+	_avg_reduced_gap /= nb;
+	return _avg_reduced_gap;
+}
+
+double evaluateMaxContactGap(const System & sys)
+{
+	double _max_contact_gap = 0;
+	for (const auto &inter: sys.interactions) {
+		if (inter->contact.is_active() &&
+			inter->getReducedGap() > _max_contact_gap) {
+			_max_contact_gap = inter->getReducedGap();
+		}
+	}
+	return _max_contact_gap;
+}
+
+double evaluateMaxVelocity(const System &sys)
+{
+	double sq_max_velocity = 0;
+	for (unsigned i = 0; i < sys.get_np(); i++) {
+		vec3d na_velocity_tmp = sys.na_velocity[i];
+		if (na_velocity_tmp.sq_norm() > sq_max_velocity) {
+			sq_max_velocity = na_velocity_tmp.sq_norm();
+		}
+	}
+	return sqrt(sq_max_velocity);
+}
+
+double evaluateMaxDispTan(const System &sys)
+{
+	double _max_disp_tan = 0;
+	for (const auto &inter: sys.interactions) {
+		if (inter->contact.disp_tan.norm() > _max_disp_tan) {
+			_max_disp_tan = inter->contact.disp_tan.norm();
+		}
+	}
+	return _max_disp_tan;
+}
+
+double evaluateMaxDispRolling(const System &sys)
+{
+	double _max_disp_rolling = 0;
+	for (const auto &inter: sys.interactions) {
+		if (inter->contact.disp_rolling.norm() > _max_disp_rolling) {
+			_max_disp_rolling = inter->contact.disp_rolling.norm();
+		}
+	}
+	return _max_disp_rolling;
+}
+
+
+std::pair<unsigned int, unsigned int> countNumberOfContact(const System &sys)
+{
+	unsigned int contact_nb = 0;
+	unsigned int fric_contact_nb = 0;
+	for (const auto &inter: sys.interactions) {
+		if (inter->contact.is_active()) {
+			contact_nb ++;
+			if (inter->contact.is_frictional()) {
+				fric_contact_nb ++;
+			}
+		}
+	}
+	return std::make_pair(contact_nb, fric_contact_nb);
+}
+
+std::pair<unsigned, double> getTAAdhesionActivityStatistics(const System &sys)
+{
+	assert(sys.delayed_adhesion);
+	unsigned active_nb = 0;
+	unsigned active_dormant_nb = 0;
+	for (const auto &inter: sys.interactions) {
+		auto state = inter->delayed_adhesion->getState();
+		if (state.activity != TActAdhesion::Activity::inactive) {
+			active_dormant_nb++;
+			if (state.activity == TActAdhesion::Activity::active) {
+				active_nb++;
+			}
+		}
+	}
+	double active_ratio = 0;
+	if (active_dormant_nb>0) {
+		active_ratio = (double)(active_nb)/active_dormant_nb;
+	}
+	return std::make_pair(active_nb, active_ratio);
+}
+
+double getPotentialEnergy(const System &sys)
+{
+	double total_energy = 0;
+	for (const auto &inter: sys.interactions) {
+		if (inter->contact.is_active()){
+			total_energy += inter->contact.calcEnergy();
+		}
+		if (sys.repulsiveforce) {
+			total_energy += inter->repulsion.calcEnergy();
+		}
+	}
+	return total_energy;
+}
+
+void isInContact(const System &sys, std::vector<int> &isincontact)
+{
+	isincontact.resize(sys.get_np(), 0);
+	for (const auto &inter: sys.interactions) {
+		if (inter->contact.is_active()) {
+			unsigned p0, p1;
+			std::tie(p0, p1) = inter->get_par_num();	
+			isincontact[p0] = 1;
+			isincontact[p1] = 1;
+		}
+	}
 }

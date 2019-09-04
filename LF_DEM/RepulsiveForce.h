@@ -20,62 +20,37 @@
 #include <fstream>
 #include "vec3d.h"
 #include "Sym2Tensor.h"
+#include "PotentialForce.h"
+#include "RepulsiveForceParams.h"
 
-class System;
-class Interaction;
+namespace Interactions
+{
 
-class RepulsiveForce{
+class RepulsiveForce : public PotentialForce {
 private:
-	System* sys;
-	Interaction* interaction;
-	unsigned int p0;
-	unsigned int p1;
-	//bool vdW;
+	struct RepulsiveForceParams p;
 	//===== forces and stresses ==================== //
 	double geometric_factor;
-	double screening_length;
-	double max_length;
-	double cutoff_roundlength;
-	vec3d force_vector; // normal contact force
-	double force_norm;
 	double reduced_force_norm;
-	double f0_NottBrady;
-	double tau_NottBrady;
+	void calcReducedForceNorm();
 	void calcScaledForce();
-	
-	void (RepulsiveForce::*forceType)();
-	void calcReducedForceNorm(); // forceType 1
-	void calcForce_NottBrady();  // forceType 2
-	void calcForce_Jenkins();    // forceType 3
-	void calcForce_longrange();  // forceType 4
 public:
-	RepulsiveForce():
-	p0(0),
-	p1(0),
-	geometric_factor(0),
-	screening_length(0),
-	max_length(0),
-	cutoff_roundlength(0),
-	force_vector(0),
-	force_norm(0),
-	reduced_force_norm(0)
-	{};
-	void init(System* sys_, Interaction* int_);
-	~RepulsiveForce(){};
-	void activate();
-	//===== forces/stresses  ========================== //
+	RepulsiveForce(PairwiseInteraction* interaction_, struct RepulsiveForceParams params);
 	void calcForce();
-	void addUpForce(std::vector<vec3d> &force) const;
-	inline double getForceNorm() const
-	{
-		return force_norm;
-	}
-	vec3d getForceVector() const
-	{
-		return force_vector;
-	}
-	void addUpStressXF(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1);
 	double calcEnergy() const;
-
 };
+
+inline double calcRepulsiveForceRange(RepulsiveForceParams input_p, double a0, double a1)
+{
+	double max_gap;
+	if (input_p.max_length == -1) {
+		max_gap = 7*input_p.screening_length;
+	} else {
+		max_gap = input_p.max_length;
+	}
+	return (a0 + a1)*(1 + 0.5*max_gap);
+}
+
+} // namespace Interactions
+
 #endif /* defined(__LF_DEM__RepulsiveForce__) */
