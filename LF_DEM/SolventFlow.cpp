@@ -41,8 +41,10 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 	six_pi = 6*M_PI;
 	if (simulation_type == "sedimentation") {
 		sedimentation = true;
+		pressure_grad_x = 0;
 	} else if (simulation_type == "channel flow") {
 		channel_flow = true;
+		pressure_grad_x = sys->p.pressure_drop;
 	} else if (simulation_type == "simple shear") {
 		simple_shear = true;
 		std::ostringstream error_str;
@@ -54,14 +56,12 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 		error_str << "Incorrect simulation type\n";
 		throw std::runtime_error(error_str.str());
 	}
-	average_pressure_x.setRelaxationTime(sys->p.sflow_pcontrol_rtime);
 	if (sedimentation) {
+		average_pressure_x.setRelaxationTime(sys->p.sflow_pcontrol_rtime);
 		std::cerr << "sedimentation simulation" << std::endl;
-		pressure_grad_x = 0;
 		sys->body_force = true;
 	}
 	if (channel_flow) {
-		pressure_grad_x = 0;
 		sys->body_force = false;
 	}
 	nx = (int)(sys->get_lx()/sys->p.sflow_dx);
@@ -73,16 +73,16 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 	} else {
 		std::cerr << std::setprecision(16) << (sys->get_lz()/dx) << std::endl;
 		nz = std::lround(sys->get_lz()/dx);
-		std::cerr << "nz = " << nz << std::endl;
+		std::cerr << "nez = " << nz << std::endl;
 		dz = sys->get_lz()/nz;
 	}
 	n = nx*nz;
-	if (abs(dx-dz) > 1e-8) {
-		std::ostringstream error_str;
-		error_str << "dx = " << dx << "  dz = " << dz << "\n";
-		error_str << "dx != dz. Modify sflow_nx or sflow_nz\n";
-		throw std::runtime_error(error_str.str());
-	}
+//	if (abs(dx-dz) > 1e-8) {
+//		std::ostringstream error_str;
+//		error_str << "dx = " << dx << "  dz = " << dz << "\n";
+//		error_str << "dx != dz. Modify sflow_nx or sflow_nz\n";
+//		throw std::runtime_error(error_str.str());
+//	}
 	cell_area = dx*dz;
 	system_volume = sys->get_lx()*sys->get_lz()*2;
 	smooth_length = sys->p.sflow_smooth_length;
@@ -361,7 +361,7 @@ void SolventFlow::pressureController()
 	}
 }
 
-double SolventFlow::update(double pressure_difference_)
+double SolventFlow::update()
 {
 	//static std::ofstream fout_tmp("debug.dat");
 	particleVelocityDiffToMesh();
@@ -444,7 +444,6 @@ void SolventFlow::predictorStep()
 				u_sol_ast_z[k] = u_sol_z[k] + sys->dt*(fz/re_num - (uz_duzdz + ux_duzdx));
 				//u_sol_ast_x[k] = u_sol_x[k] + sys->dt*(fx/re_num);
 				//u_sol_ast_z[k] = u_sol_z[k] + sys->dt*(fz/re_num);
-
 				// - sys->p.sf_zfriction*u_sol_ave.z);
 				/* sf_zfriction*u_sol_z[k] term is added
 				 * to stabilize view center along z direction.
@@ -544,13 +543,13 @@ void SolventFlow::solvePressure()
 		//rhs_vector(k) = (div_u_sol_ast[k]+gr_phi_Ud_phi_div_Ud[k])*rhs_coeff;
 	}
 	if (pressure_grad_x != 0) {
-		double delta_P_dxdx = pressure_grad_x*sys->get_lx()/(dx*dx);
+		double delta_P_dxdx_2 = 0.5*pressure_grad_x*sys->get_lx()/(dx*dx);
 		for (int j=0; j<nz; j++) {
 			int j_nx = j*nx;
 			// i = 0 --> k = j*nx
-			rhs_vector(j_nx) += -delta_P_dxdx;
+			rhs_vector(j_nx) += -delta_P_dxdx_2;
 			// i = nx-1 ---> k = nx-1+j*nx
-			rhs_vector(nx-1+j_nx) += delta_P_dxdx;
+			rhs_vector(nx-1+j_nx) += delta_P_dxdx_2;
 		}
 	}
 	pressure_vector = psolver->solve(rhs_vector);
@@ -1147,3 +1146,10 @@ int SolventFlow::meshNb(int xi, int zi)
 	return xi+zi*nx;
 }
 
+double SolventFlow::get_pressure_grad_x()
+{
+	/* flow unit --> particle dynamics unit
+	 * grad p in PD unit = (grad p in SF unit) * (a/R0)^{3-d}
+	 */
+	return pressure_grad_x;
+}

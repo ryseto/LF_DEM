@@ -40,6 +40,7 @@ namespace Dimensional {
 		kt,
 		kr,
 		stress,
+		pressure_drop,
 		sigma_zz,
 		delayed_adhesion,
 		none
@@ -71,6 +72,8 @@ namespace Dimensional {
 				return "s";
 			case Unit::sigma_zz:
 				return "sz";
+			case Unit::pressure_drop:
+				return "pd";
 			case Unit::delayed_adhesion:
 				return "da";
 			case Unit::none:
@@ -116,6 +119,9 @@ namespace Dimensional {
 		}
 		if (s == "sz" || s == "sigma_zz") {
 			return Unit::sigma_zz;
+		}
+		if (s == "pd" || s == "pressure_drop") {
+			return Unit::pressure_drop;
 		}
 		if (s == "da") {
 			return Unit::delayed_adhesion;

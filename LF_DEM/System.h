@@ -335,8 +335,6 @@ private:
 	vec3d force_downwall;
 	double effective_coordination_number;
 	double stress_transition_target;
-	/**** pipe flow setup ***********/
-	double pressure_difference;
 	/****************************************************************************************************
 	 * Extensional flow using Kraynik-Reinelt Method was originally implemented                         *
 	 * by Antonio Martiniello and Giulio Giuseppe Giusteri from Auguest to November 2016 at OIST.       *

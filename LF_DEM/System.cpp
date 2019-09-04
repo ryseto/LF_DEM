@@ -1000,11 +1000,11 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		}
 		adjustVelocityPeriodicBoundary();
 	} else {
-		if (0) {
-			sflowFiniteRe(calc_stress);
-		} else {
-			sflowIteration(calc_stress);
-		}
+		//if (1) {
+		sflowFiniteRe(calc_stress);
+		//} else {
+		//sflowIteration(calc_stress);
+		//}
 	}
 	if (wall_rheology && calc_stress) { // @@@@ calc_stress remove????
 		forceResultantReset();
@@ -1044,16 +1044,16 @@ void System::sflowIteration(bool calc_stress)
 		} else {
 			computeVelocities(calc_stress, true);
 		}
-		sflow->pressureController();
-		diff_u = sflow->update(pressure_difference);
+		diff_u = sflow->update();
+		if (cnt == 1 || cnt % 100 == 0) {
+			cerr << cnt << ' '  << diff_u << ' '  << sflow->get_pressure_grad_x() << endl;
+		}
 		cnt++;
-		if (cnt > 5000) {
+		if (cnt > 1000) {
 			break;
 		}
-		if (cnt % 100 == 1) {
-			cerr << "@ " << diff_u << ' '  << sflow->get_pressure_grad_x() << endl;
-		}
-	} while (diff_u > 1e-2);
+	} while (diff_u > 1e-3);
+	sflow->pressureController();
 	if (cnt > 1) {
 		cerr << cnt << endl;
 	}
@@ -1068,15 +1068,15 @@ void System::sflowFiniteRe(bool calc_stress)
 	} else {
 		computeVelocities(calc_stress, true);
 	}
-	sflow->pressureController();
-	sflow->update(pressure_difference);
+	//sflow->pressureController();e
+	sflow->update();
 	adjustVelocitySolventFlow();
 	//static int cnt = 0;
-//	if (cnt ++ > 1000 && forbid_displacement && fabs(sflow->u_ave.x) < 1e-3) {
-//		forbid_displacement = false;
-//		cerr << cnt << ' ' << sflow->u_ave.x << ' ' << sflow->get_pressure_grad_x() << endl;
-//		cerr << "allow displacmenet" << endl;
-//	}
+	//	if (cnt ++ > 1000 && forbid_displacement && fabs(sflow->u_ave.x) < 1e-3) {
+	//		forbid_displacement = false;
+	//		cerr << cnt << ' ' << sflow->u_ave.x << ' ' << sflow->get_pressure_grad_x() << endl;
+	//		cerr << "allow displacmenet" << endl;
+	//	}
 }
 
 /****************************************************************************************************
@@ -1289,7 +1289,6 @@ void System::timeStepMove(double time_end, double strain_end)
 	 * dot_epsion = shear_rate / 2 is always true.
 	 * clk.cumulated_strain = shear_rate * t for both simple shear and extensional flow.
 	 */
-	//	cerr << dt << ' ' << p.critical_load  << endl;
 	clk.time_ += dt;
 	total_num_timesteps ++;
 	/* evolve PBC */
