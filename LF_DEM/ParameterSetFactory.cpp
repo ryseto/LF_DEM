@@ -98,7 +98,6 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(sj_velocity, 1e-3),
 		PARAM_INIT(body_force, 1),
 		PARAM_INIT(body_force_angle, 0),
-		PARAM_INIT(pressure_drop, 1),
 		PARAM_INIT(sflow_dx, 5),
 		PARAM_INIT(sflow_smooth_length, 3),
 		PARAM_INIT(sflow_ReNum_p, 0.001),

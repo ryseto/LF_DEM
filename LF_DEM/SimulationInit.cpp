@@ -132,9 +132,10 @@ void Simulation::convertForces(Dimensional::Unit &internal_unit,
 	if (sys.body_force) {
 		/*** for sedimentation simulations ***/
 		output_unit = Dimensional::Unit::bodyforce;
-	} else if (control_var == Parameters::ControlVariable::pressure_drop) {
-		output_unit = Dimensional::Unit::critical_load;
 	}
+//		else if (control_var == Parameters::ControlVariable::pressure_drop) {
+//		output_unit = Dimensional::Unit::critical_load;
+//	}
 	cout << indent << "output units = " << Dimensional::unit2suffix(output_unit) << endl;
 
 	// when there is a hydro force, its value is the non-dimensionalized shear rate.
@@ -149,7 +150,6 @@ void Simulation::convertForces(Dimensional::Unit &internal_unit,
 		/*** for sedimentation simulations ***/
 		cerr << "sedimentation simulation" << endl;
 	}
-	cerr << "sys->p.critical_load = " << sys.p.critical_load << endl;
 }
 
 void Simulation::assertParameterCompatibility()
@@ -313,7 +313,6 @@ void Simulation::setupControl(Parameters::ControlVariable control_variable_,
 
 }
 
-
 void Simulation::setupSimulation(string in_args,
 								 vector<string>& input_files,
 								 bool binary_conf,
@@ -355,6 +354,8 @@ void Simulation::setupSimulation(string in_args,
 	if (control_var == Parameters::ControlVariable::stress) {
 		target_stress_input = control_value.value; //@@@ Where should we set the target stress???
 		sys.target_stress = target_stress_input/6/M_PI; //@@@
+	} else if (control_var == Parameters::ControlVariable::pressure_drop) {
+		sys.pressure_drop = control_value.value;
 	}
 	sys.p = PFactory.getParameterSet();
 	if (sys.shear_rheology) {
@@ -411,6 +412,7 @@ void Simulation::setupSimulation(string in_args,
 	openOutputFiles();
 	echoInputFiles(in_args, input_files);
 	checkDispersionType();
+	cerr << "sys->p.critical_load = " << sys.p.critical_load << endl;
 	cout << indent << "Simulation setup [ok]" << endl;
 }
 

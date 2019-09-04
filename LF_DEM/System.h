@@ -163,8 +163,6 @@ private:
 	std::vector<double> stokesdrag_coeff_f_sqrt;
 	std::vector<double> stokesdrag_coeff_t_sqrt;
 	std::vector <struct DBlock> resistance_matrix_dblock;
-
-	
 	
 	void adjustContactModelParameters();
 	Averager<double> kn_avg;
@@ -305,6 +303,7 @@ private:
 	double max_velocity;
 	double max_force_imbalance;
 	double target_stress;
+	double pressure_drop;
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;
 	/* Velocity difference between top and bottom

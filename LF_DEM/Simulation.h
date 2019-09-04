@@ -44,6 +44,7 @@ private:
 	Dimensional::Unit output_unit;
 	Dimensional::UnitSystem system_of_units;
 	double target_stress_input;
+	double pressure_drop;
 	double input_rate;
 	double dimensionless_rate;
 	double viscosity;
