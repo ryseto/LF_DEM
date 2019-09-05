@@ -466,8 +466,7 @@ std::pair<struct DBlock, struct DBlock> Lubrication::RFU_DBlocks() const
 // ie fills :
 // stresslet_i = R_SU^{ii} * vi + R_SU^{ij} * vj
 // stresslet_j = R_SU^{ji} * vi + R_SU^{jj} * vj
-void Lubrication::addGUStresslet(const vec3d& vi, const vec3d& vj,
-                                 const vec3d& oi, const vec3d& oj,
+void Lubrication::addGUStresslet(const struct PairVelocity &vel,
                                  Sym2Tensor& stresslet_i,
                                  Sym2Tensor& stresslet_j) const
 {
@@ -479,20 +478,20 @@ void Lubrication::addGUStresslet(const vec3d& vi, const vec3d& vj,
 	 *
 	 */
 	const auto &nvec = inter->nvec;
-	double nvec_vi = dot(nvec, vi);
-	double nvec_vj = dot(nvec, vj);
+	double nvec_vi = dot(nvec, vel.U[0]);
+	double nvec_vj = dot(nvec, vel.U[1]);
 	Sym2Tensor nvec_nvec = outer(nvec);
 	stresslet_i += -(XG[0]*nvec_vi+XG[1]*nvec_vj)*nvec_nvec; // XGU_i
 	stresslet_j += -(XG[2]*nvec_vi+XG[3]*nvec_vj)*nvec_nvec; // XGU_j
 	if (!tangential) {
 		return;
 	}
-	Sym2Tensor tmp_i = outer_sym(nvec, vi) - nvec_vi*nvec_nvec;
-	Sym2Tensor tmp_j = outer_sym(nvec, vj) - nvec_vj*nvec_nvec;
+	Sym2Tensor tmp_i = outer_sym(nvec, vel.U[0]) - nvec_vi*nvec_nvec;
+	Sym2Tensor tmp_j = outer_sym(nvec, vel.U[1]) - nvec_vj*nvec_nvec;
 	stresslet_i += -2*(YG[0]*tmp_i+YG[1]*tmp_j); // YGU_i
 	stresslet_j += -2*(YG[2]*tmp_i+YG[3]*tmp_j); // YGU_j
-	Sym2Tensor tmp2_i = outer_sym(nvec, cross(oi, nvec));
-	Sym2Tensor tmp2_j = outer_sym(nvec, cross(oj, nvec));
+	Sym2Tensor tmp2_i = outer_sym(nvec, cross(vel.O[0], nvec));
+	Sym2Tensor tmp2_j = outer_sym(nvec, cross(vel.O[1], nvec));
 	stresslet_i += -2*(YM[0]*tmp2_i+YM[1]*tmp2_j); // YHO_i
 	stresslet_j += -2*(YM[2]*tmp2_i+YM[3]*tmp2_j); // YHO_j
 }
@@ -540,10 +539,7 @@ void Lubrication::addMEStresslet(const Sym2Tensor& E_inf,
  * lubforce_p1 = -lubforce_p0
  *
  */
-vec3d Lubrication::getTotalForce(const vec3d &na_v0, 
-								 const vec3d &na_v1, 
-								 const vec3d &na_ang_v0, 
-								 const vec3d &na_ang_v1,
+vec3d Lubrication::getTotalForce(const struct PairVelocity &vel,
 								 const Sym2Tensor &E_inf) const
 {
 	/**
@@ -558,12 +554,12 @@ vec3d Lubrication::getTotalForce(const vec3d &na_v0,
 	const auto &nvec = inter->nvec;
 
 	/* XAU_i */
-	vec3d lubforce_p0 = -dot(XA[0]*na_v0+XA[1]*na_v1, nvec)*nvec;
+	vec3d lubforce_p0 = -dot(XA[0]*vel.U[0]+XA[1]*vel.U[1], nvec)*nvec;
 	if (tangential) {
 		/* YAU_i */
-		lubforce_p0 += -YA[0]*(na_v0-nvec*dot(nvec, na_v0)) - YA[1]*(na_v1-nvec*dot(nvec, na_v1));
+		lubforce_p0 += -YA[0]*(vel.U[0]-nvec*dot(nvec, vel.U[0])) - YA[1]*(vel.U[1]-nvec*dot(nvec, vel.U[1]));
 		/* YBO_i */
-		lubforce_p0 += -YB[0]*cross(nvec, na_ang_v0)        - YB[2]*cross(nvec, na_ang_v1);
+		lubforce_p0 += -YB[0]*cross(nvec, vel.O[0])        - YB[2]*cross(nvec, vel.O[1]);
 	}
 	vec3d GEi, GEj;
 	if (!tangential) {

@@ -23,12 +23,12 @@ void System::declareStressComponents()
 
 	/*****************  GU stresses *********************/
 	// From the velocity components
-	if (lubrication && na_velo_components.empty()) {
-		throw runtime_error(" System::declareStressComponents: No velocity components declared, you probably forgot it.");
-	}
-	if (lubrication) {
+	if (Interactions::hasPairwiseResistance(*p)) {
+		if (na_velo_components.empty()) {
+			throw runtime_error(" System::declareStressComponents: No velocity components declared, you probably forgot it.");
+		}
 		for (const auto &vc: na_velo_components) {
-			stress_components[vc.first] = StressComponent(VELOCITY_STRESS,
+			stress_components[vc.first] = StressComponent(StressType::velocity,
 														  vc.second.vel.size(),
 														  vc.second.rate_dependence,
 														  vc.first);
@@ -36,38 +36,38 @@ void System::declareStressComponents()
 	}
 
 	// Brownian
-	if (brownian) { // Brownian is different than other GU, needs predictor data too
-		stress_components["brownian_predictor"] = StressComponent(BROWNIAN_STRESS,
-																  np, RATE_INDEPENDENT, "brownian");// rate dependent for now --> @ WORKING NOW @
+	if (p->brownian > 0) { // Brownian is different than other GU, needs predictor data too
+		stress_components["brownian_predictor"] = StressComponent(StressType::brownian,
+																  np, RateDependence::independent, "brownian");// rate dependent for now --> @ WORKING NOW @
 	}
 
 	/****************  ME stress ********************/
-	if (lubrication) {
-		stress_components["M_E_hydro"] = StressComponent(STRAIN_STRESS, np, RATE_PROPORTIONAL, "hydro");
+	if (Interactions::has_lubrication(p->lub)) {
+		stress_components["M_E_hydro"] = StressComponent(StressType::velocitygrad, np, RateDependence::proportional, "hydro");
 	}
 
 	/****************  xF stresses *****************/
 	if (control == Parameters::ControlVariable::rate) {
-		stress_components["xF_contact"] = StressComponent(XF_STRESS, np, RATE_DEPENDENT, "contact"); // rate dependent through xFdashpot
+		stress_components["xF_contact"] = StressComponent(StressType::xf, np, RateDependence::dependent, "contact"); // rate dependent through xFdashpot
 	} else { // stress controlled
-		stress_components["xF_contact_rateprop"] = StressComponent(XF_STRESS, np, RATE_PROPORTIONAL, "contact");
-		stress_components["xF_contact_rateindep"] = StressComponent(XF_STRESS, np, RATE_INDEPENDENT, "contact");
+		stress_components["xF_contact_rateprop"] = StressComponent(StressType::xf, np, RateDependence::proportional, "contact");
+		stress_components["xF_contact_rateindep"] = StressComponent(StressType::xf, np, RateDependence::independent, "contact");
 	}
-	if (repulsiveforce) {
-		stress_components["xF_repulsion"] = StressComponent(XF_STRESS, np, RATE_INDEPENDENT, "repulsion");
-	}
-
-	if (delayed_adhesion) {
-		stress_components["xF_delayed_adhesion"] = StressComponent(XF_STRESS, np, RATE_INDEPENDENT, "delayed_adhesion");
+	if (Interactions::has_repulsion(p->repulsion)) {
+		stress_components["xF_repulsion"] = StressComponent(StressType::xf, np, RateDependence::independent, "repulsion");
 	}
 
-	if (p.confinement.on) {
-		stress_components["xF_confinement"] = StressComponent(XF_STRESS, np, RATE_INDEPENDENT, "confinement");
+	// if (delayed_adhesion) {
+	// 	stress_components["xF_delayed_adhesion"] = StressComponent(StressType::xf, np, RateDependence::independent, "delayed_adhesion");
+	// }
+
+	if (p->confinement.on) {
+		stress_components["xF_confinement"] = StressComponent(StressType::xf, np, RateDependence::independent, "confinement");
 	}
 
 	if (control == Parameters::ControlVariable::stress) {
 		for (const auto &sc: stress_components) {
-			if (sc.second.rate_dependence == RATE_DEPENDENT) {
+			if (sc.second.rate_dependence == RateDependence::dependent) {
 				ostringstream error_msg;
 				error_msg << "Cannot run stress controlled simulation with stress component " << sc.first;
 				error_msg << " as it is neither independent nor proportional to the shear rate.";
@@ -82,44 +82,8 @@ void System::declareStressComponents()
 	}
 }
 
-void System::addUpInteractionStressGU(std::vector<Sym2Tensor> &stress_comp,
-									  const std::vector<vec3d> &non_affine_vel,
-									  const std::vector<vec3d> &non_affine_ang_vel)
-{
-	if (!lubrication) {
-		return;
-	}
-	for (const auto &inter: interaction) {
-		if (inter.lubrication.is_active()) {
-			unsigned int i, j;
-			std::tie(i, j) = inter.get_par_num();
-			inter.lubrication.addGUStresslet(non_affine_vel[i], non_affine_vel[j],
-											 non_affine_ang_vel[i], non_affine_ang_vel[j],
-											 stress_comp[i], stress_comp[j]);
-		}
-	}
-}
-
-void System::addUpInteractionStressME(std::vector<Sym2Tensor> &stress_comp)
-{
-	if (!lubrication) {
-		return;
-	}
-	for (const auto &inter: interaction) {
-		if (inter.lubrication.is_active()) {
-			unsigned int i, j;
-			std::tie(i, j) = inter.get_par_num();
-			inter.lubrication.addMEStresslet(E_infinity,
-											 stress_comp[i],
-											 stress_comp[j]); // R_SE:Einf-R_SU*v
-		}
-	}
-}
-
-void System::gatherVelocitiesByRateDependencies(vector<vec3d> &rateprop_vel,
-												vector<vec3d> &rateprop_ang_vel,
-												vector<vec3d> &rateindep_vel,
-												vector<vec3d> &rateindep_ang_vel) const
+void System::gatherVelocitiesByRateDependencies(ParticleVelocity &rateprop_vel,
+												ParticleVelocity &rateindep_vel) const
 {
 	/** Gather velocity components in rate proportional and rate independent parts.
 			If there is a rate dependent (but not proportional), it is left out.
@@ -128,29 +92,33 @@ void System::gatherVelocitiesByRateDependencies(vector<vec3d> &rateprop_vel,
 						 The rate independent part is always a non-affine velocity.
 	*/
 	assert(control == Parameters::ControlVariable::stress);// || control == viscnb);
-	for (unsigned int i=0; i<rateprop_vel.size(); i++) {
-		rateprop_vel[i].reset();
-		rateprop_ang_vel[i].reset();
-		rateindep_vel[i].reset();
-		rateindep_ang_vel[i].reset();
-	}
+	rateprop_vel.reset();
+	rateindep_vel.reset();
 	for (const auto &vc: na_velo_components) {
-		if (vc.second.rate_dependence == RATE_PROPORTIONAL) {
-			for (unsigned int i=0; i<rateprop_vel.size(); i++) {
-				rateprop_vel[i] += vc.second.vel[i];
-				rateprop_ang_vel[i] += vc.second.ang_vel[i];
+		if (vc.second.rate_dependence == RateDependence::proportional) {
+			for (unsigned int i=0; i<rateprop_vel.vel.size(); i++) {
+				rateprop_vel.vel[i] += vc.second.vel[i];
+				rateprop_vel.ang_vel[i] += vc.second.ang_vel[i];
 			}
 		}
-		if (vc.second.rate_dependence == RATE_INDEPENDENT) {
-			for (unsigned int i=0; i<rateprop_vel.size(); i++) {
-				rateindep_vel[i] += vc.second.vel[i];
-				rateindep_ang_vel[i] += vc.second.ang_vel[i];
+		if (vc.second.rate_dependence == RateDependence::independent) {
+			for (unsigned int i=0; i<rateprop_vel.vel.size(); i++) {
+				rateprop_vel.vel[i] += vc.second.vel[i];
+				rateprop_vel.ang_vel[i] += vc.second.ang_vel[i];
 			}
 		}
 	}
-	for (unsigned int i=0; i<rateprop_vel.size(); i++) {
-		rateprop_vel[i] += u_inf[i];
-		rateprop_ang_vel[i] += omega_inf;
+	if (vel_bg.rate_dependence == RateDependence::proportional) {
+		for (unsigned int i=0; i<rateprop_vel.vel.size(); i++) {
+			rateprop_vel.vel[i] += vel_bg.vel[i];
+			rateprop_vel.ang_vel[i] += vel_bg.ang_vel[i];
+		}
+	}
+	if (vel_bg.rate_dependence == RateDependence::independent) {
+		for (unsigned int i=0; i<rateprop_vel.vel.size(); i++) {
+			rateindep_vel.vel[i] += vel_bg.vel[i];
+			rateindep_vel.ang_vel[i] += vel_bg.ang_vel[i];
+		}
 	}
 }
 
@@ -160,44 +128,16 @@ void System::calcContactXFPerParticleStressControlled()
 	// dashpot part: we have to split between rate proportional and rate independent parts.
 	// a bit annoying :)
 
-	vector<vec3d> rateprop_vel (np);
-	vector<vec3d> rateprop_ang_vel (np);
-	vector<vec3d> rateindep_vel (np);
-	vector<vec3d> rateindep_ang_vel (np);
-	gatherVelocitiesByRateDependencies(rateprop_vel, rateprop_ang_vel,
-									   rateindep_vel, rateindep_ang_vel);
+	ParticleVelocity rateprop_vel (np, VelocityType::total, RateDependence::proportional);
+	ParticleVelocity rateindep_vel (np, VelocityType::nonaffine, RateDependence::independent);
+	gatherVelocitiesByRateDependencies(rateprop_vel, rateindep_vel);
 
 	auto &rateprop_XF = stress_components.at("xF_contact_rateprop").particle_stress;
 	auto &rateindep_XF = stress_components.at("xF_contact_rateindep").particle_stress;
 
-	for (const auto &inter: interaction) {
-		unsigned int i, j;
-		std::tie(i, j) = inter.get_par_num();
-		if (inter.contact.is_active()) {
-			inter.contact.addUpStressSpring(rateindep_XF[i], rateindep_XF[j]); // - rF_cont
-		}
-
-		if (inter.contact.dashpot.is_active()) {
-			// rate_prop_vel is a full velocity (not non affine)
-			Sym2Tensor rateprop_stress = outer_sym(inter.rvec,
-												   inter.contact.dashpot.getForceOnP0(rateprop_vel[i],
-																					  rateprop_vel[j],
-																					  rateprop_ang_vel[i],
-																					  rateprop_ang_vel[j]));
-			double r_ij = radius[i]+radius[j];
-			rateprop_XF[i] += (radius[i]/r_ij)*rateprop_stress;
-			rateprop_XF[j] += (radius[j]/r_ij)*rateprop_stress;
-			
-			Sym2Tensor rateindep_stress = outer_sym(inter.rvec,
-													inter.contact.dashpot.getForceOnP0_nonaffine(rateindep_vel[i],
-																								 rateindep_vel[j],
-																								 rateindep_ang_vel[i],
-																								 rateindep_ang_vel[j]));
-			rateindep_XF[i] += (radius[i]/r_ij)*rateindep_stress;
-			rateindep_XF[j] += (radius[j]/r_ij)*rateindep_stress;
-		}
-		
-	}
+	interaction->addUpContactSpringStressXF(rateindep_XF);
+	interaction->addUpContactDashpotStressXF(rateindep_XF, &rateindep_vel);
+	interaction->addUpContactDashpotStressXF(rateprop_XF, &rateprop_vel);
 }
 
 void System::calcStressPerParticle()
@@ -228,16 +168,6 @@ void System::calcStressPerParticle()
 	   should be careful when calling this method from outside of the
 	   System::timeEvolutionPredictorCorrectorMethod method.
 	*/
-	if (lubrication) {
-		for (auto &inter: interaction) {
-			if (!inter.lubrication.tangential) {
-				inter.lubrication.calcXFunctionsStress();
-			} else {
-				inter.lubrication.calcXYFunctionsStress();
-			}
-		}
-	}
-
 	for (auto &sc: stress_components) {
 		sc.second.reset();
 	}
@@ -245,61 +175,46 @@ void System::calcStressPerParticle()
 	for (auto &sc: stress_components) {
 		auto type = sc.second.type;
 		const auto &component_name = sc.first;
-		if (type == VELOCITY_STRESS) {
-			addUpInteractionStressGU(sc.second.particle_stress,
-									 na_velo_components[component_name].vel,
-									 na_velo_components[component_name].ang_vel);
+		if (type == StressType::velocity) {
+			interaction->addUpInteractionStressGU(sc.second.particle_stress,
+									 			  &na_velo_components[component_name]);
 		}
-		if (type == STRAIN_STRESS) {
-			addUpInteractionStressME(sc.second.particle_stress);
+		if (type == StressType::velocitygrad) {  // there is only one
+			interaction->addUpInteractionStressME(sc.second.particle_stress);
 		}
 	}
 	if (control == Parameters::ControlVariable::rate) {
 		auto &cstress_XF = stress_components.at("xF_contact").particle_stress;
-		for (auto &inter: interaction) {
-			if (inter.contact.is_active()) {
-				unsigned int i, j;
-				std::tie(i, j) = inter.get_par_num();
-				inter.contact.addUpStress(cstress_XF[i], cstress_XF[j]); // - rF_cont
-			}
-		}
+		interaction->addUpContactStressXF(cstress_XF, &velocity);
 	} else {
 		calcContactXFPerParticleStressControlled();
 	}
 
-	if (repulsiveforce) {
+	if (Interactions::has_repulsion(p->repulsion)) {
 		auto &rstress_XF = stress_components.at("xF_repulsion").particle_stress;
-		for (auto &inter: interaction) {
-			unsigned int i, j;
-			std::tie(i, j) = inter.get_par_num();
-			inter.repulsion.addUpStressXF(rstress_XF[i], rstress_XF[j]); // - rF_rep
-		}
+		interaction->addUpRepulsiveStressXF(rstress_XF);
 	}
 
-	if (delayed_adhesion) {
-		auto &rstress_XF = stress_components.at("xF_delayed_adhesion").particle_stress;
-		for (auto &inter: interaction) {
-			unsigned int i, j;
-			std::tie(i, j) = inter.get_par_num();
-			inter.delayed_adhesion->addUpStressXF(rstress_XF[i], rstress_XF[j], inter.rvec); // - rF_rep
-		}
-	}
+	// if (delayed_adhesion) {
+	// 	auto &rstress_XF = stress_components.at("xF_delayed_adhesion").particle_stress;
+	// 	addUpDelayedAdhesionStressXF(rstress_XF);
+	// }
 
-	if (p.confinement.on) {
+	if (p->confinement.on) {
 		vec3d yvec = {0, 1, 0};
 		auto &stress_XF = stress_components.at("xF_confinement").particle_stress;
 		auto &force = force_components.at("confinement").force;
 
 		for (unsigned i=0; i<stress_XF.size(); i++) {
 			if (force[i].y > 0) { // boundary at y_min
-				stress_XF[i] += outer_sym(-radius[i]*yvec, force[i]);
+				stress_XF[i] += outer_sym(-conf->radius[i]*yvec, force[i]);
 			} else {                                       // boundary at y_max
-				stress_XF[i] += outer_sym(radius[i]*yvec, force[i]);
+				stress_XF[i] += outer_sym(conf->radius[i]*yvec, force[i]);
 			}
 		}
 	}
 
-	if (brownian) {
+	if (p->brownian > 0) {
 		auto &bstress_predictor = stress_components.at("brownian_predictor").particle_stress;
 		auto &bstress = stress_components.at("brownian").particle_stress;
 
@@ -337,7 +252,7 @@ void System::getStressCouette(int i,
 							  double &stress_rt)
 {
 	// (0 xx, 1 xy, 2 xz, 3 yz, 4 yy, 5 zz)
-	vec3d pos_normal = position[i]-origin_of_rotation;
+	vec3d pos_normal = conf->position[i]-origin_of_rotation;
 	double r_dist = pos_normal.norm();
 	double ctheta = pos_normal.x/r_dist;
 	double stheta = pos_normal.z/r_dist;
@@ -355,19 +270,20 @@ void System::gatherStressesByRateDependencies(Sym2Tensor &rate_prop_stress,
 	rate_prop_stress.reset();
 	rate_indep_stress.reset();
 	for (const auto &sc: stress_components) {
-		if (sc.second.rate_dependence == RATE_INDEPENDENT) {
+		if (sc.second.rate_dependence == RateDependence::independent) {
 			rate_indep_stress += sc.second.getTotalStress();
 		}
-		if (sc.second.rate_dependence == RATE_PROPORTIONAL) {
+		if (sc.second.rate_dependence == RateDependence::proportional) {
 			rate_prop_stress += sc.second.getTotalStress();
 		}
 	}
+	double system_volume = getSystemVolume();
 	rate_prop_stress /= system_volume;
 	rate_indep_stress /= system_volume;
 
-	if (!zero_shear) {
+	if (!imposed_flow->zero_shear()) {
 		// suspending fluid viscosity
-		rate_prop_stress += 2*E_infinity/(6*M_PI);
+		rate_prop_stress += 2*imposed_flow->sym_grad_u/(6*M_PI);
 	}
 }
 
@@ -380,19 +296,20 @@ void System::calcStress()
 		auto &group = sc.second.group;
 		total_stress_groups[group] += sc.second.getTotalStress();
 	}
+	double system_volume = getSystemVolume();
 	for (auto &sc: total_stress_groups) {
 		sc.second /= system_volume;
 	}
 
-	if (!zero_shear) {
-		total_stress_groups["hydro"] += 2*E_infinity/(6*M_PI);
+	if (!imposed_flow->zero_shear()) {
+		total_stress_groups["hydro"] += 2*imposed_flow->sym_grad_u/(6*M_PI);
 	}
 
 	total_stress.reset();
 	for (const auto &sc: total_stress_groups) {
 		total_stress += sc.second;
 	}
-	if (brownian && brownian_dominated) {
+	if (p->brownian > 0) {
 		// take an averaged stress instead of instantaneous
 		stress_avg.update(total_stress, get_time());
 		total_stress = stress_avg.get();
@@ -400,10 +317,10 @@ void System::calcStress()
 
 	if (wall_rheology) {
 		if (z_top != -1) {
-			shearstress_wall1 = force_tang_wall1/lx;
-			shearstress_wall2 = force_tang_wall2/lx;
-			normalstress_wall1 = force_normal_wall1/lx;
-			normalstress_wall2 = force_normal_wall2/lx;
+			shearstress_wall1 = force_tang_wall1/container.lx;
+			shearstress_wall2 = force_tang_wall2/container.lx;
+			normalstress_wall1 = force_normal_wall1/container.lx;
+			normalstress_wall2 = force_normal_wall2/container.lx;
 		} else {
 			double wall_area_in = M_PI*2*(radius_in-radius_wall_particle);
 			double wall_area_out = M_PI*2*(radius_out+radius_wall_particle);

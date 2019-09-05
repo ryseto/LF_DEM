@@ -8,7 +8,7 @@ namespace Geometry {
 
 PairwiseConfig::PairwiseConfig(std::shared_ptr<ParticleConfig> config) :
 conf(config),
-velo(std::nullptr)
+velo(nullptr)
 // backgroung_velo(velinf)
 {}
 
@@ -23,10 +23,18 @@ LeesEdwardsPairwiseConfig::LeesEdwardsPairwiseConfig(std::shared_ptr<ParticleCon
 PairwiseConfig(config),
 lees(lebc)
 {
-	boxset = std::make_unique<Boxing::SimpleShearBoxSet>(max_interaction_range, 
-														 conf->position.size(), 
-														 *lees);
+	boxset = new Boxing::SimpleShearBoxSet(max_interaction_range, 
+										   conf->position.size(), 
+										   *lees);
+	// boxset = std::make_unique<Boxing::SimpleShearBoxSet>(max_interaction_range, 
+	// 													 conf->position.size(), 
+	// 													 *lees);
 	updateAfterParticleMove();
+}
+
+LeesEdwardsPairwiseConfig::~LeesEdwardsPairwiseConfig()
+{
+	delete boxset;
 }
 
 void LeesEdwardsPairwiseConfig::updateAfterParticleMove()
@@ -94,11 +102,22 @@ twodimension(krbc->getContainer().ly == 0)
 							container.ly,
 							2*dl*(num_z+1)+2*dl };
 	vec3d box_origin(dl*(num_x+2), 0, dl*(num_z+2));
-	boxset = std::make_unique<Boxing::ExtensionalShearBoxSet>(max_interaction_range, 
-															  box_origin, conf->position.size(), 
-															  container_ext_flow, 
-															  container.ly != 0);
+	boxset = new Boxing::ExtensionalShearBoxSet(max_interaction_range, 
+												box_origin, conf->position.size(), 
+												container_ext_flow, 
+												container.ly != 0);
+	// boxset = std::make_unique<Boxing::ExtensionalShearBoxSet>(max_interaction_range, 
+	// 														  box_origin, conf->position.size(), 
+	// 														  container_ext_flow, 
+	// 														  container.ly != 0);
+
+	krbc->setBoxSet(boxset, &container_ext_flow);
 	updateAfterParticleMove();
+}
+
+KraynikReineltPairwiseConfig::~KraynikReineltPairwiseConfig()
+{
+	delete boxset;
 }
 
 void KraynikReineltPairwiseConfig::updateAfterParticleMove()
@@ -113,7 +132,7 @@ void KraynikReineltPairwiseConfig::updateAfterParticleMove(unsigned i)
 	boxset->box(i, conf->position[i]);
 } 
 
-void KraynikReineltPairwiseConfig::updateAfterDeformation(unsigned i)
+void KraynikReineltPairwiseConfig::updateAfterDeformation()
 {
 	boxset->updateExtFlow(container_ext_flow, kr->ext_ax);	
 } 

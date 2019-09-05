@@ -26,6 +26,7 @@ class ContactDashpot;
 namespace Lub {
 class Lubrication;
 }
+class PotentialForce;
 class RepulsiveForce;
 class vanDerWaalsForce;
 namespace TActAdhesion {
@@ -61,6 +62,7 @@ protected:
 	friend Contact;
 	friend ContactDashpot;
 	friend Lub::Lubrication;
+	friend PotentialForce;
 	friend RepulsiveForce;
 	friend vanDerWaalsForce;
 	friend TActAdhesion::TimeActivatedAdhesion;

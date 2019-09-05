@@ -1,5 +1,4 @@
 #include "PotentialForce.h"
-#include "Interaction.h"
 
 namespace Interactions
 {
@@ -15,10 +14,7 @@ void PotentialForce::addUpStressXF(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1)
 	/**
 	 \brief Compute the XF stress associated with the repulsive force.
 
-	 \b NOTE: this method does not recompute the reduced force, this force must be first computed by calcReducedForce().
-	 This method however converts the force in the System units from the reduced force.
 	 */
-	calcScaledForce();
 	/* force_vector is force acting on particle 0
 	 * rvec is from particle 0 to particle 1
 	 */

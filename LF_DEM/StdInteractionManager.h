@@ -24,6 +24,8 @@ namespace Dynamics {
 	class PairwiseResistanceVelocitySolver;
 }
 
+class ForceComponent;
+
 namespace Interactions
 {
 
@@ -46,13 +48,20 @@ public:
 						  const std::vector <struct contact_state>& cs);
 	void checkNewInteractions();
 	void updateInteractions(double dt, ParticleVelocity *vel);
+	void updateInteractions(); // not for time evolution
+
 	double getMaxRelativeVelocity(ParticleVelocity *vel);
 
 	void declareForceComponents(std::map<std::string, ForceComponent> &force_components);
 	void setForceToParticle(const std::string &component, std::vector<vec3d> &force, std::vector<vec3d> &torque);
+	void addUpInteractionStressME(std::vector<Sym2Tensor> &stress_comp);
+	void addUpInteractionStressGU(std::vector<Sym2Tensor> &stress_comp, ParticleVelocity *vel);
+	void addUpContactStressXF(std::vector<Sym2Tensor> &cstress_XF, ParticleVelocity *vel);
+	void addUpContactSpringStressXF(std::vector<Sym2Tensor> &cstress_XF);
+	void addUpContactDashpotStressXF(std::vector<Sym2Tensor> &cstress_XF, ParticleVelocity *vel);
+	void addUpRepulsiveStressXF(std::vector<Sym2Tensor> &rstress_XF);
 
 	void setContacts(const std::vector <struct contact_state>& cs);
-
 	std::vector <struct contact_state> getContacts() const;
 	void saveState();
 	void restoreState();
@@ -87,6 +96,8 @@ private:
 };
 
 double maxRangeStdInteraction(const Parameters::ParameterSet &params, const std::vector<double> &radii);
+
+bool hasPairwiseResistance(const Parameters::ParameterSet &p);
 
 }
 #endif

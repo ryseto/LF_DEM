@@ -14,9 +14,9 @@ namespace BC {
 }
 
 namespace Boxing {
-	class BoxSet;
-	// class SimpleShearBoxSet;
-	// class ExtensionalShearBoxSet;
+	// class BoxSet;
+	class SimpleShearBoxSet;
+	class ExtensionalShearBoxSet;
 }
 namespace Geometry {
 
@@ -31,7 +31,6 @@ public:
 
 	virtual void getVelocities(unsigned i, unsigned j, struct PairVelocity &k) const = 0;
 	void setVelocityState(ParticleVelocity *vel);
-	std::unique_ptr<Boxing::BoxSet> boxset;
 protected:
 	PairwiseConfig(std::shared_ptr<ParticleConfig> config); 
 	std::shared_ptr<ParticleConfig> conf;
@@ -43,6 +42,7 @@ public:
 	LeesEdwardsPairwiseConfig(std::shared_ptr<ParticleConfig> config,
 							  std::shared_ptr<BC::LeesEdwardsBC> lebc,
 							  double max_interaction_range);
+	~LeesEdwardsPairwiseConfig();
 	void updateAfterParticleMove();
 	void updateAfterParticleMove(unsigned i);
 	void updateAfterDeformation();
@@ -53,7 +53,7 @@ public:
 
 private:
 	std::shared_ptr<BC::LeesEdwardsBC> lees;
-	// std::unique_ptr<Boxing::SimpleShearBoxSet> boxset;
+	Boxing::SimpleShearBoxSet *boxset;
 	vec3d getVelOffset(unsigned i, unsigned j) const;
 };
 
@@ -62,6 +62,7 @@ public:
 	KraynikReineltPairwiseConfig(std::shared_ptr<ParticleConfig> config, 
 								 std::shared_ptr<BC::KraynikReineltBC> krbc,
 								 double max_interaction_range);
+	~KraynikReineltPairwiseConfig();
 	void updateAfterParticleMove();
 	void updateAfterParticleMove(unsigned i);
 	void updateAfterDeformation();
@@ -69,7 +70,7 @@ public:
 	vec3d getSeparation(unsigned i, unsigned j) const;
 	const std::vector <int>& neighborhood(unsigned i) const;
 	void getVelocities(unsigned i, unsigned j, struct PairVelocity &k) const;
-	// std::unique_ptr<Boxing::ExtensionalShearBoxSet> boxset;
+	Boxing::ExtensionalShearBoxSet *boxset;
 
 private:
 	std::shared_ptr<BC::KraynikReineltBC> kr;

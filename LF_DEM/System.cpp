@@ -66,7 +66,6 @@ wagnerhash(time_t t, clock_t c)
 System::System(State::BasicCheckpoint chkp):
 np(0),
 clk(chkp.clock),
-shear_rheology(true),
 shear_type(ShearType::simple_shear),
 twodimension(false),
 control(Parameters::ControlVariable::rate),
@@ -193,10 +192,6 @@ void System::declareVelocityComponents()
 	}
 }
 
-bool System::hasPairwiseResistance() {
-	return Interactions::has_lubrication(p->lub) || Interactions::has_dashpot(p->contact);
-
-}
 void System::setConfiguration(const vector <vec3d>& initial_positions,
 							  const vector <double>& radii,
 							  const vector <double>& angles)
@@ -222,7 +217,6 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 		cerr << "np fixed " << p->np_fixed << endl;
 	}
 	radius_wall_particle = conf->radius[np-1];
-	setSystemVolume();
 
 	particle_volume = 0;
 	if (twodimension) {
@@ -260,7 +254,7 @@ void System::setupParameters()
 		stress_avg.setRelaxationTime(stress_avg_relaxation_parameter);
 		rate_prop_shearstress_rate1_ave.setRelaxationTime(p->brownian_relaxation_time);
 		rate_indep_shearstress_ave.setRelaxationTime(p->brownian_relaxation_time);
-		if (hasPairwiseResistance() && p->integration_method != 1) {
+		if (Interactions::hasPairwiseResistance(*p) && p->integration_method != 1) {
 			ostringstream error_str;
 			error_str << "Brownian simulation with multiplicative noise needs to use the Predictor-Corrector method." << endl;
 			error_str << "Modify the parameter file." << endl;
@@ -314,7 +308,7 @@ void System::setupGenericConfiguration(T config, Parameters::ControlVariable con
 		pairconf = std::make_shared<Geometry::LeesEdwardsPairwiseConfig>(conf, lees, max_range);
 	}
 
-	if (hasPairwiseResistance()) {
+	if (Interactions::hasPairwiseResistance(*p)) {
 		if (!mobile_fixed) {
 			res_solver = std::make_shared<Dynamics::PairwiseResistanceVelocitySolver>(p->sd_coeff, conf->radius);
 		} else {
@@ -329,7 +323,7 @@ void System::setupGenericConfiguration(T config, Parameters::ControlVariable con
 
 	cout << indent << "Setting up System... [ok]" << endl;
 	
-	interaction = std::make_shared<Interactions::StdInteractionManager>(np, conf, &vel_bg, &velgrad_bg, pairconf, p,
+	interaction = std::make_shared<Interactions::StdInteractionManager>(np, conf.get(), &vel_bg, &velgrad_bg, pairconf, p,
 																		 res_solver,
 																		 config.contact_states);
 	interaction->declareForceComponents(force_components);
@@ -441,7 +435,7 @@ struct base_configuration System::getBaseConfiguration() const
 	if (twodimension) {
 		config.angle = conf->angle;
 	}
-	config.contact_states = getContacts();
+	config.contact_states = interaction->getContacts();
 	return config;
 }
 
@@ -661,7 +655,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	in_predictor = true;
 	in_corrector = true;
 	if (!p->solvent_flow) {
-		if (!hasPairwiseResistance()) {
+		if (!Interactions::hasPairwiseResistance(*p)) {
 			computeNonAffineVelocitiesStokesDrag();
 		} else {
 			computeNonAffineVelocities(calc_stress, true);
@@ -707,7 +701,7 @@ void System::sflowIteration(bool calc_stress)
 	double diff_u = 0;
 	int cnt = 0;
 	do {
-		if (!hasPairwiseResistance()) {
+		if (!Interactions::hasPairwiseResistance(*p)) {
 			computeNonAffineVelocitiesStokesDrag();
 		} else {
 			computeNonAffineVelocities(calc_stress, true);
@@ -731,7 +725,7 @@ void System::sflowIteration(bool calc_stress)
 
 void System::sflowFiniteRe(bool calc_stress)
 {
-	if (!hasPairwiseResistance()) {
+	if (!Interactions::hasPairwiseResistance(*p)) {
 		computeNonAffineVelocitiesStokesDrag();
 	} else {
 		computeNonAffineVelocities(calc_stress, true);
@@ -806,7 +800,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	in_predictor = true;
 	in_corrector = false;
 
-	if (hasPairwiseResistance()) {
+	if (Interactions::hasPairwiseResistance(*p)) {
 		computeNonAffineVelocities(calc_stress, true); // divided velocities for stress calculation
 	} else {
 		computeNonAffineVelocitiesStokesDrag();
@@ -830,7 +824,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	/* corrector */
 	in_predictor = false;
 	in_corrector = true;
-	if (hasPairwiseResistance()) {
+	if (Interactions::hasPairwiseResistance(*p)) {
 		computeNonAffineVelocities(calc_stress, true);
 	} else {
 		computeNonAffineVelocitiesStokesDrag();
@@ -954,6 +948,11 @@ void System::timeStepMove(double time_end, double strain_end)
 		if (almost_equal(clk.cumulated_strain, kr->getStrainRetrim(), 2)) {
 			cerr << "clk.cumulated_strain = " << clk.cumulated_strain << endl;
 			kr->retrimProcess(conf->position, clk.cumulated_strain);
+			for (int i=0; i<np; i++) {
+				velocity.vel[i] -= vel_bg.vel[i];
+				vel_bg.vel[i] = imposed_flow->grad_u*conf->position[i];
+				velocity.vel[i] += vel_bg.vel[i];
+			}
 		}
 	}
 	interaction->checkNewInteractions();
@@ -1018,6 +1017,11 @@ void System::timeStepMoveCorrector()
 		if (almost_equal(clk.cumulated_strain, kr->getStrainRetrim(), 2)) {
 			cerr << "clk.cumulated_strain = " << clk.cumulated_strain << endl;
 			kr->retrimProcess(conf->position, clk.cumulated_strain);
+			for (int i=0; i<np; i++) {
+				velocity.vel[i] -= vel_bg.vel[i];
+				vel_bg.vel[i] = imposed_flow->grad_u*conf->position[i];
+				velocity.vel[i] += vel_bg.vel[i];
+			}
 		}
 	}
 	interaction->restoreState();
@@ -1368,7 +1372,7 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 		torque[i].z = sqrt_2_dt_amp*GRANDOM;
 	}
 
-	if (hasPairwiseResistance()) {
+	if (Interactions::hasPairwiseResistance(*p)) {
 		/* L*L^T = RFU
 		 */
 		res_solver->setSolverRHS(force, torque);
@@ -1948,7 +1952,7 @@ void System::displacement(int i, const vec3d& dr)
 		lees->periodize(conf->position[i]);
 	} else {
 		/**** extensional flow ****/
-		kr->periodize(i, conf->position[i], pairconf->boxset.get());
+		kr->periodize(i, conf->position[i]);
 	}
 	pairconf->updateAfterParticleMove(i);
 
@@ -1960,23 +1964,25 @@ void System::displacement(int i, const vec3d& dr)
 }
 
 
-void System::setSystemVolume()
+double System::getSystemVolume()
 {
 	string indent = "  System::\t";
+	double system_height, system_volume;
 	if (z_top == -1) {
-		system_height = lz;
+		system_height = container.lz;
 	} else {
 		/* wall particles are at z = z_bot - a and z_top + a
 		 */
 		system_height = z_top-z_bot;
 	}
 	if (twodimension) {
-		system_volume = lx*system_height;
-		cout << indent << "lx = " << lx << " lz = " << lz << " system_height = " << system_height << endl;
+		system_volume = container.lx*system_height;
+		cout << indent << "lx = " << container.lx << " lz = " << container.lz << " system_height = " << system_height << endl;
 	} else {
-		system_volume = lx*ly*system_height;
-		cout << indent << "lx = " << lx << " lz = " << lz << " ly = " << ly << endl;
+		system_volume = container.lx*container.ly*system_height;
+		cout << indent << "lx = " << container.lx << " lz = " << container.lz << " ly = " << container.ly << endl;
 	}
+	return system_volume;
 }
 
 void System::adjustContactModelParameters()
@@ -2009,33 +2015,33 @@ void System::adjustContactModelParameters()
 	overlap_avg.update(overlap, clk.cumulated_strain);
 	double max_disp_tan = evaluateMaxDispTan(*this);
 	max_disp_tan_avg.update(max_disp_tan, clk.cumulated_strain);
-	kn_avg.update(p->kn, clk.cumulated_strain);
-	kt_avg.update(p->kt, clk.cumulated_strain);
+	kn_avg.update(p->contact.kn, clk.cumulated_strain);
+	kt_avg.update(p->contact.kt, clk.cumulated_strain);
 
 	static double previous_cumulated_strain = 0;
 	double deltagamma = (clk.cumulated_strain-previous_cumulated_strain);
 	double kn_target = kn_avg.get()*overlap_avg.get()/p->overlap_target;
-	double dkn = (kn_target-p->kn)*deltagamma/p->memory_strain_k;
+	double dkn = (kn_target-p->contact.kn)*deltagamma/p->memory_strain_k;
 
-	p->kn += dkn;
-	if (p->kn < p->min_kn_auto_det) {
-		p->kn = p->min_kn_auto_det;
+	p->contact.kn += dkn;
+	if (p->contact.kn < p->min_kn_auto_det) {
+		p->contact.kn = p->min_kn_auto_det;
 	}
-	if (p->kn > p->max_kn_auto_det) {
-		p->kn = p->max_kn_auto_det;
+	if (p->contact.kn > p->max_kn_auto_det) {
+		p->contact.kn = p->max_kn_auto_det;
 	}
 	if (p->disp_tan_target != -1) {
 		double kt_target = kt_avg.get()*max_disp_tan_avg.get()/p->disp_tan_target;
-		double dkt = (kt_target-p->kt)*deltagamma/p->memory_strain_k;
-		p->kt += dkt;
-		if (p->kt < p->min_kt_auto_det) {
-			p->kt = p->min_kt_auto_det;
+		double dkt = (kt_target-p->contact.kt)*deltagamma/p->memory_strain_k;
+		p->contact.kt += dkt;
+		if (p->contact.kt < p->min_kt_auto_det) {
+			p->contact.kt = p->min_kt_auto_det;
 		}
-		if (p->kt > p->max_kt_auto_det) {
-			p->kt = p->max_kt_auto_det;
+		if (p->contact.kt > p->max_kt_auto_det) {
+			p->contact.kt = p->max_kt_auto_det;
 		}
 	} else {
-		p->kt = p->kn;
+		p->contact.kt = p->contact.kn;
 	}
 	adaptTimeStepWithVelocities();
 	if (dt < p->min_dt_auto_det) {
@@ -2050,21 +2056,11 @@ void System::adjustContactModelParameters()
 
 void System::resetContactModelParameer()
 {
-	for (auto &inter: *interaction) {
-		inter.contact.setSpringConstants();
-		inter.contact.setDashpotConstants();
-	}
-}
-
-double System::calcLubricationRange(int i, int j)
-{
-	double rad_ratio = radius[i]/radius[j];
-	if (rad_ratio < 2 && rad_ratio > 0.5) {
-		return (2+p->lub_max_gap)*0.5*(radius[i]+radius[j]);
-	} else {
-		double minradius = (radius[i]<radius[j] ? radius[i] : radius[j]);
-		return radius[i]+radius[j]+p->lub_max_gap*minradius;
-	}
+	throw std::runtime_error("System:: resetContactModelParameer() broken.");
+	// for (auto &inter: *interaction) {
+	// 	inter->contact->setSpringConstants(p->contact);
+	// 	inter->contact->setDashpotConstants();
+	// }
 }
 
 // void System::yaplotBoxing(std::ofstream &fout_boxing)
@@ -2147,36 +2143,36 @@ void System::countContactNumber()
 	n_contact.clear();
 	n_contact.resize(np, 0);
 	for (auto &inter: *interaction) {
-		if (inter.contact.is_active()) {
-			n_contact[inter.get_p0()] ++;
-			n_contact[inter.get_p1()] ++;
+		if (inter->contact) {
+			n_contact[inter->get_p0()] ++;
+			n_contact[inter->get_p1()] ++;
 		}
 	}
 	bool cn_change;
 	do {
 		cn_change = false;
 		for (auto &inter: *interaction) {
-			if (inter.contact.is_active()) {
-				if (n_contact[inter.get_p0()] == 1
-					&& n_contact[inter.get_p1()] == 1) {
+			if (inter->contact) {
+				if (n_contact[inter->get_p0()] == 1
+					&& n_contact[inter->get_p1()] == 1) {
 					/* If two particles are in contact with one bond,
 					 * these particles are isolated.
 					 * The contact will disappear.
 					 * Residual overlaps can be considered as numerical artifact.
 					 */
-					n_contact[inter.get_p0()] = 0;
-					n_contact[inter.get_p1()] = 0;
+					n_contact[inter->get_p0()] = 0;
+					n_contact[inter->get_p1()] = 0;
 					cn_change = true;
-				} else if (n_contact[inter.get_p0()] == 1
-						   || n_contact[inter.get_p1()] == 1) {
+				} else if (n_contact[inter->get_p0()] == 1
+						   || n_contact[inter->get_p1()] == 1) {
 					/*
 					 * If one particle has only one contacting neighbor,
 					 * the particle is a dead-end branch.
 					 * Removing them.
 					 * This iteration algortim removes them from the tip one by one.
 					 */
-					n_contact[inter.get_p0()] --;
-					n_contact[inter.get_p1()] --;
+					n_contact[inter->get_p0()] --;
+					n_contact[inter->get_p1()] --;
 					cn_change = true;
 				}
 			}
@@ -2211,7 +2207,7 @@ vec3d System::meanParticleAngVelocity()
 {
 	vec3d mean_ang_velocity(0);
 	for (int i=0; i<np_mobile; i++) {
-		mean_ang_velocity += ang_velocity[i];
+		mean_ang_velocity += velocity.ang_vel[i];
 	}
 	return mean_ang_velocity/np_mobile;
 	

@@ -111,10 +111,6 @@ private:
 	void computeForcesOnWallParticles();
 	void computeVelocityCoeffFixedParticles();
 	void rescaleVelHydroStressControlled();
-	void addUpInteractionStressGU(std::vector<Sym2Tensor> &stress_comp,
-								  const std::vector<vec3d> &non_affine_vel,
-								  const std::vector<vec3d> &non_affine_ang_vel);
-	void addUpInteractionStressME(std::vector<Sym2Tensor> &stress_comp);
 	void sflowFiniteRe(bool calc_stress);
 	void sflowIteration(bool calc_stress);
 	void computeMaxNAVelocity();
@@ -169,9 +165,6 @@ private:
 	std::shared_ptr<Geometry::ImposedDeformation> imposed_flow;
 	std::shared_ptr<Geometry::PairwiseConfig> pairconf;
 	std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> res_solver;
-
-	//	bool ext_flow;
-	bool shear_rheology;
 
 	// Simulation parameters
 	bool twodimension;
@@ -264,7 +257,7 @@ private:
 	std::list <Event> events;
 	
 	/****************************************/
-	void setSystemVolume();
+	double getSystemVolume();
 	void setContacts(const std::vector <struct contact_state>& cs);
 	std::vector <struct contact_state> getContacts() const;
 	struct base_configuration getBaseConfiguration() const;
@@ -281,10 +274,8 @@ private:
 	void calcStress();
 	void calcStressPerParticle();
 	void calcContactXFPerParticleStressControlled();
-	void gatherVelocitiesByRateDependencies(std::vector<vec3d> &rateprop_vel,
-											std::vector<vec3d> &rateprop_ang_vel,
-											std::vector<vec3d> &rateindep_vel,
-											std::vector<vec3d> &rateindep_ang_vel) const;
+	void gatherVelocitiesByRateDependencies(ParticleVelocity &rateprop_vel,
+												ParticleVelocity &rateindep_vel) const;
 	void calcTotalStressPerParticle();
 	void getStressCouette(int i,
 						  double &stress_rr,

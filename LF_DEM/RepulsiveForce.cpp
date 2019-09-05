@@ -74,11 +74,11 @@ double RepulsiveForce::calcEnergy() const
 	double gap = interaction->getGap();
 	if (gap > 0) {
 		/* separating */
-		if (max_length == -1) {
+		if (p.max_length == -1) {
 			energy = geometric_factor*p.screening_length*exp(-gap/p.screening_length);
 		} else {
 			// This energy is not exact one to generate the cut-offed repulsive force.
-			energy = geometric_factor*p.screening_length*exp(-gap/p.screening_length)*0.5*(1+tanh(-(gap-max_length)/p.smoothing));
+			energy = geometric_factor*p.screening_length*exp(-gap/p.screening_length)*0.5*(1+tanh(-(gap-p.max_length)/p.smoothing));
 		}
 		//		reduced_force_vector = -force_norm*interaction->nvec;
 	} else {

@@ -357,7 +357,7 @@ void Simulation::setupSimulation(string in_args,
 		sys.target_stress = target_stress_input/6/M_PI; //@@@
 	}
 	sys.p = PFactory.getParameterSet();
-	if (sys.shear_rheology) {
+	if (sys.shear_type == ShearType::simple_shear || sys.shear_type == ShearType::extensional_flow) {
 		if (sys.p.flow_type == "extension") {
 			sys.simu_type = sys.SimulationType::extensional_flow;
 		} else {
@@ -391,7 +391,7 @@ void Simulation::setupSimulation(string in_args,
 	
 	p_initial = sys.p;
 	
-	sys.resetContactModelParameer(); //@@@@ temporary repair
+	// sys.resetContactModelParameer(); //@@@@ temporary repair // @@@ still needed??
 
 	if (sys.simu_type == sys.SimulationType::simple_shear) {
 		// simple shear
@@ -511,7 +511,7 @@ string Simulation::prepareSimulationName(bool binary_conf,
 	// }
 	string_control_parameters << control_value.value << Dimensional::unit2suffix(control_value.unit);
 	ss_simu_name << string_control_parameters.str();
-	if (sys.shear_rheology) {
+	if (sys.shear_type == ShearType::simple_shear || sys.shear_type == ShearType::extensional_flow) {
 		ss_simu_name << "_" << sys.p.flow_type;
 	}
 	if (simu_identifier != "") {

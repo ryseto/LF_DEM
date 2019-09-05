@@ -16,7 +16,7 @@ interaction(interaction_),
 friction_model(p.friction_model)
 {
 	if (norm_dashpot_coeff != 0 || tan_dashpot_coeff != 0) {
-		dashpot = std::make_unique<ContactDashpot>(interaction_, norm_dashpot_coeff, tan_dashpot_coeff);
+		dashpot = std::unique_ptr<ContactDashpot>(new ContactDashpot (interaction_, norm_dashpot_coeff, tan_dashpot_coeff));
 	}
 
 	switch (friction_model) {
@@ -187,7 +187,7 @@ void Contact::calcContactSpringForce()
 	}
 }
 
-vec3d Contact::getTotalForce(const vec3d &v0, const vec3d &v1, const vec3d &ang_v0, const vec3d &ang_v1) const
+vec3d Contact::getTotalForce(const PairVelocity &pvel) const
 {
 	/**
 		\brief Compute the total contact forces (spring+dashpot).
@@ -196,7 +196,7 @@ vec3d Contact::getTotalForce(const vec3d &v0, const vec3d &v1, const vec3d &ang_
 		@@@ It seems this affects only visualization data
 		*/
 	if (dashpot) {
-		return f_spring_total + dashpot->getForceOnP0(v0, v1, ang_v0, ang_v1);
+		return f_spring_total + dashpot->getForceOnP0(pvel);
 	} else {
 		return f_spring_total;
 	}
@@ -409,20 +409,20 @@ void Contact::addUpForceTorque(std::vector<vec3d> &force_per_particle,
 	}
 }
 
-void Contact::calcContactStress(const vec3d &v0, const vec3d &v1, const vec3d &ang_v0, const vec3d &ang_v1)
+void Contact::calcContactStress(const PairVelocity &pvel)
 {
 	/**
 	 * The "xF" contact stress.
 	 * The contact force F includes both the spring force and the dashpot force.
 	 */
-	contact_stresslet_XF = outer_sym(interaction->rvec, getTotalForce(v0, v1, ang_v0, ang_v1));
+	contact_stresslet_XF = outer_sym(interaction->rvec, getTotalForce(pvel));
 		// contact_stresslet_XF = outer_sym(interaction->rvec, f_spring_normal);
 }
 
 void Contact::addUpStress(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1,
-						  const vec3d &v0, const vec3d &v1, const vec3d &ang_v0, const vec3d &ang_v1)
+						  const PairVelocity &pvel)
 {
-	calcContactStress(v0, v1, ang_v0, ang_v1);
+	calcContactStress(pvel);
 	double r_ij = interaction->a0 + interaction->a1;
 	stress_p0 += (interaction->a0/r_ij)*contact_stresslet_XF;
 	stress_p1 += (interaction->a1/r_ij)*contact_stresslet_XF;
@@ -435,6 +435,16 @@ void Contact::addUpStressSpring(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1) co
 	double r_ij = interaction->a0 + interaction->a1;
 	stress_p0 += (interaction->a0/r_ij)*spring_stress;
 	stress_p1 += (interaction->a1/r_ij)*spring_stress;
+}
+
+void Contact::addUpStressDashpot(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1, 
+								 const PairVelocity &pvel) const
+{
+	Sym2Tensor dashpot_stress;
+	dashpot_stress = outer_sym(interaction->rvec, dashpot->getForceOnP0(pvel));
+	double r_ij = interaction->a0 + interaction->a1;
+	stress_p0 += (interaction->a0/r_ij)*dashpot_stress;
+	stress_p1 += (interaction->a1/r_ij)*dashpot_stress;
 }
 
 double Contact::calcEnergy() const
@@ -455,9 +465,9 @@ double Contact::calcEnergy() const
 	return energy;
 }
 
-double Contact::getNormalForceValue(const vec3d &v0, const vec3d &v1, const vec3d &ang_v0, const vec3d &ang_v1) const
+double Contact::getNormalForceValue(const struct PairVelocity &vel) const
 {
-	return dot(interaction->nvec, getTotalForce(v0, v1, ang_v0, ang_v1));
+	return dot(interaction->nvec, getTotalForce(vel));
 }
 
 double Contact::getNormalSpringForce() const
@@ -475,9 +485,9 @@ double Contact::get_normal_load() const
 	return normal_load;
 }
 
-vec3d Contact::getTangentialForce(const vec3d &v0, const vec3d &v1, const vec3d &ang_v0, const vec3d &ang_v1) const
+vec3d Contact::getTangentialForce(const struct PairVelocity &vel) const
 {
-	vec3d total_force = getTotalForce(v0, v1, ang_v0, ang_v1);
+	vec3d total_force = getTotalForce(vel);
 	return total_force-dot(interaction->nvec, total_force)*interaction->nvec;
 }
 

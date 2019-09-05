@@ -5,6 +5,9 @@
 #include <vector>
 #include <string>
 
+#include "ForceComponent.h"
+
+
 namespace Interactions
 {
 
@@ -15,7 +18,7 @@ public:
 		interactions_pp(np),
 		particle_partners(np) {};
 	virtual void checkNewInteractions() = 0;
-	virtual void updateInteractions(double dt) = 0;
+	// virtual void updateInteractions(double dt) = 0;
 	virtual void declareForceComponents(std::map<std::string, ForceComponent> &force_components) = 0;
 	virtual void setForceToParticle(const std::string &component, std::vector<vec3d> &force, std::vector<vec3d> &torque) = 0;
 

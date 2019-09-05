@@ -16,6 +16,10 @@
 #define __LF_DEM__SimpleShearBoxSet__
 #include "BoxSet.h"
 
+namespace BC {
+	class LeesEdwardsBC;
+}
+
 namespace Boxing {
 
 

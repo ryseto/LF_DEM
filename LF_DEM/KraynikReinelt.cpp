@@ -1,9 +1,10 @@
 #include <iostream>
 #include "KraynikReinelt.h"
+#include "ExtensionalShearBoxSet.h"
 
 namespace BC {
 
-KraynikReineltBC::KraynikReineltBC(box3d sysbox, double magic_angle, 
+KraynikReineltBC::KraynikReineltBC(Geometry::box3d sysbox, double magic_angle, 
 								   std::shared_ptr<Geometry::ImposedDeformation> imposed_deformation) :
 container(sysbox),
 deformation(imposed_deformation)
@@ -19,6 +20,12 @@ deformation(imposed_deformation)
 	sq_sin_ma = sin_ma*sin_ma;
 	cos_ma_sin_ma = cos_ma*sin_ma;
 	updateH(0); // cumulated_strain = 0
+}
+
+void KraynikReineltBC::setBoxSet(Boxing::ExtensionalShearBoxSet *bxset, struct Geometry::box3d *_container_ext_flow)
+{
+	boxset = bxset;
+	container_ext_flow = _container_ext_flow;
 }
 
 void KraynikReineltBC::updateH(double cumulated_strain)
@@ -71,17 +78,14 @@ void KraynikReineltBC::retrimProcess(std::vector<vec3d> &position,
 	std::cerr << "retrim" << std::endl;
 	strain_retrim += strain_retrim_interval;
 	updateH(cumulated_strain);
-	for (int i=0; i<position.size(); i++) {
+	for (unsigned i=0; i<position.size(); i++) {
 		retrim(position[i]);
-		boxset.box(i, position[i]);
-		velocity[i] -= u_inf[i];
-		u_inf[i] = imposed_flow.grad_u*position[i];
-		velocity[i] += u_inf[i];
+		boxset->box(i, position[i]);
 	}
-	boxset.updateExtFlow(container_ext_flow, ext_ax);
+	boxset->updateExtFlow(*container_ext_flow, ext_ax);
 }
 
-void KraynikReineltBC::periodize(unsigned i, vec3d &pos, bool &pd_transport, Boxing::BoxSet *boxset) const
+void KraynikReineltBC::periodize(unsigned i, vec3d &pos, bool &pd_transport) const
 {
 	if (boxset->boxType(i) != 1) {
 		vec3d s = deform_backward*pos;
@@ -111,7 +115,7 @@ void KraynikReineltBC::periodize(unsigned i, vec3d &pos, bool &pd_transport, Box
 	}
 }
 
-void KraynikReineltBC::periodize(unsigned i, vec3d &pos, Boxing::BoxSet *boxset) const
+void KraynikReineltBC::periodize(unsigned i, vec3d &pos) const
 {
 	if (boxset->boxType(i) != 1) {
 		vec3d s = deform_backward*pos;

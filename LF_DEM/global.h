@@ -12,9 +12,6 @@
 #include <vector>
 #include "vec3d.h"
 
-#define RATE_INDEPENDENT 0
-#define RATE_DEPENDENT 1
-#define RATE_PROPORTIONAL 2
 #define VELOCITY_STRESS 0
 #define STRAIN_STRESS 1
 #define XF_STRESS 2

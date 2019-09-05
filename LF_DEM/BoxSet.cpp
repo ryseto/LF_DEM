@@ -13,11 +13,6 @@ void BoxSet::allocateBoxes()
 	box_labels.resize(box_nb);
 }
 
-BoxSet::~BoxSet()
-{
-	Boxes.clear();
-}
-
 bool BoxSet::is_boxed() const
 {
 	return _is_boxed;

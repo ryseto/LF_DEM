@@ -7,6 +7,7 @@
 #include "global.h"
 #include "Contact.h"
 #include "Configuration.h"
+#include "System.h"
 
 
 std::pair<std::vector <vec3d>, std::vector <double>> readPositionsBStream(std::istream &input, unsigned int np)
@@ -172,7 +173,7 @@ struct base_shear_configuration readBinaryBaseShearConfiguration_old(const std::
 		c.angle.resize(c.position.size(), 0);
 	}
 
-	c.contact_states = Contact_ios::readStatesBStream(input, np);
+	c.contact_states = Interactions::Contact_ios::readStatesBStream(input, np);
 	return c;
 }
 
@@ -233,7 +234,7 @@ struct base_configuration readBinaryBaseConfiguration(std::ifstream &input)
 			c.angle.push_back(a_);
 		}
 	}
-	c.contact_states = Contact_ios::readStatesBStream(input, np);
+	c.contact_states = Interactions::Contact_ios::readStatesBStream(input, np);
 	return c;
 }
 
@@ -264,7 +265,7 @@ void writeBinaryBaseConfiguration(std::ofstream &conf_export, const struct base_
 	for (unsigned i=0; i<conf.position.size(); i++) {
 		conf_export.write((char*)&pos[i][0], dims*sizeof(double));
 	}
-	Contact_ios::writeStatesBStream(conf_export, conf.contact_states);
+	Interactions::Contact_ios::writeStatesBStream(conf_export, conf.contact_states);
 }
 
 std::vector<vec3d> readBinaryFixedVelocities(std::ifstream &input)
@@ -319,7 +320,7 @@ struct delayed_adhesion_configuration readBinaryDelayedAdhesionConfiguration(std
 	input.read((char*)&fmt, sizeof(format_type));
 
 	c.base = readBinaryBaseConfiguration(input);
-	c.adhesion_states = TActAdhesion::readStatesBStream(input);
+	c.adhesion_states = Interactions::TActAdhesion::readStatesBStream(input);
 	c.lees_edwards_disp.reset();
 	input.read((char*)&c.lees_edwards_disp.x, sizeof(double));
 	input.read((char*)&c.lees_edwards_disp.y, sizeof(double));
@@ -362,7 +363,7 @@ struct fixed_velo_configuration readBinaryFixedVeloConfigurationOld(const std::s
 		c.fixed_velocities.push_back(vec3d(vx_, vy_, vz_));
 	}
 
-	c.contact_states = Contact_ios::readStatesBStream(input, np);
+	c.contact_states = Interactions::Contact_ios::readStatesBStream(input, np);
 	return c;
 }
 
@@ -429,12 +430,14 @@ void outputBinaryConfiguration(const System &sys,
 
 	writeBinaryBaseConfiguration(conf_export, sys.getBaseConfiguration());
 	if (format == ConfFileFormat::bin_format_fixed_vel_shear) {
-		writeBinaryFixedVelocities(conf_export, sys.fixed_velocities);
+		if (sys.res_solver->velo_assignor) {
+			writeBinaryFixedVelocities(conf_export, sys.res_solver->velo_assignor->getFixedVel().vel);
+		}
 	}
 	
 	if (format == ConfFileFormat::bin_delayed_adhesion) {
-		TActAdhesion::writeStatesBStream(conf_export,
-										 sys.interaction);
+		Interactions::TActAdhesion::writeStatesBStream(conf_export,
+										 			   *(sys.interaction));
 	}
 
 	conf_export.write((char*)&(sys.shear_disp.x), sizeof(double));

@@ -21,6 +21,7 @@
 #include "MatrixBlocks.h"
 #include "LubricationCoefficients.h"
 #include "LubricationParams.h"
+#include "PairVelocity.h"
 
 
 namespace Interactions {
@@ -77,16 +78,12 @@ private:
 	void updateResistanceCoeff();
 
 	//===== forces/stresses  ========================== //
-	vec3d getTotalForce(const vec3d &na_v0, 
-						const vec3d &na_v1, 
-						const vec3d &na_ang_v0, 
-						const vec3d &na_ang_v1,
+	vec3d getTotalForce(const struct PairVelocity &vel, 
 						const Sym2Tensor &E_inf) const;
 	void addMEStresslet(const Sym2Tensor& E_inf,
 						Sym2Tensor& stresslet_i,
 						Sym2Tensor& stresslet_j) const;
-	void addGUStresslet(const vec3d& vi, const vec3d& vj,
-						const vec3d& oi, const vec3d& oj,
+	void addGUStresslet(const struct PairVelocity &vel, 
 						Sym2Tensor& stresslet_i, Sym2Tensor& stresslet_j) const;
 
 	std::tuple<vec3d,vec3d> calcGE(const Sym2Tensor& E_inf) const;

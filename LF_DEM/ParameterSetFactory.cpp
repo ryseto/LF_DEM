@@ -84,7 +84,6 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(lub.max_gap, 0.5),
 		PARAM_INIT(lub.regularization_length, 1e-3),
 		PARAM_INIT(sd_coeff, 1),
-		PARAM_INIT(interaction_range, -1),
 		PARAM_INIT(repulsion.screening_length, 0.05),
 		PARAM_INIT(repulsion.max_length, -1),
 		PARAM_INIT(repulsion.smoothing, 5e-3),
@@ -471,7 +470,7 @@ ParameterSet ParameterSetFactory::getParameterSet() const
 		inp.exportToParameterSet(p, inp);
 	}
 
-	Interactions::setupLubricationParameters(p.lub);
+	Interactions::Lub::setupLubricationParameters(p.lub);
 	Interactions::setupContactParameters(p.contact);
 
 	return p;

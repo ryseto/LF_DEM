@@ -1,9 +1,10 @@
 #include <string>
 #include "SimpleShearBoxSet.h"
+#include "LeesEdwards.h"
 
 namespace Boxing {
 
-SimpleShearBoxSet::SimpleShearBoxSet(double interaction_dist, unsigned np, const Geometry::LeesEdwardsBC &lees)
+SimpleShearBoxSet::SimpleShearBoxSet(double interaction_dist, unsigned np, const BC::LeesEdwardsBC &lees)
 {
 	std::string indent = "  BoxSet::\t";
 	std::cout << indent << "Setting up Cell List System ... ";
@@ -97,7 +98,7 @@ void SimpleShearBoxSet::positionBoxes()
 	}
 }
 
-void SimpleShearBoxSet::assignNeighborsBulk(const Geometry::LeesEdwardsBC &lees)
+void SimpleShearBoxSet::assignNeighborsBulk(const BC::LeesEdwardsBC &lees)
 {
 	for (auto& bx : BulkBoxes) {
 		auto pos = bx->getPosition();
@@ -116,7 +117,7 @@ void SimpleShearBoxSet::assignNeighborsBulk(const Geometry::LeesEdwardsBC &lees)
 	}
 }
 
-void SimpleShearBoxSet::assignNeighborsBottom(const Geometry::LeesEdwardsBC &lees)
+void SimpleShearBoxSet::assignNeighborsBottom(const BC::LeesEdwardsBC &lees)
 {
 	for (auto& bx : BottomBoxes) {
 		auto pos = bx->getPosition();
@@ -140,7 +141,7 @@ void SimpleShearBoxSet::assignNeighborsBottom(const Geometry::LeesEdwardsBC &lee
 	}
 }
 
-void SimpleShearBoxSet::assignNeighborsTop(const Geometry::LeesEdwardsBC &lees)
+void SimpleShearBoxSet::assignNeighborsTop(const BC::LeesEdwardsBC &lees)
 {
 	for (auto& bx : TopBoxes) {
 		auto pos = bx->getPosition();
@@ -164,7 +165,7 @@ void SimpleShearBoxSet::assignNeighborsTop(const Geometry::LeesEdwardsBC &lees)
 	}
 }
 
-void SimpleShearBoxSet::assignNeighborsTopBottom(const Geometry::LeesEdwardsBC &lees)
+void SimpleShearBoxSet::assignNeighborsTopBottom(const BC::LeesEdwardsBC &lees)
 {
 	for (auto& bx : TopBottomBoxes) {
 		auto pos = bx->getPosition();
@@ -189,7 +190,7 @@ void SimpleShearBoxSet::assignNeighborsTopBottom(const Geometry::LeesEdwardsBC &
 }
 
 
-void SimpleShearBoxSet::assignNeighbors(const Geometry::LeesEdwardsBC &lees)
+void SimpleShearBoxSet::assignNeighbors(const BC::LeesEdwardsBC &lees)
 {
 	// bulk boxes
 	assignNeighborsBulk(lees);
@@ -207,7 +208,7 @@ void SimpleShearBoxSet::assignNeighbors(const Geometry::LeesEdwardsBC &lees)
  At each time step, we need to check if neighborhood on top and bottom boxes have changed.
  Bulk boxes do not need to be updated.
  *****/
-void SimpleShearBoxSet::updateNeighbors(const Geometry::LeesEdwardsBC &lees)
+void SimpleShearBoxSet::updateNeighbors(const BC::LeesEdwardsBC &lees)
 {
 	/**
 	 \brief Update the neighbors of top and bottom boxes have changed.
@@ -245,7 +246,7 @@ void SimpleShearBoxSet::updateNeighbors(const Geometry::LeesEdwardsBC &lees)
 
 
 //public methods
-void SimpleShearBoxSet::update(const Geometry::LeesEdwardsBC &lees)
+void SimpleShearBoxSet::update(const BC::LeesEdwardsBC &lees)
 {
 	if (is_boxed()) {
 		updateNeighbors(lees);

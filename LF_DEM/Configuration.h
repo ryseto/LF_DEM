@@ -35,7 +35,7 @@ struct base_configuration {
 	std::vector <double> radius;
 	std::vector <double> angle;
 
-	std::vector <struct contact_state> contact_states;
+	std::vector <struct Interactions::contact_state> contact_states;
 };
 
 struct base_shear_configuration {
@@ -47,7 +47,7 @@ struct base_shear_configuration {
 	std::vector <double> radius;
 	std::vector <double> angle;
 
-	std::vector <struct contact_state> contact_states;
+	std::vector <struct Interactions::contact_state> contact_states;
 };
 
 struct fixed_velo_configuration {
@@ -63,7 +63,7 @@ struct fixed_velo_configuration {
 	std::vector <double> angle;
 	std::vector<vec3d> fixed_velocities;
 
-	std::vector <struct contact_state> contact_states;
+	std::vector <struct Interactions::contact_state> contact_states;
 };
 
 struct delayed_adhesion_configuration {
@@ -86,7 +86,7 @@ struct circular_couette_configuration {
 	std::vector <double> radius;
 	std::vector <double> angle;
 
-	std::vector <struct contact_state> contact_states;
+	std::vector <struct Interactions::contact_state> contact_states;
 };
 
 ConfFileFormat getBinaryConfigurationFileFormat(const std::string& filename_import_positions);

@@ -1,6 +1,5 @@
 #include "StdInteractionManager.h"
 #include "StdInteraction.h"
-#include "Dimer.h"
 #include "PairwiseConfig.h"
 #include "ParameterSet.h"
 
@@ -148,11 +147,31 @@ void StdInteractionManager::updateInteractions(double dt, ParticleVelocity *vel)
 	}
 }
 
+void StdInteractionManager::updateInteractions()
+{
+	/**
+	 \brief Updates the state of active interactions in absence of time evolution.
+	 */
+	unsigned i, j;
+	struct PairVelocity pvel;
+	for (unsigned k=0; k<interactions.size(); k++) {
+		bool deactivated = false;
+		std::tie(i, j) = interactions[k]->get_par_num();
+		interactions[k]->updateState(pvel,
+									 pdist->getSeparation(i, j), 
+									 0,
+									 deactivated);
+		if (deactivated) {
+			removeInteraction(k);
+		}
+	}
+}
+
 void StdInteractionManager::saveState()
 {
 	for (auto &inter: interactions) {
 		if (inter->contact) {
-			inter->contact.saveState();
+			inter->contact->saveState();
 		}
 	}
 }
@@ -161,7 +180,7 @@ void StdInteractionManager::restoreState()
 {
 	for (auto &inter: interactions) {
 		if (inter->contact) {
-			inter->contact.restoreState();
+			inter->contact->restoreState();
 		}
 	}
 }
@@ -187,13 +206,13 @@ double StdInteractionManager::getMaxRelativeVelocity(ParticleVelocity *vel)
 			max_velocity = normal_velocity;
 		}
 		if (friction) {
-			normal_velocity = inter->contact.getSlidingVelocity(vel).norm();
+			normal_velocity = inter->contact->getSlidingVelocity(pvel).norm();
 			if (normal_velocity > max_velocity) {
 				max_velocity = normal_velocity;
 			}
 		}
 		if (rolling) {
-			normal_velocity = inter->contact.getRollingVelocity(vel).norm();
+			normal_velocity = inter->contact->getRollingVelocity(pvel).norm();
 			if (normal_velocity > max_velocity) {
 				max_velocity = normal_velocity;
 			}
@@ -213,7 +232,8 @@ void StdInteractionManager::declareForceComponents(std::map<std::string, ForceCo
 	bool torque = true;
 
 	/******* Contact force, spring part ***********/
-	if (Interactions::has_friction(p.contact.friction_model)) {
+	unsigned np = conf->position.size();
+	if (Interactions::has_friction(p->contact.friction_model)) {
 		force_components["contact"] = ForceComponent(np, RateDependence::independent, torque);
 		declared_forces.push_back("contact");
 	} else {
@@ -221,31 +241,31 @@ void StdInteractionManager::declareForceComponents(std::map<std::string, ForceCo
 		declared_forces.push_back("contact");
 	}
 	
-	if (Interactions::has_dashpot(p.contact)) {
+	if (Interactions::has_dashpot(p->contact)) {
 		/******* Contact force, dashpot part, U_inf only, i.e. R_FU^{dashpot}.U_inf ***********/
 		force_components["dashpot"] = ForceComponent(np, RateDependence::proportional, torque);
 		declared_forces.push_back("dashpot");
 	}
 
 	/*********** Hydro force, i.e.  R_FE:E_inf *****************/
-	if (p.lubrication_model == "normal") {
+	if (p->lub.model == "normal") {
 		force_components["hydro"] = ForceComponent(np, RateDependence::proportional, !torque);
 		declared_forces.push_back("hydro");
 	}
-	if (p.lubrication_model == "tangential") {
+	if (p->lub.model == "tangential") {
 		force_components["hydro"] = ForceComponent(np, RateDependence::proportional, torque);
 		declared_forces.push_back("hydro");
 	}
 	
-	if (Interactions::has_repulsion(p.repulsion)) {
+	if (Interactions::has_repulsion(p->repulsion)) {
 		force_components["repulsion"] = ForceComponent(np, RateDependence::independent, !torque);
 		declared_forces.push_back("repulsion");
 	}
 
-	if (Interactions::has_TActAdhesion(p.TA_adhesion)) {
-		force_components["delayed_adhesion"] = ForceComponent(np, RateDependence::independent, !torque);
-		declared_forces.push_back("delayed_adhesion");
-	}
+	// if (Interactions::has_TActAdhesion(p->TA_adhesion)) {
+	// 	force_components["delayed_adhesion"] = ForceComponent(np, RateDependence::independent, !torque);
+	// 	declared_forces.push_back("delayed_adhesion");
+	// }
 }
 
 void StdInteractionManager::setForceToParticle(const std::string &component, std::vector<vec3d> &force, std::vector<vec3d> &torque)
@@ -255,10 +275,10 @@ void StdInteractionManager::setForceToParticle(const std::string &component, std
 	} else if (component == "dashpot") {
 		setDashpotForceToParticle(force, torque);
 	} else if (component == "hydro") {
-		if (p.lubrication_model == "normal") {
+		if (p->lub.model == "normal") {
 			setHydroForceToParticle_squeeze(force, torque);
 		}
-		if (p.lubrication_model == "tangential") {
+		if (p->lub.model == "tangential") {
 			setHydroForceToParticle_squeeze_tangential(force, torque);
 		}
 	} else if (component == "repulsion") {
@@ -429,20 +449,112 @@ std::vector <struct contact_state> StdInteractionManager::getContacts() const
 	return cs;
 }
 
+void StdInteractionManager::addUpInteractionStressME(std::vector<Sym2Tensor> &stress_comp)
+{
+	for (const auto &inter: interactions) {
+		if (inter->lubrication) {
+			unsigned int i, j;
+			std::tie(i, j) = inter->get_par_num();
+			inter->lubrication->addMEStresslet(0.5*(Einf->E[i] + Einf->E[j]),
+											 stress_comp[i],
+											 stress_comp[j]); // R_SE:Einf-R_SU*v
+		}
+	}
+}
+
+void StdInteractionManager::addUpInteractionStressGU(std::vector<Sym2Tensor> &stress_comp,
+													 ParticleVelocity *vel)
+{
+	struct PairVelocity pvel;
+	pdist->setVelocityState(vel);
+	for (const auto &inter: interactions) {
+		if (inter->lubrication) {
+			unsigned int i, j;
+			std::tie(i, j) = inter->get_par_num();
+			pdist->getVelocities(i, j, pvel);
+			inter->lubrication->addGUStresslet(pvel, stress_comp[i], stress_comp[j]);
+		}
+	}
+}
+
+void StdInteractionManager::addUpContactStressXF(std::vector<Sym2Tensor> &cstress_XF, ParticleVelocity *vel)
+{
+	struct PairVelocity pvel;
+	pdist->setVelocityState(vel);
+	for (auto &inter: interactions) {
+		if (inter->contact) {
+			unsigned int i, j;
+			std::tie(i, j) = inter->get_par_num();
+			pdist->getVelocities(i, j, pvel);
+			inter->contact->addUpStress(cstress_XF[i], cstress_XF[j], pvel); // - rF_cont
+		}
+	}
+}
+
+void StdInteractionManager::addUpContactSpringStressXF(std::vector<Sym2Tensor> &cstress_XF)
+{
+	for (const auto &inter: interactions) {
+		if (inter->contact) {
+			unsigned int i, j;
+			std::tie(i, j) = inter->get_par_num();
+			inter->contact->addUpStressSpring(cstress_XF[i], cstress_XF[j]); // - rF_cont
+		}
+	}
+}
+
+void StdInteractionManager::addUpContactDashpotStressXF(std::vector<Sym2Tensor> &cstress_XF, ParticleVelocity *vel)
+{
+	struct PairVelocity pvel;
+	pdist->setVelocityState(vel);
+	for (const auto &inter: interactions) {
+		if (inter->contact) {
+			if (inter->contact->dashpot) {
+				unsigned int i, j;
+				std::tie(i, j) = inter->get_par_num();
+				pdist->getVelocities(i, j, pvel);
+				inter->contact->addUpStressDashpot(cstress_XF[i], cstress_XF[j], pvel); // - rF_cont
+			}
+		}
+	}
+}
+
+void StdInteractionManager::addUpRepulsiveStressXF(std::vector<Sym2Tensor> &rstress_XF)
+{
+	for (auto &inter: interactions) {
+		if (inter->repulsion) {
+			unsigned int i, j;
+			std::tie(i, j) = inter->get_par_num();
+			inter->repulsion->addUpStressXF(rstress_XF[i], rstress_XF[j]); // - rF_rep
+		}
+	}
+}
+
+// void StdInteractionManager::addUpDelayedAdhesionStressXF(std::vector<Sym2Tensor> &rstress_XF)
+// {
+// 	for (auto &inter: interactions) {
+// 		if (inter->delayed_adhesion) {
+// 			unsigned int i, j;
+// 			std::tie(i, j) = inter.get_par_num();
+// 			inter->delayed_adhesion->addUpStressXF(rstress_XF[i], rstress_XF[j], inter->rvec); // - rF_rep
+// 		}
+// 	}
+// }
+
+
 double maxRangeStdInteraction(const Parameters::ParameterSet &params, const std::vector<double> &radii)
 {
 	double max_range = 0;
-	for (auto r1: radius) {
-		for (auto r2: radius) {
-			auto range = calcContactRange(conf->radius[i], conf->radius[j]);
-			if (has_lubrication(p->lub)) {
-				auto r = Lub::calcLubricationRange(p->lub.max_gap, conf->radius[i], conf->radius[j]);
+	for (auto r1: radii) {
+		for (auto r2: radii) {
+			auto range = calcContactRange(r1, r2);
+			if (has_lubrication(params.lub)) {
+				auto r = Lub::calcLubricationRange(params.lub.max_gap, r1, r2);
 				if (r > range) {
 					range = r;
 				}
 			}
-			if (has_repulsion(p->repulsion)) {
-				auto r = calcRepulsiveForceRange(p->repulsion, conf->radius[i], conf->radius[j]);
+			if (has_repulsion(params.repulsion)) {
+				auto r = calcRepulsiveForceRange(params.repulsion, r1, r2);
 				if (r > range) {
 					range = r;
 				}
@@ -452,7 +564,12 @@ double maxRangeStdInteraction(const Parameters::ParameterSet &params, const std:
 			}
 		}
 	}
-	return range;
+	return max_range;
+}
+
+bool hasPairwiseResistance(const Parameters::ParameterSet &params) {
+	return Interactions::has_lubrication(p.lub) || Interactions::has_dashpot(p.contact);
+
 }
 
 } // namespace Interactions

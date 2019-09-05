@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <memory>
+#include <map>
 
 #include "VelocityAssignor.h"
 #include "ParticleConfig.h"
@@ -12,6 +13,7 @@ namespace Interactions {
 	class StdInteractionManager;
 	class DimerManager;
 }
+class ForceComponent;
 
 namespace Dynamics {
 
@@ -43,11 +45,15 @@ public:
 	void computeVelocity(std::vector<vec3d> &vel, std::vector<vec3d> &ang_vel,
 						 const std::vector<vec3d> &force, const std::vector<vec3d> &torque);
 	void solvingIsDone();
+
+	std::unique_ptr<VelocityAssignor> velo_assignor;
 private:
 	PairwiseResistanceVelocitySolver(double stokes_coeff);
 	void buildDiagonalBlocks();
 
 	unsigned np_mobile;
+	unsigned np;
+
 	double sd_coeff;
 	std::vector<double> radius;
 
@@ -57,7 +63,6 @@ private:
 	bool pairwise_resistance_changed;
 
 	StokesSolver stokes_solver;
-	std::unique_ptr<VelocityAssignor> velo_assignor;
 };
 
 }

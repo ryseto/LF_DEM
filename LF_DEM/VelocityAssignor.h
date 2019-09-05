@@ -3,22 +3,27 @@
 
 #include <vector>
 #include "vec3d.h"
+#include "ParticleConfig.h"
 
 namespace Dynamics {
 
 class VelocityAssignor {
 public:
 	virtual	void set(std::vector<vec3d>::iterator vel, std::vector<vec3d>::iterator ang_vel) = 0;
+	ParticleVelocity getFixedVel() {return fixed_vel;};
+	
 	unsigned np_fixed;
+protected:
+	ParticleVelocity fixed_vel;
 };
 
 
 class FixedVelocityVector : public VelocityAssignor {
 public:
-	FixedVelocityVector(std::vector<vec3d> fixed_velocities);
+	FixedVelocityVector(ParticleVelocity fixed_velocities);
 	void set(std::vector<vec3d>::iterator vel, std::vector<vec3d>::iterator ang_vel);
+
 private:
-	std::vector<vec3d> fixed_vel;
 };
 
 }

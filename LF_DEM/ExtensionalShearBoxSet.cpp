@@ -192,7 +192,7 @@ void ExtensionalShearBoxSet::assignNeighobrsDynamicExtFlow(Box& bx, const vec3d 
 
 
 void ExtensionalShearBoxSet::updateNeighborsExtFlow(const struct Geometry::box3d &sysbox,
-									const struct Geometry::ExtFlowAxis &ax)
+													const struct BC::ExtFlowAxis &ax)
 {
 	vec3d pos_pd;
 	vec3d pos;
@@ -246,7 +246,7 @@ void ExtensionalShearBoxSet::updateNeighborsExtFlow(const struct Geometry::box3d
 }
 
 void ExtensionalShearBoxSet::updateExtFlow(const struct Geometry::box3d &sysbox,
-										   const struct Geometry::ExtFlowAxis &ax)
+										   const struct BC::ExtFlowAxis &ax)
 {
 	double l1 = ax.box_axis1.norm();
 	double l2 = ax.box_axis2.norm();
@@ -429,7 +429,7 @@ void ExtensionalShearBoxSet::checkNeighobrType(std::set <unsigned int> &box_labe
 	}
 }
 
-vec3d ExtensionalShearBoxSet::periodicDiffShift(int i, int j, const struct Geometry::ExtFlowAxis &ax)
+vec3d ExtensionalShearBoxSet::periodicDiffShift(int i, int j, const struct BC::ExtFlowAxis &ax)
 {
 	int type_i = boxMap[i]->type_neighborhood;
 	int type_j = boxMap[j]->type_neighborhood;

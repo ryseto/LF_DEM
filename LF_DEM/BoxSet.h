@@ -33,7 +33,7 @@ public:
 	 *****/
 	const std::vector <int>& neighborhood(int i) const;
 
-	~BoxSet();
+	~BoxSet() {};
 	void printBoxNetwork() const;
 	void printBoxContainers() const;
 	void printNeighborhoodContainers() const;

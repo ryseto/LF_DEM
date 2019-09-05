@@ -23,6 +23,7 @@
 #include "ContactDashpot.h"
 #include "ContactParams.h"
 #include "PairwiseInteraction.h"
+#include "PairVelocity.h"
 
 namespace Interactions
 {
@@ -94,7 +95,7 @@ private:
 	void setTangentialForceNorm(double, double);
 	void setRollingForceNorm(double, double);
 
-	void calcContactStress(const vec3d &v0, const vec3d &v1, const vec3d &ang_v0, const vec3d &ang_v1);
+	void calcContactStress(const struct PairVelocity &vel);
 
 	vec3d prev_disp_tan; // useful for predictor-corrector method: disp_tan in the previous time step
 	vec3d prev_disp_rolling;
@@ -104,9 +105,6 @@ private:
 	void setInteractionData(const ContactParams &p);
 	void setSpringConstants(const ContactParams &p);
 	void setDashpotConstants(const ContactParams &p);
-
-	vec3d getSlidingVelocity(const struct PairVelocity &vel) const;
-	vec3d getRollingVelocity(const struct PairVelocity &vel) const;
 
 public:
 	/*********************************
@@ -130,15 +128,19 @@ public:
 						  std::vector<vec3d> &torque_per_particle) const;
 	void addUpForce(std::vector<vec3d> &force_per_particle) const;
 	void calcContactSpringForce();
-	vec3d getTotalForce(const vec3d &v0, const vec3d &v1, const vec3d &ang_v0, const vec3d &ang_v1) const;
+	vec3d getTotalForce(const struct PairVelocity &vel) const;
 	vec3d getSpringForce() const;
-	double getNormalForceValue(const vec3d &v0, const vec3d &v1, const vec3d &ang_v0, const vec3d &ang_v1) const;
+	double getNormalForceValue(const struct PairVelocity &vel) const;
 	double getNormalSpringForce() const;
-	vec3d getTangentialForce(const vec3d &v0, const vec3d &v1, const vec3d &ang_v0, const vec3d &ang_v1) const;
+	vec3d getTangentialForce(const struct PairVelocity &vel) const;
+	vec3d getSlidingVelocity(const struct PairVelocity &vel) const;
+	vec3d getRollingVelocity(const struct PairVelocity &vel) const;
 	double get_normal_load() const;
 	void addUpStress(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1,
-					 const vec3d &v0, const vec3d &v1, const vec3d &ang_v0, const vec3d &ang_v1);
+					 const struct PairVelocity &vel);
 	void addUpStressSpring(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1) const;
+	void addUpStressDashpot(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1, 
+						    const PairVelocity &pvel) const;
 	Sym2Tensor getContactStressXF() const
 	{
 		return contact_stresslet_XF;

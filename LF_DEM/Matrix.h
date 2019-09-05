@@ -10,7 +10,6 @@
 #define Matrix_h
 #include <vector>
 #include "vec3d.h"
-#include "Sym2Tensor.h"
 
 class Sym2Tensor;
 
@@ -18,7 +17,7 @@ class matrix {
 public:
 	/* variables */
 	std::vector <double> elm;
-	inline matrix (void)
+	matrix (void)
 	{
 		elm.resize(9, 0);
 	}
@@ -40,12 +39,12 @@ public:
 		elm[8] = _e22;
 	}
 	
-	inline double get(int i, int j)
+	double get(int i, int j)
 	{
 		return elm[3*i+j];
 	}
 	
-	inline void set(int i, int j, double value)
+	void set(int i, int j, double value)
 	{
 		// 0(0,0) 1(0,1) 2(0,2)
 		// 3(1,0) 4(1,1) 5(1,2)
@@ -53,7 +52,7 @@ public:
 		elm[3*i+j] = value;
 	}
 	
-	inline void setSymmetric(double e_00, double e_01, double e_02,
+	void setSymmetric(double e_00, double e_01, double e_02,
 							 double e_12, double e_11, double e_22)
 	{
 		// 0(0,0) 1(0,1) 2(0,2)
@@ -67,7 +66,7 @@ public:
 		elm[8] = e_22;
 	}
 	
-	inline void set_zero()
+	void set_zero()
 	{
 		for (auto &elm_: elm) {
 			elm_ = 0;
@@ -209,13 +208,22 @@ public:
 					  m.elm[3], a+m.elm[4], m.elm[5],
 					  m.elm[6], m.elm[7], a+m.elm[8]);
 	}
-	
-	void print()
+	matrix transpose() const
+	{
+		return matrix (elm[0], elm[3], elm[6],
+					   elm[1], elm[4], elm[7],
+					   elm[2], elm[5], elm[8]);
+	}
+	void print() const
 	{
 		std::cout << std::setw(10) << elm[0] << std::setw(10) << elm[1] << std::setw(10) <<  elm[2] << std::endl;
 		std::cout << std::setw(10) << elm[3] << std::setw(10) << elm[4] << std::setw(10) <<  elm[5] << std::endl;
 		std::cout << std::setw(10) << elm[6] << std::setw(10) << elm[7] << std::setw(10) <<  elm[8] << std::endl;
 	}
 };
+
+std::pair<Sym2Tensor, vec3d> symmetryDecomposition(const matrix &m);
+matrix vec2AntiSymFullMatrix(vec3d omega);
+matrix sym2FullMatrix(Sym2Tensor sym);
 
 #endif /* Matrix_h */

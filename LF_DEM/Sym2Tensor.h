@@ -131,7 +131,7 @@ public:
 		+ elm[5]*elm[5];
 	}
 	
-	void setSymmetrize(matrix &m)
+	void setSymmetrize(const matrix &m)
 	{
 		//Sym2Tensor m_sym;
 		// 0(0,0) 1(0,1) 2(0,2)

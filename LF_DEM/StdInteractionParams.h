@@ -16,16 +16,16 @@ struct StdInteractionParams {
 	std::unique_ptr<vanDerWaalsForceParams> vdwp;
 
 	void add(const ContactParams &p) {
-		contp = std::make_unique<ContactParams>(p);
+		contp = std::unique_ptr<ContactParams>(new ContactParams (p));
 	}
 	void add(const Lub::LubParams &p) {
-		lubp = std::make_unique<Lub::LubParams>(p);
+		lubp = std::unique_ptr<Lub::LubParams>(new Lub::LubParams (p));
 	}
 	void add(const RepulsiveForceParams &p) {
-		repp = std::make_unique<RepulsiveForceParams>(p);
+		repp = std::unique_ptr<RepulsiveForceParams>(new RepulsiveForceParams (p));
 	}
 	void add(const vanDerWaalsForceParams &p) {
-		vdwp = std::make_unique<vanDerWaalsForceParams>(p);
+		vdwp = std::unique_ptr<vanDerWaalsForceParams>(new vanDerWaalsForceParams (p));
 	}
 };
 

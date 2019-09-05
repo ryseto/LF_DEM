@@ -1,5 +1,6 @@
 #include "PairwiseResistanceVelocitySolver.h"
-#include "InteractionManager.h"
+#include "StdInteractionManager.h"
+#include "ForceComponent.h"
 
 namespace Dynamics {
 
@@ -12,7 +13,8 @@ PairwiseResistanceVelocitySolver::PairwiseResistanceVelocitySolver(double stokes
 													 			   const std::vector<double> &particle_radius) : 
 PairwiseResistanceVelocitySolver(stokes_coeff)
 {
-	np_mobile = particle_radius.size();
+	np = particle_radius.size();
+	np_mobile = np;
 	radius = particle_radius;
 	nb_blocks_ff.resize(0);
 	nb_blocks_mm.resize(np_mobile, 0);
@@ -27,8 +29,8 @@ PairwiseResistanceVelocitySolver::PairwiseResistanceVelocitySolver(double stokes
 PairwiseResistanceVelocitySolver(stokes_coeff)
 {
 	radius = particle_radius;
-	auto np = particle_radius.size();
-	velo_assignor = std::make_unique<VelAssignor>(va);
+	np = particle_radius.size();
+	velo_assignor = std::unique_ptr<VelAssignor>(new VelAssignor (va));
 	np_mobile = np - velo_assignor->np_fixed;
 	nb_blocks_ff.resize(velo_assignor->np_fixed, 0);
 	nb_blocks_mm.resize(np_mobile, 0);
@@ -123,63 +125,63 @@ void PairwiseResistanceVelocitySolver::buildResistanceMatrix(const Interactions:
 	stokes_solver.matrixFillingDone();
 }
 
-void PairwiseResistanceVelocitySolver::buildResistanceMatrix(const Interactions::StdInteractionManager &interaction_manager,
-															 const Interactions::DimerManager &dimer_manager)
-{
-	/**
-	 \brief Builds the resistance matrix
+// void PairwiseResistanceVelocitySolver::buildResistanceMatrix(const Interactions::StdInteractionManager &interaction_manager,
+// 															 const Interactions::DimerManager &dimer_manager)
+// {
+// 	/**
+// 	 \brief Builds the resistance matrix
 
-	 The built matrix \f$R_{\mathrm{FU}}\f$ (in Bossis and Brady \cite
-	 brady_stokesian_1988 notations) contains pairwise resistances,
-	 coming from lubrication or contact dashpots.
-	 */
-	buildDiagonalBlocks();
-	for (unsigned i=0; i<np-1; i ++) {
-		stokes_solver.startNewColumn();
-		for (auto it : interaction_manager.interactions) {
-			auto j = it->partner(i);
-			if (j > i) {
-				if (it->hasPairwiseResistance()) {
-					stokes_solver.addResistanceBlocks(i, j,
-													  it->RFU_DBlocks(),
-													  it->RFU_ODBlock());
-				}
-			}
-		}
-		for (auto it : dimer_manager.interactions) {
-			auto j = it->partner(i);
-			if (j > i) {
-				stokes_solver.addResistanceBlocks(i, j,
-												  it->RFU_DBlocks(),
-												  it->RFU_ODBlock());
-			}
-		}
-	}
-	stokes_solver.matrixFillingDone();
-}
+// 	 The built matrix \f$R_{\mathrm{FU}}\f$ (in Bossis and Brady \cite
+// 	 brady_stokesian_1988 notations) contains pairwise resistances,
+// 	 coming from lubrication or contact dashpots.
+// 	 */
+// 	buildDiagonalBlocks();
+// 	for (unsigned i=0; i<np-1; i ++) {
+// 		stokes_solver.startNewColumn();
+// 		for (auto it : interaction_manager.interactions) {
+// 			auto j = it->partner(i);
+// 			if (j > i) {
+// 				if (it->hasPairwiseResistance()) {
+// 					stokes_solver.addResistanceBlocks(i, j,
+// 													  it->RFU_DBlocks(),
+// 													  it->RFU_ODBlock());
+// 				}
+// 			}
+// 		}
+// 		for (auto it : dimer_manager.interactions) {
+// 			auto j = it->partner(i);
+// 			if (j > i) {
+// 				stokes_solver.addResistanceBlocks(i, j,
+// 												  it->RFU_DBlocks(),
+// 												  it->RFU_ODBlock());
+// 			}
+// 		}
+// 	}
+// 	stokes_solver.matrixFillingDone();
+// }
 
 void PairwiseResistanceVelocitySolver::setSolverRHS(const ForceComponent &fc)
 {
 	auto np = radius.size();
 	if (fc.has_torque) {
-		for (int i=0; i<np; i++) {
+		for (unsigned i=0; i<np; i++) {
 			stokes_solver.setRHSForce(i, fc.force[i]);
 			stokes_solver.setRHSTorque(i, fc.torque[i]);
 		}
 	} else {
-		for (int i=0; i<np; i++) {
+		for (unsigned i=0; i<np; i++) {
 			stokes_solver.setRHSForce(i, fc.force[i]);
 		}
 		stokes_solver.resetRHStorque();
 	}
 }
 
-void PairwiseResistanceVelocitySolver::setSolverRHS(vector<vec3d> &force,
-													vector<vec3d> &torque)
+void PairwiseResistanceVelocitySolver::setSolverRHS(std::vector<vec3d> &force,
+													std::vector<vec3d> &torque)
 {
-	for (int i=0; i<np; i++) {
+	for (unsigned i=0; i<np; i++) {
 		stokes_solver.setRHSForce(i, force[i]);
-		stokes_solver.setRHSTorque(i, forque[i]);
+		stokes_solver.setRHSTorque(i, torque[i]);
 	}
 }
 
@@ -188,8 +190,8 @@ void PairwiseResistanceVelocitySolver::resetRHS()
 	stokes_solver.resetRHS();
 }
 
-void PairwiseResistanceVelocitySolver::compute_LTRHS(vector<vec3d> &force,
-													vector<vec3d> &torque)
+void PairwiseResistanceVelocitySolver::compute_LTRHS(std::vector<vec3d> &force,
+													std::vector<vec3d> &torque)
 {
 	stokes_solver.compute_LTRHS(force, torque);
 }
@@ -198,19 +200,19 @@ void PairwiseResistanceVelocitySolver::addToSolverRHS(const ForceComponent &fc)
 {
 	auto np = radius.size();
 	if (fc.has_torque) {
-		for (int i=0; i<np; i++) {
+		for (unsigned i=0; i<np; i++) {
 			stokes_solver.addToRHSForce(i, fc.force[i]);
 			stokes_solver.addToRHSTorque(i, fc.torque[i]);
 		}
 	} else {
-		for (int i=0; i<np; i++) {
+		for (unsigned i=0; i<np; i++) {
 			stokes_solver.addToRHSForce(i, fc.force[i]);
 		}
 	}
 }
 
-void PairwiseResistanceVelocitySolver::solve(vector<vec3d> &na_velocity, 
-											 vector<vec3d> &na_ang_velocity)
+void PairwiseResistanceVelocitySolver::solve(std::vector<vec3d> &na_velocity, 
+											 std::vector<vec3d> &na_ang_velocity)
 {
 	stokes_solver.solve(na_velocity, na_ang_velocity);
 }

@@ -1,5 +1,7 @@
 #include "Contact.h"
 
+namespace Interactions {
+
 namespace Contact_ios {
 
 template<typename T> 
@@ -67,4 +69,7 @@ void writeStatesBStream(std::ostream &conf_export, const std::vector <struct con
 		conf_export.write((char*)&(cs[i].disp_rolling.z), sizeof(double));
 	}
 }
+
+}
+
 } // namespace Contact_io

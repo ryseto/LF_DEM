@@ -75,8 +75,8 @@ void GenerateInitConfig::generateBasic(int rand_seed_, double volume_frac, unsig
 	np_movable = np;
 	baseSetup(c, sys.twodimension, inflate_ratio);
 	sys.setupConfiguration(c, Parameters::ControlVariable::rate);
-	sys.checkNewInteraction();
-	sys.updateInteractions();
+	sys.interaction->checkNewInteractions();
+	sys.interaction->updateInteractions();
 	auto contact_nb = countNumberOfContact(sys);
 	int cnt_iteration = 0;
 	while(((double)contact_nb.first)/sys.get_np() > contact_ratio && evaluateMinGap(sys) < min_gap) {
@@ -93,13 +93,13 @@ void GenerateInitConfig::generateBasic(int rand_seed_, double volume_frac, unsig
 	
 	for (int i=0; i<np_movable; i++) {
 		if (i < np1) {
-			sys.radius[i] = a1;
+			sys.conf->radius[i] = a1;
 		} else {
-			sys.radius[i] = a2;
+			sys.conf->radius[i] = a2;
 		}
 	}
 	for (int i=np_movable; i<np; i++) {
-		sys.radius[i] = radius_wall_particle;
+		sys.conf->radius[i] = radius_wall_particle;
 	}
 	outputPositionData(sys);
 }
@@ -209,8 +209,8 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, double
 		sys.setupConfiguration(c, Parameters::ControlVariable::rate);
 	}
 	
-	sys.checkNewInteraction();
-	sys.updateInteractions();
+	sys.interaction->checkNewInteractions();
+	sys.interaction->updateInteractions();
 	auto contact_nb = countNumberOfContact(sys);
 	int cnt_iteration = 0;
 	while(((double)contact_nb.first)/sys.get_np() > contact_ratio && evaluateMinGap(sys) < min_gap) {
@@ -228,19 +228,19 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, double
 	///@@@@ Symmetry check
 	if (symmetry_check) {
 		for (int i=0; i<np_movable/2; i++) {
-			sys.position[i+np_movable/2].x = sys.position[i].x;
-			sys.position[i+np_movable/2].z = lz-sys.position[i].z;
+			sys.conf->position[i+np_movable/2].x = sys.conf->position[i].x;
+			sys.conf->position[i+np_movable/2].z = lz-sys.conf->position[i].z;
 		}
 	}
 	for (int i=0; i<np_movable; i++) {
 		if (i < np1) {
-			sys.radius[i] = a1;
+			sys.conf->radius[i] = a1;
 		} else {
-			sys.radius[i] = a2;
+			sys.conf->radius[i] = a2;
 		}
 	}
 	for (int i=np_movable; i<np; i++) {
-		sys.radius[i] = radius_wall_particle;
+		sys.conf->radius[i] = radius_wall_particle;
 	}
 	if (bottom_wall_config) {
 		np -= np_wall2;
@@ -333,17 +333,17 @@ void GenerateInitConfig::outputPositionData(const System &sys)
 	
 	for (int i = 0; i<np; i++) {
 		fout << std::setprecision(15);
-		fout << sys.position[i].x << ' ';
-		fout << sys.position[i].y << ' ';
-		fout << sys.position[i].z << ' ';
-		fout << sys.radius[i] << ' ';
+		fout << sys.conf->position[i].x << ' ';
+		fout << sys.conf->position[i].y << ' ';
+		fout << sys.conf->position[i].z << ' ';
+		fout << sys.conf->radius[i] << ' ';
 		fout << endl;
 		fout_yap << "r ";
-		fout_yap << sys.radius[i] << endl;
+		fout_yap << sys.conf->radius[i] << endl;
 		fout_yap << "c ";
-		fout_yap << sys.position[i].x << ' ';
-		fout_yap << sys.position[i].y << ' ';
-		fout_yap << sys.position[i].z << endl;
+		fout_yap << sys.conf->position[i].x << ' ';
+		fout_yap << sys.conf->position[i].y << ' ';
+		fout_yap << sys.conf->position[i].z << endl;
 		//		fout_yap << "t ";
 		//		fout_yap << position[i].x << ' ';
 		//		fout_yap << position[i].y << ' ';
@@ -352,18 +352,18 @@ void GenerateInitConfig::outputPositionData(const System &sys)
 	}
 	fout_yap << "@ 4 \n";
 	fout_yap << "y 4 \n";
-	for (const auto &inter: sys.interaction) {
+	for (const auto &inter: *(sys.interaction)) {
 		unsigned int i, j;
-		std::tie(i, j) = inter.get_par_num();
-		vec3d d_pos = sys.position[i]-sys.position[j];
+		std::tie(i, j) = inter->get_par_num();
+		vec3d d_pos = sys.conf->position[i]-sys.conf->position[j];
 		if (d_pos.norm() < 10){
 			fout_yap << "l ";
-			fout_yap << sys.position[i].x << ' ';
-			fout_yap << sys.position[i].y << ' ';
-			fout_yap << sys.position[i].z << ' ';
-			fout_yap << sys.position[j].x << ' ';
-			fout_yap << sys.position[j].y << ' ';
-			fout_yap << sys.position[j].z << endl;
+			fout_yap << sys.conf->position[i].x << ' ';
+			fout_yap << sys.conf->position[i].y << ' ';
+			fout_yap << sys.conf->position[i].z << ' ';
+			fout_yap << sys.conf->position[j].x << ' ';
+			fout_yap << sys.conf->position[j].y << ' ';
+			fout_yap << sys.conf->position[j].z << endl;
 		}
 	}
 	fout.close();
@@ -670,16 +670,15 @@ void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init
 	 *
 	 */
 	Parameters::ParameterSetFactory PFactory(Dimensional::Unit::hydro);
-	simu.sys.p = PFactory.getParameterSet();
+	simu.sys.p = std::make_shared<Parameters::ParameterSet>(PFactory.getParameterSet());
 	
 	auto &sys = simu.getSys();
-	sys.zero_shear = true;
-	simu.sys.p.kn = 1;
-	simu.sys.p.friction_model = 0;
-	simu.sys.p.integration_method = 0;
-	simu.sys.p.disp_max = 5e-3;
-	simu.sys.p.lubrication_model = "none";
-	simu.sys.p.contact_relaxation_time_tan = 1e-4;
+	simu.sys.p->integration_method = 0;
+	simu.sys.p->disp_max = 5e-3;
+	simu.sys.p->lub.model = "none";
+	simu.sys.p->contact.friction_model = Interactions::FrictionModel::frictionless;
+	simu.sys.p->contact.kn = 1;
+	simu.sys.p->contact.relaxation_time_tan = 1e-4;
 	np = readStdinDefault(500, "number of particle");
 	if (circulargap_config || parallel_wall_config) {
 		sys.twodimension = true;
@@ -859,16 +858,15 @@ void GenerateInitConfig::setParametersBasic(Simulation &simu, double volume_frac
 	 *
 	 */
 	Parameters::ParameterSetFactory PFactory(Dimensional::Unit::hydro);
-	simu.sys.p = PFactory.getParameterSet();
+	simu.sys.p = std::make_shared<Parameters::ParameterSet>(PFactory.getParameterSet());
 	
 	auto &sys = simu.getSys();
-	sys.zero_shear = true;
-	simu.sys.p.kn = 1;
-	simu.sys.p.friction_model = 0;
-	simu.sys.p.integration_method = 0;
-	simu.sys.p.disp_max = 5e-3;
-	simu.sys.p.lubrication_model = "none";
-	simu.sys.p.contact_relaxation_time_tan = 1e-4;
+	simu.sys.p->integration_method = 0;
+	simu.sys.p->disp_max = 5e-3;
+	simu.sys.p->lub.model = "none";
+	simu.sys.p->contact.friction_model = Interactions::FrictionModel::frictionless;
+	simu.sys.p->contact.kn = 1;
+	simu.sys.p->contact.relaxation_time_tan = 1e-4;
 	np = N;
 	sys.twodimension = bidimensional;
 	
