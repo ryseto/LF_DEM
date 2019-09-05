@@ -13,7 +13,7 @@ namespace Interactions {
 	class StdInteractionManager;
 	class DimerManager;
 }
-class ForceComponent;
+struct ForceComponent;
 
 namespace Dynamics {
 

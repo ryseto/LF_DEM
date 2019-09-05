@@ -134,7 +134,7 @@ void Simulation::handleEventsFragility()
 
 void Simulation::handleEventsJammingStressReversal()
 {
-	//	double sr = sqrt(2*sys.getEinfty().selfdoubledot()); // shear rate for simple shear.
+	//	double sr = sqrt(2*sys.imposed_flow->sym_grad_u.selfdoubledot()); // shear rate for simple shear.
 	stress_reversal = false;
 	for (const auto& ev : sys.events) {
 		if (ev.type == "jammed_shear_rate") {
@@ -482,25 +482,13 @@ void Simulation::stopShearing(TimeKeeper &tk)
 {
 	static bool initial_shearing = true;
 	double strain_to_stop = 0;
-	if (sys.shear_type == sys.SimulationType::simple_shear) {
+	if (sys.shear_type == ShearType::simple_shear) {
 		strain_to_stop = 2;
-	} else if (sys.shear_type == sys.SimulationType::extensional_flow) {
-		strain_to_stop = sys.strain_retrim_interval;
+	} else if (sys.shear_type == ShearType::extensional_flow) {
+		strain_to_stop = sys.kr->getStrainRetrimInterval();
 	}
 	if (sys.get_cumulated_strain() >= strain_to_stop-1e-8) {
-		sys.zero_shear = true;
-		sys.set_shear_rate(0);
-		if (sys.shear_type == sys.SimulationType::simple_shear) {
-			// simple shear
-			Sym2Tensor Einf_common = {0, 0, 0, 0, 0, 0};
-			vec3d Omegainf(0, 0, 0);
-			sys.setImposedFlow(Einf_common, Omegainf);
-			sys.setVelocityDifference();
-		} else if (sys.shear_type == sys.SimulationType::extensional_flow) {
-			// extensional flow
-			sys.vel_difference.reset();
-			sys.grad_u.set_zero();
-		}
+		sys.imposed_flow->setRate(0);
 		if (initial_shearing) {
 			cerr << "Stop shear at " << sys.get_cumulated_strain() << endl;
 			tk.removeClock();
@@ -514,9 +502,10 @@ void Simulation::stopShearing(TimeKeeper &tk)
 void Simulation::stressReversal()
 {
 	jamming_strain = sys.get_cumulated_strain();
+	// @@@ why not simply double theta_shear = M_PI - theta_shear;?
 	static int shear_direction = 0;
 	double theta_shear = (shear_direction % 2) ? 0 : M_PI;
-	sys.setShearDirection(theta_shear);
+	sys.imposed_flow->setShape(BC::flowShapeSimpleShear(theta_shear));
 	shear_direction ++;
 	sys.reset_cumulated_strain();
 }
@@ -534,34 +523,34 @@ void Simulation::stressProgram()
 		first_time = false;
 		stress_original = sys.target_stress;
 		sj_rate_original = sys.p->sj_shear_rate;
-		kn_original = sys.p->kn;
-		kt_original = sys.p->kt;
+		kn_original = sys.p->contact.kn;
+		kt_original = sys.p->contact.kt;
 	}
 	cerr << " shear jamming stress program " << sj_program_stress.front() << endl;
 	if (sj_program_stress.front() == 0) {
 		if (false) {
 			double infinitesimal_stress = 1e-4;
 			sys.target_stress = infinitesimal_stress*stress_original;
-			sys.p->kn = kn_original*infinitesimal_stress;
-			sys.p->kt = kt_original*infinitesimal_stress;
+			sys.p->contact.kn = kn_original*infinitesimal_stress;
+			sys.p->contact.kt = kt_original*infinitesimal_stress;
 		} else {
 			sys.target_stress = 0;
 		}
 	} else if (sj_program_stress.front() == 1) {
-		sys.setShearDirection(0);
+		sys.imposed_flow->setShape(BC::flowShapeSimpleShear(0));
 		sys.target_stress = stress_original;
-		sys.p->kn = kn_original;
-		sys.p->kt = kt_original;
+		sys.p->contact.kn = kn_original;
+		sys.p->contact.kt = kt_original;
 	} else if (sj_program_stress.front() == -1) {
-		sys.setShearDirection(M_PI);
+		sys.imposed_flow->setShape(BC::flowShapeSimpleShear(M_PI));
 		sys.target_stress = stress_original;
-		sys.p->kn = kn_original;
-		sys.p->kt = kt_original;
+		sys.p->contact.kn = kn_original;
+		sys.p->contact.kt = kt_original;
 	} else if (sj_program_stress.front() == 2) {
-		sys.setShearDirection(M_PI/2);
+		sys.imposed_flow->setShape(BC::flowShapeSimpleShear(M_PI/2.));
 		sys.target_stress = stress_original;
-		sys.p->kn = kn_original;
-		sys.p->kt = kt_original;
+		sys.p->contact.kn = kn_original;
+		sys.p->contact.kt = kt_original;
 	} else if (sj_program_stress.front() == 999) {
 		kill = true;
 	} else {
@@ -643,7 +632,7 @@ void Simulation::outputData()
 	 and made more consistent in the future.
 	 */
 	outdata.setUnits(system_of_units, output_unit);
-	double sr = sqrt(2*sys.getEinfty().selfdoubledot()); // shear rate for simple shear.
+	double sr = sqrt(2*sys.imposed_flow->sym_grad_u.selfdoubledot()); // shear rate for simple shear.
 	if (sys.p->output.effective_coordination_number) {
 		sys.countContactNumber();
 	}
@@ -657,7 +646,7 @@ void Simulation::outputData()
 		// Simple shear geometry
 		outdata.entryData("cumulated shear strain", Dimensional::Dimension::none, 1, sys.get_cumulated_strain());
 		/* Note: shear rate
-		 * shear rate = 2*sqrt(sys.getEinfty().selfdoubledot()/2);
+		 * shear rate = 2*sqrt(sys.imposed_flow->sym_grad_u.selfdoubledot()/2);
 		 * - shear rate (\dot{\gamma}) in simple shear flow
 		 * - twice of extensional rate (\dot{\varepsilon})in extensional flow
 		 */
@@ -669,7 +658,7 @@ void Simulation::outputData()
 	}
 	/************** viscosity **********************************************************************/
 	if (sr != 0) {
-		viscosity = 0.5*doubledot(sys.total_stress, sys.getEinfty())/sys.getEinfty().selfdoubledot();
+		viscosity = 0.5*doubledot(sys.total_stress, sys.imposed_flow->sym_grad_u)/sys.imposed_flow->sym_grad_u.selfdoubledot();
 	} else {
 		// @@@ tentative ouptut for Pe = 0 simulation
 		// output xz component of stress tensor
@@ -681,7 +670,7 @@ void Simulation::outputData()
 	outdata.entryData("viscosity", Dimensional::Dimension::Viscosity, 1, viscosity);
 	for (const auto &stress_comp: sys.total_stress_groups) {
 		string entry_name = "Viscosity("+stress_comp.first+")";
-		double viscosity_component = 0.5*doubledot(stress_comp.second, sys.getEinfty())/sys.getEinfty().selfdoubledot();
+		double viscosity_component = 0.5*doubledot(stress_comp.second, sys.imposed_flow->sym_grad_u)/sys.imposed_flow->sym_grad_u.selfdoubledot();
 		outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, viscosity_component);
 	}
 	//outdata.entryData("shear stress", Dimensional::Dimension::Stress, 1, shear_stress);
@@ -777,9 +766,9 @@ void Simulation::outputData()
 	/* simulation parameter
 	 */
 	outdata.entryData("dt", Dimensional::Dimension::Time, 1, sys.avg_dt);
-	outdata.entryData("kn", Dimensional::Dimension::none, 1, sys.p->kn);
-	outdata.entryData("kt", Dimensional::Dimension::none, 1, sys.p->kt);
-	outdata.entryData("kr", Dimensional::Dimension::none, 1, sys.p->kr);
+	outdata.entryData("kn", Dimensional::Dimension::none, 1, sys.p->contact.kn);
+	outdata.entryData("kt", Dimensional::Dimension::none, 1, sys.p->contact.kt);
+	outdata.entryData("kr", Dimensional::Dimension::none, 1, sys.p->contact.kr);
 	vec3d shear_strain = sys.get_shear_strain();
 	outdata.entryData("shear strain", Dimensional::Dimension::none, 3, shear_strain);
 	if (sys.wall_rheology) {
@@ -873,7 +862,7 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 		snapshot_header << "# time" << sep << time.value << endl;
 		snapshot_header << "# theta" << sep << sys.p->theta_shear << endl;
 	}
-	if (sys.shear_type == sys.SimulationType::extensional_flow) {
+	if (sys.shear_type == ShearType::extensional_flow) {
 		/* The following snapshot data is required to
 		 * construct visualization file for extensional flow simulation in the script
 		 * generateYaplotFile_extflow.pl
@@ -956,7 +945,7 @@ void Simulation::outputParFileTxt()
 	auto pos = sys.conf->position;
 	auto vel = sys.velocity;
 	if (sys.p->output.origin_zero_flow) {
-		if (sys.shear_type != sys.SimulationType::extensional_flow) {
+		if (sys.shear_type != ShearType::extensional_flow) {
 			for (int i=0; i<np; i++) {
 				pos[i] = shiftUpCoordinate(sys.conf->position[i].x-0.5*sys.get_lx(),
 										   sys.conf->position[i].y-0.5*sys.get_ly(),
@@ -1158,7 +1147,7 @@ void Simulation::outputIntFileTxt()
 		}
 
 		outdata_int.entryData("Viscosity contribution of contact xF", Dimensional::Dimension::Stress, 1, \
-							  doubledot(stress_contact, sys.getEinfty()/sr)/sr);
+							  doubledot(stress_contact, sys.imposed_flow->sym_grad_u/sr)/sr);
 		if (sys.delayed_adhesion) {
 			outdata_int.entryData("norm of the normal adhesion force", Dimensional::Dimension::Force, 1, \
 								  inter.delayed_adhesion->getForceNorm());
@@ -1221,7 +1210,7 @@ void Simulation::dataAdjustGSD(std::vector<vec3d> &pos,
 							   double lx, double ly, double lz)
 {
 	int np = sys.get_np();
-	if (sys.shear_type == sys.SimulationType::simple_shear) {
+	if (sys.shear_type == ShearType::simple_shear) {
 		shear_strain = sys.get_shear_strain();
 		static int cnt_strain = 0;
 		shear_strain.x -= cnt_strain;
@@ -1235,7 +1224,7 @@ void Simulation::dataAdjustGSD(std::vector<vec3d> &pos,
 		}
 	}
 	pos.resize(sys.conf->position.size());
-	if (sys.shear_type == sys.SimulationType::simple_shear) {
+	if (sys.shear_type == ShearType::simple_shear) {
 		for (int i=0; i<np; i++) {
 			pos[i] = shiftUpCoordinate(sys.conf->position[i].x-0.5*lx,
 									   sys.conf->position[i].y-0.5*ly,
@@ -1250,7 +1239,7 @@ void Simulation::dataAdjustGSD(std::vector<vec3d> &pos,
 	/* If the origin is shifted,
 	 * we need to change the velocities of particles as well.
 	 */
-	if (sys.shear_type == sys.SimulationType::simple_shear) {
+	if (sys.shear_type == ShearType::simple_shear) {
 		for (int i=0; i<np; i++) {
 			if (pos[i].z < 0) {
 				vel[i] -= sys.vel_difference;
@@ -1335,7 +1324,7 @@ void Simulation::outputGSD()
 	//		throw runtime_error(error_str.str());
 	//	}
 	double xybox, xzbox, yzbox;
-	if (sys.shear_type != sys.SimulationType::extensional_flow) {
+	if (sys.shear_type != ShearType::extensional_flow) {
 		xybox = shear_strain.x;
 		xzbox = 0;
 		yzbox = 0;

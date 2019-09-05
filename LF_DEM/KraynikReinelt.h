@@ -39,6 +39,8 @@ public:
 
 	vec3d getVelDifference(const vec3d &separation) const;
 	double getStrainRetrim() const {return strain_retrim;};
+	double getStrainRetrimInterval() const {return strain_retrim_interval;};
+
 	void retrimProcess(std::vector<vec3d> &position, double cumulated_strain);
 	void setBoxSet(Boxing::ExtensionalShearBoxSet *bxset, struct Geometry::box3d *_container_ext_flow);
 

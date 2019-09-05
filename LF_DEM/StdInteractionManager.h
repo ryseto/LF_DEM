@@ -24,7 +24,7 @@ namespace Dynamics {
 	class PairwiseResistanceVelocitySolver;
 }
 
-class ForceComponent;
+struct ForceComponent;
 
 namespace Interactions
 {
