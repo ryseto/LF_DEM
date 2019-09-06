@@ -463,7 +463,6 @@ string Simulation::prepareSimulationName(bool binary_conf,
 		ss_simu_name << "_";
 		ss_simu_name << simu_identifier;
 	}
-	string indent = "  Simulation::\t";
 	cout << indent << "filename: " << ss_simu_name.str() << endl;
 
 	return ss_simu_name.str();

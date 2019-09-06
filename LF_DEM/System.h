@@ -62,9 +62,6 @@ class System {
 private:
 
 	int np; ///< number of particles
-	std::vector<unsigned int> nb_blocks_mm;
-	std::vector<unsigned int> nb_blocks_mf;
-	std::vector<unsigned int> nb_blocks_ff;
 	//bool forbid_displacement;
 	int total_num_timesteps;
 	Geometry::box3d container;
@@ -171,7 +168,6 @@ private:
 	bool wall_rheology;
 	bool mobile_fixed;
 	bool couette_stress;
-	double system_height;
 	bool in_predictor;
 	bool in_corrector;
 
@@ -212,8 +208,6 @@ private:
 	double dt;
 	double avg_dt;
 	int avg_dt_nb;
-	double system_volume;
-	vec3d shear_disp; // lees-edwards shift between top and bottom. only shear_disp.x, shear_disp.y is used
 	double max_na_velocity;
 	double max_velocity;
 	double max_force_imbalance;
@@ -256,7 +250,7 @@ private:
 	std::list <Event> events;
 	
 	/****************************************/
-	double getSystemVolume();
+	double getSystemVolume() const;
 	void setContacts(const std::vector <struct contact_state>& cs);
 	std::vector <struct contact_state> getContacts() const;
 	struct base_configuration getBaseConfiguration() const;
@@ -340,7 +334,7 @@ private:
 		return np;
 	}
 
-	vec3d get_shear_strain()
+	vec3d get_shear_strain() const
 	{
 		if (shear_type == ShearType::simple_shear) {
 			return lees->getShearStrain();

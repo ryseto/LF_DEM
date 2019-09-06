@@ -82,7 +82,6 @@ void PairwiseResistanceVelocitySolver::buildDiagonalBlocks()
 	/* [note]
 	 * The resistance matrix is reset with resistance_matrix_dblock
 	 */
-	auto np = radius.size();
 	std::vector <struct DBlock> resistance_matrix_dblock (np);
 	for (unsigned i=0; i<np; i++) {
 		double FUvalue = sd_coeff*radius[i];
@@ -162,7 +161,6 @@ void PairwiseResistanceVelocitySolver::buildResistanceMatrix(const Interactions:
 
 void PairwiseResistanceVelocitySolver::setSolverRHS(const ForceComponent &fc)
 {
-	auto np = radius.size();
 	if (fc.has_torque) {
 		for (unsigned i=0; i<np; i++) {
 			stokes_solver.setRHSForce(i, fc.force[i]);
@@ -198,7 +196,6 @@ void PairwiseResistanceVelocitySolver::compute_LTRHS(std::vector<vec3d> &force,
 
 void PairwiseResistanceVelocitySolver::addToSolverRHS(const ForceComponent &fc)
 {
-	auto np = radius.size();
 	if (fc.has_torque) {
 		for (unsigned i=0; i<np; i++) {
 			stokes_solver.addToRHSForce(i, fc.force[i]);

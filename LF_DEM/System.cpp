@@ -74,7 +74,6 @@ mobile_fixed(false),
 couette_stress(false),
 dt(0),
 avg_dt(0),
-shear_disp(0),
 max_na_velocity(0),
 target_stress(0),
 init_strain_shear_rate_limit(0),
@@ -116,9 +115,6 @@ void System::allocateRessources()
 		rate_proportional_wall_torque.resize(p->np_fixed);
 	}
 	
-	nb_blocks_ff.resize(p->np_fixed, 0);
-	nb_blocks_mm.resize(np-p->np_fixed, 0);
-	nb_blocks_mf.resize(np-p->np_fixed, 0);
 	// Forces and Stress
 	forceResultant.resize(np);
 	torqueResultant.resize(np);
@@ -337,56 +333,56 @@ void System::setupGenericConfiguration(T config, Parameters::ControlVariable con
 	setupSystemPostConfiguration();
 }
 
-void System::setupConfiguration(struct base_shear_configuration conf, Parameters::ControlVariable control_)
+void System::setupConfiguration(struct base_shear_configuration config, Parameters::ControlVariable control_)
 {
-	setupGenericConfiguration(conf, control_);
+	setupGenericConfiguration(config, control_);
 }
 
-void System::setupConfiguration(struct fixed_velo_configuration conf, Parameters::ControlVariable control_)
+void System::setupConfiguration(struct fixed_velo_configuration config, Parameters::ControlVariable control_)
 {
-	np_wall1 = conf.np_wall1;
-	np_wall2 = conf.np_wall2;
+	np_wall1 = config.np_wall1;
+	np_wall2 = config.np_wall2;
 	//p->np_fixed = conf.fixed_velocities.size();
 	p->np_fixed = np_wall1+np_wall2;
-	z_bot = conf.z_bot;
-	z_top = conf.z_top;
-	setupGenericConfiguration(conf, control_);
+	z_bot = config.z_bot;
+	z_top = config.z_top;
+	setupGenericConfiguration(config, control_);
 	throw std::runtime_error("Mobile-fixed to be fixed");	
 	// setFixedVelocities(conf.fixed_velocities);
 }
 
-void System::setupConfiguration(struct circular_couette_configuration conf, Parameters::ControlVariable control_)
+void System::setupConfiguration(struct circular_couette_configuration config, Parameters::ControlVariable control_)
 {
-	p->np_fixed = conf.np_wall1 + conf.np_wall2;
-	np_wall1 = conf.np_wall1;
-	np_wall2 = conf.np_wall2;
-	radius_in = conf.radius_in;
-	radius_out = conf.radius_out;
-	setupGenericConfiguration(conf, control_);
+	p->np_fixed = config.np_wall1 + config.np_wall2;
+	np_wall1 = config.np_wall1;
+	np_wall2 = config.np_wall2;
+	radius_in = config.radius_in;
+	radius_out = config.radius_out;
+	setupGenericConfiguration(config, control_);
 }
 
-struct base_shear_configuration confConvertBase2Shear(const struct base_configuration &conf,
+struct base_shear_configuration confConvertBase2Shear(const struct base_configuration &config,
 													  vec3d lees_edwards_disp)
 {
 	struct base_shear_configuration base_shear;
-	base_shear.lx = conf.lx;
-	base_shear.ly = conf.ly;
-	base_shear.lz = conf.lz;
-	base_shear.volume_or_area_fraction = conf.volume_or_area_fraction;
-	base_shear.position = conf.position;
-	base_shear.radius = conf.radius;
-	base_shear.angle = conf.angle;
-	base_shear.contact_states = conf.contact_states;
+	base_shear.lx = config.lx;
+	base_shear.ly = config.ly;
+	base_shear.lz = config.lz;
+	base_shear.volume_or_area_fraction = config.volume_or_area_fraction;
+	base_shear.position = config.position;
+	base_shear.radius = config.radius;
+	base_shear.angle = config.angle;
+	base_shear.contact_states = config.contact_states;
 
 	base_shear.lees_edwards_disp = lees_edwards_disp;
 	return base_shear;
 }
 
-void System::setupConfiguration(const struct delayed_adhesion_configuration &conf,
+void System::setupConfiguration(const struct delayed_adhesion_configuration &config,
 								Parameters::ControlVariable control_)
 {
-	setupGenericConfiguration(confConvertBase2Shear(conf.base, conf.lees_edwards_disp), control_);
-	Interactions::TActAdhesion::setupInteractions(*interaction, conf.adhesion_states, get_time());
+	setupGenericConfiguration(confConvertBase2Shear(config.base, config.lees_edwards_disp), control_);
+	Interactions::TActAdhesion::setupInteractions(*interaction, config.adhesion_states, get_time());
 }
 
 void System::setupSystemPostConfiguration()
@@ -434,7 +430,7 @@ struct base_configuration System::getBaseConfiguration() const
 	config.lx = container.lx;
 	config.ly = container.ly;
 	config.lz = container.lz;
-	config.volume_or_area_fraction = particle_volume/system_volume;
+	config.volume_or_area_fraction = particle_volume/getSystemVolume();
 
 	config.position = conf->position;
 	config.radius = conf->radius;
@@ -1977,7 +1973,7 @@ void System::displacement(int i, const vec3d& dr)
 }
 
 
-double System::getSystemVolume()
+double System::getSystemVolume() const
 {
 	string indent = "  System::\t";
 	double system_height, system_volume;

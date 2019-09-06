@@ -854,7 +854,9 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 {
 	string sep = " : ";
 	snapshot_header << "# cumulated strain" << sep << sys.get_cumulated_strain() << endl;
-	snapshot_header << "# shear disp" << sep << sys.shear_disp.x << endl;
+	if (sys.shear_type == ShearType::simple_shear) {
+		snapshot_header << "# shear disp" << sep << sys.lees->getShearDisp().x << endl;
+	}
 	Dimensional::DimensionalQty<double> rate = {Dimensional::Dimension::Rate, sys.imposed_flow->shear_rate, system_of_units.getInternalUnit()};
 	system_of_units.convertFromInternalUnit(rate, output_unit);
 	Dimensional::DimensionalQty<double> stress = {Dimensional::Dimension::Stress, sys.target_stress, system_of_units.getInternalUnit()};
@@ -887,8 +889,10 @@ vec3d Simulation::shiftUpCoordinate(double x, double y, double z)
 {
 	z += 0.5*sys.get_lz();
 	if (z > 0.5*sys.get_lz()) {
-		x -= sys.shear_disp.x;
-		y -= sys.shear_disp.y;
+		if (sys.shear_type == ShearType::simple_shear) {
+			x -= sys.lees->getShearDisp().x;
+			y -= sys.lees->getShearDisp().y;
+		}
 		if (x < -0.5*sys.get_lx()) {
 			x += sys.get_lx();
 		}

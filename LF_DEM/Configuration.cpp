@@ -439,9 +439,9 @@ void outputBinaryConfiguration(const System &sys,
 		Interactions::TActAdhesion::writeStatesBStream(conf_export,
 										 			   *(sys.interaction));
 	}
-
-	conf_export.write((char*)&(sys.shear_disp.x), sizeof(double));
-	conf_export.write((char*)&(sys.shear_disp.y), sizeof(double));
+	auto shear_disp = sys.lees->getShearDisp();
+	conf_export.write((char*)&(shear_disp.x), sizeof(double));
+	conf_export.write((char*)&(shear_disp.y), sizeof(double));
 
 	conf_export.close();
 }

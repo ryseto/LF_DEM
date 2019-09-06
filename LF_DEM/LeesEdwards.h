@@ -15,7 +15,7 @@ public:
 	vec3d periodized(const vec3d &pos) const;
 	void periodizeDiff(vec3d& pos_diff) const;
 
-	vec3d getShearDisp(const vec3d &pos) const {return shear_disp;};
+	vec3d getShearDisp() const {return shear_disp;};
 	vec3d getShearStrain() const {return shear_strain;};
 	vec3d getVelDifference(const vec3d &separation) const;
 	void incrementStrain(double dt);

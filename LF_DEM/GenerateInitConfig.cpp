@@ -426,10 +426,9 @@ std::pair<std::vector<vec3d>, std::vector<double>> GenerateInitConfig::putRandom
 			cluster_radius = sqrt((np1*a1*a1 + np2*a2*a2)/(num_cl* abs(cluster_phi)));
 			cerr << "cluster_radius = " << cluster_radius << endl;
 		}
-		vec3d pos;
 		while (i < np_movable) {
 			double a = (i < np1 ? a1 : a2);
-			pos.set(lx*RANDOM, 0, lz*RANDOM);
+			vec3d pos = {lx*RANDOM, 0, lz*RANDOM};
 			if (num_cl == 0) {
 				if (pos.z > z_bot+shift_up && pos.z < z_top-shift_up) {
 					position[i] = pos;
