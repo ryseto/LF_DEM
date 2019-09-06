@@ -30,6 +30,7 @@ lees(lebc)
 	// 													 conf->position.size(), 
 	// 													 *lees);
 	updateAfterParticleMove();
+	updateAfterDeformation();
 }
 
 LeesEdwardsPairwiseConfig::~LeesEdwardsPairwiseConfig()
@@ -113,6 +114,7 @@ twodimension(krbc->getContainer().ly == 0)
 
 	krbc->setBoxSet(boxset, &container_ext_flow);
 	updateAfterParticleMove();
+	updateAfterDeformation();
 }
 
 KraynikReineltPairwiseConfig::~KraynikReineltPairwiseConfig()

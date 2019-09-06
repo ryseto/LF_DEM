@@ -92,7 +92,7 @@ void StdInteractionManager::createNewInteraction(unsigned i, unsigned j, double 
 	params.add(p->contact);
 	if (has_lubrication(p->lub)) {
 		params.add(p->lub);
-		params.lubp->max_gap = Lub::calcLubricationRange(p->lub.max_gap, conf->radius[i], conf->radius[j]);
+		params.lubp->max_gap = 2*(Lub::calcLubricationRange(p->lub.max_gap, conf->radius[i], conf->radius[j])/(conf->radius[i]+conf->radius[j]) - 1);
 	}
 	if (has_repulsion(p->repulsion)) {
 		params.add(p->repulsion);

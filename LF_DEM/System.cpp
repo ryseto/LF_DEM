@@ -1123,8 +1123,8 @@ void System::timeEvolution(double time_end, double strain_end)
 	} else {
 		avg_dt = dt;
 	}
-	if (!(events.empty() || 
-		  (kr && almost_equal(clk.cumulated_strain, kr->getStrainRetrim(), 2) ))) {
+	if (!(!events.empty() || 
+		  (shear_type == ShearType::extensional_flow && almost_equal(clk.cumulated_strain, kr->getStrainRetrim(), 2) ))) {
 		if (shear_type != ShearType::solvent_flow) {
 			calc_stress = true;
 		}
