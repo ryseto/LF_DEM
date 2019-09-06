@@ -589,7 +589,7 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 	if (sys.p->simulation_mode == 31) {
 		binary_conf_format = ConfFileFormat::bin_format_fixed_vel_shear;
 	}
-	if (sys.delayed_adhesion) {
+	if (Interactions::has_delayed_adhesion(sys.p->TA_adhesion)) {
 		binary_conf_format = ConfFileFormat::bin_delayed_adhesion;
 	}
 	outputBinaryConfiguration(sys, conf_filename, binary_conf_format);
@@ -738,13 +738,13 @@ void Simulation::outputData()
 	/* maximum deformation of contact bond
 	 */
 	outdata.entryData("min gap", Dimensional::Dimension::none, 1, evaluateMinGap(sys));
-	if (sys.adhesion) {
+	if (Interactions::has_adhesion(sys.p->contact)) {
 		outdata.entryData("max gap", Dimensional::Dimension::none, 1, evaluateMaxContactGap(sys));
 	}
-	if (sys.friction) {
+	if (Interactions::has_friction(sys.p->contact.friction_model)) {
 		outdata.entryData("max tangential displacement", Dimensional::Dimension::none, 1, evaluateMaxDispTan(sys));
 	}
-	if (sys.rolling_friction) {
+	if (Interactions::has_rolling_friction(sys.p->contact)) {
 		outdata.entryData("max rolling displacement", Dimensional::Dimension::none, 1, evaluateMaxDispRolling(sys));
 	}
 	/* contact number
@@ -752,7 +752,7 @@ void Simulation::outputData()
 	outdata.entryData("contact number", Dimensional::Dimension::none, 1, contact_nb_per_particle);
 	outdata.entryData("frictional contact number", Dimensional::Dimension::none, 1, frictional_contact_nb_per_particle);
 	outdata.entryData("number of interaction", Dimensional::Dimension::none, 1, sys.get_nb_interactions());
-	if (sys.delayed_adhesion) {
+	if (Interactions::has_delayed_adhesion(sys.p->TA_adhesion)) {
 		unsigned active_nb;
 		double active_ratio;
 		std::tie(active_nb, active_ratio) = getTAAdhesionActivityStatistics(sys);
@@ -781,7 +781,7 @@ void Simulation::outputData()
 		outdata.entryData("force top wall", Dimensional::Dimension::Force, 3, sys.force_upwall);
 		outdata.entryData("force bottom wall", Dimensional::Dimension::Force, 3, sys.force_downwall);
 	}
-	if (sys.brownian) {
+	if (sys.is_brownian()) {
 		outdata.entryData("max_velocity_brownian", Dimensional::Dimension::Velocity, 1, evaluateMaxNAVelocityComponent(sys, "brownian"));
 		outdata.entryData("max_velocity_contact", Dimensional::Dimension::Velocity, 1, evaluateMaxNAVelocityComponent(sys, "contact"));
 	}
@@ -829,13 +829,13 @@ void Simulation::outputDataSedimentatioin()
 	outdata.entryData("flow dissipation", Dimensional::Dimension::none, 1, sys.sflow->flowFiledDissipation()); // 11
 	outdata.entryData("particle dissipation", Dimensional::Dimension::none, 1, sys.sflow->particleDissipation()); //12
 	outdata.entryData("min gap", Dimensional::Dimension::none, 1, evaluateMinGap(sys)); //13
-	if (sys.adhesion) {
+	if (Interactions::has_adhesion(sys.p->contact)) {
 		outdata.entryData("max gap", Dimensional::Dimension::none, 1, evaluateMaxContactGap(sys));
 	}
-	if (sys.friction) {
+	if (Interactions::has_friction(sys.p->contact.friction_model)) {
 		outdata.entryData("max tangential displacement", Dimensional::Dimension::none, 1, evaluateMaxDispTan(sys));
 	}
-	if (sys.rolling_friction) {
+	if (Interactions::has_rolling_friction(sys.p->contact)) {
 		outdata.entryData("max rolling displacement", Dimensional::Dimension::none, 1, evaluateMaxDispRolling(sys));
 	}
 	outdata.entryData("contact number", Dimensional::Dimension::none, 1, contact_nb_per_particle);
@@ -867,9 +867,9 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 		 * construct visualization file for extensional flow simulation in the script
 		 * generateYaplotFile_extflow.pl
 		 */
-		double strain_retrimed = sys.strain_retrim-sys.strain_retrim_interval;
+		double strain_retrimed = sys.kr->getStrainRetrim()-sys.kr->getStrainRetrimInterval();
 		snapshot_header << "# cumulated strain - strain_retrim" << sep << sys.get_cumulated_strain()-strain_retrimed << endl;
-		if (sys.retrim_ext_flow) {
+		if (almost_equal(sys.get_cumulated_strain(), sys.kr->getStrainRetrim(), 2)) {
 			snapshot_header << "# retrim ext flow " << sep << 1 << endl;
 		} else {
 			snapshot_header << "# retrim ext flow " << sep << 0 << endl;
@@ -945,17 +945,11 @@ void Simulation::outputParFileTxt()
 	auto pos = sys.conf->position;
 	auto vel = sys.velocity;
 	if (sys.p->output.origin_zero_flow) {
-		if (sys.shear_type != ShearType::extensional_flow) {
+		if (sys.shear_type == ShearType::simple_shear) {
 			for (int i=0; i<np; i++) {
 				pos[i] = shiftUpCoordinate(sys.conf->position[i].x-0.5*sys.get_lx(),
 										   sys.conf->position[i].y-0.5*sys.get_ly(),
 										   sys.conf->position[i].z-0.5*sys.get_lz());
-			}
-		} else {
-			for (int i=0; i<np; i++) {
-				pos[i] = shiftUpCoordinate(sys.conf->position[i].x,
-										   sys.conf->position[i].y,
-										   sys.conf->position[i].z);
 			}
 		}
 		/* If the origin is shifted,
@@ -963,11 +957,18 @@ void Simulation::outputParFileTxt()
 		 */
 		for (int i=0; i<np; i++) {
 			if (pos[i].z < 0) {
-				vel[i] -= sys.vel_difference;
+				vel.vel[i] -= sys.lees->getVelDifference({0, 0, sys.get_lz()});
+			}
+		}
+		if (sys.shear_type == ShearType::extensional_flow) {
+			for (int i=0; i<np; i++) {
+				pos[i] = shiftUpCoordinate(sys.conf->position[i].x,
+										   sys.conf->position[i].y,
+										   sys.conf->position[i].z);
 			}
 		}
 	} else if (sys.p->output.relative_position_view) {
-		relativePositionView(pos, vel);
+		relativePositionView(pos, vel.vel);
 	} else {
 		for (int i=0; i<np; i++) {
 			pos[i].x = sys.conf->position[i].x-0.5*sys.get_lx();
@@ -988,8 +989,8 @@ void Simulation::outputParFileTxt()
 			outdata_par.entryData("position z", Dimensional::Dimension::none, 1, pos[i].z, 6);
 		}
 
-		outdata_par.entryData("velocity (x, y, z)", Dimensional::Dimension::Velocity, 3, vel[i]);
-		outdata_par.entryData("angular velocity (x, y, z)", Dimensional::Dimension::none, 3, sys.ang_velocity[i]);
+		outdata_par.entryData("velocity (x, y, z)", Dimensional::Dimension::Velocity, 3, vel.vel[i]);
+		outdata_par.entryData("angular velocity (x, y, z)", Dimensional::Dimension::none, 3, vel.ang_vel[i]);
 		if (sys.twodimension) {
 			outdata_par.entryData("angle", Dimensional::Dimension::none, 1, sys.conf->angle[i]);
 		}
@@ -1004,10 +1005,10 @@ void Simulation::outputParFileTxt()
 		//		}
 		if (sys.p->output.out_na_vel) {
 			if (sys.twodimension) {
-				outdata_par.entryData("non-affine velocity x", Dimensional::Dimension::Velocity, 1, sys.na_velocity[i].x);
-				outdata_par.entryData("non-affine velocity z", Dimensional::Dimension::Velocity, 1, sys.na_velocity[i].z);
+				outdata_par.entryData("non-affine velocity x", Dimensional::Dimension::Velocity, 1, vel.ang_vel[i].x);
+				outdata_par.entryData("non-affine velocity z", Dimensional::Dimension::Velocity, 1, vel.ang_vel[i].z);
 			} else {
-				outdata_par.entryData("non-affine velocity (x, y, z)", Dimensional::Dimension::Velocity, 3, sys.na_velocity[i]);
+				outdata_par.entryData("non-affine velocity (x, y, z)", Dimensional::Dimension::Velocity, 3, vel.ang_vel[i]);
 			}
 		}
 		if (sys.p->output.out_na_disp) {
@@ -1148,7 +1149,7 @@ void Simulation::outputIntFileTxt()
 
 		outdata_int.entryData("Viscosity contribution of contact xF", Dimensional::Dimension::Stress, 1, \
 							  doubledot(stress_contact, sys.imposed_flow->sym_grad_u/sr)/sr);
-		if (sys.delayed_adhesion) {
+		if (Interactions::has_delayed_adhesion(sys.p->TA_adhesion)) {
 			outdata_int.entryData("norm of the normal adhesion force", Dimensional::Dimension::Force, 1, \
 								  inter.delayed_adhesion->getForceNorm());
 			
@@ -1273,7 +1274,7 @@ void Simulation::outputGSD()
 		uintBuffer.resize(np, 0);
 	}
 	std::vector<vec3d> pos;
-	std::vector<vec3d> vel = sys.velocity;
+	std::vector<vec3d> vel = sys.velocity.vel;
 	double lx = sys.get_lx();
 	double ly = sys.get_ly();
 	double lz = sys.get_lz();

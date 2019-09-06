@@ -296,6 +296,11 @@ private:
 	void initSolventFlow(std::string simulation_type);
 	vec3d meanParticleVelocity();
 	vec3d meanParticleAngVelocity();
+
+	bool is_brownian() const
+	{
+		return p->brownian > 0;
+	}
 	
 	double get_lx() const
 	{

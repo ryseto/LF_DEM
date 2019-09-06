@@ -142,7 +142,7 @@ void System::declareForceComponents()
 
 	bool torque = true;
 
-	if (p->brownian > 0) {
+	if (is_brownian()) {
 		force_components["brownian"] = ForceComponent(np, RateDependence::independent, torque);
 		declared_forces.push_back("brownian");
 	}
@@ -249,7 +249,7 @@ void System::setupParameters()
 		max_disp_tan_avg.setRelaxationTime(p->memory_strain_avg);
 	}
 
-	if (p->brownian > 0) {
+	if (is_brownian()) {
 		double stress_avg_relaxation_parameter = 10*p->output.time_interval_output_data.value; // 0 --> no average
 		stress_avg.setRelaxationTime(stress_avg_relaxation_parameter);
 		rate_prop_shearstress_rate1_ave.setRelaxationTime(p->brownian_relaxation_time);
@@ -1079,7 +1079,7 @@ void System::timeEvolution(double time_end, double strain_end)
 		firsttime = false;
 	}
 	bool calc_stress = false;
-	if (p->brownian > 0) {
+	if (is_brownian()) {
 		calc_stress = true;
 	}
 	avg_dt = 0;
@@ -1089,7 +1089,7 @@ void System::timeEvolution(double time_end, double strain_end)
 			dt = p->dt;
 		}
 		double time_bound, strain_bound;
-		if (p->brownian > 0) {
+		if (is_brownian()) {
 			time_bound = -1;
 			strain_bound = -1;
 		} else if (shear_type == ShearType::extensional_flow) {
@@ -1511,7 +1511,7 @@ void System::computeVelocityWithoutComponents(bool rebuild)
 		res_solver->addToSolverRHS(force_components[component]);
 	}
 	res_solver->solve(na_velocity.vel, na_velocity.ang_vel); // get V
-	if (p->brownian > 0 && twodimension) {
+	if (is_brownian() && twodimension) {
 		rushWorkFor2DBrownian(na_velocity.vel, na_velocity.ang_vel);
 	}
 }
@@ -1536,7 +1536,7 @@ void System::computeVelocityByComponents()
 		res_solver->solve(na_velo_components[component].vel,
 							na_velo_components[component].ang_vel);
 	}
-	if (p->brownian > 0 && twodimension) {
+	if (is_brownian() && twodimension) {
 		rushWorkFor2DBrownian(na_velo_components["brownian"].vel,
 							  na_velo_components["brownian"].ang_vel);
 	}
@@ -1565,7 +1565,7 @@ void System::computeShearRate()
 	 */
 	double rate_prop_shearstress_rate1 = doubledot(rate_prop_stress, imposed_flow->sym_grad_u); // computed with rate=1, o here it is also the viscosity.
 	double rate_indep_shearstress = doubledot(rate_indep_stress, imposed_flow->sym_grad_u);
-	if (p->brownian > 0) {
+	if (is_brownian()) {
 		rate_prop_shearstress_rate1_ave.update(rate_prop_shearstress_rate1, get_time());
 		rate_indep_shearstress_ave.update(rate_indep_shearstress, get_time());
 		rate_prop_shearstress_rate1 = rate_prop_shearstress_rate1_ave.get();
@@ -1871,7 +1871,7 @@ void System::computeNonAffineVelocitiesStokesDrag()
 			na_velocity.ang_vel[i] += force_components[component].torque[i]/stokesdrag_coeff_t_sqrt[i];
 		}
 	}
-	if (p->brownian > 0 && twodimension) {
+	if (is_brownian() && twodimension) {
 		rushWorkFor2DBrownian(na_velocity.vel, na_velocity.ang_vel);
 	}
 }
