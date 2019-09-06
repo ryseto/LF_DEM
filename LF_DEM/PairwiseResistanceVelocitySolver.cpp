@@ -6,20 +6,17 @@ namespace Dynamics {
 
 PairwiseResistanceVelocitySolver::PairwiseResistanceVelocitySolver(double stokes_coeff) :
 sd_coeff(stokes_coeff),
-pairwise_resistance_changed(false)
+pairwise_resistance_changed(true)
 {}
 
 PairwiseResistanceVelocitySolver::PairwiseResistanceVelocitySolver(double stokes_coeff, 
 													 			   const std::vector<double> &particle_radius) : 
 PairwiseResistanceVelocitySolver(stokes_coeff)
 {
+	radius = particle_radius;
 	np = particle_radius.size();
 	np_mobile = np;
-	radius = particle_radius;
-	nb_blocks_ff.resize(0);
-	nb_blocks_mm.resize(np_mobile, 0);
-	nb_blocks_mf.resize(0);
-	stokes_solver.init(np_mobile, 0);
+	initStokesSolver();
 }
 
 template<class VelAssignor>
@@ -32,12 +29,21 @@ PairwiseResistanceVelocitySolver(stokes_coeff)
 	np = particle_radius.size();
 	velo_assignor = std::unique_ptr<VelAssignor>(new VelAssignor (va));
 	np_mobile = np - velo_assignor->np_fixed;
-	nb_blocks_ff.resize(velo_assignor->np_fixed, 0);
-	nb_blocks_mm.resize(np_mobile, 0);
-	nb_blocks_mf.resize(np_mobile, 0);
-	stokes_solver.init(np, np_mobile);
+	initStokesSolver();
 }
 
+void PairwiseResistanceVelocitySolver::initStokesSolver()
+{
+	if (velo_assignor) {
+		nb_blocks_ff.resize(velo_assignor->np_fixed, 0);
+		nb_blocks_mf.resize(np_mobile, 0);
+	} else {
+		nb_blocks_ff.resize(0);
+		nb_blocks_mf.resize(0);
+	}
+	nb_blocks_mm.resize(np_mobile, 0);
+	stokes_solver.init(np, np_mobile);
+}
 
 void PairwiseResistanceVelocitySolver::declareResistance(unsigned p0, unsigned p1)
 {
@@ -110,7 +116,7 @@ void PairwiseResistanceVelocitySolver::buildResistanceMatrix(const Interactions:
 	buildDiagonalBlocks();
 	for (unsigned i=0; i<np-1; i ++) {
 		stokes_solver.startNewColumn();
-		for (auto it : interaction_manager.interactions) {
+		for (auto it : interaction_manager.interactions_pp[i]) {
 			auto j = it->partner(i);
 			if (j > i) {
 				if (it->hasPairwiseResistance()) {

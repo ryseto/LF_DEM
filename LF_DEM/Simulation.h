@@ -81,6 +81,8 @@ private:
 	Dimensional::Unit determineUnit(Parameters::ParameterSetFactory &PFact);
 	void convertForces(Dimensional::Unit &internal_unit,
 					   Parameters::ParameterSetFactory &PFact);
+	void setOutputUnit(Parameters::ParameterSetFactory &PFact);
+	void exportControlVariable();
 
 	/*
 	 * For inputs

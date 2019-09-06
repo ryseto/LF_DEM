@@ -77,8 +77,6 @@ private:
 
 	double calcInteractionRange(unsigned i, unsigned j);
 	void createNewInteraction(unsigned i, unsigned j, double scaled_interaction_range);
-	void checkInputParams(std::shared_ptr<Parameters::ParameterSet> params,
-						  std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> vel_solver);
 	
 	void setDashpotForceToParticle(std::vector<vec3d> &force,
 								   std::vector<vec3d> &torque);
@@ -92,6 +90,8 @@ private:
 									 std::vector<vec3d> &torque);
 	void setTActAdhesionForceToParticle(std::vector<vec3d> &force,
 								        std::vector<vec3d> &torque);
+	void checkInputParams(std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> vel_solver);
+
 	friend StdInteractionManagerOutput;
 };
 

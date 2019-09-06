@@ -118,7 +118,6 @@ void System::allocateRessources()
 	// Forces and Stress
 	forceResultant.resize(np);
 	torqueResultant.resize(np);
-	declareStressComponents();
 	total_stress_pp.resize(np);
 	phi6.resize(np);
 	n_contact.resize(np);
@@ -330,6 +329,7 @@ void System::setupGenericConfiguration(T config, Parameters::ControlVariable con
 	interaction->declareForceComponents(force_components);
 	declareForceComponents();
 	declareVelocityComponents();
+	declareStressComponents();
 	setupSystemPostConfiguration();
 }
 
@@ -1123,7 +1123,8 @@ void System::timeEvolution(double time_end, double strain_end)
 	} else {
 		avg_dt = dt;
 	}
-	if (events.empty() && !almost_equal(clk.cumulated_strain, kr->getStrainRetrim(), 2)) {
+	if (!(events.empty() || 
+		  (kr && almost_equal(clk.cumulated_strain, kr->getStrainRetrim(), 2) ))) {
 		if (shear_type != ShearType::solvent_flow) {
 			calc_stress = true;
 		}
@@ -1820,7 +1821,9 @@ void System::computeNonAffineVelocities(bool divided_velocities, bool mat_rebuil
 			imposed_flow->setRate(1);
 		}
 		computeUInf(); // note: after imposed_flow->setRate(1);
-		setFixedParticleVelocities();
+		if (mobile_fixed) {
+			setFixedParticleVelocities();
+		}
 		computeVelocityByComponents();
 		if (control == Parameters::ControlVariable::stress) {
 			// Stress-controlled simulation
@@ -1834,7 +1837,9 @@ void System::computeNonAffineVelocities(bool divided_velocities, bool mat_rebuil
 		sumUpVelocityComponents();
 	} else {
 		computeUInf();
-		setFixedParticleVelocities();
+		if (mobile_fixed) {
+			setFixedParticleVelocities();
+		}
 		computeVelocityWithoutComponents(mat_rebuild);
 	}
 	if (in_predictor) {
@@ -1986,10 +1991,8 @@ double System::getSystemVolume() const
 	}
 	if (twodimension) {
 		system_volume = container.lx*system_height;
-		cout << indent << "lx = " << container.lx << " lz = " << container.lz << " system_height = " << system_height << endl;
 	} else {
 		system_volume = container.lx*container.ly*system_height;
-		cout << indent << "lx = " << container.lx << " lz = " << container.lz << " ly = " << container.ly << endl;
 	}
 	return system_volume;
 }

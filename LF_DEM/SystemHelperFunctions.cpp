@@ -94,8 +94,10 @@ double evaluateMaxDispTan(const System &sys)
 {
 	double _max_disp_tan = 0;
 	for (const auto &inter: *(sys.interaction)) {
-		if (inter->contact->disp_tan.norm() > _max_disp_tan) {
-			_max_disp_tan = inter->contact->disp_tan.norm();
+		if (inter->contact) {
+			if (inter->contact->disp_tan.norm() > _max_disp_tan) {
+				_max_disp_tan = inter->contact->disp_tan.norm();
+			}
 		}
 	}
 	return _max_disp_tan;
@@ -105,8 +107,10 @@ double evaluateMaxDispRolling(const System &sys)
 {
 	double _max_disp_rolling = 0;
 	for (const auto &inter: *(sys.interaction)) {
-		if (inter->contact->disp_rolling.norm() > _max_disp_rolling) {
-			_max_disp_rolling = inter->contact->disp_rolling.norm();
+		if (inter->contact) {
+			if (inter->contact->disp_rolling.norm() > _max_disp_rolling) {
+				_max_disp_rolling = inter->contact->disp_rolling.norm();
+			}
 		}
 	}
 	return _max_disp_rolling;

@@ -20,7 +20,7 @@ pdist(pd),
 p(params),
 solver(vel_solver)
 {
-	checkInputParams(params, vel_solver);
+	checkInputParams(vel_solver);
 	checkNewInteractions();
 }
 
@@ -40,13 +40,12 @@ pdist(pd),
 p(params),
 solver(vel_solver)
 {
-	checkInputParams(params, vel_solver);
+	checkInputParams(vel_solver);
 	checkNewInteractions();
 	setContacts(cs);
 }
 
-void StdInteractionManager::checkInputParams(std::shared_ptr<Parameters::ParameterSet> params,
-											 std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> vel_solver)
+void StdInteractionManager::checkInputParams(std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> vel_solver)
 {
 	if (p->brownian > 0 && p->lub.model != "none" && (p->contact.relaxation_time > 0 || p->contact.relaxation_time_tan >0) ) {
 		p->contact.relaxation_time = -1;
@@ -212,16 +211,18 @@ double StdInteractionManager::getMaxRelativeVelocity(ParticleVelocity *vel)
 		if (normal_velocity > max_velocity) {
 			max_velocity = normal_velocity;
 		}
-		if (friction) {
-			normal_velocity = inter->contact->getSlidingVelocity(pvel).norm();
-			if (normal_velocity > max_velocity) {
-				max_velocity = normal_velocity;
+		if (inter->contact) {
+			if (friction) {
+				normal_velocity = inter->contact->getSlidingVelocity(pvel).norm();
+				if (normal_velocity > max_velocity) {
+					max_velocity = normal_velocity;
+				}
 			}
-		}
-		if (rolling) {
-			normal_velocity = inter->contact->getRollingVelocity(pvel).norm();
-			if (normal_velocity > max_velocity) {
-				max_velocity = normal_velocity;
+			if (rolling) {
+				normal_velocity = inter->contact->getRollingVelocity(pvel).norm();
+				if (normal_velocity > max_velocity) {
+					max_velocity = normal_velocity;
+				}
 			}
 		}
 	}

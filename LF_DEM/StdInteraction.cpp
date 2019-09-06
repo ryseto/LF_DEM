@@ -143,7 +143,9 @@ void StdInteraction::updateState(const struct PairVelocity &vel,
 		return;
 	}
 	updateContactState();
-	contact->calcContactSpringForce();
+	if (contact) {
+		contact->calcContactSpringForce();
+	}
 	
 	// Lub
 	updateLubricationState();
@@ -207,16 +209,16 @@ void StdInteraction::updateContactState()
 
 bool StdInteraction::hasPairwiseResistance()
 {
-	return contact->dashpot || lubrication;
+	return lubrication || (contact && contact->dashpot) ;
 }
 
 struct ODBlock StdInteraction::RFU_ODBlock()
 {
 	// This is a bit complex to read, we should find a better way to write a piece of code doing the same thing.
-	if (!lubrication && contact->dashpot) {
+	if (!lubrication && (contact && contact->dashpot)) {
 		return contact->dashpot->RFU_ODBlock();
 	}
-	if (contact->dashpot) {
+	if (contact && contact->dashpot) {
 		return contact->dashpot->RFU_ODBlock();
 	}
 	if (lubrication) {
@@ -230,10 +232,10 @@ struct ODBlock StdInteraction::RFU_ODBlock()
 std::pair<struct DBlock, struct DBlock> StdInteraction::RFU_DBlocks()
 {
 	// This is a bit complex to read, we should find a better way to write a piece of code doing the same thing.
-	if (!lubrication && contact->dashpot) {
+	if (!lubrication && (contact && contact->dashpot)) {
 		return contact->dashpot->RFU_DBlocks();
 	}
-	if (contact->dashpot) {
+	if (contact && contact->dashpot) {
 		return contact->dashpot->RFU_DBlocks();
 	}
 	if (lubrication) {

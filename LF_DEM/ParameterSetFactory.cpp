@@ -100,7 +100,7 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(sj_disp_max_goal, 1e-6),
 		PARAM_INIT(sj_shear_rate, 0),
 		PARAM_INIT(sj_velocity, 1e-3),
-		PARAM_INIT(body_force, 1),
+		PARAM_INIT(body_force, 0),
 		PARAM_INIT(body_force_angle, 0),
 		PARAM_INIT(sflow_dx, 5),
 		PARAM_INIT(sflow_smooth_length, 3),
@@ -455,6 +455,9 @@ ParameterSet ParameterSetFactory::getParameterSet() const
 		inp.exportToParameterSet(p, inp);
 	}
 	for (auto &inp: IntParams) {
+		inp.exportToParameterSet(p, inp);
+	}
+	for (auto &inp: UIntParams) {
 		inp.exportToParameterSet(p, inp);
 	}
 	for (auto &inp: StrParams) {

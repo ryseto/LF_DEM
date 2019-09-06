@@ -54,6 +54,7 @@ void Simulation::setupNonDimensionalization(Parameters::ParameterSetFactory &PFa
 	Dimensional::Unit internal_unit = Dimensional::Unit::hydro;
 	internal_unit = determineUnit(PFact);
 	convertForces(internal_unit, PFact);
+	setOutputUnit(PFact);
 }
 
 Dimensional::Unit Simulation::determineUnit(Parameters::ParameterSetFactory &PFact)
@@ -115,15 +116,21 @@ void Simulation::convertForces(Dimensional::Unit &internal_unit,
 	system_of_units.setInternalUnit(internal_unit);
 	PFact.setSystemOfUnits(system_of_units);
 	cout << indent << "internal units = " << Dimensional::unit2suffix(internal_unit) << endl;
+}
 
+void Simulation::setOutputUnit(Parameters::ParameterSetFactory &PFact)
+{
 	// set the output unit
 	output_unit = control_value.unit;
-	if (sys.has_body_force()) {
+	if (PFact.getParameterSet().body_force>0) {
 		/*** for sedimentation simulations ***/
 		output_unit = Dimensional::Unit::bodyforce;
 	}
 	cout << indent << "output units = " << Dimensional::unit2suffix(output_unit) << endl;
+}
 
+void Simulation::exportControlVariable()
+{
 	// when there is a hydro force, its value is the non-dimensionalized shear rate.
 	auto forces = system_of_units.getForceScales();
 	if (control_var == Parameters::ControlVariable::rate) {
@@ -218,6 +225,7 @@ void Simulation::setupFlow()
 	/* dot_gamma = 1 --> dot_epsilon = 0;
 	 *
 	 */
+	sys.imposed_flow = std::make_shared<Geometry::ImposedDeformation>();
 	if (control_value.value != 0) {
 		if (sys.shear_type == ShearType::simple_shear) {
 			/* simple shear flow
@@ -310,10 +318,7 @@ void Simulation::setupSimulation(string in_args,
 	Parameters::ParameterSetFactory PFactory(guarranted_unit);
 	PFactory.setFromFile(filename_parameters);
 	setupNonDimensionalization(PFactory);
-	if (control_var == Parameters::ControlVariable::stress) {
-		target_stress_input = control_value.value; //@@@ Where should we set the target stress???
-		sys.target_stress = target_stress_input/6/M_PI; //@@@
-	}
+
 	sys.p = std::make_shared<Parameters::ParameterSet>(PFactory.getParameterSet());
 	if (!sys.p->solvent_flow) {
 		if (sys.p->flow_type == "extension") {
@@ -332,6 +337,8 @@ void Simulation::setupSimulation(string in_args,
 	if (sys.p->output.relative_position_view) {
 		sys.p->output.origin_zero_flow = false;
 	}
+	exportControlVariable();
+
 	setupOptionalSimulation(); // @@@ To be removed
 
 	assertParameterCompatibility();

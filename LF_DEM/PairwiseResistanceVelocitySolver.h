@@ -50,6 +50,7 @@ public:
 private:
 	PairwiseResistanceVelocitySolver(double stokes_coeff);
 	void buildDiagonalBlocks();
+	void initStokesSolver();
 
 	unsigned np_mobile;
 	unsigned np;
