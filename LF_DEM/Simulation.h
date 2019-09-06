@@ -61,8 +61,6 @@ private:
 	int timestep_end;
 	Sym2Tensor stress_basis_0;
 	Sym2Tensor stress_basis_3;
-	Sym2Tensor Einf_base; // This original Einf is kept and can be used when flow is stopped.
-	vec3d Omegainf_base; // Same as Einf_base.
 	std::deque<double> sj_program_stress;
 	std::deque<double> sj_program_duration;
 	/*

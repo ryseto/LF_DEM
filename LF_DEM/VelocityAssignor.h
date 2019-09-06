@@ -9,6 +9,7 @@ namespace Dynamics {
 
 class VelocityAssignor {
 public:
+	VelocityAssignor(ParticleVelocity fixed_velocities);
 	virtual	void set(std::vector<vec3d>::iterator vel, std::vector<vec3d>::iterator ang_vel) = 0;
 	ParticleVelocity getFixedVel() {return fixed_vel;};
 	

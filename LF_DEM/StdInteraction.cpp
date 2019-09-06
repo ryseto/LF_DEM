@@ -17,7 +17,7 @@ StdInteraction::StdInteraction(unsigned int i, unsigned int j,
 							   // const Geometry::PairwiseConfig &pconf,
 							   double interaction_range_,
 							   struct StdInteractionParams params,
-							   std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> vel_solver = nullptr) :
+							   Dynamics::PairwiseResistanceVelocitySolver *vel_solver = nullptr) :
 PairwiseInteraction(i, j, a_i, a_j, sep),
 interaction_range(interaction_range_),
 p(std::move(params)),
@@ -32,12 +32,11 @@ solver(vel_solver)
 
 	// Lub
 	if (p.lubp) {
-		calcLubricationRange();
 		updateLubricationState();
 	}
 
 	if (p.repp) {
-		repulsion = std::make_unique<RepulsiveForce>(this, *(p.repp));
+		repulsion = std::unique_ptr<RepulsiveForce>(new RepulsiveForce (this, *(p.repp)));
 	}
 	
 	// if (sys->delayed_adhesion) {
@@ -56,7 +55,7 @@ solver(vel_solver)
 void StdInteraction::switchOnContact()
 {
 	auto dash_coeffs = calcContactDashpotResistanceCoeffs();
-	contact = std::make_unique<Contact>(this, *(p.contp), dash_coeffs.first, dash_coeffs.second);
+	contact = std::unique_ptr<Contact>(new Contact (this, *(p.contp), dash_coeffs.first, dash_coeffs.second));
 	solver->declareResistance(p0, p1);
 }
 
@@ -64,6 +63,20 @@ void StdInteraction::switchOffContact()
 {
 	contact.reset(nullptr);
 	solver->eraseResistance(p0, p1);
+}
+
+void StdInteraction::switchOnDelayedAdhesion()
+{
+	throw std::runtime_error(" StdIntercation:: Error: Delayed adhesion temporarily deactivated.");
+	// delayed_adhesion = \
+	// 	std::unique_ptr<TActAdhesion::TimeActivatedAdhesion>(new TActAdhesion::TimeActivatedAdhesion(sys->p.TA_adhesion,
+	// 																								 p0, p1,
+	// 																								 a0, a1));
+}
+
+void StdInteraction::switchOffDelayedAdhesion()
+{
+	delayed_adhesion.reset(nullptr);
 }
 
 
@@ -155,7 +168,7 @@ void StdInteraction::updateLubricationState()
 		}
 	} else {
 		if (reduced_gap <= p.lubp->max_gap && !contact) {
-			lubrication = std::make_unique<Lub::Lubrication>(this, *(p.lubp));
+			lubrication = std::unique_ptr<Lub::Lubrication>(new Lub::Lubrication (this, *(p.lubp)));
 			solver->declareResistance(p0, p1);
 		}
 	}

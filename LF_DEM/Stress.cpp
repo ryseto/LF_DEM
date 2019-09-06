@@ -23,7 +23,7 @@ void System::declareStressComponents()
 
 	/*****************  GU stresses *********************/
 	// From the velocity components
-	if (Interactions::hasPairwiseResistance(*p)) {
+	if (Interactions::hasPairwiseResistanceStdInteraction(*p)) {
 		if (na_velo_components.empty()) {
 			throw runtime_error(" System::declareStressComponents: No velocity components declared, you probably forgot it.");
 		}

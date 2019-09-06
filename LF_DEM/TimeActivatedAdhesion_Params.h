@@ -11,7 +11,7 @@ namespace TActAdhesion {
 	};
 }
 
-bool has_delayed_adhesion(const TActAdhesion::Parameters &p)
+inline bool has_delayed_adhesion(const TActAdhesion::Parameters &p)
 {
 	return p.adhesion_max_force > 0;
 }

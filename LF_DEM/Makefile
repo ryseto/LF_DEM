@@ -110,7 +110,7 @@ hasconfig:
 $(OUT_CODE): $(OBJ) $(DSFMT_OBJ) $(GSD_OBJ) hasconfig
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJ) $(DSFMT_OBJ) $(GSD_OBJ) $(Cholmod_Linking_Flags) $(Cholmod_GPU) $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Extra_Linking_Flags) -lstdc++ -lm
 
-$(OBJ): $(SRC)
+%.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(Includes) -c $(@:.o=.cpp)
 
 $(GSD_OBJ): $(GSD_SRC)

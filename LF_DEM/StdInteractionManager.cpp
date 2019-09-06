@@ -57,6 +57,13 @@ void StdInteractionManager::checkInputParams(std::shared_ptr<Parameters::Paramet
 	if (!vel_solver && (has_lubrication(p->lub) || has_dashpot(p->contact))) {
 		throw std::runtime_error(" InteractionManager:: Error: Dashpot and lubrication require a pairwise velocity solver.");
 	}
+
+	if (p->contact.critical_load > 0) {
+		if (p->contact.friction_model != FrictionModel::criticalload) {
+			p->contact.friction_model = FrictionModel::criticalload;
+			std::cerr << "Warning : critical load simulation -> switched to friction_model=2" << std::endl;
+		}
+	}
 }
 
 double StdInteractionManager::calcInteractionRange(unsigned i, unsigned j)
@@ -94,7 +101,7 @@ void StdInteractionManager::createNewInteraction(unsigned i, unsigned j, double 
 	}
 	addInteraction(i, j, std::make_shared<StdInteraction>(i, j, conf->radius[i], conf->radius[j], 
 															pdist->getSeparation(i, j), scaled_interaction_range, 
-															std::move(params), solver));
+															std::move(params), solver.get()));
 }
 
 void StdInteractionManager::checkNewInteractions()
@@ -393,21 +400,21 @@ void StdInteractionManager::setRepulsiveForceToParticle(std::vector<vec3d> &forc
 	}
 }
 
-// void StdInteractionManager::setTActAdhesionForceToParticle(std::vector<vec3d> &force,
-// 										            std::vector<vec3d> &torque)
-// {
-// 	for (auto &f: force) {
-// 		f.reset();
-// 	}
-// 	for (auto &t: torque) {
-// 		t.reset();
-// 	}
-// 	unsigned int i, j;
-// 	for (const auto &inter: interactions) {
-// 		std::tie(i, j) = inter->get_par_num();
-// 		inter->delayed_adhesion->addUpForce(force[i], force[j]);
-// 	}
-// }
+void StdInteractionManager::setTActAdhesionForceToParticle(std::vector<vec3d> &force,
+										            std::vector<vec3d> &torque)
+{
+	for (auto &f: force) {
+		f.reset();
+	}
+	for (auto &t: torque) {
+		t.reset();
+	}
+	unsigned int i, j;
+	for (const auto &inter: interactions) {
+		std::tie(i, j) = inter->get_par_num();
+		inter->delayed_adhesion->addUpForce(force[i], force[j]);
+	}
+}
 
 
 void StdInteractionManager::setContacts(const std::vector <struct contact_state>& cs)
@@ -567,7 +574,7 @@ double maxRangeStdInteraction(const Parameters::ParameterSet &params, const std:
 	return max_range;
 }
 
-bool hasPairwiseResistance(const Parameters::ParameterSet &params) {
+bool hasPairwiseResistanceStdInteraction(const Parameters::ParameterSet &p) {
 	return Interactions::has_lubrication(p.lub) || Interactions::has_dashpot(p.contact);
 
 }

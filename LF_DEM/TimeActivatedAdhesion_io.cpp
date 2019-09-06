@@ -41,7 +41,7 @@ void writeStatesBStream(std::ostream &output,
 {
 	std::vector<State> adhesion_states;
 	for (auto &inter: interactions) {
-		adhesion_states.push_back(inter.delayed_adhesion->getState());
+		adhesion_states.push_back(inter->delayed_adhesion->getState());
 	}
 
 	unsigned ncont = adhesion_states.size();
@@ -70,9 +70,10 @@ void setupInteractions(Interactions::StdInteractionManager &interactions,
 		bool existing_interaction = false;
 		for (auto &inter: interactions) {
 			unsigned int p0, p1;
-			std::tie(p0, p1) = inter.get_par_num();
+			std::tie(p0, p1) = inter->get_par_num();
 			if (p0 == state.p0 && p1 == state.p1) {
-				inter.delayed_adhesion->setState(state, time_now);
+				inter->switchOnDelayedAdhesion();
+				inter->delayed_adhesion->setState(state, time_now);
 				existing_interaction = true;
 			}
 		}

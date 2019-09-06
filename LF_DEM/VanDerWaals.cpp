@@ -26,9 +26,9 @@ void vanDerWaalsForce::calcReducedForceNorm()
 	double gap = interaction->getGap();
 	if (gap > 0) {
 		/* van del Waals attraction */
-		double hh = gap+p.vdW_singularity_cutoff;
+		double hh = gap+p.singularity_cutoff;
 		reduced_force_norm = -p.coefficient/hh/hh;
-		double f_tmp = 1-p.coefficient/p.vdW_singularity_cutoff/p.vdW_singularity_cutoff;
+		double f_tmp = 1-p.coefficient/p.singularity_cutoff/p.singularity_cutoff;
 		reduced_force_norm /= f_tmp;
 		reduced_force_norm *= geometric_factor;
 	}

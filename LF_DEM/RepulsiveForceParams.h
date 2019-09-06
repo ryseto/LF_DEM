@@ -11,7 +11,7 @@ struct RepulsiveForceParams
 	double smoothing;			///<  Smooth the exponential down to 0 at max_length with a tanh of width smoothing [0]
 };
 
-bool has_repulsion(struct RepulsiveForceParams p)
+inline bool has_repulsion(struct RepulsiveForceParams p)
 {
 	return p.repulsion > 0;
 }

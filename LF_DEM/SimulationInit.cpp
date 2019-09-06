@@ -80,26 +80,16 @@ Dimensional::Unit Simulation::determineUnit(Parameters::ParameterSetFactory &PFa
 					internal_unit = fs.type;
 				}
 			}
-			if (control_value.unit == Dimensional::Unit::brownian) {
-				//if (internal_unit == Dimensional::Unit::brownian)  // @@@
-				sys.brownian = true; // @@@@ to be checked
-				sys.brownian_dominated = true;
-			}
 		} else {
 			if (control_value.unit == Dimensional::Unit::brownian) {
 				cout << indent << "Brownian at Pe = 0 " << endl;
 				internal_unit = Dimensional::Unit::brownian;
-				sys.brownian = true; // @@@@ to be checked
-				sys.brownian_dominated = true;
-				sys.zero_shear = true;
 			} else if (control_value.unit == Dimensional::Unit::repulsion) {
 				cout << indent << "non-Brownain at rate = 0 " << endl;
 				internal_unit = Dimensional::Unit::repulsion;
-				sys.zero_shear = true;
 			} else {
 				cout << indent << "non-Brownain at rate = 0 " << endl;
 				internal_unit = Dimensional::Unit::kn;
-				sys.zero_shear = true;
 			}
 		}
 	} else if (control_var == Parameters::ControlVariable::stress) {
@@ -114,7 +104,6 @@ Dimensional::Unit Simulation::determineUnit(Parameters::ParameterSetFactory &PFa
 		system_of_units.add(Dimensional::Unit::bodyforce, control_value);
 		system_of_units.setInternalUnit(Dimensional::Unit::bodyforce);
 		internal_unit = Dimensional::Unit::bodyforce;
-		sys.zero_shear = true; // zero imposed shear
 	}
 	return internal_unit;
 }
@@ -129,7 +118,7 @@ void Simulation::convertForces(Dimensional::Unit &internal_unit,
 
 	// set the output unit
 	output_unit = control_value.unit;
-	if (sys.body_force) {
+	if (sys.has_body_force()) {
 		/*** for sedimentation simulations ***/
 		output_unit = Dimensional::Unit::bodyforce;
 	}
@@ -138,9 +127,7 @@ void Simulation::convertForces(Dimensional::Unit &internal_unit,
 	// when there is a hydro force, its value is the non-dimensionalized shear rate.
 	auto forces = system_of_units.getForceScales();
 	if (control_var == Parameters::ControlVariable::rate) {
-		if (!sys.zero_shear) {
-			sys.set_shear_rate(forces.at(Dimensional::Unit::hydro).value);
-		}
+		sys.imposed_flow->setRate(forces.at(Dimensional::Unit::hydro).value);
 	} else if (control_var == Parameters::ControlVariable::stress) {
 		sys.target_stress = forces.at(Dimensional::Unit::stress).value;
 	} else if (control_var == Parameters::ControlVariable::pressure) {
@@ -156,24 +143,11 @@ void Simulation::convertForces(Dimensional::Unit &internal_unit,
 void Simulation::assertParameterCompatibility()
 {
 	// test for incompatibilities
-	if (sys.brownian == true) {
-		if (sys.pairwise_resistance && sys.p.integration_method != 1) {
-			 // @@@@ This test is broken as System has not yet set pairwise resistance. For now test is duplicated later on in System
-			ostringstream error_str;
-			error_str << "Brownian simulation needs to use the Predictor-Corrector method." << endl;
-			error_str << "Modify the parameter file." << endl;
-			throw runtime_error(error_str.str());
-		}
-	}
 	if (control_var == Parameters::ControlVariable::stress) {
-		if (sys.p.integration_method != 0) {
+		if (sys.p->integration_method != 0) {
 			cerr << "Warning : use of the Predictor-Corrector method for the stress controlled simulation is experimental." << endl;
 		}
 		//p.integration_method = 0;
-	}
-	if (sys.critical_load_model) {
-		sys.p.friction_model = 2;
-		cerr << "Warning : critical load simulation -> switched to friction_model=2" << endl;
 	}
 }
 
@@ -245,8 +219,7 @@ void Simulation::setupFlow()
 	 *
 	 */
 	if (control_value.value != 0) {
-		double dimensionless_deformation_rate = 0.5;
-		if (sys.simu_type == sys.SimulationType::simple_shear) {
+		if (sys.shear_type == ShearType::simple_shear) {
 			/* simple shear flow
 			 * shear_rate = 2*dot_epsilon
 			 *
@@ -256,52 +229,37 @@ void Simulation::setupFlow()
 			 * E = ((-1/4, 0, 0), (0, 1/2, 0), (0, 0, -1/4))
 			 * G = ((-1/2, 0, 0), (0, 0, 0), (0, 0, 1/2)
 			 */
-			Einf_base.set(0, 0, 1, 0, 0, 0); // = D
-			Omegainf_base.set(0, 1, 0);
-			sys.setImposedFlow(dimensionless_deformation_rate*Einf_base, dimensionless_deformation_rate*Omegainf_base);
-			stress_basis_0 = {-dimensionless_deformation_rate/2, 0, 0, 0,
-				dimensionless_deformation_rate, -dimensionless_deformation_rate/2}; // = E
-			stress_basis_3 = {-dimensionless_deformation_rate, 0, 0, 0, 0, dimensionless_deformation_rate}; // = G
-		} else if (sys.simu_type == sys.SimulationType::extensional_flow) {
+			matrix flow_shape = {0, 0, 1,
+								 0, 0, 0,
+								 0, 0, 0};
+			sys.imposed_flow->setShape(flow_shape);
+			stress_basis_0 = {-0.25, 0, 0, 0, 0.5, -0.25}; // = E
+			stress_basis_3 = {-0.5, 0, 0, 0, 0, 0.5}; // = G
+		} else if (sys.shear_type == ShearType::extensional_flow) {
 			/* extensional flow
 			 *
 			 */
-			sys.p.magic_angle = atan(0.5*(sqrt(5)-1)); // simulation box needs to be tilted in this angle.
-			matrix grad_u_orig(dimensionless_deformation_rate, 0, 0,
-							   0, 0, 0,
-							   0, 0, -dimensionless_deformation_rate);
+			sys.p->magic_angle = atan(0.5*(sqrt(5)-1)); // simulation box needs to be tilted in this angle.
+			matrix flow_shape (0.5, 0, 0,
+							   0,   0, 0,
+							   0,   0, -0.5);
 			matrix rotation, rotation_inv;
-			rotation.set_rotation(-sys.p.magic_angle, 'y');
-			rotation_inv.set_rotation(sys.p.magic_angle, 'y');
-			sys.grad_u_hat = rotation_inv*grad_u_orig*rotation;
-			sys.grad_u = rotation_inv*grad_u_orig*rotation;
-			Einf_base.setSymmetrize(sys.grad_u);
-			Omegainf_base.set(0, 0, 0);
-			sys.setImposedFlow(Einf_base, Omegainf_base);
-			matrix mat_stress_basis_0(-dimensionless_deformation_rate/2, 0, 0,
-									  0, dimensionless_deformation_rate, 0,
-									  0, 0, -dimensionless_deformation_rate/2);
-			matrix mat_stress_basis_3(0, 0, dimensionless_deformation_rate,
-									  0, 0, 0,
-									  dimensionless_deformation_rate, 0, 0);
+			rotation.set_rotation(-sys.p->magic_angle, 'y');
+			rotation_inv.set_rotation(sys.p->magic_angle, 'y');
+			sys.imposed_flow->setShape(flow_shape);
+			matrix mat_stress_basis_0(-0.25, 0,   0,
+									  0,     0.5, 0,
+									  0,     0,   -0.25);
+			matrix mat_stress_basis_3(0,   0, 0.5,
+									  0,   0, 0,
+									  0.5, 0, 0);
 			mat_stress_basis_0 = rotation_inv*mat_stress_basis_0*rotation;
 			mat_stress_basis_3 = rotation_inv*mat_stress_basis_3*rotation;
 			stress_basis_0.setSymmetrize(mat_stress_basis_0);
 			stress_basis_3.setSymmetrize(mat_stress_basis_3);
-		} else {
-			/// @@@ ???
-			Einf_base.set(0, 0, 0, 0, 0, 0); // = D
-			Omegainf_base.set(0, 1, 0);
-			sys.setImposedFlow(0*Einf_base, 0*Omegainf_base);
 		}
 	} else {
-		cerr << " dimensionlessnumber = " << control_value.value << endl;
-		Einf_base.set(0, 0, 1, 0, 0, 0);
-		Omegainf_base.set(0, 1, 0);
-		Sym2Tensor Einf_zero = {0, 0, 0, 0, 0, 0};
-		vec3d Omegainf_zero(0, 0, 0);
-		sys.setImposedFlow(Einf_zero, Omegainf_zero);
-		sys.zero_shear = true;
+		sys.imposed_flow->setRate(0);
 	}
 }
 
@@ -356,25 +314,23 @@ void Simulation::setupSimulation(string in_args,
 		target_stress_input = control_value.value; //@@@ Where should we set the target stress???
 		sys.target_stress = target_stress_input/6/M_PI; //@@@
 	}
-	sys.p = PFactory.getParameterSet();
-	if (sys.shear_type == ShearType::simple_shear || sys.shear_type == ShearType::extensional_flow) {
-		if (sys.p.flow_type == "extension") {
-			sys.simu_type = sys.SimulationType::extensional_flow;
+	sys.p = std::make_shared<Parameters::ParameterSet>(PFactory.getParameterSet());
+	if (!sys.p->solvent_flow) {
+		if (sys.p->flow_type == "extension") {
+			sys.shear_type = ShearType::extensional_flow;
 		} else {
-			sys.simu_type = sys.SimulationType::simple_shear;
+			sys.shear_type = ShearType::simple_shear;
 		}
-	} else {
-		cerr << "Repulsive force = " << sys.p.repulsion << endl;
-		sys.simu_type = sys.SimulationType::solvent_flow;
-	}
-	if (!sys.p.solvent_flow) {
 		setupFlow(); // Including parameter p setting.
+	} else {
+		cerr << "Repulsive force = " << sys.p->repulsion.repulsion << endl;
+		sys.shear_type = ShearType::solvent_flow;
 	}
-	if (sys.simu_type == sys.SimulationType::extensional_flow) {
-		sys.p.output.origin_zero_flow = false;
+	if (sys.shear_type == ShearType::extensional_flow) {
+		sys.p->output.origin_zero_flow = false;
 	}
-	if (sys.p.output.relative_position_view) {
-		sys.p.output.origin_zero_flow = false;
+	if (sys.p->output.relative_position_view) {
+		sys.p->output.origin_zero_flow = false;
 	}
 	setupOptionalSimulation(); // @@@ To be removed
 
@@ -384,26 +340,15 @@ void Simulation::setupSimulation(string in_args,
 
 	if (false) {
 		// Symmetry check
-		for (int i=0; i< sys.get_np(); i++) {
-			sys.position[i].z = sys.get_lz()-sys.position[i].z;
+		for (unsigned i=0; i< sys.get_np(); i++) {
+			sys.conf->position[i].z = sys.get_lz()-sys.conf->position[i].z;
 		}
 	}
 	
-	p_initial = sys.p;
+	p_initial = *(sys.p);
 	
 	// sys.resetContactModelParameer(); //@@@@ temporary repair // @@@ still needed??
 
-	if (sys.simu_type == sys.SimulationType::simple_shear) {
-		// simple shear
-		cerr << "simple shear " << endl;
-		sys.setVelocityDifference();
-	} else if (sys.simu_type == sys.SimulationType::extensional_flow) {
-		// extensional flow
-		cerr << "extensional flow " << endl;
-		sys.vel_difference.reset();
-	} else {
-		sys.zero_shear = true;
-	}
 	if (simu_name.empty()) {
 		simu_name = prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
 										  simu_identifier);
@@ -429,7 +374,7 @@ void Simulation::openOutputFiles()
 	outdata_st.setFile("st_"+simu_name+".dat",
 					   data_header.str(), force_to_run, restart_from_chkp);
 
-	if (!sys.p.output.out_particle_stress.empty()) {
+	if (!sys.p->output.out_particle_stress.empty()) {
 		outdata_pst.setFile("pst_"+simu_name+".dat",
 							data_header.str(), force_to_run, restart_from_chkp);
 
@@ -442,31 +387,31 @@ void Simulation::openOutputFiles()
 	} else {
 		fout_input.open(input_filename.c_str(), fstream::out | fstream::app);
 	}
-	if (sys.p.output.out_data_particle) {
+	if (sys.p->output.out_data_particle) {
 		outdata_par.setFile("par_"+simu_name+".dat",
 							data_header.str(), force_to_run, restart_from_chkp);
 	}
-	if (sys.p.output.out_data_interaction) {
+	if (sys.p->output.out_data_interaction) {
 		outdata_int.setFile("int_"+simu_name+".dat",
 							data_header.str(), force_to_run, restart_from_chkp);
 	}
-	if (sys.p.output.out_gsd) {
+	if (sys.p->output.out_gsd) {
 		string gsd_filename = simu_name+".gsd";
 		gsd_create(gsd_filename.c_str(), "CIL", "hoomd", gsd_make_version(1, 1));
 		gsd_open(&gsdOut, gsd_filename.c_str() , GSD_OPEN_APPEND);
 	}
-	if (sys.p.solvent_flow) {
+	if (sys.p->solvent_flow) {
 		string sflow_filename = "sf_"+simu_name+".yap";
 		fout_flow.open(sflow_filename.c_str());
 	}
-	if (sys.p.solvent_flow) {
+	if (sys.p->solvent_flow) {
 		string flowprofile_filename = "fp_"+simu_name+".dat";
 		fout_fprofile.open(flowprofile_filename.c_str());
 	}
-	if (sys.p.output.recording_interaction_history) {
-		string rec_filename = "rec_"+simu_name+".dat";
-		sys.openHistoryFile(rec_filename);
-	}
+	// if (sys.p->output.recording_interaction_history) {
+	// 	string rec_filename = "rec_"+simu_name+".dat";
+	// 	sys.openHistoryFile(rec_filename);
+	// }
 
 	//string box_name = "box_"+simu_name+".dat";
 	//fout_boxing.open(box_name);
@@ -512,7 +457,7 @@ string Simulation::prepareSimulationName(bool binary_conf,
 	string_control_parameters << control_value.value << Dimensional::unit2suffix(control_value.unit);
 	ss_simu_name << string_control_parameters.str();
 	if (sys.shear_type == ShearType::simple_shear || sys.shear_type == ShearType::extensional_flow) {
-		ss_simu_name << "_" << sys.p.flow_type;
+		ss_simu_name << "_" << sys.p->flow_type;
 	}
 	if (simu_identifier != "") {
 		ss_simu_name << "_";
@@ -527,23 +472,23 @@ string Simulation::prepareSimulationName(bool binary_conf,
 TimeKeeper Simulation::initTimeKeeper()
 {
 	TimeKeeper tk;
-	if (sys.p.output.log_time_interval) {
-		tk.addClock("data", LogClock(sys.p.output.initial_log_time.value,
-									 sys.p.time_end.value,
-									 sys.p.output.nb_output_data_log_time,
-									 sys.p.time_end.dimension == Dimensional::Dimension::Strain));
+	if (sys.p->output.log_time_interval) {
+		tk.addClock("data", LogClock(sys.p->output.initial_log_time.value,
+									 sys.p->time_end.value,
+									 sys.p->output.nb_output_data_log_time,
+									 sys.p->time_end.dimension == Dimensional::Dimension::Strain));
 	} else {
-		tk.addClock("data", LinearClock(sys.p.output.time_interval_output_data.value,
-										sys.p.output.time_interval_output_data.dimension == Dimensional::Dimension::Strain));
+		tk.addClock("data", LinearClock(sys.p->output.time_interval_output_data.value,
+										sys.p->output.time_interval_output_data.dimension == Dimensional::Dimension::Strain));
 	}
-	if (sys.p.output.log_time_interval) {
-		tk.addClock("config", LogClock(sys.p.output.initial_log_time.value,
-									   sys.p.time_end.value,
-									   sys.p.output.nb_output_config_log_time,
-									   sys.p.time_end.dimension == Dimensional::Dimension::Strain));
+	if (sys.p->output.log_time_interval) {
+		tk.addClock("config", LogClock(sys.p->output.initial_log_time.value,
+									   sys.p->time_end.value,
+									   sys.p->output.nb_output_config_log_time,
+									   sys.p->time_end.dimension == Dimensional::Dimension::Strain));
 	} else {
-		tk.addClock("config", LinearClock(sys.p.output.time_interval_output_config.value,
-										  sys.p.output.time_interval_output_config.dimension == Dimensional::Dimension::Strain));
+		tk.addClock("config", LinearClock(sys.p->output.time_interval_output_config.value,
+										  sys.p->output.time_interval_output_config.dimension == Dimensional::Dimension::Strain));
 	}
 	return tk;
 }
@@ -553,7 +498,7 @@ void Simulation::checkDispersionType()
 	int cnt_type = 0;
 	np1 = sys.get_np();
 	for (unsigned i=0; i<sys.get_np()-1; i++) {
-		if (sys.radius[i+1] != sys.radius[i]) {
+		if (sys.conf->radius[i+1] != sys.conf->radius[i]) {
 			cnt_type ++;
 			np1 = i+1;
 		}

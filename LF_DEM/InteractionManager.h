@@ -7,6 +7,7 @@
 
 #include "ForceComponent.h"
 
+class StdInteractionManagerOutput;
 
 namespace Interactions
 {
@@ -43,6 +44,8 @@ private:
 	std::vector< std::vector<unsigned> >particle_partners;
 	void removePartners(unsigned i, unsigned j);
 	void removeInteractionPP(unsigned i, std::shared_ptr<InteractionT> dead_inter);
+
+	friend StdInteractionManagerOutput;
 };
 
 template <class InteractionT>

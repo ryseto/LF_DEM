@@ -177,4 +177,16 @@ void KraynikReineltPairwiseConfig::periodizeDiffExtFlow(vec3d& pos_diff, unsigne
 	}
 }
 
+void KraynikReineltPairwiseConfig::getVelocities(unsigned i, unsigned j, struct PairVelocity &k) const
+{
+	vec3d pbc_vel_offset;
+	if (velo->type == VelocityType::total) {
+		pbc_vel_offset = getVelOffset(i, j);
+	}
+	k.U[0] = velo->vel[i];
+	k.U[1] = velo->vel[j] + pbc_vel_offset;
+	k.O[0] = velo->ang_vel[i];
+	k.O[1] = velo->ang_vel[j];
+}
+
 } // namespace Geometry

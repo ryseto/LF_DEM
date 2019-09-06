@@ -26,7 +26,8 @@
 #include "Lubrication.h"
 #include "RepulsiveForce.h"
 #include "VanDerWaals.h"
-// #include "TimeActivatedAdhesion.h"
+#include "TimeActivatedAdhesion.h"
+#include "TimeActivatedAdhesion_io.h"
 #include "Sym2Tensor.h"
 #include "PairwiseInteraction.h"
 #include "StdInteractionParams.h"
@@ -51,10 +52,11 @@ private:
 	//===== forces and stresses computations =====//
 	void integrateStress();
 	std::pair<double, double> calcContactDashpotResistanceCoeffs();
+	void switchOnDelayedAdhesion();
+	void switchOffDelayedAdhesion();
 	void switchOnContact();
 	void switchOffContact();
 	void updateContactState();
-	void calcLubricationRange();
 
 	void updateLubricationState();
 
@@ -66,14 +68,16 @@ private:
 	std::vector<double> gap_history;
 	
 	struct StdInteractionParams p;
-	
+	friend void TActAdhesion::setupInteractions(Interactions::StdInteractionManager &interactions, 
+											    const std::vector <struct State> &adhesion_states,
+											    double time_now);
 public:
 	std::unique_ptr<Contact> contact;
 	std::unique_ptr<Lub::Lubrication> lubrication;
 	std::unique_ptr<RepulsiveForce> repulsion;
-	std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> solver;
+	Dynamics::PairwiseResistanceVelocitySolver *solver;
 
-	// std::unique_ptr<TActAdhesion::TimeActivatedAdhesion> delayed_adhesion;
+	std::unique_ptr<TActAdhesion::TimeActivatedAdhesion> delayed_adhesion;
 	 
 	/*********************************
 	 *       Public Methods          *
@@ -84,7 +88,7 @@ public:
 				   // const Geometry::PairwiseConfig &pconf,
 				   double interaction_range_,
 				   struct StdInteractionParams params,
-				   std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> vel_solver);
+				   Dynamics::PairwiseResistanceVelocitySolver *vel_solver);
 	//======= state updates  ====================//
 	void updateState(const struct PairVelocity &vel,
 				    vec3d sep,

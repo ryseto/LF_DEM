@@ -25,7 +25,7 @@ struct LubParams {
 	std::string model;              ///< Lubrication type. "none": no lubrication, "normal": 1/xi lubrication (only squeeze mode), "tangential": "normal" plus log(1/xi) terms (shear and pump modes) ["tangential"]
 };
 
-void setupLubricationParameters(LubParams &p)
+inline void setupLubricationParameters(LubParams &p)
 {
 	std::string indent = "  setupLubricationParameters::\t";
 	if (p.max_gap < 0) {
@@ -40,7 +40,7 @@ void setupLubricationParameters(LubParams &p)
 
 } // namespace Lub
 
-bool has_lubrication(const Lub::LubParams &p)
+inline bool has_lubrication(const Lub::LubParams &p)
 {
 	return p.model != "none";
 }

@@ -7,6 +7,7 @@
 //
 
 #include "System.h"
+
 #include <stdexcept>
 
 using namespace std;
@@ -28,7 +29,7 @@ double evaluateMaxAngVelocity(const System & sys)
 {
 	double _max_ang_velocity = 0;
 	for (unsigned i = 0; i < sys.get_np(); i++) {
-		vec3d na_ang_velocity_tmp = sys.na_ang_velocity[i];
+		vec3d na_ang_velocity_tmp = sys.na_velocity.ang_vel[i];
 		if (na_ang_velocity_tmp.norm() > _max_ang_velocity) {
 			_max_ang_velocity = na_ang_velocity_tmp.norm();
 		}
@@ -39,9 +40,9 @@ double evaluateMaxAngVelocity(const System & sys)
 
 double evaluateMinGap(const System & sys)
 {
-	double _min_reduced_gap = sys.p.interaction_range;
+	double _min_reduced_gap = 1000;
 	unsigned int p0, p1;
-	for (const auto &inter: sys.interactions) {
+	for (const auto &inter: *(sys.interaction)) {
 		std::tie(p0, p1) = inter->get_par_num();
 		if ((int)p0 < sys.np_mobile && // exclude fixed-fixed
 			inter->getReducedGap() < _min_reduced_gap) {
@@ -55,8 +56,8 @@ double evaluateAvgContactGap(const System & sys)
 {
 	double _avg_reduced_gap = 0;
 	int nb=0;
-	for (const auto &inter: sys.interactions) {
-		if (inter->contact.is_active()) {
+	for (const auto &inter: *(sys.interaction)) {
+		if (inter->contact) {
 			_avg_reduced_gap += inter->getReducedGap();
 			nb++;
 		}
@@ -68,8 +69,8 @@ double evaluateAvgContactGap(const System & sys)
 double evaluateMaxContactGap(const System & sys)
 {
 	double _max_contact_gap = 0;
-	for (const auto &inter: sys.interactions) {
-		if (inter->contact.is_active() &&
+	for (const auto &inter: *(sys.interaction)) {
+		if (inter->contact &&
 			inter->getReducedGap() > _max_contact_gap) {
 			_max_contact_gap = inter->getReducedGap();
 		}
@@ -81,7 +82,7 @@ double evaluateMaxVelocity(const System &sys)
 {
 	double sq_max_velocity = 0;
 	for (unsigned i = 0; i < sys.get_np(); i++) {
-		vec3d na_velocity_tmp = sys.na_velocity[i];
+		vec3d na_velocity_tmp = sys.na_velocity.vel[i];
 		if (na_velocity_tmp.sq_norm() > sq_max_velocity) {
 			sq_max_velocity = na_velocity_tmp.sq_norm();
 		}
@@ -92,9 +93,9 @@ double evaluateMaxVelocity(const System &sys)
 double evaluateMaxDispTan(const System &sys)
 {
 	double _max_disp_tan = 0;
-	for (const auto &inter: sys.interactions) {
-		if (inter->contact.disp_tan.norm() > _max_disp_tan) {
-			_max_disp_tan = inter->contact.disp_tan.norm();
+	for (const auto &inter: *(sys.interaction)) {
+		if (inter->contact->disp_tan.norm() > _max_disp_tan) {
+			_max_disp_tan = inter->contact->disp_tan.norm();
 		}
 	}
 	return _max_disp_tan;
@@ -103,9 +104,9 @@ double evaluateMaxDispTan(const System &sys)
 double evaluateMaxDispRolling(const System &sys)
 {
 	double _max_disp_rolling = 0;
-	for (const auto &inter: sys.interactions) {
-		if (inter->contact.disp_rolling.norm() > _max_disp_rolling) {
-			_max_disp_rolling = inter->contact.disp_rolling.norm();
+	for (const auto &inter: *(sys.interaction)) {
+		if (inter->contact->disp_rolling.norm() > _max_disp_rolling) {
+			_max_disp_rolling = inter->contact->disp_rolling.norm();
 		}
 	}
 	return _max_disp_rolling;
@@ -116,10 +117,10 @@ std::pair<unsigned int, unsigned int> countNumberOfContact(const System &sys)
 {
 	unsigned int contact_nb = 0;
 	unsigned int fric_contact_nb = 0;
-	for (const auto &inter: sys.interactions) {
-		if (inter->contact.is_active()) {
+	for (const auto &inter: *(sys.interaction)) {
+		if (inter->contact) {
 			contact_nb ++;
-			if (inter->contact.is_frictional()) {
+			if (inter->contact->is_frictional()) {
 				fric_contact_nb ++;
 			}
 		}
@@ -129,15 +130,17 @@ std::pair<unsigned int, unsigned int> countNumberOfContact(const System &sys)
 
 std::pair<unsigned, double> getTAAdhesionActivityStatistics(const System &sys)
 {
-	assert(sys.delayed_adhesion);
+	assert(Interactions::has_delayed_adhesion(sys.p->TA_adhesion));
 	unsigned active_nb = 0;
 	unsigned active_dormant_nb = 0;
-	for (const auto &inter: sys.interactions) {
-		auto state = inter->delayed_adhesion->getState();
-		if (state.activity != TActAdhesion::Activity::inactive) {
-			active_dormant_nb++;
-			if (state.activity == TActAdhesion::Activity::active) {
-				active_nb++;
+	for (const auto &inter: *(sys.interaction)) {
+		if (inter->delayed_adhesion) {
+			auto state = inter->delayed_adhesion->getState();
+			if (state.activity != Interactions::TActAdhesion::Activity::inactive) {
+				active_dormant_nb++;
+				if (state.activity == Interactions::TActAdhesion::Activity::active) {
+					active_nb++;
+				}
 			}
 		}
 	}
@@ -151,12 +154,12 @@ std::pair<unsigned, double> getTAAdhesionActivityStatistics(const System &sys)
 double getPotentialEnergy(const System &sys)
 {
 	double total_energy = 0;
-	for (const auto &inter: sys.interactions) {
-		if (inter->contact.is_active()){
-			total_energy += inter->contact.calcEnergy();
+	for (const auto &inter: *(sys.interaction)) {
+		if (inter->contact){
+			total_energy += inter->contact->calcEnergy();
 		}
-		if (sys.repulsiveforce) {
-			total_energy += inter->repulsion.calcEnergy();
+		if (inter->repulsion) {
+			total_energy += inter->repulsion->calcEnergy();
 		}
 	}
 	return total_energy;
@@ -165,8 +168,8 @@ double getPotentialEnergy(const System &sys)
 void isInContact(const System &sys, std::vector<int> &isincontact)
 {
 	isincontact.resize(sys.get_np(), 0);
-	for (const auto &inter: sys.interactions) {
-		if (inter->contact.is_active()) {
+	for (const auto &inter: *(sys.interaction)) {
+		if (inter->contact) {
 			unsigned p0, p1;
 			std::tie(p0, p1) = inter->get_par_num();	
 			isincontact[p0] = 1;

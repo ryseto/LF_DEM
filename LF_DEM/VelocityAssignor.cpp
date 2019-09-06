@@ -3,11 +3,18 @@
 namespace Dynamics
 {
 
-FixedVelocityVector::FixedVelocityVector(ParticleVelocity fixed_velocities) :
+VelocityAssignor::VelocityAssignor(ParticleVelocity fixed_velocities) :
 fixed_vel(fixed_velocities)
 {
 	np_fixed = fixed_velocities.vel.size();
 }
+
+FixedVelocityVector::FixedVelocityVector(ParticleVelocity fixed_velocities) :
+VelocityAssignor(fixed_velocities)
+{
+	
+}
+
 
 void FixedVelocityVector::set(std::vector<vec3d>::iterator vel, std::vector<vec3d>::iterator ang_vel)
 {

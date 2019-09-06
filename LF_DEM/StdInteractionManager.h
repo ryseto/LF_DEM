@@ -92,12 +92,12 @@ private:
 									 std::vector<vec3d> &torque);
 	void setTActAdhesionForceToParticle(std::vector<vec3d> &force,
 								        std::vector<vec3d> &torque);
-
+	friend StdInteractionManagerOutput;
 };
 
 double maxRangeStdInteraction(const Parameters::ParameterSet &params, const std::vector<double> &radii);
 
-bool hasPairwiseResistance(const Parameters::ParameterSet &p);
+bool hasPairwiseResistanceStdInteraction(const Parameters::ParameterSet &p);
 
 }
 #endif

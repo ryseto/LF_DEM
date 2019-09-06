@@ -254,7 +254,9 @@ void System::setupParameters()
 		stress_avg.setRelaxationTime(stress_avg_relaxation_parameter);
 		rate_prop_shearstress_rate1_ave.setRelaxationTime(p->brownian_relaxation_time);
 		rate_indep_shearstress_ave.setRelaxationTime(p->brownian_relaxation_time);
-		if (Interactions::hasPairwiseResistance(*p) && p->integration_method != 1) {
+		// if ((Interactions::hasPairwiseResistanceStdInteractionStdInteraction(*p) || Interactions::hasDimer(*p))
+		if (Interactions::hasPairwiseResistanceStdInteraction(*p)
+			&& p->integration_method != 1) {
 			ostringstream error_str;
 			error_str << "Brownian simulation with multiplicative noise needs to use the Predictor-Corrector method." << endl;
 			error_str << "Modify the parameter file." << endl;
@@ -282,6 +284,9 @@ void System::setupParameters()
 		#endif
 		#endif
 	}
+	if (wall_rheology) {
+		throw std::runtime_error("wall_rheology commented out in System.");
+	}
 }
 
 template<typename T>
@@ -308,7 +313,7 @@ void System::setupGenericConfiguration(T config, Parameters::ControlVariable con
 		pairconf = std::make_shared<Geometry::LeesEdwardsPairwiseConfig>(conf, lees, max_range);
 	}
 
-	if (Interactions::hasPairwiseResistance(*p)) {
+	if (Interactions::hasPairwiseResistanceStdInteraction(*p)) {
 		if (!mobile_fixed) {
 			res_solver = std::make_shared<Dynamics::PairwiseResistanceVelocitySolver>(p->sd_coeff, conf->radius);
 		} else {
@@ -337,17 +342,18 @@ void System::setupConfiguration(struct base_shear_configuration conf, Parameters
 	setupGenericConfiguration(conf, control_);
 }
 
-// void System::setupConfiguration(struct fixed_velo_configuration conf, Parameters::ControlVariable control_)
-// {
-// 	np_wall1 = conf.np_wall1;
-// 	np_wall2 = conf.np_wall2;
-// 	//p->np_fixed = conf.fixed_velocities.size();
-// 	p->np_fixed = np_wall1+np_wall2;
-// 	z_bot = conf.z_bot;
-// 	z_top = conf.z_top;
-// 	setupGenericConfiguration(conf, control_);
-// 	setFixedVelocities(conf.fixed_velocities);
-// }
+void System::setupConfiguration(struct fixed_velo_configuration conf, Parameters::ControlVariable control_)
+{
+	np_wall1 = conf.np_wall1;
+	np_wall2 = conf.np_wall2;
+	//p->np_fixed = conf.fixed_velocities.size();
+	p->np_fixed = np_wall1+np_wall2;
+	z_bot = conf.z_bot;
+	z_top = conf.z_top;
+	setupGenericConfiguration(conf, control_);
+	throw std::runtime_error("Mobile-fixed to be fixed");	
+	// setFixedVelocities(conf.fixed_velocities);
+}
 
 void System::setupConfiguration(struct circular_couette_configuration conf, Parameters::ControlVariable control_)
 {
@@ -482,8 +488,9 @@ void System::eventShearJamming()
 	}
 }
 
-// void System::forceResultantInterpaticleForces()
-// {
+void System::forceResultantInterpaticleForces()
+{
+	throw std::runtime_error(" forceResultantInterpaticleForces deactivated ");
 // 	auto &contact_force = force_components["contact"].force;
 // 	int np_tmp = np;
 // 	for (int i=0; i<np_tmp; i++) {
@@ -507,10 +514,12 @@ void System::eventShearJamming()
 // 			forceResultant[i] += adhesion_force[i];
 // 		}
 // 	}
-// }
+}
 
-// void System::wallForces()
-// {
+void System::wallForces()
+{
+	throw std::runtime_error(" wallForces deactivated ");
+
 // 	if (wall_rheology) {
 // 		double max_total_force = 0;
 // 		double max_total_torque = 0;
@@ -573,15 +582,16 @@ void System::eventShearJamming()
 // 			cerr << "Fn " << force_normal_wall1 << ' ' << force_normal_wall2 << endl;
 // 		}
 // 	}
-// }
+}
 
-// void System::forceResultantReset()
-// {
+void System::forceResultantReset()
+{
+	throw std::runtime_error(" forceResultantReset deactivated ");
 // 	for (int i=0; i<np; i++) {
 // 		forceResultant[i].reset();
 // 		torqueResultant[i].reset();
 // 	}
-// }
+}
 
 // void System::checkForceBalance()
 // {
@@ -655,7 +665,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	in_predictor = true;
 	in_corrector = true;
 	if (!p->solvent_flow) {
-		if (!Interactions::hasPairwiseResistance(*p)) {
+		if (!Interactions::hasPairwiseResistanceStdInteraction(*p)) {
 			computeNonAffineVelocitiesStokesDrag();
 		} else {
 			computeNonAffineVelocities(calc_stress, true);
@@ -701,7 +711,7 @@ void System::sflowIteration(bool calc_stress)
 	double diff_u = 0;
 	int cnt = 0;
 	do {
-		if (!Interactions::hasPairwiseResistance(*p)) {
+		if (!Interactions::hasPairwiseResistanceStdInteraction(*p)) {
 			computeNonAffineVelocitiesStokesDrag();
 		} else {
 			computeNonAffineVelocities(calc_stress, true);
@@ -725,7 +735,7 @@ void System::sflowIteration(bool calc_stress)
 
 void System::sflowFiniteRe(bool calc_stress)
 {
-	if (!Interactions::hasPairwiseResistance(*p)) {
+	if (!Interactions::hasPairwiseResistanceStdInteraction(*p)) {
 		computeNonAffineVelocitiesStokesDrag();
 	} else {
 		computeNonAffineVelocities(calc_stress, true);
@@ -800,7 +810,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	in_predictor = true;
 	in_corrector = false;
 
-	if (Interactions::hasPairwiseResistance(*p)) {
+	if (Interactions::hasPairwiseResistanceStdInteraction(*p)) {
 		computeNonAffineVelocities(calc_stress, true); // divided velocities for stress calculation
 	} else {
 		computeNonAffineVelocitiesStokesDrag();
@@ -824,7 +834,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	/* corrector */
 	in_predictor = false;
 	in_corrector = true;
-	if (Interactions::hasPairwiseResistance(*p)) {
+	if (Interactions::hasPairwiseResistanceStdInteraction(*p)) {
 		computeNonAffineVelocities(calc_stress, true);
 	} else {
 		computeNonAffineVelocitiesStokesDrag();
@@ -1228,8 +1238,9 @@ void System::timeEvolution(double time_end, double strain_end)
 // 	}
 // }
 
-// void System::forceResultantLubricationForce()
-// {
+void System::forceResultantLubricationForce()
+{
+	throw std::runtime_error(" forceResultantLubricationForce deactivated ");
 // 	/* Only F = R_FU U is calculated, but R_FE E is not implemented yet.
 // 	 * So, we cannot check the force balance with E^{inf} yet.
 // 	 */
@@ -1331,7 +1342,7 @@ void System::timeEvolution(double time_end, double strain_end)
 // 			torqueResultant[i].z += force_f_to_f[i6+5];
 // 		}
 // 	}
-// }
+}
 
 void System::setBrownianForceToParticle(vector<vec3d> &force,
 										vector<vec3d> &torque)
@@ -1372,7 +1383,7 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 		torque[i].z = sqrt_2_dt_amp*GRANDOM;
 	}
 
-	if (Interactions::hasPairwiseResistance(*p)) {
+	if (Interactions::hasPairwiseResistanceStdInteraction(*p)) {
 		/* L*L^T = RFU
 		 */
 		res_solver->setSolverRHS(force, torque);
@@ -1585,8 +1596,9 @@ void System::computeShearRate()
 	}
 }
 
-// void System::computeShearRateWalls()
-// {
+void System::computeShearRateWalls()
+{
+	throw std::runtime_error(" computeShearRateWalls deactivated ");
 // 	/**
 // 	 \brief Compute the coefficient to give to the velocity of the fixed particles under stress control conditions.
 // 	 */
@@ -1757,7 +1769,7 @@ void System::computeShearRate()
 // 			}
 // 		}
 // 	}
-// }
+}
 
 void System::sumUpVelocityComponents()
 {
@@ -1775,8 +1787,9 @@ void System::sumUpVelocityComponents()
 	}
 }
 
-// void System::setFixedParticleVelocities()
-// {
+void System::setFixedParticleVelocities()
+{
+	throw std::runtime_error("Mobile-fixed to be fixed");
 // 	if (p->simulation_mode == 0) {
 // 		for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
 // 			na_velocity[i].reset();
@@ -1785,7 +1798,7 @@ void System::sumUpVelocityComponents()
 // 	} else if (p->simulation_mode > 0) {
 // 		tmpMixedProblemSetVelocities();
 // 	}
-// }
+}
 
 void System::rescaleVelHydroStressControlled()
 {

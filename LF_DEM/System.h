@@ -115,7 +115,6 @@ private:
 	void sflowIteration(bool calc_stress);
 	void computeMaxNAVelocity();
 	void computeMaxVelocity();
-	double (System::*calcInteractionRange)(int, int);
 	void forceResultantReset();
 	void forceResultantLubricationForce();
 	void forceResultantInterpaticleForces();
@@ -284,7 +283,6 @@ private:
 	void initializeBoxing();
 
 	/*************************************************************/
-	double calcLubricationRange(int, int);
 	void (System::*eventLookUp)();
 	void eventShearJamming();
 	// void yaplotBoxing(std::ofstream &fout_boxing); // Extensional flow Periodic Boundary condition
@@ -302,6 +300,11 @@ private:
 		return p->brownian > 0;
 	}
 	
+	bool has_body_force() const
+	{
+		return p->body_force > 0;
+	}
+
 	double get_lx() const
 	{
 		return container.lx;

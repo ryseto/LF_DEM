@@ -6,8 +6,8 @@ namespace BC {
 
 KraynikReineltBC::KraynikReineltBC(Geometry::box3d sysbox, double magic_angle, 
 								   std::shared_ptr<Geometry::ImposedDeformation> imposed_deformation) :
-container(sysbox),
-deformation(imposed_deformation)
+deformation(imposed_deformation),
+container(sysbox)
 {
 // extensional flow
 	// @@@ Some variables need to be set before initializeBoxing() @@@
