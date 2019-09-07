@@ -15,6 +15,7 @@ sedimentation(false),
 channel_flow(false)
 {
 	psolver = new Eigen::SimplicialLDLT <SpMat>;
+	pressure_grad_x = 0;
 }
 
 SolventFlow::~SolventFlow()
@@ -44,7 +45,10 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 		pressure_grad_x = 0;
 	} else if (simulation_type == "channel flow") {
 		channel_flow = true;
-		pressure_grad_x = sys->pressure_drop;
+		if (pressure_grad_x < sys->pressure_drop) {
+			pressure_grad_x += sys->pressure_drop/10000;
+		}
+		std::cerr << "pressure_grad_x = " << pressure_grad_x << std::endl;
 	} else if (simulation_type == "simple shear") {
 		simple_shear = true;
 		std::ostringstream error_str;
@@ -73,7 +77,7 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 	} else {
 		std::cerr << std::setprecision(16) << (sys->get_lz()/dx) << std::endl;
 		nz = std::lround(sys->get_lz()/dx);
-		std::cerr << "nez = " << nz << std::endl;
+		std::cerr << "nz = " << nz << std::endl;
 		dz = sys->get_lz()/nz;
 	}
 	n = nx*nz;
@@ -387,7 +391,6 @@ double SolventFlow::update()
 		u_sol_x_old[k] = u_sol_x[k];
 		u_sol_z_old[k] = u_sol_z[k];
 	}
-
 	return sqrt(u_change_max);
 }
 
@@ -543,13 +546,13 @@ void SolventFlow::solvePressure()
 		//rhs_vector(k) = (div_u_sol_ast[k]+gr_phi_Ud_phi_div_Ud[k])*rhs_coeff;
 	}
 	if (pressure_grad_x != 0) {
-		double delta_P_dxdx_2 = 0.5*pressure_grad_x*sys->get_lx()/(dx*dx);
+		double delta_P_dxdx = pressure_grad_x*sys->get_lx()/(dx*dx);
 		for (int j=0; j<nz; j++) {
 			int j_nx = j*nx;
 			// i = 0 --> k = j*nx
-			rhs_vector(j_nx) += -delta_P_dxdx_2;
+			rhs_vector(j_nx) += -delta_P_dxdx;
 			// i = nx-1 ---> k = nx-1+j*nx
-			rhs_vector(nx-1+j_nx) += delta_P_dxdx_2;
+			rhs_vector(nx-1+j_nx) += delta_P_dxdx;
 		}
 	}
 	pressure_vector = psolver->solve(rhs_vector);

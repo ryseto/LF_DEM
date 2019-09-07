@@ -107,8 +107,9 @@ Dimensional::Unit Simulation::determineUnit(Parameters::ParameterSetFactory &PFa
 		internal_unit = control_value.unit;
 		//		internal_unit = Dimensional::Unit::stress;
 	} else if (control_var == Parameters::ControlVariable::pressure_drop) {
-		system_of_units.add(Dimensional::Unit::stress, control_value);
-		internal_unit = control_value.unit;
+		system_of_units.add(Dimensional::Unit::pressure_drop, control_value);
+		//internal_unit = control_value.unit;
+		internal_unit = Dimensional::Unit::pressure_drop;
 	} else if (control_var == Parameters::ControlVariable::force) {
 		// sedimentation problem
 		system_of_units.add(Dimensional::Unit::bodyforce, control_value);
@@ -133,9 +134,6 @@ void Simulation::convertForces(Dimensional::Unit &internal_unit,
 		/*** for sedimentation simulations ***/
 		output_unit = Dimensional::Unit::bodyforce;
 	}
-//		else if (control_var == Parameters::ControlVariable::pressure_drop) {
-//		output_unit = Dimensional::Unit::critical_load;
-//	}
 	cout << indent << "output units = " << Dimensional::unit2suffix(output_unit) << endl;
 
 	// when there is a hydro force, its value is the non-dimensionalized shear rate.
@@ -146,6 +144,9 @@ void Simulation::convertForces(Dimensional::Unit &internal_unit,
 		}
 	} else if (control_var == Parameters::ControlVariable::stress) {
 		sys.target_stress = forces.at(Dimensional::Unit::stress).value;
+	} else if (control_var == Parameters::ControlVariable::pressure_drop) {
+		sys.pressure_drop = forces.at(Dimensional::Unit::pressure_drop).value;
+		cerr << "sys.pressure_drop = " << sys.pressure_drop << endl;
 	} else if (control_var == Parameters::ControlVariable::force) {
 		/*** for sedimentation simulations ***/
 		cerr << "sedimentation simulation" << endl;
@@ -354,8 +355,6 @@ void Simulation::setupSimulation(string in_args,
 	if (control_var == Parameters::ControlVariable::stress) {
 		target_stress_input = control_value.value; //@@@ Where should we set the target stress???
 		sys.target_stress = target_stress_input/6/M_PI; //@@@
-	} else if (control_var == Parameters::ControlVariable::pressure_drop) {
-		sys.pressure_drop = control_value.value;
 	}
 	sys.p = PFactory.getParameterSet();
 	if (sys.shear_rheology) {
@@ -365,7 +364,6 @@ void Simulation::setupSimulation(string in_args,
 			sys.simu_type = sys.SimulationType::simple_shear;
 		}
 	} else {
-		cerr << "Repulsive force = " << sys.p.repulsion << endl;
 		sys.simu_type = sys.SimulationType::solvent_flow;
 	}
 	if (!sys.p.solvent_flow) {
