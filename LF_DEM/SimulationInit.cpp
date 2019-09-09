@@ -334,9 +334,6 @@ void Simulation::setupSimulation(string in_args,
 	if (sys.shear_type == ShearType::extensional_flow) {
 		sys.p->output.origin_zero_flow = false;
 	}
-	if (sys.p->output.relative_position_view) {
-		sys.p->output.origin_zero_flow = false;
-	}
 	exportControlVariable();
 
 	setupOptionalSimulation(); // @@@ To be removed
