@@ -14,6 +14,8 @@
 %include "../LF_DEM/Sym2Tensor.h"
 %include "../LF_DEM/DimensionalQty.h"
 %include "../LF_DEM/Configuration.h"
+
+
 %include <std_string.i>
 %include <std_set.i>
 %include <std_vector.i>
