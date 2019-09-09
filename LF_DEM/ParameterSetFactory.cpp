@@ -447,35 +447,40 @@ void ParameterSetFactory::setSystemOfUnits(const Dimensional::UnitSystem &unit_s
 ParameterSet ParameterSetFactory::getParameterSet() const
 {
 	ParameterSet p;
+	auto pptr = std::make_shared<ParameterSet>(p);
+	getParameterSetViaPtr(pptr);
+	return p;
+}
+
+void ParameterSetFactory::getParameterSetViaPtr(std::shared_ptr<ParameterSet> &p) const
+{
 	for (auto &inp: BoolParams) {
-		inp.exportToParameterSet(p, inp);
+		inp.exportToParameterSet(*p, inp);
 	}
 	for (auto &inp: DoubleParams) {
-		inp.exportToParameterSet(p, inp);
+		inp.exportToParameterSet(*p, inp);
 	}
 	for (auto &inp: IntParams) {
-		inp.exportToParameterSet(p, inp);
+		inp.exportToParameterSet(*p, inp);
 	}
 	for (auto &inp: UIntParams) {
-		inp.exportToParameterSet(p, inp);
+		inp.exportToParameterSet(*p, inp);
 	}
 	for (auto &inp: StrParams) {
-		inp.exportToParameterSet(p, inp);
+		inp.exportToParameterSet(*p, inp);
 	}
 	for (auto &inp: DimValDblParams) {
-		inp.exportToParameterSet(p, inp);
+		inp.exportToParameterSet(*p, inp);
 	}
 	for (auto &inp: TrueDimValDblParams) {
-		inp.exportToParameterSet(p, inp);
+		inp.exportToParameterSet(*p, inp);
 	}
 	for (auto &inp: ForceScaleParams) {
-		inp.exportToParameterSet(p, inp);
+		inp.exportToParameterSet(*p, inp);
 	}
 
-	Interactions::Lub::setupLubricationParameters(p.lub);
-	Interactions::setupContactParameters(p.contact);
-
-	return p;
+	Interactions::Lub::setupLubricationParameters(p->lub);
+	Interactions::setupContactParameters(p->contact);
 }
 
 } // namespace Parameters

@@ -5,6 +5,7 @@
 %apply int &INPUT { int &binconf_counter };
 %{
 /* Put headers and other declarations here */
+#define SWIG_FILE_WITH_INIT
 #include "../LF_DEM/Simulation.h"
 #include "../LF_DEM/SystemHelperFunctions.h"
 #include "../LF_DEM/Timer.h"
@@ -14,12 +15,17 @@
 %include "../LF_DEM/Sym2Tensor.h"
 %include "../LF_DEM/DimensionalQty.h"
 %include "../LF_DEM/Configuration.h"
+%include "../LF_DEM/ParameterSet.h"
+%include "../LF_DEM/ImposedDeformation.h"
 
 
 %include <std_string.i>
 %include <std_set.i>
 %include <std_vector.i>
 %include <std_pair.i>
+%include <std_shared_ptr.i>
+%shared_ptr(ParameterSet);
+%shared_ptr(ImposedDeformation);
 
 // Instantiate templates used by example
 namespace std {

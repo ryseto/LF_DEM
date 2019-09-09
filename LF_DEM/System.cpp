@@ -289,14 +289,26 @@ void System::setupGenericConfiguration(T config, Parameters::ControlVariable con
 {
 	string indent = "  System::\t";
 	cout << indent << "Setting up System... " << endl;
+	cerr << "0" << endl;
+	
 	np = config.position.size();
+	cerr << "001" << endl;
 	np_mobile = np - p->np_fixed;
+	cerr << "002" << endl;
+
 	control = control_;
+	cerr << "003" << endl;
+
 	container = {config.lx, config.ly, config.lz};
+	cerr << "004" << endl;
+
 	twodimension = config.ly == 0;
+	cerr << "01" << endl;
 
 	setupParameters();
+	cerr << "1" << endl;
 	setConfiguration(config.position, config.radius, config.angle);
+	cerr << "2" << endl;
 
 	auto max_range = Interactions::maxRangeStdInteraction(*p, conf->radius);
 	if (shear_type == ShearType::extensional_flow) {
@@ -315,9 +327,11 @@ void System::setupGenericConfiguration(T config, Parameters::ControlVariable con
 			throw std::runtime_error("Mobile-fixed to be fixed");
 		}
 	}
+	cerr << "3" << endl;
 	
 	// Memory
 	allocateRessources();
+	cerr << "4" << endl;
 
 	total_num_timesteps = 0;
 
@@ -330,6 +344,8 @@ void System::setupGenericConfiguration(T config, Parameters::ControlVariable con
 	declareForceComponents();
 	declareVelocityComponents();
 	declareStressComponents();
+	cerr << "5" << endl;
+
 	setupSystemPostConfiguration();
 }
 

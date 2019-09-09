@@ -318,8 +318,8 @@ void Simulation::setupSimulation(string in_args,
 	Parameters::ParameterSetFactory PFactory(guarranted_unit);
 	PFactory.setFromFile(filename_parameters);
 	setupNonDimensionalization(PFactory);
-
-	sys.p = std::make_shared<Parameters::ParameterSet>(PFactory.getParameterSet());
+	PFactory.getParameterSetViaPtr(sys.p);
+	// sys.p = std::make_shared<Parameters::ParameterSet>(PFactory.getParameterSet());
 	if (!sys.p->solvent_flow) {
 		if (sys.p->flow_type == "extension") {
 			sys.shear_type = ShearType::extensional_flow;

@@ -1,5 +1,6 @@
 #include <functional>
 #include <vector>
+#include <memory>
 #include "DimensionalQty.h"
 #include "ParameterSet.h"
 
@@ -23,6 +24,7 @@ public:
 	void setFromLine(std::string& line);
 	void setParameterFromKeyValue(const std::string &keyword,
 								  const std::string &value);
+	void getParameterSetViaPtr(std::shared_ptr<ParameterSet> &p) const;
 	ParameterSet getParameterSet() const;
 	std::vector<Dimensional::ForceScale> getForceScales() const;
 	void setSystemOfUnits(const Dimensional::UnitSystem &unit_system);
