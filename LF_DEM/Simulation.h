@@ -32,6 +32,8 @@
 #include "Timer.h"
 #include "gsd.h"
 
+enum class DispersionType { mono, bi, poly };
+
 class Simulation {
 private:
 	Parameters::ParameterSet p_initial;
@@ -93,7 +95,6 @@ private:
 	void checkDispersionType();
 	/*********** shear jamming  ************/
 	void operateJammingStressReversal(std::set<std::string> &output_events);
-	enum class DispersionType { mono, bi, poly };
 	DispersionType dispersion_type;
 	std::string indent;
 public:

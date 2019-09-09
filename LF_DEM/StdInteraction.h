@@ -69,7 +69,7 @@ private:
 	
 	struct StdInteractionParams p;
 	friend void TActAdhesion::setupInteractions(Interactions::StdInteractionManager &interactions, 
-											    const std::vector <struct State> &adhesion_states,
+											    const std::vector <struct TActAdhesion::State> &adhesion_states,
 											    double time_now);
 public:
 	std::unique_ptr<Contact> contact;
