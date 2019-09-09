@@ -15,6 +15,7 @@ sedimentation(false),
 channel_flow(false)
 {
 	psolver = new Eigen::SimplicialLDLT <SpMat>;
+	pressure_grad_x = 0;
 }
 
 SolventFlow::~SolventFlow()
@@ -41,8 +42,13 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 	six_pi = 6*M_PI;
 	if (simulation_type == "sedimentation") {
 		sedimentation = true;
+		pressure_grad_x = 0;
 	} else if (simulation_type == "channel flow") {
 		channel_flow = true;
+		if (pressure_grad_x < sys->pressure_drop) {
+			pressure_grad_x += sys->pressure_drop/10000;
+		}
+		std::cerr << "pressure_grad_x = " << pressure_grad_x << std::endl;
 	} else if (simulation_type == "simple shear") {
 		simple_shear = true;
 		std::ostringstream error_str;
@@ -54,14 +60,12 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 		error_str << "Incorrect simulation type\n";
 		throw std::runtime_error(error_str.str());
 	}
-	average_pressure_x.setRelaxationTime(sys->p.sflow_pcontrol_rtime);
 	if (sedimentation) {
+		average_pressure_x.setRelaxationTime(sys->p.sflow_pcontrol_rtime);
 		std::cerr << "sedimentation simulation" << std::endl;
-		pressure_grad_x = 0;
 		sys->body_force = true;
 	}
 	if (channel_flow) {
-		pressure_grad_x = 0;
 		sys->body_force = false;
 	}
 	nx = (int)(sys->get_lx()/sys->p.sflow_dx);
@@ -77,12 +81,12 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 		dz = sys->get_lz()/nz;
 	}
 	n = nx*nz;
-	if (abs(dx-dz) > 1e-8) {
-		std::ostringstream error_str;
-		error_str << "dx = " << dx << "  dz = " << dz << "\n";
-		error_str << "dx != dz. Modify sflow_nx or sflow_nz\n";
-		throw std::runtime_error(error_str.str());
-	}
+//	if (abs(dx-dz) > 1e-8) {
+//		std::ostringstream error_str;
+//		error_str << "dx = " << dx << "  dz = " << dz << "\n";
+//		error_str << "dx != dz. Modify sflow_nx or sflow_nz\n";
+//		throw std::runtime_error(error_str.str());
+//	}
 	cell_area = dx*dz;
 	system_volume = sys->get_lx()*sys->get_lz()*2;
 	smooth_length = sys->p.sflow_smooth_length;
@@ -361,7 +365,7 @@ void SolventFlow::pressureController()
 	}
 }
 
-double SolventFlow::update(double pressure_difference_)
+double SolventFlow::update()
 {
 	//static std::ofstream fout_tmp("debug.dat");
 	particleVelocityDiffToMesh();
@@ -387,7 +391,6 @@ double SolventFlow::update(double pressure_difference_)
 		u_sol_x_old[k] = u_sol_x[k];
 		u_sol_z_old[k] = u_sol_z[k];
 	}
-
 	return sqrt(u_change_max);
 }
 
@@ -444,7 +447,6 @@ void SolventFlow::predictorStep()
 				u_sol_ast_z[k] = u_sol_z[k] + sys->dt*(fz/re_num - (uz_duzdz + ux_duzdx));
 				//u_sol_ast_x[k] = u_sol_x[k] + sys->dt*(fx/re_num);
 				//u_sol_ast_z[k] = u_sol_z[k] + sys->dt*(fz/re_num);
-
 				// - sys->p.sf_zfriction*u_sol_ave.z);
 				/* sf_zfriction*u_sol_z[k] term is added
 				 * to stabilize view center along z direction.
@@ -1147,3 +1149,10 @@ int SolventFlow::meshNb(int xi, int zi)
 	return xi+zi*nx;
 }
 
+double SolventFlow::get_pressure_grad_x()
+{
+	/* flow unit --> particle dynamics unit
+	 * grad p in PD unit = (grad p in SF unit) * (a/R0)^{3-d}
+	 */
+	return pressure_grad_x;
+}

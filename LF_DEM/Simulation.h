@@ -44,6 +44,7 @@ private:
 	Dimensional::Unit output_unit;
 	Dimensional::UnitSystem system_of_units;
 	double target_stress_input;
+	double pressure_drop;
 	double input_rate;
 	double dimensionless_rate;
 	double viscosity;
@@ -167,7 +168,6 @@ public:
 					   double lx, double ly, double lz);
 	void checkpoint();
 	vec3d shiftUpCoordinate(double x, double y, double z);
-	void relativePositionView(std::vector<vec3d> &pos, std::vector<vec3d> &vel);
 	void outputComputationTime();
 	bool kill;
 	bool force_to_run;

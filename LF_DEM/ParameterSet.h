@@ -58,7 +58,6 @@ namespace Parameters {
 		int nb_output_data_log_time;		///< Nb of data output in log time mode [100]
 		int nb_output_config_log_time;		///< Nb of config output in log time mode (must be <= nb_output_data_log_time) [100]
 		bool origin_zero_flow;				///< Output: the middle height of the simulation box is set to the flow zero level. [true]
-		bool relative_position_view;		///< Output: put a particle at the origin of view [false]
 		bool out_data_particle;				///< Output par_* file [true]
 		bool out_data_interaction;			///< Output int_* file [true]
 		bool out_binary_conf;				///< Output binary configurations conf_*.bin files [false]

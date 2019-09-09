@@ -137,7 +137,7 @@ namespace Parameters {
 	enum class ControlVariable : unsigned {
 		rate,
 		stress,
-		pressure,
+		pressure_drop,
 		force
 		// viscnb
 	};
