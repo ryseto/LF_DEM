@@ -327,9 +327,9 @@ void Simulation::setupSimulation(string in_args,
 			sys.shear_type = ShearType::simple_shear;
 		}
 	} else {
-		sys.simu_type = sys.SimulationType::solvent_flow;
+		sys.shear_type = ShearType::solvent_flow;
 	}
-	if (!sys.p.solvent_flow) {
+	if (!sys.p->solvent_flow) {
 		setupFlow(); // Including parameter p setting.
 	} else {
 		cerr << "Repulsive force = " << sys.p->repulsion.repulsion << endl;
@@ -364,7 +364,6 @@ void Simulation::setupSimulation(string in_args,
 	openOutputFiles();
 	echoInputFiles(in_args, input_files);
 	checkDispersionType();
-	cerr << "sys->p.critical_load = " << sys.p.critical_load << endl;
 	cout << indent << "Simulation setup [ok]" << endl;
 }
 

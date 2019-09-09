@@ -61,7 +61,7 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 		throw std::runtime_error(error_str.str());
 	}
 	if (sedimentation) {
-		average_pressure_x.setRelaxationTime(sys->p.sflow_pcontrol_rtime);
+		average_pressure_x.setRelaxationTime(sys->p->sflow_pcontrol_rtime);
 		std::cerr << "sedimentation simulation" << std::endl;
 	}
 	nx = (int)(sys->get_lx()/sys->p->sflow_dx);

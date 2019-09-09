@@ -661,7 +661,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	static int cnt = 0;
 	in_predictor = true;
 	in_corrector = true;
-	if (!p->solvent_flow) {
+	if (shear_type == ShearType::simple_shear || shear_type == ShearType::extensional_flow) {
 		if (!Interactions::hasPairwiseResistanceStdInteraction(*p)) {
 			computeNonAffineVelocitiesStokesDrag();
 		} else {
@@ -671,15 +671,16 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	} else {
 		//if (1) {
 		//sflowFiniteRe(calc_stress);
-		if (!pairwise_resistance) {
-			computeVelocitiesStokesDrag();
+		if (!Interactions::hasPairwiseResistanceStdInteraction(*p)) {
+			computeNonAffineVelocitiesStokesDrag();
 		} else {
-			computeVelocities(calc_stress, true);
+			computeNonAffineVelocities(calc_stress, true);
 		}
-		if (!p.fixed_dt) {
+		if (!p->fixed_dt) {
 			if (cnt++ > 0) {
-				adaptTimeStep(time_end, strain_end);
+				adaptTimeStepWithVelocities();
 			}
+			adaptTimeStepWithBounds(time_end, strain_end);
 		}
 		//	sflow->pressureController();
 		sflow->update();
@@ -900,7 +901,7 @@ void System::adaptTimeStepWithVelocities()
 		computeMaxVelocity();
 		double dt_sflow = p->disp_max/max_velocity;
 		if (max_velocity > 0) {
-			dt_sflow = p.disp_max/max_velocity;
+			dt_sflow = p->disp_max/max_velocity;
 		} else {
 			dt_sflow = 1e-5;
 		}
@@ -957,7 +958,7 @@ void System::timeStepMove(double time_end, double strain_end)
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity.vel[i]*dt);
 	}
-	if (angle_output) {
+	if (twodimension) {
 		for (int i=0; i<np; i++) {
 			conf->angle[i] += velocity.ang_vel[i].y*dt;
 		}
