@@ -129,7 +129,6 @@ private:
 	std::vector<double> stokesdrag_coeff_t;
 	std::vector<double> stokesdrag_coeff_f_sqrt;
 	std::vector<double> stokesdrag_coeff_t_sqrt;
-	
 	void adjustContactModelParameters();
 	Averager<double> kn_avg;
 	Averager<double> kt_avg;
@@ -212,6 +211,7 @@ private:
 	double max_velocity;
 	double max_force_imbalance;
 	double target_stress;
+	double pressure_drop;
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;
 
@@ -238,8 +238,6 @@ private:
 	vec3d force_downwall;
 	double effective_coordination_number;
 	double stress_transition_target;
-	/**** pipe flow setup ***********/
-	double pressure_difference;
 	/****************************************************************************************************
 	 * Extensional flow using Kraynik-Reinelt Method was originally implemented                         *
 	 * by Antonio Martiniello and Giulio Giuseppe Giusteri from Auguest to November 2016 at OIST.       *

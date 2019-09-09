@@ -113,7 +113,7 @@ public:
 	Averager<double> average_pressure_x;
 	void init(System* sys_, std::string simulation_type);
 	void particleVelocityDiffToMesh();
-	double update(double pressure_difference);
+	double update();
 	void initPoissonSolver();
 	void localFlow(const vec3d &p, vec3d &u_local, vec3d &omega_local,
 				   std::vector<double> &e_local);
@@ -123,12 +123,6 @@ public:
 	double flowFiledDissipation();
 	double particleDissipation();
 	void pressureController();
-	double get_pressure_grad_x()
-	{
-		/* flow unit --> particle dynamics unit
-		 * grad p in PD unit = (grad p in SF unit) * (a/R0)^{3-d}
-		 */
-		return pressure_grad_x;
-	}
+	double get_pressure_grad_x();
 };
 #endif /* SolventFlow_hpp */

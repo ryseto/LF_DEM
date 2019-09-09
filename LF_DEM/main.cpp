@@ -132,8 +132,8 @@ int main(int argc, char **argv)
 				break;
 			case 'C':
 				simulation_type = "channel flow";
-				control_variable = Parameters::ControlVariable::force;
-				control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Force, optarg, "force");
+				control_variable = Parameters::ControlVariable::pressure_drop;
+				control_value = Dimensional::str2DimensionalQty(Dimensional::Dimension::Stress, optarg, "pressure drop");
 				break;
 			case 'S':
 				simulation_type = "sedimentation";

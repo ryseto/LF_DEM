@@ -658,6 +658,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 
 	 This method is never used when running a Brownian simulation.
 	 */
+	static int cnt = 0;
 	in_predictor = true;
 	in_corrector = true;
 	if (!p->solvent_flow) {
@@ -668,11 +669,25 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		}
 		computeTotalVelocity();
 	} else {
-		if (0) {
-			sflowFiniteRe(calc_stress);
+		//if (1) {
+		//sflowFiniteRe(calc_stress);
+		if (!pairwise_resistance) {
+			computeVelocitiesStokesDrag();
 		} else {
-			sflowIteration(calc_stress);
+			computeVelocities(calc_stress, true);
 		}
+		if (!p.fixed_dt) {
+			if (cnt++ > 0) {
+				adaptTimeStep(time_end, strain_end);
+			}
+		}
+		//	sflow->pressureController();
+		sflow->update();
+		adjustVelocitySolventFlow();
+
+		//} else {
+		//sflowIteration(calc_stress);
+		//}
 	}
 	if (wall_rheology && calc_stress) { // @@@@ calc_stress remove????
 		forceResultantReset();
@@ -712,16 +727,16 @@ void System::sflowIteration(bool calc_stress)
 		} else {
 			computeNonAffineVelocities(calc_stress, true);
 		}
-		sflow->pressureController();
-		diff_u = sflow->update(pressure_difference);
+		diff_u = sflow->update();
+		if (cnt == 1 || cnt % 100 == 0) {
+			cerr << cnt << ' '  << diff_u << ' '  << sflow->get_pressure_grad_x() << endl;
+		}
 		cnt++;
-		if (cnt > 5000) {
+		if (cnt > 1000) {
 			break;
 		}
-		if (cnt % 100 == 1) {
-			cerr << "@ " << diff_u << ' '  << sflow->get_pressure_grad_x() << endl;
-		}
-	} while (diff_u > 1e-2);
+	} while (diff_u > 1e-3);
+	sflow->pressureController();
 	if (cnt > 1) {
 		cerr << cnt << endl;
 	}
@@ -731,20 +746,12 @@ void System::sflowIteration(bool calc_stress)
 
 void System::sflowFiniteRe(bool calc_stress)
 {
-	if (!Interactions::hasPairwiseResistanceStdInteraction(*p)) {
-		computeNonAffineVelocitiesStokesDrag();
-	} else {
-		computeNonAffineVelocities(calc_stress, true);
-	}
-	sflow->pressureController();
-	sflow->update(pressure_difference);
-	adjustVelocitySolventFlow();
 	//static int cnt = 0;
-//	if (cnt ++ > 1000 && forbid_displacement && fabs(sflow->u_ave.x) < 1e-3) {
-//		forbid_displacement = false;
-//		cerr << cnt << ' ' << sflow->u_ave.x << ' ' << sflow->get_pressure_grad_x() << endl;
-//		cerr << "allow displacmenet" << endl;
-//	}
+	//	if (cnt ++ > 1000 && forbid_displacement && fabs(sflow->u_ave.x) < 1e-3) {
+	//		forbid_displacement = false;
+	//		cerr << cnt << ' ' << sflow->u_ave.x << ' ' << sflow->get_pressure_grad_x() << endl;
+	//		cerr << "allow displacmenet" << endl;
+	//	}
 }
 
 /****************************************************************************************************
@@ -892,6 +899,13 @@ void System::adaptTimeStepWithVelocities()
 	if (p->solvent_flow) {
 		computeMaxVelocity();
 		double dt_sflow = p->disp_max/max_velocity;
+		if (max_velocity > 0) {
+			dt_sflow = p.disp_max/max_velocity;
+		} else {
+			dt_sflow = 1e-5;
+		}
+		cerr << "max_velocity = " << max_velocity << endl;
+		cerr << "dt_sflow = " << dt_sflow << endl;
 		if (dt_sflow < dt) {
 			dt = dt_sflow;
 		}
@@ -929,12 +943,10 @@ void System::timeStepMove(double time_end, double strain_end)
 	 * dot_epsion = shear_rate / 2 is always true.
 	 * clk.cumulated_strain = shear_rate * t for both simple shear and extensional flow.
 	 */
-	//	cerr << dt << ' ' << p->critical_load  << endl;
 	if (!p->fixed_dt) {
 		adaptTimeStepWithVelocities();
 	}
 	adaptTimeStepWithBounds(time_end, strain_end);
-
 	clk.time_ += dt;
 	total_num_timesteps ++;
 	/* evolve PBC */
@@ -945,7 +957,7 @@ void System::timeStepMove(double time_end, double strain_end)
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity.vel[i]*dt);
 	}
-	if (twodimension) {
+	if (angle_output) {
 		for (int i=0; i<np; i++) {
 			conf->angle[i] += velocity.ang_vel[i].y*dt;
 		}
@@ -1836,6 +1848,7 @@ void System::computeNonAffineVelocities(bool divided_velocities, bool mat_rebuil
 		}
 		sumUpVelocityComponents();
 	} else {
+		//if (!p.solvent_flow) {
 		computeUInf();
 		if (mobile_fixed) {
 			setFixedParticleVelocities();
@@ -1961,12 +1974,15 @@ void System::displacement(int i, const vec3d& dr)
 	 * we need to modify the velocity, which was already evaluated.
 	 * The position and velocity will be used to calculate the contact forces.
 	 */
-	if (shear_type != ShearType::extensional_flow) {
+	if (shear_type == ShearType::simple_shear) {
 		/**** simple shear flow ****/
 		lees->periodize(conf->position[i]);
-	} else {
+	} else if (shear_type == ShearType::extensional_flow) {
 		/**** extensional flow ****/
 		kr->periodize(i, conf->position[i]);
+	} else {
+		throw std::runtime_error(" What to do here?");
+		// periodize(position[i]);
 	}
 	pairconf->updateAfterParticleMove(i);
 

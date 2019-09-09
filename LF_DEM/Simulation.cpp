@@ -1039,7 +1039,6 @@ void Simulation::outputParFileTxt()
 	outdata_par.writeToFile(snapshot_header.str());
 }
 
-
 void Simulation::outputIntFileTxt()
 {
 	outdata_int.setUnits(system_of_units, output_unit);

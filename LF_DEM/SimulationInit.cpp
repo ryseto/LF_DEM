@@ -97,9 +97,10 @@ Dimensional::Unit Simulation::determineUnit(Parameters::ParameterSetFactory &PFa
 		system_of_units.add(Dimensional::Unit::stress, control_value);
 		internal_unit = control_value.unit;
 		//		internal_unit = Dimensional::Unit::stress;
-	} else if (control_var == Parameters::ControlVariable::pressure) {
-		system_of_units.add(Dimensional::Unit::stress, control_value);
-		internal_unit = control_value.unit;
+	} else if (control_var == Parameters::ControlVariable::pressure_drop) {
+		system_of_units.add(Dimensional::Unit::pressure_drop, control_value);
+		//internal_unit = control_value.unit;
+		internal_unit = Dimensional::Unit::pressure_drop;
 	} else if (control_var == Parameters::ControlVariable::force) {
 		// sedimentation problem
 		system_of_units.add(Dimensional::Unit::bodyforce, control_value);
@@ -137,14 +138,13 @@ void Simulation::exportControlVariable()
 		sys.imposed_flow->setRate(forces.at(Dimensional::Unit::hydro).value);
 	} else if (control_var == Parameters::ControlVariable::stress) {
 		sys.target_stress = forces.at(Dimensional::Unit::stress).value;
-	} else if (control_var == Parameters::ControlVariable::pressure) {
-		sys.pressure_difference = forces.at(Dimensional::Unit::stress).value;
-		cerr << "sys.pressure_difference = " << sys.pressure_difference << endl;
+	} else if (control_var == Parameters::ControlVariable::pressure_drop) {
+		sys.pressure_drop = forces.at(Dimensional::Unit::pressure_drop).value;
+		cerr << "sys.pressure_drop = " << sys.pressure_drop << endl;
 	} else if (control_var == Parameters::ControlVariable::force) {
 		/*** for sedimentation simulations ***/
 		cerr << "sedimentation simulation" << endl;
 	}
-
 }
 
 void Simulation::assertParameterCompatibility()
@@ -280,7 +280,6 @@ void Simulation::setupControl(Parameters::ControlVariable control_variable_,
 
 }
 
-
 void Simulation::setupSimulation(string in_args,
 								 vector<string>& input_files,
 								 bool binary_conf,
@@ -301,8 +300,9 @@ void Simulation::setupSimulation(string in_args,
 		} else {
 			guarranted_unit = control_value.unit;
 		}
-	} else if (control_var == Parameters::ControlVariable::stress
-			   || control_var == Parameters::ControlVariable::pressure) {
+	} else if (control_var == Parameters::ControlVariable::stress) {
+		guarranted_unit = control_value.unit;
+	} else if (control_var == Parameters::ControlVariable::pressure_drop) {
 		guarranted_unit = control_value.unit;
 	} else if (control_var == Parameters::ControlVariable::force) {
 		guarranted_unit = control_value.unit;
@@ -311,7 +311,7 @@ void Simulation::setupSimulation(string in_args,
 		error_str << "control_var is not set properly. " << (unsigned)control_var;
 		error_str << " (can be rate: " << (unsigned)Parameters::ControlVariable::rate; 
 		error_str << ", stress: " << (unsigned)Parameters::ControlVariable::stress;
-		error_str << ", pressure: " << (unsigned)Parameters::ControlVariable::pressure << ")";
+		error_str << ", pressure_drop: " << (unsigned)Parameters::ControlVariable::pressure_drop << ")";
 		error_str << endl;
 		throw runtime_error(error_str.str());
 	}
@@ -326,6 +326,10 @@ void Simulation::setupSimulation(string in_args,
 		} else {
 			sys.shear_type = ShearType::simple_shear;
 		}
+	} else {
+		sys.simu_type = sys.SimulationType::solvent_flow;
+	}
+	if (!sys.p.solvent_flow) {
 		setupFlow(); // Including parameter p setting.
 	} else {
 		cerr << "Repulsive force = " << sys.p->repulsion.repulsion << endl;
@@ -360,6 +364,7 @@ void Simulation::setupSimulation(string in_args,
 	openOutputFiles();
 	echoInputFiles(in_args, input_files);
 	checkDispersionType();
+	cerr << "sys->p.critical_load = " << sys.p.critical_load << endl;
 	cout << indent << "Simulation setup [ok]" << endl;
 }
 
@@ -450,8 +455,8 @@ string Simulation::prepareSimulationName(bool binary_conf,
 		string_control_parameters << "_" << "rate";
 	} else if (control_var == Parameters::ControlVariable::stress) {
 		string_control_parameters << "_" << "stress";
-	} else if (control_var == Parameters::ControlVariable::pressure) {
-		string_control_parameters << "_" << "pressure";
+	} else if (control_var == Parameters::ControlVariable::pressure_drop) {
+		string_control_parameters << "_" << "pdrop";
 	} else if (control_var == Parameters::ControlVariable::force) {
 		string_control_parameters << "_" << "force";
 	}
