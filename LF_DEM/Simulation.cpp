@@ -975,8 +975,6 @@ void Simulation::outputParFileTxt()
 										   sys.conf->position[i].z);
 			}
 		}
-	// } else if (sys.p->output.relative_position_view) {
-	// 	relativePositionView(pos, vel.vel);
 	} else {
 		for (int i=0; i<np; i++) {
 			pos[i].x = sys.conf->position[i].x-0.5*sys.get_lx();
@@ -1041,58 +1039,6 @@ void Simulation::outputParFileTxt()
 	outdata_par.writeToFile(snapshot_header.str());
 }
 
-// void Simulation::relativePositionView(std::vector<vec3d> &pos, std::vector<vec3d> &vel)
-// {
-// 	int np = sys.get_np();
-// 	for (int i=0; i<np; i++) {
-// 		pos[i].set(sys.conf->position[i].x-sys.conf->position[0].x,
-// 				   sys.conf->position[i].y-sys.conf->position[0].y,
-// 				   sys.conf->position[i].z-sys.conf->position[0].z);
-// 		if (pos[i].z > 0.5*sys.get_lz()) {
-// 			pos[i].x -= sys.shear_disp.x;
-// 			pos[i].y -= sys.shear_disp.y;
-// 			if (pos[i].x < -0.5*sys.get_lx()) {
-// 				pos[i].x += sys.get_lx();
-// 			}
-// 			if (pos[i].y < -0.5*sys.get_ly()) {
-// 				pos[i].y += sys.get_ly();
-// 			}
-// 			pos[i].z -= sys.get_lz();
-// 			for (int ii=0; i<np; i++) {
-// 				if (pos[ii].z < 0) {
-// 					vel[ii] -= sys.vel_difference;
-// 				}
-// 			}
-// 		} else if (pos[i].z < -0.5*sys.get_lz()) {
-// 			pos[i].x += sys.shear_disp.x;
-// 			pos[i].y += sys.shear_disp.y;
-// 			if (pos[i].x > 0.5*sys.get_lx()) {
-// 				pos[i].x -= sys.get_lx();
-// 			}
-// 			if (pos[i].y > 0.5*sys.get_ly()) {
-// 				pos[i].y -= sys.get_ly();
-// 			}
-// 			pos[i].z += sys.get_lz();
-// 			for (int ii=0; i<np; i++) {
-// 				if (pos[ii].z < 0) {
-// 					vel[ii] += sys.vel_difference;
-// 				}
-// 			}
-// 		}
-// 		while (pos[i].x < -0.5*sys.get_lx()) {
-// 			pos[i].x += sys.get_lx();
-// 		}
-// 		while (pos[i].x > 0.5*sys.get_lx()) {
-// 			pos[i].x -= sys.get_lx();
-// 		}
-// 		while (pos[i].y < -0.5*sys.get_ly()) {
-// 			pos[i].y += sys.get_ly();
-// 		}
-// 		while (pos[i].y > 0.5*sys.get_ly()) {
-// 			pos[i].y -= sys.get_ly();
-// 		}
-// 	}
-// }
 
 void Simulation::outputIntFileTxt()
 {
