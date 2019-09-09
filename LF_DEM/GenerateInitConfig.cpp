@@ -6,6 +6,7 @@
 //  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
 //
 
+#include <tuple>
 #include "GenerateInitConfig.h"
 #include "Simulation.h"
 #include "SystemHelperFunctions.h"
