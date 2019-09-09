@@ -192,7 +192,7 @@ private:
 	std::vector<std::complex<double>> phi6;
 	Sym2Tensor total_stress;
 	std::vector<int> n_contact;
-	std::ofstream fout_history;
+	// std::ofstream fout_history;
 
 	std::shared_ptr<Interactions::StdInteractionManager> interaction;
 	void gatherStressesByRateDependencies(Sym2Tensor &rate_prop_stress,
@@ -249,8 +249,6 @@ private:
 	
 	/****************************************/
 	double getSystemVolume() const;
-	void setContacts(const std::vector <struct contact_state>& cs);
-	std::vector <struct contact_state> getContacts() const;
 	struct base_configuration getBaseConfiguration() const;
 
 	void setupConfiguration(struct base_shear_configuration c, Parameters::ControlVariable control_);
@@ -272,7 +270,6 @@ private:
 						  double &stress_rr,
 						  double &stress_thetatheta,
 						  double &stress_rtheta);
-	void initializeBoxing();
 
 	/*************************************************************/
 	void (System::*eventLookUp)();
@@ -282,7 +279,6 @@ private:
 	// void openHistoryFile(std::string rec_filename);
 
 	void countContactNumber();
-	void checkStaticForceBalance();
 	void initSolventFlow(std::string simulation_type);
 	vec3d meanParticleVelocity();
 	vec3d meanParticleAngVelocity();

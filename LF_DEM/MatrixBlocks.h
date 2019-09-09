@@ -1,6 +1,7 @@
 #ifndef __LF_DEM__MatrixBlocks__
 #define __LF_DEM__MatrixBlocks__
 #include <array>
+#include "vec3d.h"
 
 struct ODBlock {
   /**
@@ -129,6 +130,44 @@ inline void resetDBlock(struct DBlock& b)
 	b.col3.fill(0);
 	b.col4.fill(0);
 	b.col5.fill(0);
+}
+
+namespace ResistanceBlocks {
+
+enum class Label {
+	ForceVel,
+	ForceAngVel,
+	TorqueVel,
+	TorqueAngVel
+};
+
+class DBlockBuilder
+{
+public:
+	DBlockBuilder();
+	void addIdentity(Label loc, double prefactor);
+	void addDyadic(Label loc, vec3d v, double prefactor);
+	void addComplementaryDyadic(Label loc, vec3d v, double prefactor);
+	void addVectorProduct(Label loc, vec3d v);
+
+	DBlock block;
+private:
+
+};
+
+class ODBlockBuilder
+{
+public:
+	ODBlockBuilder();
+	void addIdentity(Label loc, double prefactor);
+	void addDyadic(Label loc, vec3d v, double prefactor);
+	void addComplementaryDyadic(Label loc, vec3d v, double prefactor);
+	void addVectorProduct(Label loc, vec3d v);
+
+	ODBlock block;
+private:
+
+};
 }
 
 #endif
