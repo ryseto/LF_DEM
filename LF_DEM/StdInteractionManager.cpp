@@ -10,7 +10,7 @@ StdInteractionManager::StdInteractionManager(unsigned np,
 											 ParticleVelocity *background_vel,
 											 ParticleVelocityGrad *background_velgrad,
 											 std::shared_ptr<Geometry::PairwiseConfig> pd,
-											 std::shared_ptr<Parameters::ParameterSet> params,
+											 Parameters::ParameterSet *params,
 											 std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> vel_solver) :
 InteractionManager<StdInteraction>(np),
 conf(config),
@@ -29,7 +29,7 @@ StdInteractionManager::StdInteractionManager(unsigned np,
 											 ParticleVelocity *background_vel,
 											 ParticleVelocityGrad *background_velgrad,
 											 std::shared_ptr<Geometry::PairwiseConfig> pd,
-											 std::shared_ptr<Parameters::ParameterSet> params,
+											 Parameters::ParameterSet *params,
 											 std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> vel_solver,
 											 const std::vector <struct contact_state>& cs) :
 InteractionManager<StdInteraction>(np),
@@ -138,6 +138,7 @@ void StdInteractionManager::updateInteractions(double dt, ParticleVelocity *vel)
 	 */
 	unsigned i, j;
 	struct PairVelocity pvel;
+
 	pdist->setVelocityState(vel);
 	for (unsigned k=0; k<interactions.size(); k++) {
 		bool deactivated = false;

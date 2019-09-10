@@ -670,15 +670,15 @@ void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init
 	 *
 	 */
 	Parameters::ParameterSetFactory PFactory(Dimensional::Unit::hydro);
-	simu.sys.p = std::make_shared<Parameters::ParameterSet>(PFactory.getParameterSet());
+	simu.sys.p = PFactory.getParameterSet();
 	
 	auto &sys = simu.getSys();
-	simu.sys.p->integration_method = 0;
-	simu.sys.p->disp_max = 5e-3;
-	simu.sys.p->lub.model = "none";
-	simu.sys.p->contact.friction_model = Interactions::FrictionModel::frictionless;
-	simu.sys.p->contact.kn = 1;
-	simu.sys.p->contact.relaxation_time_tan = 1e-4;
+	simu.sys.p.integration_method = 0;
+	simu.sys.p.disp_max = 5e-3;
+	simu.sys.p.lub.model = "none";
+	simu.sys.p.contact.friction_model = Interactions::FrictionModel::frictionless;
+	simu.sys.p.contact.kn = 1;
+	simu.sys.p.contact.relaxation_time_tan = 1e-4;
 	np = readStdinDefault(500, "number of particle");
 	if (circulargap_config || parallel_wall_config) {
 		sys.twodimension = true;
@@ -858,15 +858,15 @@ void GenerateInitConfig::setParametersBasic(Simulation &simu, double volume_frac
 	 *
 	 */
 	Parameters::ParameterSetFactory PFactory(Dimensional::Unit::hydro);
-	simu.sys.p = std::make_shared<Parameters::ParameterSet>(PFactory.getParameterSet());
+	simu.sys.p = PFactory.getParameterSet();
 	
 	auto &sys = simu.getSys();
-	simu.sys.p->integration_method = 0;
-	simu.sys.p->disp_max = 5e-3;
-	simu.sys.p->lub.model = "none";
-	simu.sys.p->contact.friction_model = Interactions::FrictionModel::frictionless;
-	simu.sys.p->contact.kn = 1;
-	simu.sys.p->contact.relaxation_time_tan = 1e-4;
+	simu.sys.p.integration_method = 0;
+	simu.sys.p.disp_max = 5e-3;
+	simu.sys.p.lub.model = "none";
+	simu.sys.p.contact.friction_model = Interactions::FrictionModel::frictionless;
+	simu.sys.p.contact.kn = 1;
+	simu.sys.p.contact.relaxation_time_tan = 1e-4;
 	np = N;
 	sys.twodimension = bidimensional;
 	

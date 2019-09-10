@@ -10,22 +10,38 @@
 #include "../LF_DEM/SystemHelperFunctions.h"
 #include "../LF_DEM/Timer.h"
 #include "../LF_DEM/global.h"
+#include "../LF_DEM/ParameterSet.h"
+#include "../LF_DEM/ParticleConfig.h"
 %}
+%include <std_string.i>
+%include <std_set.i>
+%include <std_vector.i>
+%include <std_pair.i>
+%include <std_shared_ptr.i>
+%shared_ptr(ParticleConfig);
+%rename(TAAParams) Interactions::TActAdhesion::Parameters;
+%rename(ConfinementParams) Confinement::Parameters;
+
 %include "../LF_DEM/vec3d.h"
 %include "../LF_DEM/Sym2Tensor.h"
 %include "../LF_DEM/DimensionalQty.h"
 %include "../LF_DEM/Configuration.h"
 %include "../LF_DEM/ParameterSet.h"
 %include "../LF_DEM/ImposedDeformation.h"
-
-
-%include <std_string.i>
-%include <std_set.i>
-%include <std_vector.i>
-%include <std_pair.i>
-%include <std_shared_ptr.i>
-%shared_ptr(ParameterSet);
-%shared_ptr(ImposedDeformation);
+%include "../LF_DEM/ParticleConfig.h"
+%include "../LF_DEM/System.h"
+%include "../LF_DEM/ContactParams.h"
+%include "../LF_DEM/LubricationParams.h"
+%include "../LF_DEM/RepulsiveForceParams.h"
+%include "../LF_DEM/ConfinementParams.h"
+%include "../LF_DEM/VanDerWaalsParams.h"
+%include "../LF_DEM/TimeActivatedAdhesion_Params.h"
+%include "../LF_DEM/ParameterSetFactory.h"
+%include "../LF_DEM/SystemHelperFunctions.h"
+%include "../LF_DEM/ShearType.h"
+%include "../LF_DEM/Simulation.h"
+%include "../LF_DEM/global.h"
+%include "../LF_DEM/Timer.h"
 
 // Instantiate templates used by example
 namespace std {
@@ -49,10 +65,3 @@ namespace std {
 	  SWIG_exception(SWIG_RuntimeError, e.what());
     }
 }
-%include "../LF_DEM/System.h"
-%include "../LF_DEM/ParameterSet.h"
-%include "../LF_DEM/ParameterSetFactory.h"
-%include "../LF_DEM/SystemHelperFunctions.h"
-%include "../LF_DEM/Simulation.h"
-%include "../LF_DEM/global.h"
-%include "../LF_DEM/Timer.h"

@@ -26,11 +26,11 @@ SolventFlow::~SolventFlow()
 void SolventFlow::init(System* sys_, std::string simulation_type)
 {
 	sys = sys_;
-	re_num = sys->p->sflow_ReNum_p;
+	re_num = sys->p.sflow_ReNum_p;
 	//	if (sys->twodimension) {
-	//		length_scale = sqrt(sys->p->sflow_ReNum/sys->p->sflow_ReNum_p);
+	//		length_scale = sqrt(sys->p.sflow_ReNum/sys->p.sflow_ReNum_p);
 	//	} else {
-	//		//length_scale = pow(sys->p->sflow_ReNum/sys->p->sflow_ReNum_p, 0.3333);
+	//		//length_scale = pow(sys->p.sflow_ReNum/sys->p.sflow_ReNum_p, 0.3333);
 	//		exit(1);
 	//	}
 	//std::cerr << "Ro/a = " << length_scale << std::endl;
@@ -61,12 +61,12 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 		throw std::runtime_error(error_str.str());
 	}
 	if (sedimentation) {
-		average_pressure_x.setRelaxationTime(sys->p->sflow_pcontrol_rtime);
+		average_pressure_x.setRelaxationTime(sys->p.sflow_pcontrol_rtime);
 		std::cerr << "sedimentation simulation" << std::endl;
 	}
-	nx = (int)(sys->get_lx()/sys->p->sflow_dx);
+	nx = (int)(sys->get_lx()/sys->p.sflow_dx);
 	dx = sys->get_lx()/nx;
-	std::cerr << sys->p->sflow_dx << " --> " << dx << std::endl;
+	std::cerr << sys->p.sflow_dx << " --> " << dx << std::endl;
 	if (sys->get_lx() == sys->get_lz()) {
 		dz = dx;
 		nz = nx;
@@ -85,7 +85,7 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 //	}
 	cell_area = dx*dz;
 	system_volume = sys->get_lx()*sys->get_lz()*2;
-	smooth_length = sys->p->sflow_smooth_length;
+	smooth_length = sys->p.sflow_smooth_length;
 	sq_smooth_length = smooth_length*smooth_length;
 	pressure.resize(n, 0);
 	Urel_x.resize(n, 0);
@@ -97,7 +97,7 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 	gr_phi_Ud_phi_div_Ud.resize(n, 0);
 	phi_ux.resize(n,0);
 	phi_ux2.resize(n,0);
-	if (sys->p->sflow_boundary_conditions == 0) {
+	if (sys->p.sflow_boundary_conditions == 0) {
 		pos.resize(n);
 		jmax_uz = nz;
 		Urel_z.resize(n, 0);
@@ -154,14 +154,14 @@ void SolventFlow::initPoissonSolver()
 	for (int j = 0; j < nz; j++) {
 		for (int i = 0; i < nx; i++) {
 			int k = i+j*nx;
-			if (sys->p->sflow_boundary_conditions == 0) {
+			if (sys->p.sflow_boundary_conditions == 0) {
 				// b(xi, zi)
 				lmat[k][k]              += -2*(dx2i+dz2i);  //p(xi,zi) --> b(xi,zi)
 				lmat[k][meshNb(i+1, j)] += dx2i;  //p(xi+1,zi) --> b(xi,zi)
 				lmat[k][meshNb(i-1, j)] += dx2i;  //p(xi-1,zi) --> b(xi,zi)
 				lmat[k][meshNb(i, j+1)] += dz2i;  //p(xi,zi+1) --> b(xi,zi)
 				lmat[k][meshNb(i, j-1)] += dz2i;  //p(xi,zi-1) --> b(xi,zi)
-			} else if (sys->p->sflow_boundary_conditions == 1) {
+			} else if (sys->p.sflow_boundary_conditions == 1) {
 				if (j == 0) {
 					// dp/dz = 0 at the bottom wall
 					lmat[k][k]              += -2*dx2i-dz2i;
@@ -255,7 +255,7 @@ void SolventFlow::particleVelocityDiffToMesh()
 					iix -= nx;
 					xo -= sys->get_lx();
 				}
-				if (sys->p->sflow_boundary_conditions == 0) {
+				if (sys->p.sflow_boundary_conditions == 0) {
 					if (iiz <= -1) {
 						iiz += nz;
 						zo += sys->get_lz();
@@ -349,15 +349,15 @@ void SolventFlow::pressureController()
 	u_ave = calcAverageU(); // fluid unit
 	average_pressure_x.update(pressure_grad_x, sys->get_time());
 	if (channel_flow) {
-		if (u_ave.x < sys->p->sflow_target_flux) {
-			pressure_grad_x += sys->p->sflow_pcontrol_increment;
+		if (u_ave.x < sys->p.sflow_target_flux) {
+			pressure_grad_x += sys->p.sflow_pcontrol_increment;
 		} else {
-			pressure_grad_x -= sys->p->sflow_pcontrol_increment;
+			pressure_grad_x -= sys->p.sflow_pcontrol_increment;
 		}
 	} else if (sedimentation) {
 		double diff_x = u_ave.x-target_flux;
-		pressure_grad_x += -diff_x*sys->p->sflow_pcontrol_increment*sys->dt;
-		pressure_grad_x += -sys->p->sflow_pcontrol_damper*(pressure_grad_x - average_pressure_x.get())*sys->dt;
+		pressure_grad_x += -diff_x*sys->p.sflow_pcontrol_increment*sys->dt;
+		pressure_grad_x += -sys->p.sflow_pcontrol_damper*(pressure_grad_x - average_pressure_x.get())*sys->dt;
 	}
 }
 
@@ -397,8 +397,8 @@ double SolventFlow::porousResistance(double phi)
 	 */
 	//double porosity = (1-area_fraction)/(1-average_area_fraction);
 	double porosity = 1-phi;
-	double poro_factor = sys->p->sflow_Darcy_coeff;
-	for (int k=0; k<sys->p->sflow_Darcy_power; k++) {
+	double poro_factor = sys->p.sflow_Darcy_coeff;
+	for (int k=0; k<sys->p.sflow_Darcy_power; k++) {
 		poro_factor *= porosity;
 	}
 	return 3.375*phi/poro_factor;
@@ -410,7 +410,7 @@ void SolventFlow::predictorStep()
 	double dz2 = dz*dz;
 	for (int j=0; j<nz; j++) {
 		int jp1, jm1;
-		if (sys->p->sflow_boundary_conditions == 0) {
+		if (sys->p.sflow_boundary_conditions == 0) {
 			jp1 = (j == nz-1 ? 0 : j+1);
 			jm1 = (j == 0 ? nz-1 : j-1);
 		} else {
@@ -428,7 +428,7 @@ void SolventFlow::predictorStep()
 			double res_coeff_ux = porousResistance(phi_ux[k]);
 			double res_coeff_uz = porousResistance(phi_uz[k]);
 			
-			if (sys->p->sflow_boundary_conditions == 0) {
+			if (sys->p.sflow_boundary_conditions == 0) {
 				/* periodic boundary condtions in x and z directions.
 				 */
 				double dd_ux = (u_sol_x[ir]-2*u_sol_x[k]+u_sol_x[il])/dx2+(u_sol_x[ju]-2*u_sol_x[k]+u_sol_x[jd])/dz2;
@@ -484,7 +484,7 @@ void SolventFlow::predictorStep()
 			}
 		}
 	}
-	if (sys->p->sflow_boundary_conditions == 1) {
+	if (sys->p.sflow_boundary_conditions == 1) {
 		int j = nz;
 		for (int i=0; i<nx; i++) {
 			int k = i + nx*j;
@@ -506,7 +506,7 @@ void SolventFlow::calcVelocityDivergence()
 	
 	// This works for both boundary conditions.
 	// u_sol_ast_z[i, j = 0] = 0 (top and bottom)
-	if (sys->p->sflow_boundary_conditions == 0) {
+	if (sys->p.sflow_boundary_conditions == 0) {
 		for (int j=0; j<nz; j++) {
 			int jp1 = (j == nz-1 ? 0 : j+1);
 			for (int i=0; i<nx; i++) {
@@ -565,7 +565,7 @@ void SolventFlow::solvePressure()
 
 void SolventFlow::correctorStep()
 {
-	if (sys->p->sflow_boundary_conditions == 0) {
+	if (sys->p.sflow_boundary_conditions == 0) {
 		/* periodic boundary condtions in x and z directions.
 		 */
 		double sixpi_dt_Re = six_pi*sys->dt/re_num;
@@ -611,7 +611,7 @@ void SolventFlow::correctorStep()
 
 void SolventFlow::calcVelocityGradients()
 {
-	if (sys->p->sflow_boundary_conditions == 0) {
+	if (sys->p.sflow_boundary_conditions == 0) {
 		for (int j=0; j<nz; j++) {
 			int jm1 = (j == 0 ? nz-1 : j-1);
 			int jp1 = (j == nz-1 ? 0 : j+1);

@@ -93,7 +93,7 @@ std::pair<double, double> StdInteraction::calcContactDashpotResistanceCoeffs()
 		}
 		normal_coeff = 4*p.contp->kn*p.contp->relaxation_time;
 	} else {
-		if (p.lubp->model != "none") { // take the same resistance as lubrication
+		if (p.lubp && p.lubp->model != "none") { // take the same resistance as lubrication
 			// 1/(h+c) --> 1/c
 			normal_coeff = 1/p.lubp->regularization_length;
 		} else {
@@ -101,16 +101,16 @@ std::pair<double, double> StdInteraction::calcContactDashpotResistanceCoeffs()
 		}
 	}
 
-	if (p.contp->friction_model == FrictionModel::frictionless && p.lubp->model != "tangential") {
+	if (p.contp->friction_model == FrictionModel::frictionless && p.lubp && p.lubp->model != "tangential") {
 		tangential_coeff = 0;
 	} else {
 		if (p.contp->relaxation_time_tan > 0) {
-			if (p.lubp->model != "none") { // the contact can get unstable if the tangential resistance difference is too big between with and wihout contact
+			if (p.lubp && p.lubp->model != "none") { // the contact can get unstable if the tangential resistance difference is too big between with and wihout contact
 				throw std::runtime_error(" ContactDashpot:: Error: with lubrication, tangential relaxation time cannot be set positive.");
 			}
 			tangential_coeff = 6*p.contp->kt*p.contp->relaxation_time_tan;
 		} else {
-			if (p.lubp->model != "none") {// take the same resistance as lubrication
+			if (p.lubp && p.lubp->model != "none") {// take the same resistance as lubrication
 				// 1/(h+c) --> 1/c
 				if (p.lubp->regularization_length < 1) {
 					tangential_coeff = log(1/p.lubp->regularization_length);
@@ -136,21 +136,26 @@ void StdInteraction::updateState(const struct PairVelocity &vel,
 		// (VERY IMPORTANT): we increment displacements BEFORE updating the normal vector not to mess up with Lees-Edwards PBC
 		contact->incrementDisplacements(dt, vel);
 	}
+
 	setSeparation(sep);
 	// setSeparation(pconf);
 	if (r > interaction_range) {
 		deactivated = true;
 		return;
 	}
-	updateContactState();
-	if (contact) {
-		contact->calcContactSpringForce();
-	}
-	
-	// Lub
-	updateLubricationState();
 
-	if (repulsion) {
+	if (p.contp) {
+		updateContactState();
+		if (contact) {
+			contact->calcContactSpringForce();
+		}
+	}
+	if (p.lubp) {
+		// Lub
+		updateLubricationState();
+	}
+
+	if (p.repp && repulsion) {
 		repulsion->calcForce();
 	}
 	// if (delayed_adhesion) {

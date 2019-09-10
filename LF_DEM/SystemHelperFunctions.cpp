@@ -134,7 +134,7 @@ std::pair<unsigned int, unsigned int> countNumberOfContact(const System &sys)
 
 std::pair<unsigned, double> getTAAdhesionActivityStatistics(const System &sys)
 {
-	assert(Interactions::has_delayed_adhesion(sys.p->TA_adhesion));
+	assert(Interactions::has_delayed_adhesion(sys.p.TA_adhesion));
 	unsigned active_nb = 0;
 	unsigned active_dormant_nb = 0;
 	for (const auto &inter: *(sys.interaction)) {

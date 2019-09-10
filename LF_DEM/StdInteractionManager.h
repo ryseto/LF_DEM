@@ -36,14 +36,14 @@ public:
 						  ParticleVelocity *background_vel,
 						  ParticleVelocityGrad *background_velgrad,
 						  std::shared_ptr<Geometry::PairwiseConfig> pd,
-						  std::shared_ptr<Parameters::ParameterSet> params,
+						  Parameters::ParameterSet *params,
 						  std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> vel_solver);
 	StdInteractionManager(unsigned np,
 						  ParticleConfig *config,
 						  ParticleVelocity *background_vel,
 						  ParticleVelocityGrad *background_velgrad,
 						  std::shared_ptr<Geometry::PairwiseConfig> pd,
-						  std::shared_ptr<Parameters::ParameterSet> params,
+						  Parameters::ParameterSet *params,
 						  std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> vel_solver,
 						  const std::vector <struct contact_state>& cs);
 	void checkNewInteractions();
@@ -72,7 +72,7 @@ private:
 	ParticleVelocity *velinf;
 	ParticleVelocityGrad *Einf;
 	std::shared_ptr<Geometry::PairwiseConfig> pdist;
-	std::shared_ptr<Parameters::ParameterSet> p;
+	Parameters::ParameterSet *p;
 	std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> solver;
 
 	double calcInteractionRange(unsigned i, unsigned j);

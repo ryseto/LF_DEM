@@ -23,7 +23,7 @@ void System::declareStressComponents()
 
 	/*****************  GU stresses *********************/
 	// From the velocity components
-	if (Interactions::hasPairwiseResistanceStdInteraction(*p)) {
+	if (Interactions::hasPairwiseResistanceStdInteraction(p)) {
 		if (na_velo_components.empty()) {
 			throw runtime_error(" System::declareStressComponents: No velocity components declared, you probably forgot it.");
 		}
@@ -36,13 +36,13 @@ void System::declareStressComponents()
 	}
 
 	// Brownian
-	if (p->brownian > 0) { // Brownian is different than other GU, needs predictor data too
+	if (p.brownian > 0) { // Brownian is different than other GU, needs predictor data too
 		stress_components["brownian_predictor"] = StressComponent(StressType::brownian,
 																  np, RateDependence::independent, "brownian");// rate dependent for now --> @ WORKING NOW @
 	}
 
 	/****************  ME stress ********************/
-	if (Interactions::has_lubrication(p->lub)) {
+	if (Interactions::has_lubrication(p.lub)) {
 		stress_components["M_E_hydro"] = StressComponent(StressType::velocitygrad, np, RateDependence::proportional, "hydro");
 	}
 
@@ -53,7 +53,7 @@ void System::declareStressComponents()
 		stress_components["xF_contact_rateprop"] = StressComponent(StressType::xf, np, RateDependence::proportional, "contact");
 		stress_components["xF_contact_rateindep"] = StressComponent(StressType::xf, np, RateDependence::independent, "contact");
 	}
-	if (Interactions::has_repulsion(p->repulsion)) {
+	if (Interactions::has_repulsion(p.repulsion)) {
 		stress_components["xF_repulsion"] = StressComponent(StressType::xf, np, RateDependence::independent, "repulsion");
 	}
 
@@ -61,7 +61,7 @@ void System::declareStressComponents()
 	// 	stress_components["xF_delayed_adhesion"] = StressComponent(StressType::xf, np, RateDependence::independent, "delayed_adhesion");
 	// }
 
-	if (p->confinement.on) {
+	if (p.confinement.on) {
 		stress_components["xF_confinement"] = StressComponent(StressType::xf, np, RateDependence::independent, "confinement");
 	}
 
@@ -190,7 +190,7 @@ void System::calcStressPerParticle()
 		calcContactXFPerParticleStressControlled();
 	}
 
-	if (Interactions::has_repulsion(p->repulsion)) {
+	if (Interactions::has_repulsion(p.repulsion)) {
 		auto &rstress_XF = stress_components.at("xF_repulsion").particle_stress;
 		interaction->addUpRepulsiveStressXF(rstress_XF);
 	}
@@ -200,7 +200,7 @@ void System::calcStressPerParticle()
 	// 	addUpDelayedAdhesionStressXF(rstress_XF);
 	// }
 
-	if (p->confinement.on) {
+	if (p.confinement.on) {
 		vec3d yvec = {0, 1, 0};
 		auto &stress_XF = stress_components.at("xF_confinement").particle_stress;
 		auto &force = force_components.at("confinement").force;
@@ -214,7 +214,7 @@ void System::calcStressPerParticle()
 		}
 	}
 
-	if (p->brownian > 0) {
+	if (p.brownian > 0) {
 		auto &bstress_predictor = stress_components.at("brownian_predictor").particle_stress;
 		auto &bstress = stress_components.at("brownian").particle_stress;
 
@@ -309,7 +309,7 @@ void System::calcStress()
 	for (const auto &sc: total_stress_groups) {
 		total_stress += sc.second;
 	}
-	if (p->brownian > 0) {
+	if (p.brownian > 0) {
 		// take an averaged stress instead of instantaneous
 		stress_avg.update(total_stress, get_time());
 		total_stress = stress_avg.get();

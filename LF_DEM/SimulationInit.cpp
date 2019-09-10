@@ -151,7 +151,7 @@ void Simulation::assertParameterCompatibility()
 {
 	// test for incompatibilities
 	if (control_var == Parameters::ControlVariable::stress) {
-		if (sys.p->integration_method != 0) {
+		if (sys.p.integration_method != 0) {
 			cerr << "Warning : use of the Predictor-Corrector method for the stress controlled simulation is experimental." << endl;
 		}
 		//p.integration_method = 0;
@@ -247,13 +247,13 @@ void Simulation::setupFlow()
 			/* extensional flow
 			 *
 			 */
-			sys.p->magic_angle = atan(0.5*(sqrt(5)-1)); // simulation box needs to be tilted in this angle.
+			sys.p.magic_angle = atan(0.5*(sqrt(5)-1)); // simulation box needs to be tilted in this angle.
 			matrix flow_shape (0.5, 0, 0,
 							   0,   0, 0,
 							   0,   0, -0.5);
 			matrix rotation, rotation_inv;
-			rotation.set_rotation(-sys.p->magic_angle, 'y');
-			rotation_inv.set_rotation(sys.p->magic_angle, 'y');
+			rotation.set_rotation(-sys.p.magic_angle, 'y');
+			rotation_inv.set_rotation(sys.p.magic_angle, 'y');
 			sys.imposed_flow->setShape(flow_shape);
 			matrix mat_stress_basis_0(-0.25, 0,   0,
 									  0,     0.5, 0,
@@ -318,10 +318,10 @@ void Simulation::setupSimulation(string in_args,
 	Parameters::ParameterSetFactory PFactory(guarranted_unit);
 	PFactory.setFromFile(filename_parameters);
 	setupNonDimensionalization(PFactory);
-	PFactory.getParameterSetViaPtr(sys.p);
+	sys.p = PFactory.getParameterSet();
 	// sys.p = std::make_shared<Parameters::ParameterSet>(PFactory.getParameterSet());
-	if (!sys.p->solvent_flow) {
-		if (sys.p->flow_type == "extension") {
+	if (!sys.p.solvent_flow) {
+		if (sys.p.flow_type == "extension") {
 			sys.shear_type = ShearType::extensional_flow;
 		} else {
 			sys.shear_type = ShearType::simple_shear;
@@ -329,14 +329,14 @@ void Simulation::setupSimulation(string in_args,
 	} else {
 		sys.shear_type = ShearType::solvent_flow;
 	}
-	if (!sys.p->solvent_flow) {
+	if (!sys.p.solvent_flow) {
 		setupFlow(); // Including parameter p setting.
 	} else {
-		cerr << "Repulsive force = " << sys.p->repulsion.repulsion << endl;
+		cerr << "Repulsive force = " << sys.p.repulsion.repulsion << endl;
 		sys.shear_type = ShearType::solvent_flow;
 	}
 	if (sys.shear_type == ShearType::extensional_flow) {
-		sys.p->output.origin_zero_flow = false;
+		sys.p.output.origin_zero_flow = false;
 	}
 	exportControlVariable();
 
@@ -353,7 +353,7 @@ void Simulation::setupSimulation(string in_args,
 		}
 	}
 	
-	p_initial = *(sys.p);
+	p_initial = sys.p;
 	
 	// sys.resetContactModelParameer(); //@@@@ temporary repair // @@@ still needed??
 
@@ -382,7 +382,7 @@ void Simulation::openOutputFiles()
 	outdata_st.setFile("st_"+simu_name+".dat",
 					   data_header.str(), force_to_run, restart_from_chkp);
 
-	if (!sys.p->output.out_particle_stress.empty()) {
+	if (!sys.p.output.out_particle_stress.empty()) {
 		outdata_pst.setFile("pst_"+simu_name+".dat",
 							data_header.str(), force_to_run, restart_from_chkp);
 
@@ -395,28 +395,28 @@ void Simulation::openOutputFiles()
 	} else {
 		fout_input.open(input_filename.c_str(), fstream::out | fstream::app);
 	}
-	if (sys.p->output.out_data_particle) {
+	if (sys.p.output.out_data_particle) {
 		outdata_par.setFile("par_"+simu_name+".dat",
 							data_header.str(), force_to_run, restart_from_chkp);
 	}
-	if (sys.p->output.out_data_interaction) {
+	if (sys.p.output.out_data_interaction) {
 		outdata_int.setFile("int_"+simu_name+".dat",
 							data_header.str(), force_to_run, restart_from_chkp);
 	}
-	if (sys.p->output.out_gsd) {
+	if (sys.p.output.out_gsd) {
 		string gsd_filename = simu_name+".gsd";
 		gsd_create(gsd_filename.c_str(), "CIL", "hoomd", gsd_make_version(1, 1));
 		gsd_open(&gsdOut, gsd_filename.c_str() , GSD_OPEN_APPEND);
 	}
-	if (sys.p->solvent_flow) {
+	if (sys.p.solvent_flow) {
 		string sflow_filename = "sf_"+simu_name+".yap";
 		fout_flow.open(sflow_filename.c_str());
 	}
-	if (sys.p->solvent_flow) {
+	if (sys.p.solvent_flow) {
 		string flowprofile_filename = "fp_"+simu_name+".dat";
 		fout_fprofile.open(flowprofile_filename.c_str());
 	}
-	// if (sys.p->output.recording_interaction_history) {
+	// if (sys.p.output.recording_interaction_history) {
 	// 	string rec_filename = "rec_"+simu_name+".dat";
 	// 	sys.openHistoryFile(rec_filename);
 	// }
@@ -465,7 +465,7 @@ string Simulation::prepareSimulationName(bool binary_conf,
 	string_control_parameters << control_value.value << Dimensional::unit2suffix(control_value.unit);
 	ss_simu_name << string_control_parameters.str();
 	if (sys.shear_type == ShearType::simple_shear || sys.shear_type == ShearType::extensional_flow) {
-		ss_simu_name << "_" << sys.p->flow_type;
+		ss_simu_name << "_" << sys.p.flow_type;
 	}
 	if (simu_identifier != "") {
 		ss_simu_name << "_";
@@ -479,23 +479,23 @@ string Simulation::prepareSimulationName(bool binary_conf,
 TimeKeeper Simulation::initTimeKeeper()
 {
 	TimeKeeper tk;
-	if (sys.p->output.log_time_interval) {
-		tk.addClock("data", LogClock(sys.p->output.initial_log_time.value,
-									 sys.p->time_end.value,
-									 sys.p->output.nb_output_data_log_time,
-									 sys.p->time_end.dimension == Dimensional::Dimension::Strain));
+	if (sys.p.output.log_time_interval) {
+		tk.addClock("data", LogClock(sys.p.output.initial_log_time.value,
+									 sys.p.time_end.value,
+									 sys.p.output.nb_output_data_log_time,
+									 sys.p.time_end.dimension == Dimensional::Dimension::Strain));
 	} else {
-		tk.addClock("data", LinearClock(sys.p->output.time_interval_output_data.value,
-										sys.p->output.time_interval_output_data.dimension == Dimensional::Dimension::Strain));
+		tk.addClock("data", LinearClock(sys.p.output.time_interval_output_data.value,
+										sys.p.output.time_interval_output_data.dimension == Dimensional::Dimension::Strain));
 	}
-	if (sys.p->output.log_time_interval) {
-		tk.addClock("config", LogClock(sys.p->output.initial_log_time.value,
-									   sys.p->time_end.value,
-									   sys.p->output.nb_output_config_log_time,
-									   sys.p->time_end.dimension == Dimensional::Dimension::Strain));
+	if (sys.p.output.log_time_interval) {
+		tk.addClock("config", LogClock(sys.p.output.initial_log_time.value,
+									   sys.p.time_end.value,
+									   sys.p.output.nb_output_config_log_time,
+									   sys.p.time_end.dimension == Dimensional::Dimension::Strain));
 	} else {
-		tk.addClock("config", LinearClock(sys.p->output.time_interval_output_config.value,
-										  sys.p->output.time_interval_output_config.dimension == Dimensional::Dimension::Strain));
+		tk.addClock("config", LinearClock(sys.p.output.time_interval_output_config.value,
+										  sys.p.output.time_interval_output_config.dimension == Dimensional::Dimension::Strain));
 	}
 	return tk;
 }

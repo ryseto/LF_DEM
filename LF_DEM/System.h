@@ -152,7 +152,7 @@ private:
  public:
 	System(struct State::BasicCheckpoint = State::zero_time_basicchkp);
 
-	std::shared_ptr<Parameters::ParameterSet> p;
+	Parameters::ParameterSet p;
 	int np_mobile; ///< number of mobile particles
 	ShearType shear_type;
 	std::shared_ptr<BC::LeesEdwardsBC> lees;
@@ -285,12 +285,12 @@ private:
 
 	bool is_brownian() const
 	{
-		return p->brownian > 0;
+		return p.brownian > 0;
 	}
 	
 	bool has_body_force() const
 	{
-		return p->body_force > 0;
+		return p.body_force > 0;
 	}
 
 	double get_lx() const

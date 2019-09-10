@@ -101,7 +101,7 @@ void System::allocateRessources()
 	// Velocity
 	velocity = ParticleVelocity(np, VelocityType::total, RateDependence::dependent);
 	na_velocity = ParticleVelocity(np, VelocityType::nonaffine, RateDependence::dependent);
-	if (p->integration_method == 1) {
+	if (p.integration_method == 1) {
 		velocity_predictor = ParticleVelocity(np, VelocityType::total, RateDependence::dependent);
 	}
 	vel_bg = ParticleVelocity(np, VelocityType::total, RateDependence::proportional);
@@ -109,10 +109,10 @@ void System::allocateRessources()
 
 	na_disp.resize(np);
 	if (mobile_fixed) {
-		non_rate_proportional_wall_force.resize(p->np_fixed);
-		non_rate_proportional_wall_torque.resize(p->np_fixed);
-		rate_proportional_wall_force.resize(p->np_fixed);
-		rate_proportional_wall_torque.resize(p->np_fixed);
+		non_rate_proportional_wall_force.resize(p.np_fixed);
+		non_rate_proportional_wall_torque.resize(p.np_fixed);
+		rate_proportional_wall_force.resize(p.np_fixed);
+		rate_proportional_wall_torque.resize(p.np_fixed);
 	}
 	
 	// Forces and Stress
@@ -121,7 +121,7 @@ void System::allocateRessources()
 	total_stress_pp.resize(np);
 	phi6.resize(np);
 	n_contact.resize(np);
-	if (p->solvent_flow) {
+	if (p.solvent_flow) {
 		sflow = new SolventFlow;
 		phi_local.resize(np);
 		//forbid_displacement = true;
@@ -142,7 +142,7 @@ void System::declareForceComponents()
 		declared_forces.push_back("brownian");
 	}
 
-	if (p->body_force > 0) {
+	if (p.body_force > 0) {
 		force_components["body_force"] = ForceComponent(np, RateDependence::independent, torque);
 		declared_forces.push_back("body_force");
 	}
@@ -150,17 +150,17 @@ void System::declareForceComponents()
 	if (mobile_fixed) {
 		throw std::runtime_error("Mobile-fixed to be fixed");
 		// rate proportional with walls, but this can change
-		if (p->lub.model == "normal") {
+		if (p.lub.model == "normal") {
 			force_components["from_fixed"] = ForceComponent(np, RateDependence::proportional, !torque);
 			declared_forces.push_back("from_fixed");
 		}
-		if (p->lub.model == "tangential") {
+		if (p.lub.model == "tangential") {
 			force_components["from_fixed"] = ForceComponent(np, RateDependence::proportional, torque);
 			declared_forces.push_back("from_fixed");
 		}
 
 	}
-	if (p->confinement.on) {
+	if (p.confinement.on) {
 		force_components["confinement"] = ForceComponent(np, RateDependence::independent, !torque);
 		declared_forces.push_back("confinement");
 	}
@@ -203,13 +203,13 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	if (twodimension) {
 		conf->angle = angles;
 	}
-	np_mobile = np-p->np_fixed;
+	np_mobile = np-p.np_fixed;
 	if (np_mobile <= 0) {
 		throw runtime_error("np_fixed>=np");
 	}
-	if (p->np_fixed > 0) {
+	if (p.np_fixed > 0) {
 		mobile_fixed = true;
-		cerr << "np fixed " << p->np_fixed << endl;
+		cerr << "np fixed " << p.np_fixed << endl;
 	}
 	radius_wall_particle = conf->radius[np-1];
 
@@ -231,27 +231,27 @@ void System::setupParameters()
 {
 	string indent = "  System::\t";
 
-	if (p->integration_method > 1) {
+	if (p.integration_method > 1) {
 		ostringstream error_str;
-		error_str << indent << "integration_method = " << p->integration_method << endl << indent << "The integration method is not impremented yet." << endl;
+		error_str << indent << "integration_method = " << p.integration_method << endl << indent << "The integration method is not impremented yet." << endl;
 		throw runtime_error(error_str.str());
 	}
 	
-	if (p->auto_determine_knkt) {
-		kn_avg.setRelaxationTime(p->memory_strain_avg);
-		kt_avg.setRelaxationTime(p->memory_strain_avg);
-		overlap_avg.setRelaxationTime(p->memory_strain_avg);
-		max_disp_tan_avg.setRelaxationTime(p->memory_strain_avg);
+	if (p.auto_determine_knkt) {
+		kn_avg.setRelaxationTime(p.memory_strain_avg);
+		kt_avg.setRelaxationTime(p.memory_strain_avg);
+		overlap_avg.setRelaxationTime(p.memory_strain_avg);
+		max_disp_tan_avg.setRelaxationTime(p.memory_strain_avg);
 	}
 
 	if (is_brownian()) {
-		double stress_avg_relaxation_parameter = 10*p->output.time_interval_output_data.value; // 0 --> no average
+		double stress_avg_relaxation_parameter = 10*p.output.time_interval_output_data.value; // 0 --> no average
 		stress_avg.setRelaxationTime(stress_avg_relaxation_parameter);
-		rate_prop_shearstress_rate1_ave.setRelaxationTime(p->brownian_relaxation_time);
-		rate_indep_shearstress_ave.setRelaxationTime(p->brownian_relaxation_time);
-		// if ((Interactions::hasPairwiseResistanceStdInteractionStdInteraction(*p) || Interactions::hasDimer(*p))
-		if (Interactions::hasPairwiseResistanceStdInteraction(*p)
-			&& p->integration_method != 1) {
+		rate_prop_shearstress_rate1_ave.setRelaxationTime(p.brownian_relaxation_time);
+		rate_indep_shearstress_ave.setRelaxationTime(p.brownian_relaxation_time);
+		// if ((Interactions::hasPairwiseResistanceStdInteractionStdInteraction(p) || Interactions::hasDimer(p))
+		if (Interactions::hasPairwiseResistanceStdInteraction(p)
+			&& p.integration_method != 1) {
 			ostringstream error_str;
 			error_str << "Brownian simulation with multiplicative noise needs to use the Predictor-Corrector method." << endl;
 			error_str << "Modify the parameter file." << endl;
@@ -289,64 +289,53 @@ void System::setupGenericConfiguration(T config, Parameters::ControlVariable con
 {
 	string indent = "  System::\t";
 	cout << indent << "Setting up System... " << endl;
-	cerr << "0" << endl;
 	
 	np = config.position.size();
-	cerr << "001" << endl;
-	np_mobile = np - p->np_fixed;
-	cerr << "002" << endl;
+	np_mobile = np - p.np_fixed;
 
 	control = control_;
-	cerr << "003" << endl;
 
 	container = {config.lx, config.ly, config.lz};
-	cerr << "004" << endl;
-
 	twodimension = config.ly == 0;
-	cerr << "01" << endl;
 
 	setupParameters();
-	cerr << "1" << endl;
 	setConfiguration(config.position, config.radius, config.angle);
-	cerr << "2" << endl;
 
-	auto max_range = Interactions::maxRangeStdInteraction(*p, conf->radius);
+	auto max_range = Interactions::maxRangeStdInteraction(p, conf->radius);
 	if (shear_type == ShearType::extensional_flow) {
-		kr = std::make_shared<BC::KraynikReineltBC>(container, p->magic_angle, imposed_flow);
+		kr = std::make_shared<BC::KraynikReineltBC>(container, p.magic_angle, imposed_flow);
 		pairconf = std::make_shared<Geometry::KraynikReineltPairwiseConfig>(conf, kr, max_range);
 
 	} else {
-		lees = std::make_shared<BC::LeesEdwardsBC>(container, config.lees_edwards_disp, !p->keep_input_strain, imposed_flow);
+		lees = std::make_shared<BC::LeesEdwardsBC>(container, config.lees_edwards_disp, !p.keep_input_strain, imposed_flow);
 		pairconf = std::make_shared<Geometry::LeesEdwardsPairwiseConfig>(conf, lees, max_range);
 	}
 
-	if (Interactions::hasPairwiseResistanceStdInteraction(*p)) {
+	if (Interactions::hasPairwiseResistanceStdInteraction(p)) {
 		if (!mobile_fixed) {
-			res_solver = std::make_shared<Dynamics::PairwiseResistanceVelocitySolver>(p->sd_coeff, conf->radius);
+			res_solver = std::make_shared<Dynamics::PairwiseResistanceVelocitySolver>(p.sd_coeff, conf->radius);
 		} else {
 			throw std::runtime_error("Mobile-fixed to be fixed");
 		}
 	}
-	cerr << "3" << endl;
 	
 	// Memory
 	allocateRessources();
-	cerr << "4" << endl;
 
 	total_num_timesteps = 0;
 
-	cout << indent << "Setting up System... [ok]" << endl;
 	
-	interaction = std::make_shared<Interactions::StdInteractionManager>(np, conf.get(), &vel_bg, &velgrad_bg, pairconf, p,
+	interaction = std::make_shared<Interactions::StdInteractionManager>(np, conf.get(), &vel_bg, &velgrad_bg, pairconf, &p,
 																		 res_solver,
 																		 config.contact_states);
 	interaction->declareForceComponents(force_components);
 	declareForceComponents();
 	declareVelocityComponents();
 	declareStressComponents();
-	cerr << "5" << endl;
 
 	setupSystemPostConfiguration();
+
+	cout << indent << "Setting up System... [ok]" << endl;
 }
 
 void System::setupConfiguration(struct base_shear_configuration config, Parameters::ControlVariable control_)
@@ -358,8 +347,8 @@ void System::setupConfiguration(struct fixed_velo_configuration config, Paramete
 {
 	np_wall1 = config.np_wall1;
 	np_wall2 = config.np_wall2;
-	//p->np_fixed = conf.fixed_velocities.size();
-	p->np_fixed = np_wall1+np_wall2;
+	//p.np_fixed = conf.fixed_velocities.size();
+	p.np_fixed = np_wall1+np_wall2;
 	z_bot = config.z_bot;
 	z_top = config.z_top;
 	setupGenericConfiguration(config, control_);
@@ -369,7 +358,7 @@ void System::setupConfiguration(struct fixed_velo_configuration config, Paramete
 
 void System::setupConfiguration(struct circular_couette_configuration config, Parameters::ControlVariable control_)
 {
-	p->np_fixed = config.np_wall1 + config.np_wall2;
+	p.np_fixed = config.np_wall1 + config.np_wall2;
 	np_wall1 = config.np_wall1;
 	np_wall2 = config.np_wall2;
 	radius_in = config.radius_in;
@@ -408,34 +397,34 @@ void System::setupSystemPostConfiguration()
 	}
 	omega_wheel_in  = 0;
 	omega_wheel_out = 0;
-	if (p->simulation_mode >= 10 && p->simulation_mode <= 20) {
+	if (p.simulation_mode >= 10 && p.simulation_mode <= 20) {
 		origin_of_rotation = {0.5*container.lx, 0, 0.5*container.lz};
 		for (int i=np_mobile; i<np; i++) {
 			conf->angle[i] = -atan2(conf->position[i].z-origin_of_rotation.z,
 							 		 conf->position[i].x-origin_of_rotation.x);
 		}
 		double omega_wheel = (radius_out-radius_in)*imposed_flow->shear_rate/radius_in;
-		if (p->simulation_mode == 11) {
+		if (p.simulation_mode == 11) {
 			omega_wheel_in  = 0;
 			omega_wheel_out = -omega_wheel;
-		} else if (p->simulation_mode == 12) {
+		} else if (p.simulation_mode == 12) {
 			omega_wheel_in  = omega_wheel;
 			omega_wheel_out = 0;
-		} else if (p->simulation_mode == 13) {
+		} else if (p.simulation_mode == 13) {
 			omega_wheel_in  = 0.5*omega_wheel;
 			omega_wheel_out = -0.5*omega_wheel;
-		} else if (p->simulation_mode == 10) {
+		} else if (p.simulation_mode == 10) {
 			omega_wheel_in  = 0;
 			omega_wheel_out = 0;
 		}
 		couette_stress = true; // output stress per perticle
-	} else if (p->simulation_mode == 51) {
+	} else if (p.simulation_mode == 51) {
 		double omega_wheel = (radius_out-radius_in)*imposed_flow->shear_rate/radius_out;
 		omega_wheel_out = -omega_wheel;
 		omega_wheel_in  = omega_wheel*radius_out/radius_in;
 	}
-	dt = p->dt;
-	if (p->fixed_dt) {
+	dt = p.dt;
+	if (p.fixed_dt) {
 		avg_dt = dt;
 	}
 }
@@ -472,7 +461,7 @@ void System::timeStepBoxing()
 			throw std::runtime_error("timeStepBoxing:: Extensional flow to fix");
 		}
 	} else {
-		if (wall_rheology || p->simulation_mode == 31) {
+		if (wall_rheology || p.simulation_mode == 31) {
 			vec3d strain_increment = 2*dot(imposed_flow->sym_grad_u, {0, 0, 1})*dt;
 			clk.cumulated_strain += strain_increment.norm();
 			// shear_strain += strain_increment;
@@ -485,12 +474,12 @@ void System::timeStepBoxing()
 void System::eventShearJamming()
 {
 	/**
-	 \brief Create an event when the shear rate is less than p->sj_shear_rate
+	 \brief Create an event when the shear rate is less than p.sj_shear_rate
 	*/
 	static int cnt_jamming = 0;
-	if (abs(imposed_flow->shear_rate) < p->sj_shear_rate && max_na_velocity < p->sj_velocity) {
+	if (abs(imposed_flow->shear_rate) < p.sj_shear_rate && max_na_velocity < p.sj_velocity) {
 		cnt_jamming ++;
-		if (cnt_jamming > p->sj_check_count) {
+		if (cnt_jamming > p.sj_check_count) {
 			Event ev;
 			ev.type = "jammed_shear_rate";
 			events.push_back(Event(ev));
@@ -545,7 +534,7 @@ void System::wallForces()
 // 		}
 // 		cerr << "force balance: " << sqrt(max_total_force) << endl;
 // 		cerr << "torque balance: " << sqrt(max_total_torque) << endl;
-// 		if (p->simulation_mode >= 10 && p->simulation_mode <= 20) {
+// 		if (p.simulation_mode >= 10 && p.simulation_mode <= 20) {
 // 			int i_np_1 = np_mobile+np_wall1;
 // 			// inner wheel
 // 			// Positions of wall particles are at r =
@@ -574,7 +563,7 @@ void System::wallForces()
 // 			force_tang_wall2 = torque_wall2/(radius_out+radius_wall_particle);
 // 			cerr << " normal:" << force_normal_wall1 << ' ' << force_normal_wall2 << endl;
 // 			cerr << " tangential:" << force_tang_wall1 << ' ' << force_tang_wall2 << ' ' << torque_wall1 << ' ' << torque_wall2 << endl;
-// 		} else if (p->simulation_mode > 40) {
+// 		} else if (p.simulation_mode > 40) {
 // 			int i_np_1 = np_mobile+np_wall1;
 // 			// bottom wall
 // 			force_tang_wall1 = 0;
@@ -678,7 +667,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	in_predictor = true;
 	in_corrector = true;
 	if (shear_type == ShearType::simple_shear || shear_type == ShearType::extensional_flow) {
-		if (!Interactions::hasPairwiseResistanceStdInteraction(*p)) {
+		if (!Interactions::hasPairwiseResistanceStdInteraction(p)) {
 			computeNonAffineVelocitiesStokesDrag();
 		} else {
 			computeNonAffineVelocities(calc_stress, true);
@@ -687,12 +676,12 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	} else {
 		//if (1) {
 		//sflowFiniteRe(calc_stress);
-		if (!Interactions::hasPairwiseResistanceStdInteraction(*p)) {
+		if (!Interactions::hasPairwiseResistanceStdInteraction(p)) {
 			computeNonAffineVelocitiesStokesDrag();
 		} else {
 			computeNonAffineVelocities(calc_stress, true);
 		}
-		if (!p->fixed_dt) {
+		if (!p.fixed_dt) {
 			if (cnt++ > 0) {
 				adaptTimeStepWithVelocities();
 			}
@@ -718,11 +707,11 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		if (wall_rheology) {
 			calcStress();
 		}
-		if (!p->output.out_particle_stress.empty() || couette_stress || p->output.out_gsd) {
+		if (!p.output.out_particle_stress.empty() || couette_stress || p.output.out_gsd) {
 			calcTotalStressPerParticle();
 		}
 	}
-	// if (p->output.recording_interaction_history) {
+	// if (p.output.recording_interaction_history) {
 	// 	recordHistory();
 	// }
 	timeStepMove(time_end, strain_end);
@@ -739,7 +728,7 @@ void System::sflowIteration(bool calc_stress)
 	double diff_u = 0;
 	int cnt = 0;
 	do {
-		if (!Interactions::hasPairwiseResistanceStdInteraction(*p)) {
+		if (!Interactions::hasPairwiseResistanceStdInteraction(p)) {
 			computeNonAffineVelocitiesStokesDrag();
 		} else {
 			computeNonAffineVelocities(calc_stress, true);
@@ -830,12 +819,12 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	in_predictor = true;
 	in_corrector = false;
 
-	if (Interactions::hasPairwiseResistanceStdInteraction(*p)) {
+	if (Interactions::hasPairwiseResistanceStdInteraction(p)) {
 		computeNonAffineVelocities(calc_stress, true); // divided velocities for stress calculation
 	} else {
 		computeNonAffineVelocitiesStokesDrag();
 	}
-	if (!p->solvent_flow) {
+	if (!p.solvent_flow) {
 		computeTotalVelocity();
 	}
 	if (wall_rheology && calc_stress) {
@@ -854,12 +843,12 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	/* corrector */
 	in_predictor = false;
 	in_corrector = true;
-	if (Interactions::hasPairwiseResistanceStdInteraction(*p)) {
+	if (Interactions::hasPairwiseResistanceStdInteraction(p)) {
 		computeNonAffineVelocities(calc_stress, true);
 	} else {
 		computeNonAffineVelocitiesStokesDrag();
 	}
-	if (!p->solvent_flow) {
+	if (!p.solvent_flow) {
 		computeTotalVelocity();
 	}
 	if (calc_stress) {
@@ -867,7 +856,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 		if (wall_rheology) {
 			calcStress();
 		}
-		if (!p->output.out_particle_stress.empty() || couette_stress || p->output.out_gsd) {
+		if (!p.output.out_particle_stress.empty() || couette_stress || p.output.out_gsd) {
 			calcTotalStressPerParticle();
 		}
 	}
@@ -883,41 +872,41 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 void System::adaptTimeStepWithVelocities()
 {
 	/**
-	 \brief Adapt the time step so that the maximum relative displacement is p->disp_max .
+	 \brief Adapt the time step so that the maximum relative displacement is p.disp_max .
 	 */
 
 	/*
 	 * The max velocity is used to find dt from max displacement
-	 * at each time step->
+	 * at each time step.
 	 */
 	if (in_predictor) {
-		if (!p->fixed_dt || eventLookUp != NULL) {
+		if (!p.fixed_dt || eventLookUp != NULL) {
 			computeMaxNAVelocity();
 		}
 	}
 	double max_interaction_vel = interaction->getMaxRelativeVelocity(&velocity);
 	if (max_na_velocity > 0 || max_interaction_vel > 0) { // small density system can have na_velocity=0
 		if (max_na_velocity > max_interaction_vel) {
-			dt = p->disp_max/max_na_velocity;
+			dt = p.disp_max/max_na_velocity;
 		} else {
-			dt = p->disp_max/max_interaction_vel;
+			dt = p.disp_max/max_interaction_vel;
 		}
 	} else {
-		dt = p->disp_max/imposed_flow->shear_rate;
+		dt = p.disp_max/imposed_flow->shear_rate;
 	}
-	if (dt*imposed_flow->shear_rate > p->disp_max) { // cases where na_velocity < \dotgamma*radius
-		dt = p->disp_max/imposed_flow->shear_rate;
+	if (dt*imposed_flow->shear_rate > p.disp_max) { // cases where na_velocity < \dotgamma*radius
+		dt = p.disp_max/imposed_flow->shear_rate;
 	}
-	if (p->dt_max > 0) {
-		if (dt > p->dt_max) {
-			dt = p->dt_max;
+	if (p.dt_max > 0) {
+		if (dt > p.dt_max) {
+			dt = p.dt_max;
 		}
 	}
-	if (p->solvent_flow) {
+	if (p.solvent_flow) {
 		computeMaxVelocity();
-		double dt_sflow = p->disp_max/max_velocity;
+		double dt_sflow = p.disp_max/max_velocity;
 		if (max_velocity > 0) {
-			dt_sflow = p->disp_max/max_velocity;
+			dt_sflow = p.disp_max/max_velocity;
 		} else {
 			dt_sflow = 1e-5;
 		}
@@ -932,7 +921,7 @@ void System::adaptTimeStepWithVelocities()
 void System::adaptTimeStepWithBounds(double time_end, double strain_end)
 {
 	/**
-	 \brief Adapt the time step so that (a) the maximum relative displacement is p->disp_max, and (b) time or strain does not get passed the end value.
+	 \brief Adapt the time step so that (a) the maximum relative displacement is p.disp_max, and (b) time or strain does not get passed the end value.
 	 */
 	// To stop exactly at t == time_end or strain == strain_end,
 	// whatever comes first
@@ -960,7 +949,7 @@ void System::timeStepMove(double time_end, double strain_end)
 	 * dot_epsion = shear_rate / 2 is always true.
 	 * clk.cumulated_strain = shear_rate * t for both simple shear and extensional flow.
 	 */
-	if (!p->fixed_dt) {
+	if (!p.fixed_dt) {
 		adaptTimeStepWithVelocities();
 	}
 	adaptTimeStepWithBounds(time_end, strain_end);
@@ -999,7 +988,7 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
 	/**
 	 \brief Moves particle positions according to previously computed velocities, predictor step.
 	 */
-	if (!p->fixed_dt) {
+	if (!p.fixed_dt) {
 		adaptTimeStepWithVelocities();
 	}
 	adaptTimeStepWithBounds(time_end, strain_end);
@@ -1105,7 +1094,7 @@ void System::timeEvolution(double time_end, double strain_end)
 
 	double loop_time_adjust = 0;
 
-	if (p->fixed_dt == true && !firsttime) {
+	if (p.fixed_dt == true && !firsttime) {
 		loop_time_adjust = dt;
 	}
 
@@ -1113,6 +1102,7 @@ void System::timeEvolution(double time_end, double strain_end)
 		calculateForces();
 		firsttime = false;
 	}
+
 	bool calc_stress = false;
 	if (is_brownian()) {
 		calc_stress = true;
@@ -1120,8 +1110,8 @@ void System::timeEvolution(double time_end, double strain_end)
 	avg_dt = 0;
 	avg_dt_nb = 0;
 	while (keepRunning(time_end-loop_time_adjust, strain_end-loop_time_adjust)) {
-		if (p->fixed_dt) {
-			dt = p->dt;
+		if (p.fixed_dt) {
+			dt = p.dt;
 		}
 		double time_bound, strain_bound;
 		if (is_brownian()) {
@@ -1134,9 +1124,9 @@ void System::timeEvolution(double time_end, double strain_end)
 			time_bound = time_end;
 			strain_bound = strain_end;
 		}
-		if (p->integration_method == 0) {
+		if (p.integration_method == 0) {
 			timeEvolutionEulersMethod(calc_stress, time_bound, strain_bound);
-		} else if (p->integration_method == 1) {
+		} else if (p.integration_method == 1) {
 			timeEvolutionPredictorCorrectorMethod(calc_stress, time_bound, strain_bound);
 		}
 		avg_dt += dt;
@@ -1157,14 +1147,14 @@ void System::timeEvolution(double time_end, double strain_end)
 		if (shear_type != ShearType::solvent_flow) {
 			calc_stress = true;
 		}
-		if (p->integration_method == 0) {
+		if (p.integration_method == 0) {
 			timeEvolutionEulersMethod(calc_stress, time_end, strain_end);
-		} else if (p->integration_method == 1) {
+		} else if (p.integration_method == 1) {
 			timeEvolutionPredictorCorrectorMethod(calc_stress, time_end, strain_end);
 		}
 	}
-	if (p->auto_determine_knkt
-		&& clk.cumulated_strain > p->start_adjust) {
+	if (p.auto_determine_knkt
+		&& clk.cumulated_strain > p.start_adjust) {
 		adjustContactModelParameters();
 	}
 }
@@ -1183,8 +1173,8 @@ void System::timeEvolution(double time_end, double strain_end)
 // 	if (!zero_shear) {
 // 		throw runtime_error(" Stress-control with walls requires zero_shear==true .\n");
 // 	}
-// 	vector<vec3d> force (p->np_fixed);
-// 	vector<vec3d> torque (p->np_fixed);
+// 	vector<vec3d> force (p.np_fixed);
+// 	vector<vec3d> torque (p.np_fixed);
 
 // 	// Compute the part of the velocity of mobile particles
 // 	// that is not coming from the wall velocities
@@ -1222,7 +1212,7 @@ void System::timeEvolution(double time_end, double strain_end)
 // 	const auto &repulsive_force = force_components["repulsion"].force;
 // 	const auto &adhesion_force = force_components["delayed_adhesion"].force;
 // 	throw std::runtime_error("computeForcesOnWallParticles : ongoing work.... sorry");
-// 	for (int i=0; i<p->np_fixed; i++) {
+// 	for (int i=0; i<p.np_fixed; i++) {
 // 		non_rate_proportional_wall_force[i] = -force[i];
 // 		non_rate_proportional_wall_torque[i] = -torque[i];
 // 		non_rate_proportional_wall_force[i] += contact_force[i+np_mobile];
@@ -1242,7 +1232,7 @@ void System::timeEvolution(double time_end, double strain_end)
 // 		na_ang_velocity_mobile[i] = ang_vel_hydro_from_fixed[i];
 // 	}
 // 	stokes_solver.multiply_by_RFU_fm(na_velocity_mobile, na_ang_velocity_mobile, force, torque);
-// 	for (int i=0; i<p->np_fixed; i++) {
+// 	for (int i=0; i<p.np_fixed; i++) {
 // 		rate_proportional_wall_force[i] = -force[i];
 // 		rate_proportional_wall_torque[i] = -torque[i];
 // 	}
@@ -1250,15 +1240,15 @@ void System::timeEvolution(double time_end, double strain_end)
 // 	// From the fixed particles themselves. This should be zero if these particles form a wall
 // 	// (i.e. they move with zero relative velocity) and if the Stokes drag is zero (which is controlled by sd_coeff)
 // 	// As we do not want to make too many assumptions here (especially regarding the Stokes drag)
-// 	// we compute it. [Probably a p->no_stokes_drag should be introduced at some point.]
-// 	vector<vec3d> na_velocity_fixed (p->np_fixed);
-// 	vector<vec3d> na_ang_velocity_fixed (p->np_fixed);
-// 	for (int i=0; i<p->np_fixed; i++) {
+// 	// we compute it. [Probably a p.no_stokes_drag should be introduced at some point.]
+// 	vector<vec3d> na_velocity_fixed (p.np_fixed);
+// 	vector<vec3d> na_ang_velocity_fixed (p.np_fixed);
+// 	for (int i=0; i<p.np_fixed; i++) {
 // 		na_velocity_fixed[i] = na_velocity[i+np_mobile];
 // 		na_ang_velocity_fixed[i] = na_ang_velocity[i+np_mobile];
 // 	}
 // 	stokes_solver.multiply_by_RFU_ff(na_velocity_fixed, na_ang_velocity_fixed, force, torque);
-// 	for (int i=0; i<p->np_fixed; i++) {
+// 	for (int i=0; i<p.np_fixed; i++) {
 // 		rate_proportional_wall_force[i] -= force[i];
 // 		rate_proportional_wall_torque[i] -= torque[i];
 // 	}
@@ -1299,8 +1289,8 @@ void System::forceResultantLubricationForce()
 // 		 *  F^{M} += R_FU^{MF} U^{F}
 // 		 */
 // 		vector<double> force_f_to_m (6*np_mobile);
-// 		vector<double> minus_fixed_velocities (6*p->np_fixed);
-// 		for (int i=0; i<p->np_fixed; i++) {
+// 		vector<double> minus_fixed_velocities (6*p.np_fixed);
+// 		for (int i=0; i<p.np_fixed; i++) {
 // 			int i6 = 6*i;
 // 			int i_fixed = i+np_mobile;
 // 			minus_fixed_velocities[i6  ] = -na_velocity[i_fixed].x;
@@ -1323,7 +1313,7 @@ void System::forceResultantLubricationForce()
 // 		/*
 // 		 *  F^{F} += R_FU^{FM} U^{M}
 // 		 */
-// 		vector<double> force_m_to_f (6*p->np_fixed);
+// 		vector<double> force_m_to_f (6*p.np_fixed);
 // 		for (int i=0; i<np_mobile; i++) {
 // 			int i6 = 6*i;
 // 			minus_mobile_velocities[i6  ] = -na_velocity[i].x;
@@ -1346,8 +1336,8 @@ void System::forceResultantLubricationForce()
 // 		/*
 // 		 *  F^{F} += R_FU^{FF} U^{F}
 // 		 */
-// 		vector<double> force_f_to_f (6*p->np_fixed);
-// 		for (int i=0; i<p->np_fixed; i++) {
+// 		vector<double> force_f_to_f (6*p.np_fixed);
+// 		for (int i=0; i<p.np_fixed; i++) {
 // 			int i6 = 6*i;
 // 			int i_fixed = i+np_mobile;
 // 			minus_fixed_velocities[i6  ] = -na_velocity[i_fixed].x;
@@ -1399,7 +1389,7 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 	for (auto &t: torque) {
 		t.reset();
 	}
-	double sqrt_2_dt_amp = sqrt(2*p->brownian/dt);
+	double sqrt_2_dt_amp = sqrt(2*p.brownian/dt);
 	for (unsigned int i=0; i<force.size(); i++) {
 		force[i].x = sqrt_2_dt_amp*GRANDOM; // \sqrt(2kT/dt) * random vector A (force and torque)
 		force[i].y = sqrt_2_dt_amp*GRANDOM;
@@ -1409,7 +1399,7 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 		torque[i].z = sqrt_2_dt_amp*GRANDOM;
 	}
 
-	if (Interactions::hasPairwiseResistanceStdInteraction(*p)) {
+	if (Interactions::hasPairwiseResistanceStdInteraction(p)) {
 		/* L*L^T = RFU
 		 */
 		res_solver->setSolverRHS(force, torque);
@@ -1439,9 +1429,9 @@ void System::setBodyForce(vector<vec3d> &force,
 	for (auto &t: torque) {
 		t.reset();
 	}
-	double angle = M_PI*p->body_force_angle/180;
-	double bf_x = p->body_force*cos(angle); // cos(angle);
-	double bf_z = -p->body_force*sin(angle);
+	double angle = M_PI*p.body_force_angle/180;
+	double bf_x = p.body_force*cos(angle); // cos(angle);
+	double bf_z = -p.body_force*sin(angle);
 	for (int i=0; i<np_mobile; i++) {
 		force[i].set(radius_cubed[i]*bf_x, 0 , radius_cubed[i]*bf_z);
 	}
@@ -1457,10 +1447,10 @@ void System::setConfinementForce(vector<vec3d> &force,
 		t.reset();
 	}
 	for (int i=0; i<np_mobile; i++) {
-		if (conf->position[i].y > p->confinement.y_max) {
-			force[i].set(0, -p->confinement.k.value*(conf->position[i].y-p->confinement.y_max), 0);
-		} else if (conf->position[i].y < p->confinement.y_min) {
-			force[i].set(0, -p->confinement.k.value*(conf->position[i].y-p->confinement.y_min), 0);
+		if (conf->position[i].y > p.confinement.y_max) {
+			force[i].set(0, -p.confinement.k.value*(conf->position[i].y-p.confinement.y_max), 0);
+		} else if (conf->position[i].y < p.confinement.y_min) {
+			force[i].set(0, -p.confinement.k.value*(conf->position[i].y-p.confinement.y_min), 0);
 		} else {
 			force[i].reset();
 		}
@@ -1472,8 +1462,8 @@ void System::setConfinementForce(vector<vec3d> &force,
 // {
 // 	vector<double> force_torque_from_fixed (6*np_mobile);
 // 	// @@ TODO: avoid copy of the velocities and forces
-// 	vector<double> minus_fixed_velocities (6*p->np_fixed);
-// 	for (int i=0; i<p->np_fixed; i++) {
+// 	vector<double> minus_fixed_velocities (6*p.np_fixed);
+// 	for (int i=0; i<p.np_fixed; i++) {
 // 		int i6 = 6*i;
 // 		int i_fixed = i+np_mobile;
 // 		minus_fixed_velocities[i6  ] = -na_velocity[i_fixed].x;
@@ -1633,8 +1623,8 @@ void System::computeShearRateWalls()
 
 // 	double total_rate_dep_wall_shear_stress = 0;
 // 	double total_rate_indep_wall_shear_stress = 0;
-// 	cerr << "np_fixed =" << p->np_fixed << endl;
-// 	for (int i=0; i<p->np_fixed; i++) {
+// 	cerr << "np_fixed =" << p.np_fixed << endl;
+// 	for (int i=0; i<p.np_fixed; i++) {
 // 		total_rate_dep_wall_shear_stress += dot(fixed_velocities[i], rate_proportional_wall_force[i]);
 // 		total_rate_indep_wall_shear_stress += dot(fixed_velocities[i], non_rate_proportional_wall_force[i]);
 // 	}
@@ -1656,10 +1646,10 @@ void System::computeShearRateWalls()
 // 			imposed_flow->setRate(init_shear_rate_limit);
 // 		}
 // 	}
-// 	if (p->simulation_mode == 31) {
+// 	if (p.simulation_mode == 31) {
 // 		force_upwall.reset();
 // 		force_downwall.reset();
-// 		for (int i=0; i<p->np_fixed; i++) {
+// 		for (int i=0; i<p.np_fixed; i++) {
 // 			if (fixed_velocities[i].x > 0) {
 // 				force_upwall += shear_rate*rate_proportional_wall_force[i]+non_rate_proportional_wall_force[i];
 // 			}
@@ -1672,7 +1662,7 @@ void System::computeShearRateWalls()
 
 // void System::tmpMixedProblemSetVelocities()
 // {
-// 	if (p->simulation_mode == 1) {
+// 	if (p.simulation_mode == 1) {
 // 		/* Shear reversal simulation
 // 		 */
 // 		static double time_next = 16;
@@ -1687,7 +1677,7 @@ void System::computeShearRateWalls()
 // 			na_ang_velocity[i].reset();
 // 		}
 // 		na_velocity[np_mobile].x = direction;
-// 	} else if (p->simulation_mode == 4) {
+// 	} else if (p.simulation_mode == 4) {
 // 		static double time_next = 10;
 // 		if (get_time() > time_next) {
 // 			if (zero_shear == true) {
@@ -1703,7 +1693,7 @@ void System::computeShearRateWalls()
 // 				na_ang_velocity[i].reset();
 // 			}
 // 		}
-// 	} else if (p->simulation_mode >= 10 && p->simulation_mode < 20) {
+// 	} else if (p.simulation_mode >= 10 && p.simulation_mode < 20) {
 // 		int i_np_in = np_mobile+np_wall1;
 // 		// inner wheel
 // 		for (int i=np_mobile; i<i_np_in; i++) { // temporary: particles perfectly advected
@@ -1719,14 +1709,14 @@ void System::computeShearRateWalls()
 // 				omega_wheel_out*(position[i].x-origin_of_rotation.x)};
 // 			na_ang_velocity[i] = {0, -omega_wheel_out, 0};
 // 		}
-// 	} else if (p->simulation_mode == 21) {
-// 		static double time_next = p->strain_reversal;
+// 	} else if (p.simulation_mode == 21) {
+// 		static double time_next = p.strain_reversal;
 // 		if (get_time() > time_next) {
-// 			p->theta_shear += M_PI;
-// 			setShearDirection(p->theta_shear);
-// 			time_next += p->strain_reversal;
+// 			p.theta_shear += M_PI;
+// 			setShearDirection(p.theta_shear);
+// 			time_next += p.strain_reversal;
 // 		}
-// 	} else if (p->simulation_mode == 31) {
+// 	} else if (p.simulation_mode == 31) {
 // 		auto &vel_from_fixed = na_velo_components["from_fixed"];
 // 		for (int i=np_mobile; i<np; i++) {
 // 			vel_from_fixed.vel[i] = shear_rate*fixed_velocities[i-np_mobile];
@@ -1734,7 +1724,7 @@ void System::computeShearRateWalls()
 // 			na_velocity[i] = vel_from_fixed.vel[i];
 // 			na_ang_velocity[i] = vel_from_fixed.ang_vel[i];
 // 		}
-// 	} else if (p->simulation_mode == 41) {
+// 	} else if (p.simulation_mode == 41) {
 // 		int i_np_wall1 = np_mobile+np_wall1;
 // 		double wall_velocity = shear_rate*system_height;
 // 		for (int i=np_mobile; i<i_np_wall1; i++) {
@@ -1745,7 +1735,7 @@ void System::computeShearRateWalls()
 // 			na_velocity[i] = {wall_velocity/2, 0, 0};
 // 			na_ang_velocity[i].reset();
 // 		}
-// 	} else if (p->simulation_mode == 42) {
+// 	} else if (p.simulation_mode == 42) {
 // 		int i_np_wall1 = np_mobile+np_wall1;
 // 		double wall_velocity = shear_rate*system_height;
 // 		for (int i=np_mobile; i<i_np_wall1; i++) {
@@ -1756,7 +1746,7 @@ void System::computeShearRateWalls()
 // 			na_velocity[i] = {wall_velocity, 0, 0};
 // 			na_ang_velocity[i].reset();
 // 		}
-// 	} else if (p->simulation_mode == 51) {
+// 	} else if (p.simulation_mode == 51) {
 // 		int i_np_in = np_mobile+np_wall1;
 // 		// inner wheel
 // 		double l = lx/2;
@@ -1782,7 +1772,7 @@ void System::computeShearRateWalls()
 // 				na_ang_velocity[i] = {0, -omega_wheel_out, 0};
 // 			}
 // 		}
-// 	} else if (p->simulation_mode == 60) {
+// 	} else if (p.simulation_mode == 60) {
 // 		if (mobile_fixed) {
 // 			int i_np_wall1 = np_mobile+np_wall1;
 // 			for (int i=np_mobile; i<i_np_wall1; i++) {
@@ -1816,12 +1806,12 @@ void System::sumUpVelocityComponents()
 void System::setFixedParticleVelocities()
 {
 	throw std::runtime_error("Mobile-fixed to be fixed");
-// 	if (p->simulation_mode == 0) {
+// 	if (p.simulation_mode == 0) {
 // 		for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
 // 			na_velocity[i].reset();
 // 			na_ang_velocity[i].reset();
 // 		}
-// 	} else if (p->simulation_mode > 0) {
+// 	} else if (p.simulation_mode > 0) {
 // 		tmpMixedProblemSetVelocities();
 // 	}
 }
@@ -1856,7 +1846,7 @@ void System::computeNonAffineVelocities(bool divided_velocities, bool mat_rebuil
 		computeVelocityByComponents();
 		if (control == Parameters::ControlVariable::stress) {
 			// Stress-controlled simulation
-			if (p->simulation_mode != 31) {
+			if (p.simulation_mode != 31) {
 				computeShearRate();
 			} else {
 				computeShearRateWalls();
@@ -1965,7 +1955,7 @@ void System::rushWorkFor2DBrownian(vector<vec3d> &vel, vector<vec3d> &ang_vel)
 	 * Native 2D simulation is not implemented yet.
 	 * As a quick implementation, the velocity elements for extra dimension are set to zero
 	 */
-	if (p->monolayer) {
+	if (p.monolayer) {
 		/* Particle (3D sphere) cannot move along y-direction.
 		 * All other degrees of freedom exist.
 		 */
@@ -2060,40 +2050,40 @@ void System::adjustContactModelParameters()
 	overlap_avg.update(overlap, clk.cumulated_strain);
 	double max_disp_tan = evaluateMaxDispTan(*this);
 	max_disp_tan_avg.update(max_disp_tan, clk.cumulated_strain);
-	kn_avg.update(p->contact.kn, clk.cumulated_strain);
-	kt_avg.update(p->contact.kt, clk.cumulated_strain);
+	kn_avg.update(p.contact.kn, clk.cumulated_strain);
+	kt_avg.update(p.contact.kt, clk.cumulated_strain);
 
 	static double previous_cumulated_strain = 0;
 	double deltagamma = (clk.cumulated_strain-previous_cumulated_strain);
-	double kn_target = kn_avg.get()*overlap_avg.get()/p->overlap_target;
-	double dkn = (kn_target-p->contact.kn)*deltagamma/p->memory_strain_k;
+	double kn_target = kn_avg.get()*overlap_avg.get()/p.overlap_target;
+	double dkn = (kn_target-p.contact.kn)*deltagamma/p.memory_strain_k;
 
-	p->contact.kn += dkn;
-	if (p->contact.kn < p->min_kn_auto_det) {
-		p->contact.kn = p->min_kn_auto_det;
+	p.contact.kn += dkn;
+	if (p.contact.kn < p.min_kn_auto_det) {
+		p.contact.kn = p.min_kn_auto_det;
 	}
-	if (p->contact.kn > p->max_kn_auto_det) {
-		p->contact.kn = p->max_kn_auto_det;
+	if (p.contact.kn > p.max_kn_auto_det) {
+		p.contact.kn = p.max_kn_auto_det;
 	}
-	if (p->disp_tan_target != -1) {
-		double kt_target = kt_avg.get()*max_disp_tan_avg.get()/p->disp_tan_target;
-		double dkt = (kt_target-p->contact.kt)*deltagamma/p->memory_strain_k;
-		p->contact.kt += dkt;
-		if (p->contact.kt < p->min_kt_auto_det) {
-			p->contact.kt = p->min_kt_auto_det;
+	if (p.disp_tan_target != -1) {
+		double kt_target = kt_avg.get()*max_disp_tan_avg.get()/p.disp_tan_target;
+		double dkt = (kt_target-p.contact.kt)*deltagamma/p.memory_strain_k;
+		p.contact.kt += dkt;
+		if (p.contact.kt < p.min_kt_auto_det) {
+			p.contact.kt = p.min_kt_auto_det;
 		}
-		if (p->contact.kt > p->max_kt_auto_det) {
-			p->contact.kt = p->max_kt_auto_det;
+		if (p.contact.kt > p.max_kt_auto_det) {
+			p.contact.kt = p.max_kt_auto_det;
 		}
 	} else {
-		p->contact.kt = p->contact.kn;
+		p.contact.kt = p.contact.kn;
 	}
 	adaptTimeStepWithVelocities();
-	if (dt < p->min_dt_auto_det) {
-		dt = p->min_dt_auto_det;
+	if (dt < p.min_dt_auto_det) {
+		dt = p.min_dt_auto_det;
 	}
-	if (dt > p->max_dt_auto_det) {
-		dt = p->max_dt_auto_det;
+	if (dt > p.max_dt_auto_det) {
+		dt = p.max_dt_auto_det;
 	}
 	previous_cumulated_strain = clk.cumulated_strain;
 	resetContactModelParameer();
@@ -2103,7 +2093,7 @@ void System::resetContactModelParameer()
 {
 	throw std::runtime_error("System:: resetContactModelParameer() broken.");
 	// for (auto &inter: *interaction) {
-	// 	inter->contact->setSpringConstants(p->contact);
+	// 	inter->contact->setSpringConstants(p.contact);
 	// 	inter->contact->setDashpotConstants();
 	// }
 }
