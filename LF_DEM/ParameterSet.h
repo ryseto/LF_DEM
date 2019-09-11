@@ -13,6 +13,7 @@
 #include "RepulsiveForceParams.h"
 #include "ContactParams.h"
 #include "VanDerWaalsParams.h"
+#include "DimerParams.h"
 #include "DimensionalQty.h"
 
 /*===================================================
@@ -94,6 +95,8 @@ namespace Parameters {
 		double bodyforce;              ///< Amplitude of the body force [0]
 		int np_fixed;
 		struct Interactions::TActAdhesion::Parameters TA_adhesion; ///< Time delayed adhesion params (.adhesion_range [1e-2], .adhesion_max_force [0h], .activation_time [0h])
+		
+		struct Interactions::Dimer::DimerParams dimer;  ///< see DimerParams.h
 		/*******************************************************
 		 HYDRODYNAMICS
 		 ********************************************************/

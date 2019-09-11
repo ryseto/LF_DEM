@@ -329,4 +329,28 @@ vec3d::vertical_projection(const vec3d& v)
 	(*this) -= dot(*this, v)*v;
 }
 
+
+// inline vec3d str2vec3d(const std::string& value)
+// {
+// 	std::string::size_type l1 = value.find("(", 0);
+// 	if (l1 == std::string::npos) {
+// 		exit(1);
+// 	}
+// 	std::string::size_type l2 = value.find(",", l1);
+// 	if (l2 == std::string::npos) {
+// 		exit(1);
+// 	}
+// 	std::string::size_type l3 = value.find(",", l2+1);
+// 	if (l3 == std::string::npos) {
+// 		exit(1);
+// 	}
+// 	std::string::size_type l4 = value.find(")", l3+1);
+// 	if (l4 == std::string::npos) {
+// 		exit(1);
+// 	}
+// 	double vx = atof(value.substr(l1+1, l2-l1-1).c_str());
+// 	double vy = atof(value.substr(l2+1, l3-l2-1).c_str());
+// 	double vz = atof(value.substr(l3+1, l4-l3-1).c_str());
+// 	return vec3d(vx,vy,vz);
+// }
 #endif

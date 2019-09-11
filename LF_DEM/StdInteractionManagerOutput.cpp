@@ -1,4 +1,3 @@
-#include "StdInteractionManagerOutput.h"
 #include "StdInteractionManager.h"
 #include "ParameterSet.h"
 #include "OutputData.h"
@@ -8,13 +7,8 @@
 
 namespace Interactions {
 
-// StdInteractionManagerOutput::StdInteractionManagerOutput(std::shared_ptr<StdInteractionManager> interactions) :
-// interaction(interactions)
-// {
 
-// }
-
-void StdInteractionManagerOutput::output(const StdInteractionManager &manager, ParticleVelocity *vel, const struct Parameters::ParameterSet &p, OutputData &outdata_int)
+void output(const StdInteractionManager &manager, ParticleVelocity *vel, const struct Parameters::ParameterSet &p, OutputData &outdata_int)
 {
 	struct PairVelocity pvel;
 	manager.pdist->setVelocityState(vel);

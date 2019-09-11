@@ -7,6 +7,7 @@
 #include "PairwiseInteraction.h"
 #include "Sym2Tensor.h"
 #include "PairVelocity.h"
+#include "DimerParams.h"
 
 
 namespace Interactions {
@@ -14,33 +15,50 @@ namespace Interactions {
 namespace Dimer {
 
 class Dimer;
+class DimerManager;
+
+struct SpringState {
+	vec3d stretch;
+	double relaxed_length;
+};
 
 struct DimerState {
 	unsigned int p0;
 	unsigned int p1;
-	vec3d sliding_stretch;
-	vec3d rotation_stretch;
+	SpringState sliding_st;
+	SpringState rotation_st;
+};
+
+struct UnloadedDimerState {
+	unsigned int p0;
+	unsigned int p1;
+	double relaxed_length;
 };
 
 namespace io 
 {
 std::vector <struct DimerState> readStatesBStream(std::istream &input);
+std::vector <struct DimerState> readTxtDimer(const std::string& filename);
 void writeStatesBStream(std::ostream &conf_export, const std::vector <struct DimerState> &ds);
 }
 
 class Spring {
 public:
-	Spring(double stiffness);
+	Spring(SpringState state, double stiffness);
 
 	void saveState();
 	void restoreState();
 	vec3d getForce() const;
 	vec3d getStretch() const;
+	double getRelaxedLength() const;
 	void setStretch(const vec3d &new_stretch);
+	void setRelaxedLength(double l);
 	void incrementStretch(const vec3d &delta_stretch);
 
 private:
 	double k;
+	double relaxed_length;
+	double saved_relaxed_length;
 	vec3d stretch;
 	vec3d saved_stretch;
 };
@@ -59,9 +77,10 @@ private:
 
 class Dimer : public PairwiseInteraction {
 private:
+	Dashpot dashpot;
 	Spring sliding_spring;
 	Spring rotation_spring;
-	Dashpot dashpot;
+	void checkHomegeneity();
 
 protected:
 	vec3d getContactVelocity(const struct PairVelocity &vel);
@@ -69,19 +88,29 @@ protected:
 
 	friend Dashpot;
 	friend Spring;
+	friend DimerManager;
 
 public:
-	Dimer(double rest_separation, double stiffness, double resistance);
+	Dimer(const PairId &pairid, vec3d sep, const struct UnloadedDimerState &uds, DimerParams p);
+	Dimer(const PairId &pairid, vec3d sep, const struct DimerState &uds, DimerParams p);
 
 	struct DimerState getState() const;
-	void setState(const struct DimerState& ds);
+	// void setSpringState(const struct SpringState& ds);
 
 	void saveState();
 	void restoreState();
 	void applyTimeStep(double dt, const struct PairVelocity &vel);
 
 	std::pair<vec3d, vec3d> getForceTorque(const struct PairVelocity &vel) const;
+	std::pair<vec3d, vec3d> getForceTorqueDashpot(const struct PairVelocity &vel) const;
+	std::pair<vec3d, vec3d> getForceTorqueSpring() const;
+
 	Sym2Tensor getStress(const struct PairVelocity &vel) const;
+	Sym2Tensor getDashpotStress(const struct PairVelocity &vel) const;
+	Sym2Tensor getSpringStress() const;
+
+	double getRelaxedLength() const {return sliding_spring.getRelaxedLength();};
+
 };
 
 } // namespace Dimer

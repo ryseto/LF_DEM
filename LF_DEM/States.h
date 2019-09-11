@@ -3,8 +3,6 @@
 #ifndef __LF_DEM__States__
 #define __LF_DEM__States__
 
-class System;
-
 namespace State {
 	
 enum class StateFileFormat : int 
@@ -21,7 +19,7 @@ struct BasicCheckpoint {
 	struct Clock clock;
 };
 
-void outputStateBinary(std::string state_filename, const System &sys);
+void outputStateBinary(std::string state_filename, double strain, double _time);
 struct BasicCheckpoint readBasicCheckpoint(const std::string &filename);
 static BasicCheckpoint zero_time_basicchkp = {{0, 0}};
 bool isZeroTimeChkp(BasicCheckpoint chkp);

@@ -98,8 +98,10 @@ void StdInteractionManager::createNewInteraction(unsigned i, unsigned j, double 
 		params.add(p->repulsion);
 		params.repp->max_length = calcRepulsiveForceRange(p->repulsion, conf->radius[i], conf->radius[j]);
 	}
-	addInteraction(i, j, std::make_shared<StdInteraction>(i, j, conf->radius[i], conf->radius[j], 
-															pdist->getSeparation(i, j), scaled_interaction_range, 
+
+	struct PairId pairid = {i, j, 
+							conf->radius[i], conf->radius[j]};
+	addInteraction(i, j, std::make_shared<StdInteraction>(pairid, pdist->getSeparation(i, j), scaled_interaction_range, 
 															std::move(params), solver.get()));
 }
 
@@ -177,18 +179,14 @@ void StdInteractionManager::updateInteractions()
 void StdInteractionManager::saveState()
 {
 	for (auto &inter: interactions) {
-		if (inter->contact) {
-			inter->contact->saveState();
-		}
+		inter->saveState();
 	}
 }
 
 void StdInteractionManager::restoreState()
 {
 	for (auto &inter: interactions) {
-		if (inter->contact) {
-			inter->contact->restoreState();
-		}
+		inter->restoreState();
 	}
 }
 
@@ -208,21 +206,21 @@ double StdInteractionManager::getMaxRelativeVelocity(ParticleVelocity *vel)
 		std::tie(i, j) = inter->get_par_num();
 		pdist->getVelocities(i, j, pvel);
 
-		double normal_velocity = std::abs(inter->getNormalVelocity(pvel));
-		if (normal_velocity > max_velocity) {
-			max_velocity = normal_velocity;
+		double velocity = std::abs(inter->getNormalVelocity(pvel));
+		if (velocity > max_velocity) {
+			max_velocity = velocity;
 		}
 		if (inter->contact) {
 			if (friction) {
-				normal_velocity = inter->contact->getSlidingVelocity(pvel).norm();
-				if (normal_velocity > max_velocity) {
-					max_velocity = normal_velocity;
+				velocity = inter->contact->getSlidingVelocity(pvel).norm();
+				if (velocity > max_velocity) {
+					max_velocity = velocity;
 				}
 			}
 			if (rolling) {
-				normal_velocity = inter->contact->getRollingVelocity(pvel).norm();
-				if (normal_velocity > max_velocity) {
-					max_velocity = normal_velocity;
+				velocity = inter->contact->getRollingVelocity(pvel).norm();
+				if (velocity > max_velocity) {
+					max_velocity = velocity;
 				}
 			}
 		}

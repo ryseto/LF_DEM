@@ -1,11 +1,11 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-#include "System.h"
 #include "States.h"
+#include "CheckFile.h"
 
 namespace State {	
-	void outputStateBinary(std::string state_filename, const System &sys)
+	void outputStateBinary(std::string state_filename, double strain, double _time)
 	{
 		/**
 		 \brief Saves the current state of the simulation in a binary file.
@@ -19,9 +19,7 @@ namespace State {
 		typedef std::underlying_type<StateFileFormat>::type format_type;
 		format_type binary_format = static_cast<format_type>(StateFileFormat::basic);
 		state_export.write((char*)&binary_format, sizeof(format_type));
-		double strain = sys.get_cumulated_strain();
 		state_export.write((char*)&strain, sizeof(double));
-		double _time = sys.get_time();
 		state_export.write((char*)&_time, sizeof(double));
 		state_export.close();
 	}

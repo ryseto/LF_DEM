@@ -2,8 +2,8 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include <algorithm>
 
-#include "global.h"
 #include "ParameterSetFactory.h"
 #define PARAM_INIT(name, default_value) {#name,  [](ParameterSet &p, InputParameter<decltype(ParameterSet::name)> in) {p.name = in.value;}, default_value}
 #define PARAM_INIT_ENUMCLASS(name, default_value) {#name,\
@@ -13,8 +13,23 @@
 #define PARAM_INIT_DIMQTY(name, default_value) {#name,  [](ParameterSet &p, InputParameter<Dimensional::DimensionalQty<decltype(ParameterSet::name)>> in) {p.name = in.value.value;}, default_value}
 #define PARAM_INIT_FORCESCALE(name, default_value) {#name,  [](ParameterSet &p, InputParameter<Dimensional::ForceScale> in) {p.name = in.value.dim_qty.value;}, default_value}
 
-namespace Parameters {
-	
+inline void removeBlank(std::string& str)
+{
+	str.erase(std::remove_if(str.begin(), str.end(), (int(*)(int))isspace), str.end());
+}
+
+bool str2bool(const std::string& value)
+{
+	if (value == "true") {
+		return true;
+	} else if (value == "false") {
+		return false;
+	} else {
+		std::cerr << "The value should be true or false" << std::endl;
+		exit(1);
+	}
+}
+
 void Str2KeyValue(const std::string& str_parameter,
 				  std::string& keyword,
 				  std::string& value)
@@ -23,6 +38,8 @@ void Str2KeyValue(const std::string& str_parameter,
 	keyword = str_parameter.substr(0, pos_equal);
 	value = str_parameter.substr(pos_equal+1);
 }
+
+namespace Parameters {
 
 ParameterSetFactory::ParameterSetFactory(Dimensional::Unit guarranted_unit) 
 {
@@ -112,6 +129,8 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(sflow_target_flux, 0),
 		PARAM_INIT(confinement.y_min, 0),
 		PARAM_INIT(confinement.y_max, 0),
+		PARAM_INIT(dimer.resistance, 0),
+		PARAM_INIT(dimer.stiffness, 0),
 	};
 
 	/*================================

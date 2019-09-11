@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include "InteractionManager.h"
+#include "InteractionManagerOutput.h"
 #include "StdInteraction.h"
 
 class ParticleConfig;
@@ -92,7 +93,7 @@ private:
 								        std::vector<vec3d> &torque);
 	void checkInputParams(std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> vel_solver);
 
-	friend StdInteractionManagerOutput;
+	friend void output(const StdInteractionManager &manager, ParticleVelocity *vel, const struct Parameters::ParameterSet &p, OutputData &outdata_int);
 };
 
 double maxRangeStdInteraction(const Parameters::ParameterSet &params, const std::vector<double> &radii);

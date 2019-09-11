@@ -33,6 +33,13 @@ namespace TActAdhesion {
 class TimeActivatedAdhesion;
 }
 
+struct PairId {
+	unsigned p1;
+	unsigned p0; 
+	double a0;
+	double a1; 
+};
+
 class PairwiseInteraction {
 
 protected:
@@ -47,14 +54,8 @@ protected:
 	vec3d rvec; // vector center to center
 	vec3d nvec; // normal vector
 
-	// struct PairVelocity vel;
-	// struct PairVelocity velinf;
-	// struct PairVelocityGrad velgrad;
 
 	void setSeparation(const vec3d &sep);
-	// void setSeparation(const Geometry::PairwiseConfig &pconf);
-	// void setVelocities(const Geometry::PairwiseConfig &pconf);
-	// void setVelocityGrad(const struct PairVelocityGrad &vgrad);
 
 	double gap2separation(double gap);  // gap is in units of (a0+a1)/2, separation is in std unit length
 	double separation2gap(double sep);  // gap is in units of (a0+a1)/2, separation is in std unit length
@@ -69,11 +70,7 @@ protected:
 	friend InteractionSet;
 
 public:
-	PairwiseInteraction(unsigned i, unsigned j, 
-						double a_i, double a_j, 
-						vec3d sep);
-						// const Geometry::PairwiseConfig &pconf);
-						// const struct PairVelocityGrad &vgrad);
+	PairwiseInteraction(const PairId &data, vec3d sep);
 
 	virtual void saveState() = 0;
 	virtual void restoreState() = 0;

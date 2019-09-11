@@ -16,35 +16,31 @@
 #ifndef __LF_DEM__System__
 #define __LF_DEM__System__
 #include <iostream>
-#include <iomanip>
+// #include <iomanip>
 #include <sstream>
 #include <vector>
-#include <fstream>
-#include <queue>
+// #include <fstream>
 #include <list>
 #include <string>
-#include <tuple>
 #include <map>
 #include <complex>
-#include "global.h"
+#include <memory>
+
 #include "Configuration.h"
 #include "States.h"
 #include "Sym2Tensor.h"
 #include "vec3d.h"
-#include "Matrix.h"
 #include "ParameterSet.h"
 #include "Averager.h"
 #include "Events.h"
 #include "StressComponent.h"
-#include "SolventFlow.h"
-#include "Box3d.h"
-#include "KraynikReinelt.h"
-#include "LeesEdwards.h"
+#include "ImposedDeformation.h"
 #include "PairwiseConfig.h"
 #include "ParticleConfig.h"
 #include "ShearType.h"
 #include "StdInteractionManager.h"
 #include "PairwiseResistanceVelocitySolver.h"
+#include "ControlVariable.h"
 
 
 class MTRand;
@@ -53,9 +49,6 @@ class MTRand;
 #include "dSFMT-src-2.2.3/dSFMT.h"
 #endif
 
-class Simulation;
-// class Interaction;
-class BoxSet;
 class SolventFlow;
 
 class System {
@@ -328,16 +321,7 @@ private:
 		return np;
 	}
 
-	vec3d get_shear_strain() const
-	{
-		if (shear_type == ShearType::simple_shear) {
-			return lees->getShearStrain();
-		}
-		if (shear_type == ShearType::extensional_flow) {
-			throw std::runtime_error("getShearStrain for Kraynik-Reinelt?");
-		}
-		return 0;
-	}
+	vec3d get_shear_strain() const;
 
 	double get_cumulated_strain() const
 	{

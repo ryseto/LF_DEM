@@ -4,11 +4,43 @@
 #include <sstream>
 #include <map>
 #include <set>
-#include "global.h"
+#include <algorithm>
 #include "Contact.h"
 #include "Configuration.h"
 #include "System.h"
+#include "LeesEdwards.h"
+#include "CheckFile.h"
 
+inline void removeBlank(std::string& str)
+{
+	str.erase(std::remove_if(str.begin(), str.end(), (int(*)(int))isspace), str.end());
+}
+
+std::vector<std::string> splitString(const std::string& str)
+{
+	std::string stripped_str = str;
+	std::size_t brk = 0;
+
+	std::vector<std::string> elements;
+
+	while (stripped_str.length() > 0) {
+		brk = stripped_str.find(" ");
+		std::string first_part;
+		if (brk < std::string::npos) {
+			brk += 1;
+			first_part = stripped_str.substr(0, brk);
+			stripped_str = stripped_str.substr(brk, std::string::npos);
+		} else {
+			first_part = stripped_str.substr(0, brk);
+			stripped_str = "";
+		}
+		removeBlank(first_part);
+		if ( first_part.length()>0 ) {
+			elements.push_back(first_part);
+		}
+	}
+	return elements;
+}
 
 std::pair<std::vector <vec3d>, std::vector <double>> readPositionsBStream(std::istream &input, unsigned int np)
 {

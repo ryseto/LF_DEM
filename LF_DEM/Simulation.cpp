@@ -16,7 +16,12 @@
 #include <complex>
 #include "Simulation.h"
 #include "SystemHelperFunctions.h"
-#include "StdInteractionManagerOutput.h"
+#include "InteractionManagerOutput.h"
+#include "LeesEdwards.h"
+#include "KraynikReinelt.h"
+#include "SolventFlow.h"
+
+#include "AlmostEqual.h"
 
 using namespace std;
 
@@ -606,7 +611,7 @@ void Simulation::checkpoint()
 	outputConfigurationBinary(conf_filename);
 	string state_filename;
 	state_filename = "chk_" + simu_name + ".dat";
-	State::outputStateBinary(state_filename, sys);
+	State::outputStateBinary(state_filename, sys.get_cumulated_strain(), sys.get_time());
 }
 
 vector<Sym2Tensor> Simulation::getParticleStressGroup(string group)
@@ -1044,8 +1049,7 @@ void Simulation::outputIntFileTxt()
 	outdata_int.setUnits(system_of_units, output_unit);
 	stringstream snapshot_header;
 	getSnapshotHeader(snapshot_header);
-	Interactions::StdInteractionManagerOutput out_std;
-	out_std.output(*(sys.interaction), &sys.velocity, sys.p, outdata_int);
+	Interactions::output(*(sys.interaction), &sys.velocity, sys.p, outdata_int);
 	if (sys.interaction->size() > 0) {
 		outdata_int.writeToFile(snapshot_header.str());
 	}

@@ -82,17 +82,14 @@ public:
 	/*********************************
 	 *       Public Methods          *
 	 *********************************/
-	StdInteraction(unsigned i, unsigned j,
-				   double a_i, double a_j,
-				   vec3d sep,
-				   // const Geometry::PairwiseConfig &pconf,
+	StdInteraction(const PairId &pairid,
+				   vec3d sep,	
 				   double interaction_range_,
 				   struct StdInteractionParams params,
 				   Dynamics::PairwiseResistanceVelocitySolver *vel_solver);
 	//======= state updates  ====================//
 	void updateState(const struct PairVelocity &vel,
 				    vec3d sep,
-					// const Geometry::PairwiseConfig &pconf, 
 					double dt,
 					bool& deactivated);
 	double separation_distance() const {return r;}

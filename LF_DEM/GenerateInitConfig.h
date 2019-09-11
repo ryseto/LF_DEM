@@ -23,6 +23,7 @@
 #include <vector>
 #include <string>
 #include "vec3d.h"
+#include "Simulation.h"
 #include "System.h"
 #include "ParameterSet.h"
 #include "Events.h"

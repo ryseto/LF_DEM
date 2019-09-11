@@ -8,7 +8,6 @@
 
 #include <tuple>
 #include "GenerateInitConfig.h"
-#include "Simulation.h"
 #include "SystemHelperFunctions.h"
 #include "Configuration.h"
 #include "ParameterSetFactory.h"

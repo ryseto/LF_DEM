@@ -6,25 +6,21 @@
 //  Copyright (c) 2012-2015 Ryohei Seto and Romain Mari. All rights reserved.
 //
 #include "StdInteraction.h"
-// #include "PairwiseConfig.h"
 #include "PairwiseResistanceVelocitySolver.h"
 
 namespace Interactions {
 
-StdInteraction::StdInteraction(unsigned int i, unsigned int j,
-							   double a_i, double a_j,
+StdInteraction::StdInteraction(const PairId &pairid,
 							   vec3d sep,
-							   // const Geometry::PairwiseConfig &pconf,
 							   double interaction_range_,
 							   struct StdInteractionParams params,
 							   Dynamics::PairwiseResistanceVelocitySolver *vel_solver = nullptr) :
-PairwiseInteraction(i, j, a_i, a_j, sep),
+PairwiseInteraction(pairid, sep),
 interaction_range(interaction_range_),
 p(std::move(params)),
 solver(vel_solver)
 {
 	setSeparation(sep);
-	// setSeparation(pconf);
 
 	if (p.contp && reduced_gap <= 0) {
 		switchOnContact();
@@ -253,12 +249,16 @@ std::pair<struct DBlock, struct DBlock> StdInteraction::RFU_DBlocks()
 
 void StdInteraction::saveState()
 {
-	contact->saveState();
+	if (contact) {
+		contact->saveState();
+	}
 }
 
 void StdInteraction::restoreState()
 {
-	contact->restoreState();
+	if (contact) {
+		contact->restoreState();
+	}
 }
 
 

@@ -1,5 +1,5 @@
 #include "OutputData.h"
-#include "global.h"
+#include "CheckFile.h"
 
 void OutputData::setFile(const std::string& fname,
 						 const std::string& data_header,

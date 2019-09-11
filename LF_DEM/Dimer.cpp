@@ -4,20 +4,24 @@ namespace Interactions {
 
 namespace Dimer {
 
-Spring::Spring(double stiffness) :
+Spring::Spring(SpringState state, double stiffness) :
 k(stiffness),
-stretch(0),
-saved_stretch(0)
+relaxed_length(state.relaxed_length),
+saved_relaxed_length(state.relaxed_length),
+stretch(state.stretch),
+saved_stretch(state.stretch)
 {}
 
 void Spring::saveState()
 {
 	saved_stretch = stretch;
+	saved_relaxed_length = relaxed_length;
 }
 
 void Spring::restoreState()
 {
 	stretch = saved_stretch;
+	relaxed_length = saved_relaxed_length;
 }
 
 vec3d Spring::getForce() const
@@ -33,6 +37,17 @@ vec3d Spring::getStretch() const
 void Spring::setStretch(const vec3d &new_stretch)
 {
 	stretch = new_stretch;
+}
+
+
+double Spring::getRelaxedLength() const
+{
+	return relaxed_length;
+}
+
+void Spring::setRelaxedLength(double l)
+{
+	relaxed_length = l;
 }
 
 void Spring::incrementStretch(const vec3d &delta_stretch)
@@ -86,21 +101,42 @@ std::pair<vec3d, vec3d> Dashpot::getForceTorque(const struct PairVelocity &vel) 
 	return std::make_pair(force, torque);
 }
 
+void Dimer::checkHomegeneity()
+{
+	if (a0 != a1) {
+		throw std::runtime_error("Only homogeneous dimers are implemented");
+	}
+}
+
+Dimer::Dimer(const PairId &pairid, vec3d sep, const struct UnloadedDimerState &uds, DimerParams p) :
+PairwiseInteraction(pairid, sep),
+dashpot(p.resistance, this),
+sliding_spring({getSeparation() - uds.relaxed_length*getUnitSeparation(), uds.relaxed_length}, p.stiffness),
+rotation_spring({vec3d(), uds.relaxed_length}, p.stiffness)
+{
+	checkHomegeneity();
+}
+
+
+Dimer::Dimer(const PairId &pairid, vec3d sep, const struct DimerState &ds, DimerParams p) :
+PairwiseInteraction(pairid, sep),
+dashpot(p.resistance, this),
+sliding_spring(ds.sliding_st, p.stiffness),
+rotation_spring(ds.rotation_st, p.stiffness)
+{
+	checkHomegeneity();
+}
 
 struct DimerState Dimer::getState() const
 {
 	struct DimerState s;
 	s.p0 = p0;
 	s.p1 = p1;
-	s.sliding_stretch = sliding_spring.getStretch();
-	s.rotation_stretch = rotation_spring.getStretch();
+	s.sliding_st.stretch = sliding_spring.getStretch();
+	s.sliding_st.relaxed_length = rotation_spring.getRelaxedLength();
+	s.rotation_st.stretch = sliding_spring.getStretch();
+	s.rotation_st.relaxed_length = rotation_spring.getRelaxedLength();
 	return s;
-}
-
-void Dimer::setState(const struct DimerState &ds)
-{
-	sliding_spring.setStretch(ds.sliding_stretch);
-	rotation_spring.setStretch(ds.rotation_stretch);
 }
 
 void Dimer::saveState()
@@ -132,8 +168,16 @@ void Dimer::applyTimeStep(double dt, const struct PairVelocity &vel)
 	rotation_spring.incrementStretch(getRotationDiffVelocity(vel)*dt);
 }
 
-
 std::pair<vec3d, vec3d> Dimer::getForceTorque(const struct PairVelocity &vel) const
+{
+	std::pair<vec3d, vec3d> fts = getForceTorqueSpring();
+	std::pair<vec3d, vec3d> ftd = getForceTorqueDashpot(vel);
+
+	return std::make_pair(fts.first + ftd.first, fts.second + ftd.second);
+}
+
+
+std::pair<vec3d, vec3d> Dimer::getForceTorqueSpring() const
 {
 	//Sliding spring
 	vec3d force = sliding_spring.getForce();
@@ -142,12 +186,12 @@ std::pair<vec3d, vec3d> Dimer::getForceTorque(const struct PairVelocity &vel) co
 	//Rotation spring
 	torque += rotation_spring.getForce();
 
-	//Dashpot
-	auto dashpot_ft = dashpot.getForceTorque(vel);
-	force += dashpot_ft.first;
-	torque += dashpot_ft.second;
-
 	return std::make_pair(force, torque);
+}
+
+std::pair<vec3d, vec3d> Dimer::getForceTorqueDashpot(const struct PairVelocity &vel) const
+{
+	return dashpot.getForceTorque(vel);
 }
 
 Sym2Tensor Dimer::getStress(const struct PairVelocity &vel) const
@@ -156,53 +200,17 @@ Sym2Tensor Dimer::getStress(const struct PairVelocity &vel) const
 	return outer_sym(rvec, ft.first);
 }
 
-namespace io 
+Sym2Tensor Dimer::getDashpotStress(const struct PairVelocity &vel) const
 {
-
-std::vector <struct DimerState> readStatesBStream(std::istream &input)
-{
-	unsigned ndimer;
-	input.read((char*)&ndimer, sizeof(decltype(ndimer)));
-	std::vector <struct DimerState> states;
-	for (unsigned i=0; i<ndimer; i++) {
-		unsigned p0, p1;
-		double dt_x, dt_y, dt_z, dr_x, dr_y, dr_z;
-		input.read((char*)&p0, sizeof(unsigned));
-		input.read((char*)&p1, sizeof(unsigned));
-		input.read((char*)&dt_x, sizeof(decltype(dt_x)));
-		input.read((char*)&dt_y, sizeof(decltype(dt_y)));
-		input.read((char*)&dt_z, sizeof(decltype(dt_z)));
-		input.read((char*)&dr_x, sizeof(decltype(dr_x)));
-		input.read((char*)&dr_y, sizeof(decltype(dr_y)));
-		input.read((char*)&dr_z, sizeof(decltype(dr_z)));
-		struct DimerState s;
-		s.p0 = (int)p0;
-		s.p1 = (int)p1;
-		s.sliding_stretch = vec3d(dt_x, dt_y, dt_z);
-		s.rotation_stretch = vec3d(dr_x, dr_y, dr_z);
-		states.push_back(s);
-	}
-	return states;
+	auto ft = getForceTorqueDashpot(vel);
+	return outer_sym(rvec, ft.first);
 }
 
-
-void writeStatesBStream(std::ostream &conf_export, const std::vector <struct DimerState> &ds)
+Sym2Tensor Dimer::getSpringStress() const
 {
-	unsigned ndimer = ds.size();
-	conf_export.write((char*)&ndimer, sizeof(unsigned int));
-	for (unsigned i=0; i<ds.size(); i++) {
-		conf_export.write((char*)&(ds[i].p0), sizeof(unsigned int));
-		conf_export.write((char*)&(ds[i].p1), sizeof(unsigned int));
-		conf_export.write((char*)&(ds[i].sliding_stretch.x), sizeof(double));
-		conf_export.write((char*)&(ds[i].sliding_stretch.y), sizeof(double));
-		conf_export.write((char*)&(ds[i].sliding_stretch.z), sizeof(double));
-		conf_export.write((char*)&(ds[i].rotation_stretch.x), sizeof(double));
-		conf_export.write((char*)&(ds[i].rotation_stretch.y), sizeof(double));
-		conf_export.write((char*)&(ds[i].rotation_stretch.z), sizeof(double));
-	}
+	auto ft = getForceTorqueSpring();
+	return outer_sym(rvec, ft.first);
 }
-
-} //namespace io
 
 } // namespace Dimer
 
