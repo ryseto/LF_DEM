@@ -171,8 +171,9 @@ vec3d Dimer::getRotationDiffVelocity(const struct PairVelocity &vel)
 	return vel.O[1]-vel.O[0];
 }
 
-void Dimer::applyTimeStep(double dt, const struct PairVelocity &vel)
+void Dimer::applyTimeStep(double dt, vec3d sep, const struct PairVelocity &vel)
 {
+	setSeparation(sep);
 	sliding_spring.incrementStretch(getContactVelocity(vel)*dt);
 	rotation_spring.incrementStretch(getRotationDiffVelocity(vel)*dt);
 }

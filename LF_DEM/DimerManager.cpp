@@ -90,7 +90,7 @@ void DimerManager::updateInteractions(double dt, ParticleVelocity *vel)
 	for (auto &dimer: interactions) {
 		std::tie(i, j) = dimer->get_par_num();
 		pdist->getVelocities(i, j, pvel);
-		dimer->applyTimeStep(dt, pvel);
+		dimer->applyTimeStep(dt, pdist->getSeparation(i, j), pvel);
 	}
 }
 

@@ -68,7 +68,7 @@ public:
 
 	void saveState();
 	void restoreState();
-	void applyTimeStep(double dt, const struct PairVelocity &vel);
+	void applyTimeStep(double dt, vec3d sep, const struct PairVelocity &vel);
 
 	std::pair<vec3d, vec3d> getForceTorque(const struct PairVelocity &vel) const;
 	std::pair<vec3d, vec3d> getForceTorqueDashpot(const struct PairVelocity &vel) const;
