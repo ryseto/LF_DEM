@@ -245,8 +245,10 @@ private:
 	void setupConfiguration(struct fixed_velo_configuration c, Parameters::ControlVariable control_);
 	void setupConfiguration(struct circular_couette_configuration c, Parameters::ControlVariable control_);
 	void setupConfiguration(const struct delayed_adhesion_configuration &conf, Parameters::ControlVariable control_);
-	void addDimers(const std::vector<Interactions::Dimer::DimerState> &dimers);
-	void addDimers(const std::vector<Interactions::Dimer::UnloadedDimerState> &dimers);
+	void addDimers(const std::vector<Interactions::Dimer::DimerState> &dimers,
+				   const std::vector <struct Interactions::contact_state>& cs);
+	void addDimers(const std::vector<Interactions::Dimer::UnloadedDimerState> &dimers,
+				   const std::vector <struct Interactions::contact_state>& cs);
 
 	void resetContactModelParameer();
 	void allocateRessources();

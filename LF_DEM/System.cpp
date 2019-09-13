@@ -333,7 +333,8 @@ void System::setupConfiguration(struct circular_couette_configuration config, Pa
 	setupGenericConfiguration(config, control_);
 }
 
-void System::addDimers(const std::vector<Interactions::Dimer::DimerState> &dimers)
+void System::addDimers(const std::vector<Interactions::Dimer::DimerState> &dimers,
+					   const std::vector <struct Interactions::contact_state>& cs)
 {
 	// reinitialize interaction machinery, start by dimers, to not create StdInteractions for dimer pairs
 	auto pair_manager = std::make_shared<Interactions::PairManager> (np);
@@ -345,7 +346,6 @@ void System::addDimers(const std::vector<Interactions::Dimer::DimerState> &dimer
 																		&p,
 																		res_solver,
 																		dimers);
-	auto contacts = interaction->getContacts();
 	interaction = std::make_shared<Interactions::StdInteractionManager>(np, 
 																		pair_manager,
 																		conf.get(), 
@@ -354,7 +354,7 @@ void System::addDimers(const std::vector<Interactions::Dimer::DimerState> &dimer
 																		pairconf, 
 																		&p,
 																		res_solver,
-																		contacts);
+																		cs);
 	
 	dimer_manager->declareForceComponents(force_components);
 	interaction->declareForceComponents(force_components);
@@ -362,7 +362,8 @@ void System::addDimers(const std::vector<Interactions::Dimer::DimerState> &dimer
 	declareStressComponents();
 }
 
-void System::addDimers(const std::vector<Interactions::Dimer::UnloadedDimerState> &dimers)
+void System::addDimers(const std::vector<Interactions::Dimer::UnloadedDimerState> &dimers,
+					   const std::vector <struct Interactions::contact_state>& cs)
 {
 	auto pair_manager = std::make_shared<Interactions::PairManager> (np);
 	dimer_manager = std::make_shared<Interactions::Dimer::DimerManager>(np, 
@@ -373,7 +374,6 @@ void System::addDimers(const std::vector<Interactions::Dimer::UnloadedDimerState
 																		&p,
 																		res_solver,
 																		dimers);
-	auto contacts = interaction->getContacts();
 	interaction = std::make_shared<Interactions::StdInteractionManager>(np, 
 																		pair_manager,
 																		conf.get(), 
@@ -382,7 +382,7 @@ void System::addDimers(const std::vector<Interactions::Dimer::UnloadedDimerState
 																		pairconf, 
 																		&p,
 																		res_solver,
-																		contacts);
+																		cs);
 	
 	dimer_manager->declareForceComponents(force_components);
 	interaction->declareForceComponents(force_components);

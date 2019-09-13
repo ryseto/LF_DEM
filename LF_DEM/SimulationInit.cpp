@@ -218,6 +218,76 @@ void Simulation::setConfigToSystem(bool binary_conf, const std::string &filename
 	}
 }
 
+void Simulation::setConfigToSystemDimers(bool binary_conf, const std::string &filename, const std::string &dimer_filename)
+{
+	// This is a bit dirty, as it duplicates cases of setConfigToSystem, only adding each time a call to sys.addDimers 
+	// Startup should be refactored a bit to make setConfig more flexible
+	if (binary_conf) {
+		auto format = getBinaryConfigurationFileFormat(filename);
+		switch(format) {
+			case ConfFileFormat::bin_format_base_shear:
+			case ConfFileFormat::bin_format_base_new:
+				{
+					auto conf = readBinaryBaseShearConfiguration(filename);
+					sys.setupConfiguration(conf, control_var);
+					sys.addDimers(Interactions::Dimer::io::readTxtDimer(dimer_filename), conf.contact_states);
+					break;
+				}
+			case ConfFileFormat::bin_format_fixed_vel_shear:
+				{
+					auto conf = readBinaryFixedVeloConfiguration(filename);
+					sys.setupConfiguration(conf, control_var);
+					sys.addDimers(Interactions::Dimer::io::readTxtDimer(dimer_filename), conf.contact_states);
+					break;
+				}
+			case ConfFileFormat::bin_delayed_adhesion:
+				{
+					auto conf = readBinaryDelayedAdhesionConfiguration(filename);
+					sys.setupConfiguration(conf, control_var);
+					sys.addDimers(Interactions::Dimer::io::readTxtDimer(dimer_filename), conf.base.contact_states);
+					break;
+				}
+			default:
+				throw std::runtime_error("Unable to read config binary format "+to_string(static_cast<int>(format)));
+		}
+	} else {
+		auto format = getTxtConfigurationFileFormat(filename);
+		switch(format) {
+			case ConfFileFormat::txt_format_base_old:
+				{
+					auto conf = readTxtBaseConfiguration(filename);
+					sys.setupConfiguration(conf, control_var);
+					sys.addDimers(Interactions::Dimer::io::readTxtDimer(dimer_filename), conf.contact_states);
+					break;
+				}
+			case ConfFileFormat::txt_format_base_new:
+				{
+					auto conf = readTxtBaseConfiguration(filename);
+					sys.setupConfiguration(conf, control_var);
+					sys.addDimers(Interactions::Dimer::io::readTxtDimer(dimer_filename), conf.contact_states);
+					break;
+				}
+			case ConfFileFormat::txt_format_fixed_vel:
+				{
+					auto conf = readTxtFixedVeloConfiguration(filename);
+					sys.setupConfiguration(conf, control_var);
+					sys.addDimers(Interactions::Dimer::io::readTxtDimer(dimer_filename), conf.contact_states);
+					break;
+				}
+			case ConfFileFormat::txt_format_circular_couette:
+				{
+					auto conf = readTxtCircularCouetteConfiguration(filename);
+					sys.setupConfiguration(conf, control_var);
+					sys.addDimers(Interactions::Dimer::io::readTxtDimer(dimer_filename), conf.contact_states);
+					break;
+				}
+			default:
+				throw std::runtime_error("Unable to read config text format "+to_string(static_cast<int>(format)));
+		}
+	}
+}
+
+
 void Simulation::setupFlow()
 {
 	// @@@ This function is quite messy, should be fixed 
@@ -344,9 +414,10 @@ void Simulation::setupSimulation(string in_args,
 
 	assertParameterCompatibility();
 
-	setConfigToSystem(binary_conf, filename_import_positions);
-	if (input_files.count("dimers")) {
-		sys.addDimers(Interactions::Dimer::io::readTxtDimer(input_files["dimers"]));
+	if (!input_files.count("dimers")) {
+		setConfigToSystem(binary_conf, filename_import_positions);
+	} else {
+		setConfigToSystemDimers(binary_conf, filename_import_positions, input_files["dimers"]);
 	}
 	if (false) {
 		// Symmetry check

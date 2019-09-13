@@ -122,6 +122,8 @@ public:
 	void setupControl(Parameters::ControlVariable control_variable_,
 					   Dimensional::DimensionalQty<double> control_value_);
 	void setConfigToSystem(bool binary_conf, const std::string &filename);
+	void setConfigToSystemDimers(bool binary_conf, const std::string &filename, const std::string &dimer_filename);
+
 	TimeKeeper initTimeKeeper();
 	bool keepRunning();
 	// void timeEvolution(double& next_output_data);
