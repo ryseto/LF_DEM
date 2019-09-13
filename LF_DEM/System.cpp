@@ -1581,7 +1581,11 @@ double System::computeMaxVelocity()
 void System::computeVelocityWithoutComponents(bool rebuild)
 {
 	if (rebuild) {
-		res_solver->buildResistanceMatrix(*interaction);
+		if (!dimer_manager) {
+			res_solver->buildResistanceMatrix(*interaction);
+		} else {
+			res_solver->buildResistanceMatrix(*interaction, *dimer_manager);
+		}
 	}
 	for (const auto &component: interaction->declared_forces) {
 		interaction->setForceToParticle(component, force_components[component].force, force_components[component].torque);
@@ -1610,7 +1614,11 @@ void System::computeVelocityByComponents()
 	/**
 	 \brief Compute velocities component by component.
 	 */
-	res_solver->buildResistanceMatrix(*interaction);
+	if (!dimer_manager) {
+		res_solver->buildResistanceMatrix(*interaction);
+	} else {
+		res_solver->buildResistanceMatrix(*interaction, *dimer_manager);
+	}
 	for (const auto &component: interaction->declared_forces) {
 		interaction->setForceToParticle(component, force_components[component].force, force_components[component].torque);
 		res_solver->setSolverRHS(force_components[component]);

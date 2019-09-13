@@ -135,10 +135,10 @@ inline void resetDBlock(struct DBlock& b)
 namespace ResistanceBlocks {
 
 enum class Label {
-	ForceVel,
-	ForceAngVel,
-	TorqueVel,
-	TorqueAngVel
+	ForceVel,       // top left, symmetric
+	ForceAngVel,	// top right, antisymmetric
+	TorqueVel,		// bottom left, antisymmetric
+	TorqueAngVel	// bottom right, symmetric
 };
 
 class DBlockBuilder

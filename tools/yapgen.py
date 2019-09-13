@@ -187,6 +187,8 @@ def snaps2yap(pos_fname,
                 angle = frame_par[1][:, pcols['angle']].astype(np.float)
                 particles, crosses = particles_yaparray(pos, rad, angles=angle)
                 yap_out = np.row_stack((yap_out, particles))
+                yap_out = pyp.add_color_switch(yap_out, 0)
+                yap_out = np.row_stack((yap_out, crosses))
             except KeyError:
                 yap_out = np.row_stack((yap_out, particles_yaparray(pos, rad)))
         else:

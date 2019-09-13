@@ -64,11 +64,13 @@ dimer(parent)
 
 struct ODBlock Dashpot::RFU_ODBlock() const
 {
+	// !!! Block (p1, p0)
+	// Force and torque on p1 from motion of p0
 	ResistanceBlocks::ODBlockBuilder builder;
 
 	builder.addIdentity(ResistanceBlocks::Label::ForceVel, -res);
 	builder.addVectorProduct(ResistanceBlocks::Label::ForceAngVel, res*dimer->rvec/2.);
-	builder.addVectorProduct(ResistanceBlocks::Label::TorqueVel, -res*dimer->rvec/2.);
+	builder.addVectorProduct(ResistanceBlocks::Label::TorqueVel, res*dimer->rvec/2.);
 	builder.addComplementaryDyadic(ResistanceBlocks::Label::TorqueAngVel, dimer->rvec/2., -res);
 
 	// rotational velocity damping
@@ -79,16 +81,23 @@ struct ODBlock Dashpot::RFU_ODBlock() const
 
 std::pair<struct DBlock, struct DBlock> Dashpot::RFU_DBlocks() const
 {
-	ResistanceBlocks::DBlockBuilder builder;
+	ResistanceBlocks::DBlockBuilder builder0, builder1;
 
-	builder.addIdentity(ResistanceBlocks::Label::ForceVel, res);
-	builder.addComplementaryDyadic(ResistanceBlocks::Label::TorqueAngVel, dimer->rvec/2., res);
-	builder.addVectorProduct(ResistanceBlocks::Label::TorqueVel, res*dimer->rvec/2.);
+	builder0.addIdentity(ResistanceBlocks::Label::ForceVel, res);
+	builder0.addComplementaryDyadic(ResistanceBlocks::Label::TorqueAngVel, dimer->rvec/2., res);
+	builder0.addVectorProduct(ResistanceBlocks::Label::TorqueVel, res*dimer->rvec/2.);
 
 	// rotational velocity damping
-	builder.addIdentity(ResistanceBlocks::Label::TorqueAngVel, -rotres);
+	builder0.addIdentity(ResistanceBlocks::Label::TorqueAngVel, rotres);
 
-	return std::make_pair(builder.block, builder.block);
+	builder1.addIdentity(ResistanceBlocks::Label::ForceVel, res);
+	builder1.addComplementaryDyadic(ResistanceBlocks::Label::TorqueAngVel, dimer->rvec/2., res);
+	builder1.addVectorProduct(ResistanceBlocks::Label::TorqueVel, -res*dimer->rvec/2.);
+
+	// rotational velocity damping
+	builder1.addIdentity(ResistanceBlocks::Label::TorqueAngVel, rotres);
+
+	return std::make_pair(builder0.block, builder1.block);
 }
 
 std::pair<vec3d, vec3d> Dashpot::getForceTorque(const struct PairVelocity &vel) const
@@ -210,6 +219,16 @@ Sym2Tensor Dimer::getSpringStress() const
 {
 	auto ft = getForceTorqueSpring();
 	return outer_sym(rvec, ft.first);
+}
+
+struct ODBlock Dimer::RFU_ODBlock() const
+{
+	return dashpot.RFU_ODBlock();
+}
+
+std::pair<struct DBlock, struct DBlock> Dimer::RFU_DBlocks() const
+{
+	return dashpot.RFU_DBlocks();
 }
 
 } // namespace Dimer

@@ -945,6 +945,7 @@ void StokesSolver::matrixFillingDone()
 		odbrows_table_ff[i] = (chol_int)odbrows_ff.size();
 	}
 	completeResistanceMatrix();
+	// printResistanceMatrix(std::cout, "dense");
 }
 
 void StokesSolver::factorizeResistanceMatrix()

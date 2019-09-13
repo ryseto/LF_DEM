@@ -1,5 +1,6 @@
 #include "PairwiseResistanceVelocitySolver.h"
 #include "StdInteractionManager.h"
+#include "DimerManager.h"
 #include "ForceComponent.h"
 
 namespace Dynamics {
@@ -130,40 +131,40 @@ void PairwiseResistanceVelocitySolver::buildResistanceMatrix(const Interactions:
 	stokes_solver.matrixFillingDone();
 }
 
-// void PairwiseResistanceVelocitySolver::buildResistanceMatrix(const Interactions::StdInteractionManager &interaction_manager,
-// 															 const Interactions::DimerManager &dimer_manager)
-// {
-// 	/**
-// 	 \brief Builds the resistance matrix
+void PairwiseResistanceVelocitySolver::buildResistanceMatrix(const Interactions::StdInteractionManager &interaction_manager,
+															 const Interactions::Dimer::DimerManager &dimer_manager)
+{
+	/**
+	 \brief Builds the resistance matrix
 
-// 	 The built matrix \f$R_{\mathrm{FU}}\f$ (in Bossis and Brady \cite
-// 	 brady_stokesian_1988 notations) contains pairwise resistances,
-// 	 coming from lubrication or contact dashpots.
-// 	 */
-// 	buildDiagonalBlocks();
-// 	for (unsigned i=0; i<np-1; i ++) {
-// 		stokes_solver.startNewColumn();
-// 		for (auto it : interaction_manager.interactions) {
-// 			auto j = it->partner(i);
-// 			if (j > i) {
-// 				if (it->hasPairwiseResistance()) {
-// 					stokes_solver.addResistanceBlocks(i, j,
-// 													  it->RFU_DBlocks(),
-// 													  it->RFU_ODBlock());
-// 				}
-// 			}
-// 		}
-// 		for (auto it : dimer_manager.interactions) {
-// 			auto j = it->partner(i);
-// 			if (j > i) {
-// 				stokes_solver.addResistanceBlocks(i, j,
-// 												  it->RFU_DBlocks(),
-// 												  it->RFU_ODBlock());
-// 			}
-// 		}
-// 	}
-// 	stokes_solver.matrixFillingDone();
-// }
+	 The built matrix \f$R_{\mathrm{FU}}\f$ (in Bossis and Brady \cite
+	 brady_stokesian_1988 notations) contains pairwise resistances,
+	 coming from lubrication or contact dashpots.
+	 */
+	buildDiagonalBlocks();
+	for (unsigned i=0; i<np-1; i ++) {
+		stokes_solver.startNewColumn();
+		for (auto it : interaction_manager.interactions_pp[i]) {
+			auto j = it->partner(i);
+			if (j > i) {
+				if (it->hasPairwiseResistance()) {
+					stokes_solver.addResistanceBlocks(i, j,
+													  it->RFU_DBlocks(),
+													  it->RFU_ODBlock());
+				}
+			}
+		}
+		for (auto it : dimer_manager.interactions_pp[i]) {
+			auto j = it->partner(i);
+			if (j > i) {
+				stokes_solver.addResistanceBlocks(i, j,
+												  it->RFU_DBlocks(),
+												  it->RFU_ODBlock());
+			}
+		}
+	}
+	stokes_solver.matrixFillingDone();
+}
 
 void PairwiseResistanceVelocitySolver::setSolverRHS(const ForceComponent &fc)
 {

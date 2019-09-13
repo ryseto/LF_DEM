@@ -11,7 +11,9 @@
 
 namespace Interactions {
 	class StdInteractionManager;
+namespace Dimer {
 	class DimerManager;
+}
 }
 struct ForceComponent;
 
@@ -30,7 +32,7 @@ public:
 	void eraseResistance(unsigned p0, unsigned p1);
 	void buildResistanceMatrix(const Interactions::StdInteractionManager &interaction_manager);
 	void buildResistanceMatrix(const Interactions::StdInteractionManager &interaction_manager,
-							   const Interactions::DimerManager &dimer_manager);
+							   const Interactions::Dimer::DimerManager &dimer_manager);
 	void setSolverRHS(const ForceComponent &fc);
 	void addToSolverRHS(const ForceComponent &fc);
 

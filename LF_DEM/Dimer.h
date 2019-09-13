@@ -59,20 +59,6 @@ private:
 };
 
 class Dimer : public PairwiseInteraction {
-private:
-	Dashpot dashpot;
-	Spring sliding_spring;
-	Spring rotation_spring;
-	void checkHomegeneity();
-
-protected:
-	vec3d getContactVelocity(const struct PairVelocity &vel);
-	vec3d getRotationDiffVelocity(const struct PairVelocity &vel);
-
-	friend Dashpot;
-	friend Spring;
-	friend DimerManager;
-
 public:
 	Dimer(const PairId &pairid, vec3d sep, const struct UnloadedDimerState &uds, DimerParams p);
 	Dimer(const PairId &pairid, vec3d sep, const struct DimerState &uds, DimerParams p);
@@ -93,6 +79,22 @@ public:
 	Sym2Tensor getSpringStress() const;
 
 	double getRelaxedLength() const {return sliding_spring.getRelaxedLength();};
+	struct ODBlock RFU_ODBlock() const;
+	std::pair<struct DBlock, struct DBlock> RFU_DBlocks() const;
+
+protected:
+	vec3d getContactVelocity(const struct PairVelocity &vel);
+	vec3d getRotationDiffVelocity(const struct PairVelocity &vel);
+
+	friend Dashpot;
+	friend Spring;
+	friend DimerManager;
+
+private:
+	Dashpot dashpot;
+	Spring sliding_spring;
+	Spring rotation_spring;
+	void checkHomegeneity();
 
 };
 

@@ -1050,7 +1050,10 @@ void Simulation::outputIntFileTxt()
 	stringstream snapshot_header;
 	getSnapshotHeader(snapshot_header);
 	Interactions::output(*(sys.interaction), &sys.velocity, sys.p, outdata_int);
-	if (sys.interaction->size() > 0) {
+	if (sys.dimer_manager) {
+		Interactions::Dimer::output(*(sys.dimer_manager), &sys.velocity, sys.p, outdata_int);
+	}
+	if (sys.interaction->size() > 0 || (sys.dimer_manager && sys.dimer_manager->size())) {
 		outdata_int.writeToFile(snapshot_header.str());
 	}
 }

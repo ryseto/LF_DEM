@@ -36,7 +36,7 @@ void DBlockBuilder::addDyadic(Label loc, vec3d v, double prefactor)
 	} else if (loc == Label::TorqueAngVel) {
 		block.col3[0] += prefactor*v.x*v.x;
 		block.col3[1] += prefactor*v.x*v.y;
-		block.col4[2] += prefactor*v.x*v.z;
+		block.col3[2] += prefactor*v.x*v.z;
 		block.col4[0] += prefactor*v.y*v.y;
 		block.col4[1] += prefactor*v.y*v.z;
 		block.col5[0] += prefactor*v.z*v.z;
@@ -47,6 +47,10 @@ void DBlockBuilder::addDyadic(Label loc, vec3d v, double prefactor)
 
 void DBlockBuilder::addComplementaryDyadic(Label loc, vec3d v, double prefactor)
 {
+	// Unnormalized projection on v
+	// 
+	// Writing u = v/|v|
+	// returns prefactor*|v|^2*(1-uu)
 	addIdentity(loc, prefactor*v.sq_norm());
 	addDyadic(loc, v, -prefactor); 
 }
@@ -98,7 +102,7 @@ void ODBlockBuilder::addDyadic(Label loc, vec3d v, double prefactor)
 	} else if (loc == Label::TorqueAngVel) {
 		block.col3[2] += prefactor*v.x*v.x;
 		block.col3[3] += prefactor*v.x*v.y;
-		block.col4[4] += prefactor*v.x*v.z;
+		block.col3[4] += prefactor*v.x*v.z;
 		block.col4[1] += prefactor*v.y*v.y;
 		block.col4[2] += prefactor*v.y*v.z;
 		block.col5[0] += prefactor*v.z*v.z;
@@ -120,7 +124,7 @@ void ODBlockBuilder::addVectorProduct(Label loc, vec3d v)
 		block.col0[3] += v.z;
 		block.col0[4] += -v.y;
 		block.col1[2] += v.x;
-	} else if (loc == Label::TorqueAngVel) {
+	} else if (loc == Label::ForceAngVel) {
 		block.col3[0] += v.z;
 		block.col3[1] += -v.y;
 		block.col4[0] += v.x;
