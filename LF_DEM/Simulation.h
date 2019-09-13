@@ -102,20 +102,20 @@ public:
 	/* For DEMsystem*/
 	Simulation(State::BasicCheckpoint chkp = State::zero_time_basicchkp);
 	void simulationSteadyShear(std::string in_args,
-							   std::vector<std::string>& input_files,
+							   std::map<std::string, std::string>& input_files,
 							   bool binary_conf,
 							   Parameters::ControlVariable control_variable_,
 							   Dimensional::DimensionalQty<double> control_value_,
 							   std::string simu_identifier);
 	void simulationFlowField(std::string simulation_type,
 							 std::string in_args,
-							 std::vector<std::string>& input_files,
+							 std::map<std::string, std::string>& input_files,
 							 bool binary_conf,
 							 Parameters::ControlVariable control_variable_,
 							 Dimensional::DimensionalQty<double> control_value_,
 							 std::string simu_identifier);
 	void setupSimulation(std::string in_args,
-						 std::vector<std::string>& input_files,
+						 std::map<std::string, std::string> &input_files,
 						 bool binary_conf,
 						 std::string simu_identifier);
 	void setupFlow();
@@ -142,7 +142,7 @@ public:
 									  const std::string& filename_parameters,
 									  const std::string& simu_identifier);
 	void echoInputFiles(std::string in_args,
-						std::vector<std::string>& input_files);
+						std::map<std::string, std::string>& input_files);
 //	void contactForceParameter(std::string filename); // @@@ Do we use this?
 //	void contactForceParameterBrownian(std::string filename); // @@@ Do we use this?
 	void setupNonDimensionalization(Parameters::ParameterSetFactory &PFact);

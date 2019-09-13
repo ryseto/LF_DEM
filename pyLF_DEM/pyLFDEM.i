@@ -35,10 +35,13 @@
 %include "../LF_DEM/RepulsiveForceParams.h"
 %include "../LF_DEM/ConfinementParams.h"
 %include "../LF_DEM/VanDerWaalsParams.h"
+%include "../LF_DEM/DimerParams.h"
+%include "../LF_DEM/DimerState.h"
 %include "../LF_DEM/TimeActivatedAdhesion_Params.h"
 %include "../LF_DEM/ParameterSetFactory.h"
 %include "../LF_DEM/SystemHelperFunctions.h"
 %include "../LF_DEM/ShearType.h"
+%include "../LF_DEM/ControlVariable.h"
 %include "../LF_DEM/Simulation.h"
 %include "../LF_DEM/global.h"
 %include "../LF_DEM/Timer.h"
@@ -50,6 +53,7 @@ namespace std {
   %template(DoubleVector) vector<double>;
   %template(IntVector) vector<int>;
   %template(Sym2Vector) vector<Sym2Tensor>;
+  %template(UnloadedDimerStateVector) vector<Interactions::Dimer::UnloadedDimerState>;
   %template(PairUIntUInt) pair<unsigned int, unsigned int>;
   %template(PairIntInt) pair<int, int>;
   %template(PairDoubleString) pair<double, string>;

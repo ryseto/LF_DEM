@@ -130,7 +130,6 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(confinement.y_min, 0),
 		PARAM_INIT(confinement.y_max, 0),
 		PARAM_INIT(dimer.resistance, 0),
-		PARAM_INIT(dimer.stiffness, 0),
 	};
 
 	/*================================
@@ -195,8 +194,6 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 	default_val = {Dimensional::Unit::repulsion, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(repulsion.repulsion, default_val));
 
-	
-
 	default_val = {Dimensional::Unit::brownian, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(brownian, default_val));
 
@@ -244,7 +241,9 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 	default_qty = {Dimensional::Dimension::Time, 0, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(TA_adhesion.activation_time, default_qty));
 
-	
+	default_qty = {Dimensional::Dimension::Force, 0, guarranted_unit};
+	DimValDblParams.push_back(PARAM_INIT_DIMQTY(dimer.stiffness, default_qty));
+
 	/*----------  True dim vals  ----------*/
 	
 	default_qty = {Dimensional::Dimension::TimeOrStrain, 10, guarranted_unit};

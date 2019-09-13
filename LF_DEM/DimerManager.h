@@ -32,13 +32,15 @@ namespace Dimer
 class DimerManager : public InteractionManager<Dimer> {
 public:
 	DimerManager(unsigned np,
-				  ParticleConfig *config,
-				  ParticleVelocity *background_vel,
-				  std::shared_ptr<Geometry::PairwiseConfig> pd,
-				  Parameters::ParameterSet *params,
-				  std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> vel_solver,
-				  const std::vector <struct DimerState>& ds);
+				 std::shared_ptr<PairManager> &pairmanager,
+				 ParticleConfig *config,
+				 ParticleVelocity *background_vel,
+				 std::shared_ptr<Geometry::PairwiseConfig> pd,
+				 Parameters::ParameterSet *params,
+				 std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> vel_solver,
+				 const std::vector <struct DimerState>& ds);
 	DimerManager(unsigned np,
+				 std::shared_ptr<PairManager> &pairmanager,
 				 ParticleConfig *config,
 				 ParticleVelocity *background_vel,
 				 std::shared_ptr<Geometry::PairwiseConfig> pd,

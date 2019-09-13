@@ -6,13 +6,14 @@
 namespace Interactions {
 
 StdInteractionManager::StdInteractionManager(unsigned np,
+											 std::shared_ptr<PairManager> &pairmanager,
 											 ParticleConfig *config,
 											 ParticleVelocity *background_vel,
 											 ParticleVelocityGrad *background_velgrad,
 											 std::shared_ptr<Geometry::PairwiseConfig> pd,
 											 Parameters::ParameterSet *params,
 											 std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> vel_solver) :
-InteractionManager<StdInteraction>(np),
+InteractionManager<StdInteraction>(np, pairmanager),
 conf(config),
 velinf(background_vel),
 Einf(background_velgrad),
@@ -25,6 +26,7 @@ solver(vel_solver)
 }
 
 StdInteractionManager::StdInteractionManager(unsigned np,
+											 std::shared_ptr<PairManager> &pairmanager,
 											 ParticleConfig *config,
 											 ParticleVelocity *background_vel,
 											 ParticleVelocityGrad *background_velgrad,
@@ -32,7 +34,7 @@ StdInteractionManager::StdInteractionManager(unsigned np,
 											 Parameters::ParameterSet *params,
 											 std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> vel_solver,
 											 const std::vector <struct contact_state>& cs) :
-InteractionManager<StdInteraction>(np),
+InteractionManager<StdInteraction>(np, pairmanager),
 conf(config),
 velinf(background_vel),
 Einf(background_velgrad),
@@ -115,7 +117,7 @@ void StdInteractionManager::checkNewInteractions()
 	for (unsigned i=0; i<conf->position.size()-1; i++) {
 		for (unsigned j : pdist->neighborhood(i)) {
 			if (j > i) {
-				if (!areInteracting(i, j)) {
+				if (!pair_manager->areInteracting(i, j)) {
 					double sq_dist = pdist->getSeparation(i, j).sq_norm();
 					double scaled_interaction_range = calcInteractionRange(i, j);
 					double sq_dist_lim = scaled_interaction_range*scaled_interaction_range;

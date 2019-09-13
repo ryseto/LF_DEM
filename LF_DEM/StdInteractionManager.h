@@ -33,6 +33,7 @@ namespace Interactions
 class StdInteractionManager : public InteractionManager<StdInteraction> {
 public:
 	StdInteractionManager(unsigned np,
+						  std::shared_ptr<PairManager> &pairmanager,
 						  ParticleConfig *config,
 						  ParticleVelocity *background_vel,
 						  ParticleVelocityGrad *background_velgrad,
@@ -40,6 +41,7 @@ public:
 						  Parameters::ParameterSet *params,
 						  std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> vel_solver);
 	StdInteractionManager(unsigned np,
+						  std::shared_ptr<PairManager> &pairmanager,
 						  ParticleConfig *config,
 						  ParticleVelocity *background_vel,
 						  ParticleVelocityGrad *background_velgrad,
@@ -47,7 +49,7 @@ public:
 						  Parameters::ParameterSet *params,
 						  std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> vel_solver,
 						  const std::vector <struct contact_state>& cs);
-	void checkNewInteractions();
+	virtual void checkNewInteractions();
 	void updateInteractions(double dt, ParticleVelocity *vel);
 	void updateInteractions(); // not for time evolution
 

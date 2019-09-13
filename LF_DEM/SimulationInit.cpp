@@ -16,19 +16,19 @@
 using namespace std;
 
 void Simulation::echoInputFiles(string in_args,
-								vector<string>& input_files)
+								map<string, string>& input_files)
 {
 	/**
 	 \brief Print the entire information needed to reproduce the simulation in Simulation::fout_input
 	 */
 	fout_input << "# LF_DEM version " << GIT_VERSION << ", called with:" << endl;
 	fout_input << in_args << endl << endl;
-	for (const string& in_file : input_files) {
+	for (auto in_file : input_files) {
 		ifstream in_f;
 		string line;
-		in_f.open(in_file.c_str());
+		in_f.open(in_file.second.c_str());
 		if (in_f.is_open()) {
-			fout_input << "********** File " << in_file << " ************" << endl << endl;
+			fout_input << "********** File " << in_file.second << " ************" << endl << endl;
 			while (in_f.good()) {
 				getline(in_f, line);
 				fout_input << line << endl;
@@ -281,7 +281,7 @@ void Simulation::setupControl(Parameters::ControlVariable control_variable_,
 }
 
 void Simulation::setupSimulation(string in_args,
-								 vector<string>& input_files,
+								 map<string,string> &input_files,
 								 bool binary_conf,
 								 string simu_identifier)
 {
@@ -291,8 +291,8 @@ void Simulation::setupSimulation(string in_args,
 		This function is intended to be generically used to set up the simulation. It processes the input parameters, non-dimensionalizes the system and starts up a System class with the relevant parameters.
 	 */
 	cout << indent << "Simulation setup starting... " << endl;
-	string filename_import_positions = input_files[0];
-	string filename_parameters = input_files[1];
+	string filename_import_positions = input_files.at("config");
+	string filename_parameters = input_files.at("params");
 	Dimensional::Unit guarranted_unit; // a unit we're sure will mean something, for ParameterSetFactory to set default dimensional qties.
 	if (control_var == Parameters::ControlVariable::rate) {
 		if (control_value.value != 0) {
@@ -345,7 +345,9 @@ void Simulation::setupSimulation(string in_args,
 	assertParameterCompatibility();
 
 	setConfigToSystem(binary_conf, filename_import_positions);
-
+	if (input_files.count("dimers")) {
+		sys.addDimers(Interactions::Dimer::io::readTxtDimer(input_files["dimers"]));
+	}
 	if (false) {
 		// Symmetry check
 		for (unsigned i=0; i< sys.get_np(); i++) {

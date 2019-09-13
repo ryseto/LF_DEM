@@ -70,10 +70,6 @@ int main(int argc, char **argv)
 	bool binary_conf = false;
 	bool force_to_run = false;
 	string simulation_type = "shear rheology";
-	string config_filename = "not_given";
-	string param_filename = "not_given";
-	string knkt_filename = "not_given";
-	string stress_rate_filename = "not_given";
 	string chkp_filename = "";
 	string simu_name;
 	
@@ -81,6 +77,8 @@ int main(int argc, char **argv)
 	Parameters::ControlVariable control_variable = Parameters::ControlVariable::rate;
 	string simu_identifier = "";
 	vector<string> str_vec;
+	map <string, string> input_files;
+
 	const struct option longopts[] = {
 		{"rate-controlled",   required_argument, 0, 'r'},
 		{"rate-infty",        required_argument, 0, '8'},
@@ -98,13 +96,14 @@ int main(int argc, char **argv)
 		{"identifier",        required_argument, 0, 'v'},
 		{"force-to-run",      no_argument,       0, 'f'},
 		{"diminish-output",   no_argument,       0, 'd'},
-		{"checkpoint-file",   no_argument,       0, 'c'},
+		{"checkpoint-file",   required_argument, 0, 'c'},
+		{"dimer-file",   	  required_argument, 0, 'D'},
 		{"help",              no_argument,       0, 'h'},
 		{0, 0, 0, 0},
 	};
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hn80fds:t:r:C:S:g::G:p:a:b:k:i:v:c:N:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hn80fds:t:r:C:S:g::G:p:a:b:k:i:v:c:N:D:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
 				simulation_type = "shear rheology";
@@ -147,13 +146,13 @@ int main(int argc, char **argv)
 				}
 				break;
 			case 'k':
-				knkt_filename = optarg;
+				input_files["knkt"] = optarg;
 				break;
 			case 'c':
 				chkp_filename = optarg;
 				break;
 			case 'i':
-				stress_rate_filename = optarg;
+				input_files["stress_rate"] = optarg;
 				break;
 			case 'g':
 				generate_init = 1; // normal
@@ -205,6 +204,9 @@ int main(int argc, char **argv)
 			case 'N':
 				simu_name = optarg;
 				break;
+			case 'D':
+				input_files["dimers"] = optarg;
+				break;
 			case 'h':
 				cerr << usage << endl;
 				exit(1);
@@ -232,18 +234,13 @@ int main(int argc, char **argv)
 		std::signal(SIGINT, sigint_handler);
 #endif
 		if (optind == argc-2) {
-			config_filename = argv[optind++];
-			param_filename = argv[optind++];
+			input_files["config"] = argv[optind++];
+			input_files["params"] = argv[optind++];
 		} else {
 			cout << usage << endl;
 			exit(1);
 		}
-		vector <string> input_files(5, "not_given");
-		input_files[0] = config_filename;
-		input_files[1] = param_filename;
-		input_files[2] = knkt_filename;
-		input_files[3] = stress_rate_filename;
-		
+
 		State::BasicCheckpoint state = State::zero_time_basicchkp;
 		
 		if (!chkp_filename.empty()) {

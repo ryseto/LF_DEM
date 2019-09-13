@@ -8,6 +8,7 @@
 #include "Sym2Tensor.h"
 #include "PairVelocity.h"
 #include "DimerParams.h"
+#include "DimerState.h"
 
 
 namespace Interactions {
@@ -17,28 +18,10 @@ namespace Dimer {
 class Dimer;
 class DimerManager;
 
-struct SpringState {
-	vec3d stretch;
-	double relaxed_length;
-};
-
-struct DimerState {
-	unsigned int p0;
-	unsigned int p1;
-	SpringState sliding_st;
-	SpringState rotation_st;
-};
-
-struct UnloadedDimerState {
-	unsigned int p0;
-	unsigned int p1;
-	double relaxed_length;
-};
-
 namespace io 
 {
 std::vector <struct DimerState> readStatesBStream(std::istream &input);
-std::vector <struct DimerState> readTxtDimer(const std::string& filename);
+std::vector <struct UnloadedDimerState> readTxtDimer(const std::string& filename);
 void writeStatesBStream(std::ostream &conf_export, const std::vector <struct DimerState> &ds);
 }
 

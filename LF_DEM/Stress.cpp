@@ -64,6 +64,17 @@ void System::declareStressComponents()
 		stress_components["xF_confinement"] = StressComponent(StressType::xf, np, RateDependence::independent, "confinement");
 	}
 
+	if (dimer_manager) {
+		if (control == Parameters::ControlVariable::rate) {
+			stress_components["xF_dimer"] = StressComponent(StressType::xf, np, RateDependence::dependent, "dimer");
+		} else if (control == Parameters::ControlVariable::stress) {
+			stress_components["xF_dimer_rateprop"] = StressComponent(StressType::xf, np, RateDependence::proportional, "dimer");
+			stress_components["xF_dimer_rateindep"] = StressComponent(StressType::xf, np, RateDependence::independent, "dimer");
+		} else {
+			throw runtime_error("Dimer stress component when control is not rate not stress?");
+		}
+	}
+
 	if (control == Parameters::ControlVariable::stress) {
 		for (const auto &sc: stress_components) {
 			if (sc.second.rate_dependence == RateDependence::dependent) {
@@ -121,6 +132,24 @@ void System::gatherVelocitiesByRateDependencies(ParticleVelocity &rateprop_vel,
 	}
 }
 
+void System::calcDimerXFPerParticleStressControlled()
+{
+	// spring part: easy
+	// dashpot part: we have to split between rate proportional and rate independent parts.
+	// a bit annoying :)
+
+	ParticleVelocity rateprop_vel (np, VelocityType::total, RateDependence::proportional);
+	ParticleVelocity rateindep_vel (np, VelocityType::nonaffine, RateDependence::independent);
+	gatherVelocitiesByRateDependencies(rateprop_vel, rateindep_vel);
+
+	auto &rateprop_XF = stress_components.at("xF_dimer_rateprop").particle_stress;
+	auto &rateindep_XF = stress_components.at("xF_dimer_rateindep").particle_stress;
+
+	dimer_manager->addUpStressSpring(rateindep_XF);
+	dimer_manager->addUpStressDashpot(rateindep_XF, &rateindep_vel);
+	dimer_manager->addUpStressDashpot(rateprop_XF, &rateprop_vel);
+}
+
 void System::calcContactXFPerParticleStressControlled()
 {
 	// spring part: easy
@@ -138,6 +167,7 @@ void System::calcContactXFPerParticleStressControlled()
 	interaction->addUpContactDashpotStressXF(rateindep_XF, &rateindep_vel);
 	interaction->addUpContactDashpotStressXF(rateprop_XF, &rateprop_vel);
 }
+
 
 void System::calcStressPerParticle()
 {
@@ -199,6 +229,14 @@ void System::calcStressPerParticle()
 	// 	addUpDelayedAdhesionStressXF(rstress_XF);
 	// }
 
+	if (dimer_manager) {
+		if (control == Parameters::ControlVariable::rate) {
+			auto &dstress_XF = stress_components.at("xF_dimer").particle_stress;
+			dimer_manager->addUpStress(dstress_XF, &velocity);
+		} else {
+			calcDimerXFPerParticleStressControlled();
+		}
+	}
 	if (p.confinement.on) {
 		vec3d yvec = {0, 1, 0};
 		auto &stress_XF = stress_components.at("xF_confinement").particle_stress;
@@ -280,10 +318,8 @@ void System::gatherStressesByRateDependencies(Sym2Tensor &rate_prop_stress,
 	rate_prop_stress /= system_volume;
 	rate_indep_stress /= system_volume;
 
-	if (!imposed_flow->zero_shear()) {
-		// suspending fluid viscosity
-		rate_prop_stress += 2*imposed_flow->sym_grad_u/(6*M_PI);
-	}
+	// suspending fluid viscosity
+	rate_prop_stress += 2*imposed_flow->sym_grad_u/(6*M_PI);
 }
 
 void System::calcStress()
@@ -300,9 +336,7 @@ void System::calcStress()
 		sc.second /= system_volume;
 	}
 
-	if (!imposed_flow->zero_shear()) {
-		total_stress_groups["hydro"] += 2*imposed_flow->sym_grad_u/(6*M_PI);
-	}
+	total_stress_groups["hydro"] += 2*imposed_flow->sym_grad_u/(6*M_PI);
 
 	total_stress.reset();
 	for (const auto &sc: total_stress_groups) {

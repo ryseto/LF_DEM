@@ -8,7 +8,7 @@ namespace Dimer {
 namespace io 
 {
 
-std::vector<DimerState> readTxtDimer(const std::string& filename)
+std::vector<UnloadedDimerState> readTxtDimer(const std::string& filename)
 {
 	/**
 		\brief Import a text file base configuration.
@@ -22,10 +22,9 @@ std::vector<DimerState> readTxtDimer(const std::string& filename)
 	checkInFile(filename);
 	std::ifstream input(filename.c_str(), std::ios::in);
 
-	std::vector<DimerState> c;
-	DimerState st;
-	st.rotation_st.relaxed_length = 0;
-	while (input >> st.p0 >> st.p1 >> st.sliding_st.relaxed_length) {		
+	std::vector<UnloadedDimerState> c;
+	UnloadedDimerState st;
+	while (input >> st.p0 >> st.p1 >> st.relaxed_length) {		
 		c.push_back(st);
 	}
 	return c;

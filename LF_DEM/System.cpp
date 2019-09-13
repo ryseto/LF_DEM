@@ -36,7 +36,6 @@ mobile_fixed(false),
 couette_stress(false),
 dt(0),
 avg_dt(0),
-max_na_velocity(0),
 target_stress(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
@@ -286,10 +285,16 @@ void System::setupGenericConfiguration(T config, Parameters::ControlVariable con
 
 	total_num_timesteps = 0;
 
-	
-	interaction = std::make_shared<Interactions::StdInteractionManager>(np, conf.get(), &vel_bg, &velgrad_bg, pairconf, &p,
-																		 res_solver,
-																		 config.contact_states);
+	auto pair_manager = std::make_shared<Interactions::PairManager> (np);
+	interaction = std::make_shared<Interactions::StdInteractionManager>(np, 
+																		pair_manager,
+																		conf.get(), 
+																		&vel_bg, 
+																		&velgrad_bg, 
+																		pairconf, 
+																		&p,
+																		res_solver,
+																		config.contact_states);
 	interaction->declareForceComponents(force_components);
 	declareForceComponents();
 	declareVelocityComponents();
@@ -326,6 +331,63 @@ void System::setupConfiguration(struct circular_couette_configuration config, Pa
 	radius_in = config.radius_in;
 	radius_out = config.radius_out;
 	setupGenericConfiguration(config, control_);
+}
+
+void System::addDimers(const std::vector<Interactions::Dimer::DimerState> &dimers)
+{
+	// reinitialize interaction machinery, start by dimers, to not create StdInteractions for dimer pairs
+	auto pair_manager = std::make_shared<Interactions::PairManager> (np);
+	dimer_manager = std::make_shared<Interactions::Dimer::DimerManager>(np, 
+																		pair_manager,
+																		conf.get(),
+																		&vel_bg,
+																		pairconf,
+																		&p,
+																		res_solver,
+																		dimers);
+	auto contacts = interaction->getContacts();
+	interaction = std::make_shared<Interactions::StdInteractionManager>(np, 
+																		pair_manager,
+																		conf.get(), 
+																		&vel_bg, 
+																		&velgrad_bg, 
+																		pairconf, 
+																		&p,
+																		res_solver,
+																		contacts);
+	
+	dimer_manager->declareForceComponents(force_components);
+	interaction->declareForceComponents(force_components);
+	declareVelocityComponents();
+	declareStressComponents();
+}
+
+void System::addDimers(const std::vector<Interactions::Dimer::UnloadedDimerState> &dimers)
+{
+	auto pair_manager = std::make_shared<Interactions::PairManager> (np);
+	dimer_manager = std::make_shared<Interactions::Dimer::DimerManager>(np, 
+																		pair_manager,
+																		conf.get(),
+																		&vel_bg,
+																		pairconf,
+																		&p,
+																		res_solver,
+																		dimers);
+	auto contacts = interaction->getContacts();
+	interaction = std::make_shared<Interactions::StdInteractionManager>(np, 
+																		pair_manager,
+																		conf.get(), 
+																		&vel_bg, 
+																		&velgrad_bg, 
+																		pairconf, 
+																		&p,
+																		res_solver,
+																		contacts);
+	
+	dimer_manager->declareForceComponents(force_components);
+	interaction->declareForceComponents(force_components);
+	declareVelocityComponents();
+	declareStressComponents();
 }
 
 struct base_shear_configuration confConvertBase2Shear(const struct base_configuration &config,
@@ -439,7 +501,7 @@ void System::eventShearJamming()
 	 \brief Create an event when the shear rate is less than p.sj_shear_rate
 	*/
 	static int cnt_jamming = 0;
-	if (abs(imposed_flow->shear_rate) < p.sj_shear_rate && max_na_velocity < p.sj_velocity) {
+	if (abs(imposed_flow->shear_rate) < p.sj_shear_rate && computeMaxNAVelocity() < p.sj_velocity) {
 		cnt_jamming ++;
 		if (cnt_jamming > p.sj_check_count) {
 			Event ev;
@@ -841,12 +903,19 @@ void System::adaptTimeStepWithVelocities()
 	 * The max velocity is used to find dt from max displacement
 	 * at each time step.
 	 */
+	double max_na_velocity = computeMaxNAVelocity();
 	if (in_predictor) {
 		if (!p.fixed_dt || eventLookUp != NULL) {
 			computeMaxNAVelocity();
 		}
 	}
 	double max_interaction_vel = interaction->getMaxRelativeVelocity(&velocity);
+	if (dimer_manager) {
+		double max_dimer_vel = dimer_manager->getMaxRelativeVelocity(&velocity);
+		if (max_dimer_vel > max_interaction_vel) {
+			max_interaction_vel = max_dimer_vel;
+		}
+	}
 	if (max_na_velocity > 0 || max_interaction_vel > 0) { // small density system can have na_velocity=0
 		if (max_na_velocity > max_interaction_vel) {
 			dt = p.disp_max/max_na_velocity;
@@ -865,7 +934,7 @@ void System::adaptTimeStepWithVelocities()
 		}
 	}
 	if (p.solvent_flow) {
-		computeMaxVelocity();
+		auto max_velocity = computeMaxVelocity();
 		double dt_sflow = p.disp_max/max_velocity;
 		if (max_velocity > 0) {
 			dt_sflow = p.disp_max/max_velocity;
@@ -943,6 +1012,9 @@ void System::timeStepMove(double time_end, double strain_end)
 	}
 	interaction->checkNewInteractions();
 	interaction->updateInteractions(dt, &velocity);
+	if (dimer_manager) {
+		dimer_manager->updateInteractions(dt, &velocity);
+	}
 }
 
 void System::timeStepMovePredictor(double time_end, double strain_end)
@@ -973,6 +1045,10 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
 	}
 	interaction->saveState();
 	interaction->updateInteractions(dt, &velocity);
+	if (dimer_manager) {
+		dimer_manager->saveState();
+		dimer_manager->updateInteractions(dt, &velocity);
+	}
 	/*
 	 * Keep V^{-} to use them in the corrector.
 	 */
@@ -1013,6 +1089,10 @@ void System::timeStepMoveCorrector()
 	interaction->restoreState();
 	interaction->checkNewInteractions();
 	interaction->updateInteractions(dt, &velocity);
+	if (dimer_manager) {
+		dimer_manager->restoreState();
+		dimer_manager->updateInteractions(dt, &velocity);
+	}
 }
 
 bool System::keepRunning(double time_end, double strain_end)
@@ -1034,6 +1114,9 @@ void System::calculateForces()
 	interaction->checkNewInteractions();
 	in_predictor = true;
 	interaction->updateInteractions(0, &velocity);
+	if (dimer_manager) {
+		dimer_manager->updateInteractions(0, &velocity);
+	}
 	in_predictor = false;
 }
 
@@ -1459,7 +1542,7 @@ vec3d System::get_shear_strain() const
 }
 
 
-void System::computeMaxNAVelocity()
+double System::computeMaxNAVelocity()
 {
 	/**
 	 \brief Compute the maximum non-affine velocity
@@ -1474,10 +1557,10 @@ void System::computeMaxNAVelocity()
 			sq_max_na_velocity = sq_na_velocity;
 		}
 	}
-	max_na_velocity = sqrt(sq_max_na_velocity);
+	return sqrt(sq_max_na_velocity);
 }
 
-void System::computeMaxVelocity()
+double System::computeMaxVelocity()
 {
 	/**
 	 \brief Compute the maximum non-affine velocity
@@ -1492,7 +1575,7 @@ void System::computeMaxVelocity()
 			sq_max_velocity = sq_velocity;
 		}
 	}
-	max_velocity = sqrt(sq_max_velocity);
+	return sqrt(sq_max_velocity);
 }
 
 void System::computeVelocityWithoutComponents(bool rebuild)
@@ -1503,6 +1586,12 @@ void System::computeVelocityWithoutComponents(bool rebuild)
 	for (const auto &component: interaction->declared_forces) {
 		interaction->setForceToParticle(component, force_components[component].force, force_components[component].torque);
 		res_solver->addToSolverRHS(force_components[component]);
+	}
+	if (dimer_manager) {
+		for (const auto &component: dimer_manager->declared_forces) {
+			dimer_manager->setForceToParticle(component, force_components[component].force, force_components[component].torque);
+			res_solver->addToSolverRHS(force_components[component]);
+		}
 	}
 	for (const auto &component: declared_forces) {
 		if (component != "brownian" || in_predictor) {
@@ -1527,6 +1616,14 @@ void System::computeVelocityByComponents()
 		res_solver->setSolverRHS(force_components[component]);
 		res_solver->solve(na_velo_components[component].vel,
 							na_velo_components[component].ang_vel);
+	}
+	if (dimer_manager) {
+		for (const auto &component: dimer_manager->declared_forces) {
+			dimer_manager->setForceToParticle(component, force_components[component].force, force_components[component].torque);
+			res_solver->setSolverRHS(force_components[component]);
+			res_solver->solve(na_velo_components[component].vel,
+								na_velo_components[component].ang_vel);
+		}
 	}
 	for (const auto &component: declared_forces) {
 		if (component != "brownian" || in_predictor) {
@@ -1863,9 +1960,18 @@ void System::computeNonAffineVelocitiesStokesDrag()
 	for (const auto &component: interaction->declared_forces) {
 		interaction->setForceToParticle(component, force_components[component].force, force_components[component].torque);
 		for (unsigned int i=0; i<na_velocity.vel.size(); i++) {
+			na_velocity.vel[i]     += force_components[component].force[i] /stokesdrag_coeff_f[i];
+			na_velocity.ang_vel[i] += force_components[component].torque[i]/stokesdrag_coeff_t[i];
+		}
+	}
+	if (dimer_manager) {
+		for (const auto &component: dimer_manager->declared_forces) {
+			dimer_manager->setForceToParticle(component, force_components[component].force, force_components[component].torque);
+			for (unsigned int i=0; i<na_velocity.vel.size(); i++) {
 				na_velocity.vel[i]     += force_components[component].force[i] /stokesdrag_coeff_f[i];
 				na_velocity.ang_vel[i] += force_components[component].torque[i]/stokesdrag_coeff_t[i];
-		} 
+			}
+		}
 	}
 	for (const auto &component: declared_forces) {
 		if (component != "brownian" || in_predictor) {

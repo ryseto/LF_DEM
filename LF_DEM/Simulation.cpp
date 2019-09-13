@@ -326,7 +326,7 @@ void Simulation::printProgress()
  * @@@ (Flow rates in stress control simulations are not steady)
  */
 void Simulation::simulationSteadyShear(string in_args,
-									   vector<string>& input_files,
+									   map<string, string>& input_files,
 									   bool binary_conf,
 									   Parameters::ControlVariable control_variable_,
 									   Dimensional::DimensionalQty<double> control_value_,
@@ -383,13 +383,13 @@ void Simulation::simulationSteadyShear(string in_args,
 	time_strain_end = now;
 	timestep_end = sys.get_total_num_timesteps();
 	outputComputationTime();
-	string filename_parameters = input_files[1];
+	string filename_parameters = input_files.at("params");
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		/* To prepare relaxed initial configuration,
 		 * we can use Brownian simulation for a short interval.
 		 * Here is just to export the position data.
 		 */
-		string filename_configuration = input_files[0];
+		string filename_configuration = input_files.at("config");
 		outputFinalConfiguration(filename_configuration);
 	}
 	cout << indent << "Time evolution done" << endl << endl;
@@ -397,7 +397,7 @@ void Simulation::simulationSteadyShear(string in_args,
 
 void Simulation::simulationFlowField(std::string simulation_type,
 									 std::string in_args,
-									 std::vector<std::string>& input_files,
+									 std::map<std::string, std::string>& input_files,
 									 bool binary_conf,
 									 Parameters::ControlVariable control_variable_,
 									 Dimensional::DimensionalQty<double> control_value_,
@@ -440,13 +440,13 @@ void Simulation::simulationFlowField(std::string simulation_type,
 	time_strain_end = now;
 	timestep_end = sys.get_total_num_timesteps();
 	outputComputationTime();
-	string filename_parameters = input_files[1];
+	string filename_parameters = input_files.at("params");
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		/* To prepare relaxed initial configuration,
 		 * we can use Brownian simulation for a short interval.
 		 * Here is just to export the position data.
 		 */
-		string filename_configuration = input_files[0];
+		string filename_configuration = input_files.at("config");
 		outputFinalConfiguration(filename_configuration);
 	}
 	fout_flow.close();
@@ -770,7 +770,7 @@ void Simulation::outputData()
 	}
 	/* maximum velocity
 	 */
-	outdata.entryData("max velocity", Dimensional::Dimension::Velocity, 1, sys.max_na_velocity);
+	outdata.entryData("max velocity", Dimensional::Dimension::Velocity, 1, sys.computeMaxNAVelocity());
 	outdata.entryData("max angular velocity", Dimensional::Dimension::Velocity, 1, evaluateMaxAngVelocity(sys));
 	/* simulation parameter
 	 */
@@ -802,9 +802,9 @@ void Simulation::outputData()
 	if (sys.p.event_handler == "jamming_stress_reversal") {
 		outdata.entryData("jamming strain", Dimensional::Dimension::none, 1, jamming_strain);
 	}
-	if (sys.p.check_static_force_balance) {
-		outdata.entryData("max force imbalance",  Dimensional::Dimension::none, 1, sys.max_force_imbalance);
-	}
+	// if (sys.p.check_static_force_balance) {
+	// 	outdata.entryData("max force imbalance",  Dimensional::Dimension::none, 1, sys.max_force_imbalance);
+	// }
 
 	outdata.writeToFile();
 	/****************************   Stress Tensor Output *****************/

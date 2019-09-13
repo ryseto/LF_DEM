@@ -7,13 +7,14 @@ namespace Interactions {
 namespace Dimer {
 
 DimerManager::DimerManager(unsigned np,
+						   std::shared_ptr<PairManager> &pairmanager,
 						   ParticleConfig *config,
 						   ParticleVelocity *background_vel,
 						   std::shared_ptr<Geometry::PairwiseConfig> pd,
 						   Parameters::ParameterSet *params,
 						   std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> vel_solver,
 						   const std::vector <struct DimerState>& ds) :
-InteractionManager<Dimer>(np),
+InteractionManager<Dimer>(np, pairmanager),
 conf(config),
 velinf(background_vel),
 pdist(pd),
@@ -24,13 +25,14 @@ solver(vel_solver)
 }
 
 DimerManager::DimerManager(unsigned np,
+						   std::shared_ptr<PairManager> &pairmanager,
 						   ParticleConfig *config,
 						   ParticleVelocity *background_vel,
 						   std::shared_ptr<Geometry::PairwiseConfig> pd,
 						   Parameters::ParameterSet *params,
 						   std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> vel_solver,
 						   const std::vector <struct UnloadedDimerState>& uds) :
-InteractionManager<Dimer>(np),
+InteractionManager<Dimer>(np, pairmanager),
 conf(config),
 velinf(background_vel),
 pdist(pd),
@@ -143,7 +145,7 @@ void DimerManager::declareForceComponents(std::map<std::string, ForceComponent> 
 
 void DimerManager::setForceToParticle(const std::string &component, std::vector<vec3d> &force, std::vector<vec3d> &torque)
 {
-	if (component == "contact") {
+	if (component == "dimer_spring") {
 		setSpringForceToParticle(force, torque);
 	} else if (component == "dimer_dashpot") {
 		setDashpotForceToParticle(force, torque);
@@ -171,7 +173,9 @@ void DimerManager::setDashpotForceToParticle(std::vector<vec3d> &force,
 		pdist->getVelocities(i, j, pvel);
 		std::tie(f, t) = dimer->getForceTorqueDashpot(pvel);
 		force[i] += f;
-		force[j] += t;
+		force[j] -= f;
+		torque[i] += t;
+		torque[j] += t;
 	}
 }
 
@@ -190,7 +194,9 @@ void DimerManager::setSpringForceToParticle(std::vector<vec3d> &force,
 		std::tie(i, j) = dimer->get_par_num();
 		std::tie(f, t) = dimer->getForceTorqueSpring();
 		force[i] += f;
-		force[j] += t;
+		force[j] -= f;
+		torque[i] += t;
+		torque[j] += t;
 	}
 }
 

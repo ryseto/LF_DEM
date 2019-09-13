@@ -39,6 +39,7 @@
 #include "ParticleConfig.h"
 #include "ShearType.h"
 #include "StdInteractionManager.h"
+#include "DimerManager.h"
 #include "PairwiseResistanceVelocitySolver.h"
 #include "ControlVariable.h"
 
@@ -103,8 +104,7 @@ private:
 	void rescaleVelHydroStressControlled();
 	void sflowFiniteRe(bool calc_stress);
 	void sflowIteration(bool calc_stress);
-	void computeMaxNAVelocity();
-	void computeMaxVelocity();
+	double computeMaxVelocity();
 	void forceResultantReset();
 	void forceResultantLubricationForce();
 	void forceResultantInterpaticleForces();
@@ -188,6 +188,8 @@ private:
 	// std::ofstream fout_history;
 
 	std::shared_ptr<Interactions::StdInteractionManager> interaction;
+	std::shared_ptr<Interactions::Dimer::DimerManager> dimer_manager;
+
 	void gatherStressesByRateDependencies(Sym2Tensor &rate_prop_stress,
 										  Sym2Tensor &rate_indep_stress);
 	std::map<std::string, ForceComponent> force_components;
@@ -200,9 +202,6 @@ private:
 	double dt;
 	double avg_dt;
 	int avg_dt_nb;
-	double max_na_velocity;
-	double max_velocity;
-	double max_force_imbalance;
 	double target_stress;
 	double pressure_drop;
 	double init_strain_shear_rate_limit;
@@ -236,8 +235,6 @@ private:
 	 * by Antonio Martiniello and Giulio Giuseppe Giusteri from Auguest to November 2016 at OIST.       *
 	 ****************************************************************************************************/
 
-	std::vector <int> overlap_particles;
-
 	std::list <Event> events;
 	
 	/****************************************/
@@ -248,6 +245,9 @@ private:
 	void setupConfiguration(struct fixed_velo_configuration c, Parameters::ControlVariable control_);
 	void setupConfiguration(struct circular_couette_configuration c, Parameters::ControlVariable control_);
 	void setupConfiguration(const struct delayed_adhesion_configuration &conf, Parameters::ControlVariable control_);
+	void addDimers(const std::vector<Interactions::Dimer::DimerState> &dimers);
+	void addDimers(const std::vector<Interactions::Dimer::UnloadedDimerState> &dimers);
+
 	void resetContactModelParameer();
 	void allocateRessources();
 	void timeEvolution(double time_end, double strain_end);
@@ -256,6 +256,7 @@ private:
 	void calcStress();
 	void calcStressPerParticle();
 	void calcContactXFPerParticleStressControlled();
+	void calcDimerXFPerParticleStressControlled();
 	void gatherVelocitiesByRateDependencies(ParticleVelocity &rateprop_vel,
 												ParticleVelocity &rateindep_vel) const;
 	void calcTotalStressPerParticle();
@@ -275,6 +276,7 @@ private:
 	void initSolventFlow(std::string simulation_type);
 	vec3d meanParticleVelocity();
 	vec3d meanParticleAngVelocity();
+	double computeMaxNAVelocity();
 
 	bool is_brownian() const
 	{

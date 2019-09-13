@@ -33,9 +33,9 @@ private:
 	std::vector<InputParameter<int>> IntParams;
 	std::vector<InputParameter<unsigned>> UIntParams;
 	std::vector<InputParameter<std::string>> StrParams;
-	std::vector<InputParameter<Dimensional::ForceScale>> ForceScaleParams;
-	std::vector<InputParameter<Dimensional::DimensionalQty<double>>> DimValDblParams;
-	std::vector<InputParameter<Dimensional::DimensionalQty<double>>> TrueDimValDblParams;
+	std::vector<InputParameter<Dimensional::ForceScale>> ForceScaleParams;                 // things that define a force scale in the sense of Dimension::Unit (i.e. are associated to a suffixa and can be used as unit)
+	std::vector<InputParameter<Dimensional::DimensionalQty<double>>> DimValDblParams;      // things that are defined as double in the code but input with suffix
+	std::vector<InputParameter<Dimensional::DimensionalQty<double>>> TrueDimValDblParams;  // things that are defined as DimensionalValue<double> in the code (and as such have input with suffix)
 	void setDefaultValues(Dimensional::Unit guarranted_unit);
 	void convertParameterUnit(const Dimensional::UnitSystem &unit_system, 
 							  InputParameter<Dimensional::DimensionalQty<double>> &param);
