@@ -10,6 +10,7 @@
 
 from __future__ import print_function
 import sys
+import os
 import numpy as np
 import argparse
 import clfdem_file as clff
@@ -38,6 +39,10 @@ def get_normal_force(interactions, coldef_dict):
     for f in normal_forces_loc:
         total_force += interactions[:, f].astype(np.float32)
 
+    return total_force
+
+def get_normal_force_dimers(dimers, coldef_dict):
+    total_force = dimers[:, coldef_dict['total force']]
     return total_force
 
 
@@ -128,6 +133,41 @@ def interactions_bonds_yaparray(int_snapshot,
 
     return yap_out, f_factor
 
+def dimers_yaparray(dim_snapshot,
+                    par_snapshot,
+                    dcols,
+                    pcols,
+                    f_factor=None,
+                    f_chain_thresh=None,
+                    layer_dimers=3,
+                    color_dimers=4):
+    if f_chain_thresh is None:
+        f_chain_thresh = 0
+
+    r1r2 = lfu.get_interaction_end_points(dim_snapshot, par_snapshot,
+                                          dcols, pcols)
+    if r1r2.shape[-1]==4:
+        zeros = np.zeros(len(r1r2))
+        r1r2 = np.column_stack((r1r2[:,0], zeros, r1r2[:,[1,2]], zeros, r1r2[:,3]))
+    f, r1r2 = filter_interactions_crossing_PBC(dim_snapshot, r1r2)
+
+    # display a line joining the center of interacting particles
+    # with a thickness proportional to the normal force
+    dimer_forces = get_normal_force_dimers(f, dcols)
+    #  convert the force to a thickness. case-by-case.
+    if f_factor is None and len(dimer_forces)>0:
+        f_factor = 0.5/np.max(np.abs(dimer_forces))
+    dimer_forces = f_factor*np.abs(dimer_forces)
+    # avg_force = np.mean(np.abs(dimer_forces))
+    # large_forces = dimer_forces > f_chain_thresh * avg_force
+
+    yap_out = pyp.layer_switch(layer_dimers)
+    yap_out = pyp.add_color_switch(yap_out, color_dimers)
+    dimers = pyp.sticks_yaparray(r1r2, dimer_forces)
+    yap_out = np.row_stack((yap_out, dimers))
+
+    return yap_out, f_factor
+
 
 def cuboid(lx2, ly2, lz2):
     return np.array([[lx2, ly2, lz2, lx2, ly2, -lz2],
@@ -157,17 +197,26 @@ def snaps2yap(pos_fname,
               f_chain_thresh=None):
 
     forces_fname = pos_fname.replace("par_", "int_")
-    par_f = clff.snapshot_file(pos_fname)
-    int_f = clff.snapshot_file(forces_fname)
+    dimers_fname = pos_fname.replace("par_", "dim_")
 
+    par_f = clff.snapshot_file(pos_fname)
+    int_f = None
+    if os.path.isfile(forces_fname) and os.stat(forces_fname).st_size > 0:
+        int_f = clff.snapshot_file(forces_fname)
+    dim_f = None
+    if os.path.isfile(dimers_fname) and os.stat(dimers_fname).st_size > 0:
+        dim_f = clff.snapshot_file(dimers_fname)
 
     pcols = par_f.column_def()
-    icols = int_f.column_def()
 
     is2d = float(par_f.meta_data()['Ly']) == 0
     i = 0
-    frame_int = int_f.__next__()
-    strain_int = du.matching_uniq(frame_int[0], ["cu".encode('utf8'), "strain".encode('utf8')])
+    if int_f is not None:
+        frame_int = int_f.__next__()
+        strain_int = du.matching_uniq(frame_int[0], ["cu".encode('utf8'), "strain".encode('utf8')])
+    if dim_f is not None:
+        frame_dim = dim_f.__next__()
+        strain_int = du.matching_uniq(frame_dim[0], ["cu".encode('utf8'), "strain".encode('utf8')])
     for frame_par in par_f:
         # *cu*rvilinear or *cu*mulated strain depending on LF_DEM version
         strain = du.matching_uniq(frame_par[0], ["cu".encode('utf8'), "strain".encode('utf8')])
@@ -215,22 +264,33 @@ def snaps2yap(pos_fname,
         # display interactions, if any
         while strain_int < strain:
             try:
-                frame_int = int_f.__next__()
-                strain_int = du.matching_uniq(frame_int[0], ["cu".encode('utf8'), "strain".encode('utf8')])
+                if int_f is not None:
+                    frame_int = int_f.__next__()
+                    strain_int = du.matching_uniq(frame_int[0], ["cu".encode('utf8'), "strain".encode('utf8')])
+                if dim_f is not None:
+                    frame_dim = dim_f.__next__()
+                    strain_int = du.matching_uniq(frame_dim[0], ["cu".encode('utf8'), "strain".encode('utf8')])
             except StopIteration:
                 break
         if strain_int == strain:
-            interaction_bonds, f_factor =\
-            interactions_bonds_yaparray(frame_int[1], frame_par[1],
-                                        icols, pcols,
+            if int_f is not None:
+                interaction_bonds, f_factor =\
+                interactions_bonds_yaparray(frame_int[1], frame_par[1],
+                                            int_f.column_def(), pcols,
+                                            f_factor=f_factor,
+                                            f_chain_thresh=f_chain_thresh,
+                                            layer_contacts=1,
+                                            layer_noncontacts=2,
+                                            color_contacts=4,
+                                            color_noncontacts=5)
+                yap_out = np.row_stack((yap_out, interaction_bonds))
+            if dim_f is not None:
+                dimers, f_factor =\
+                    dimers_yaparray(frame_dim[1], frame_par[1],
+                                        dim_f.column_def(), pcols,
                                         f_factor=f_factor,
-                                        f_chain_thresh=f_chain_thresh,
-                                        layer_contacts=1,
-                                        layer_noncontacts=2,
-                                        color_contacts=4,
-                                        color_noncontacts=5)
-            yap_out = np.row_stack((yap_out, interaction_bonds))
-
+                                        f_chain_thresh=f_chain_thresh)
+                yap_out = np.row_stack((yap_out, dimers))
 
         # output
         np.savetxt(yap_file, yap_out, fmt="%s "*7)

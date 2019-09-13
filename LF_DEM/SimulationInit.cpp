@@ -475,6 +475,10 @@ void Simulation::openOutputFiles()
 	if (sys.p.output.out_data_interaction) {
 		outdata_int.setFile("int_"+simu_name+".dat",
 							data_header.str(), force_to_run, restart_from_chkp);
+		if (sys.dimer_manager) {
+			outdata_dim.setFile("dim_"+simu_name+".dat",
+							data_header.str(), force_to_run, restart_from_chkp);
+		}
 	}
 	if (sys.p.output.out_gsd) {
 		string gsd_filename = simu_name+".gsd";

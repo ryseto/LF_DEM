@@ -954,7 +954,6 @@ void Simulation::outputParFileTxt()
 	int np = sys.get_np();
 	int output_precision = 6;
 	outdata_par.setDefaultPrecision(output_precision);
-	outdata_int.setDefaultPrecision(output_precision);
 	auto pos = sys.conf->position;
 	auto vel = sys.velocity;
 	if (sys.p.output.origin_zero_flow) {
@@ -1046,15 +1045,27 @@ void Simulation::outputParFileTxt()
 
 void Simulation::outputIntFileTxt()
 {
+	int output_precision = 6;
+	outdata_int.setDefaultPrecision(output_precision);
 	outdata_int.setUnits(system_of_units, output_unit);
 	stringstream snapshot_header;
 	getSnapshotHeader(snapshot_header);
 	Interactions::output(*(sys.interaction), &sys.velocity, sys.p, outdata_int);
-	if (sys.dimer_manager) {
-		Interactions::Dimer::output(*(sys.dimer_manager), &sys.velocity, sys.p, outdata_int);
-	}
-	if (sys.interaction->size() > 0 || (sys.dimer_manager && sys.dimer_manager->size())) {
+	if (sys.interaction->size() > 0) {
 		outdata_int.writeToFile(snapshot_header.str());
+	}
+}
+
+void Simulation::outputDimFileTxt()
+{
+	int output_precision = 6;
+	outdata_dim.setDefaultPrecision(output_precision);
+	outdata_dim.setUnits(system_of_units, output_unit);
+	stringstream snapshot_header;
+	getSnapshotHeader(snapshot_header);
+	Interactions::Dimer::output(*(sys.dimer_manager), &sys.velocity, sys.p, outdata_dim);
+	if (sys.dimer_manager->size()) {
+		outdata_dim.writeToFile(snapshot_header.str());
 	}
 }
 
@@ -1065,6 +1076,9 @@ void Simulation::outputConfigurationData()
 	}
 	if (sys.p.output.out_data_interaction) {
 		outputIntFileTxt();
+		if (sys.dimer_manager) {
+			outputDimFileTxt();
+		}
 	}
 	if (!sys.p.output.out_particle_stress.empty()) {
 		outputPstFileTxt();

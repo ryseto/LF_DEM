@@ -76,6 +76,7 @@ private:
 	OutputData outdata_pst;
 	OutputData outdata_par;
 	OutputData outdata_int;
+	OutputData outdata_dim;
 	std::ofstream fout_boxing;
 	std::ofstream fout_flow;
 	std::ofstream fout_fprofile;
@@ -163,6 +164,7 @@ public:
 	void outputIntFileTxt();
 	void outputParFileTxt();
 	void outputPstFileTxt();
+	void outputDimFileTxt();
 	void outputConfigurationBinary(std::string);
 	void outputGSD();
 	void dataAdjustGSD(std::vector<vec3d> &pos,
