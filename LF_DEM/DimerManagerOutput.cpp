@@ -24,9 +24,9 @@ void output(const DimerManager &manager, ParticleVelocity *vel, const struct Par
 		outdata_int.entryData("Relaxed separation", \
 							  Dimensional::Dimension::none, 1,  inter->getRelaxedLength());
 	
-		outdata_int.entryData("total force", Dimensional::Dimension::Force, 3, inter->getForceTorque(pvel).first);
-		outdata_int.entryData("dashpot force", Dimensional::Dimension::Force, 3, inter->getForceTorqueDashpot(pvel).first);
-		outdata_int.entryData("spring force", Dimensional::Dimension::Force, 3, inter->getForceTorqueSpring().first);
+		outdata_int.entryData("total force", Dimensional::Dimension::Force, 3, std::get<0>(inter->getForceTorque(pvel)));
+		outdata_int.entryData("dashpot force", Dimensional::Dimension::Force, 3, std::get<0>(inter->getForceTorqueDashpot(pvel)));
+		outdata_int.entryData("spring force", Dimensional::Dimension::Force, 3, std::get<0>(inter->getForceTorqueSpring()));
 	}
 }
 }

@@ -100,14 +100,14 @@ std::pair<struct DBlock, struct DBlock> Dashpot::RFU_DBlocks() const
 	return std::make_pair(builder0.block, builder1.block);
 }
 
-std::pair<vec3d, vec3d> Dashpot::getForceTorque(const struct PairVelocity &vel) const
+std::tuple<vec3d, vec3d, vec3d, vec3d> Dashpot::getForceTorque(const struct PairVelocity &vel) const
 {
-	vec3d force = -res*dimer->getContactVelocity(vel);
-	vec3d torque = cross(dimer->rvec/2, force);
+	vec3d force_sliding = res*dimer->getContactVelocity(vel);
+	vec3d torque_sliding = cross(dimer->rvec/2, force_sliding);
 
-	torque += -rotres*dimer->getRotationDiffVelocity(vel);
+	vec3d torque_rotation = rotres*dimer->getRotationDiffVelocity(vel);
 
-	return std::make_pair(force, torque);
+	return std::make_tuple(force_sliding, -force_sliding, torque_sliding + torque_rotation, torque_sliding - torque_rotation);
 }
 
 void Dimer::checkHomegeneity()
@@ -178,28 +178,31 @@ void Dimer::applyTimeStep(double dt, vec3d sep, const struct PairVelocity &vel)
 	rotation_spring.incrementStretch(getRotationDiffVelocity(vel)*dt);
 }
 
-std::pair<vec3d, vec3d> Dimer::getForceTorque(const struct PairVelocity &vel) const
+std::tuple<vec3d, vec3d, vec3d, vec3d> Dimer::getForceTorque(const struct PairVelocity &vel) const
 {
-	std::pair<vec3d, vec3d> fts = getForceTorqueSpring();
-	std::pair<vec3d, vec3d> ftd = getForceTorqueDashpot(vel);
+	auto fts = getForceTorqueSpring();
+	auto ftd = getForceTorqueDashpot(vel);
 
-	return std::make_pair(fts.first + ftd.first, fts.second + ftd.second);
+	return std::make_tuple(std::get<0>(fts) + std::get<0>(ftd), 
+						   std::get<1>(fts) + std::get<1>(ftd), 
+						   std::get<2>(fts) + std::get<2>(ftd), 
+						   std::get<3>(fts) + std::get<3>(ftd));
 }
 
 
-std::pair<vec3d, vec3d> Dimer::getForceTorqueSpring() const
+std::tuple<vec3d, vec3d, vec3d, vec3d> Dimer::getForceTorqueSpring() const
 {
 	//Sliding spring
-	vec3d force = sliding_spring.getForce();
-	vec3d torque = cross(rvec/2, force);
+	vec3d force_sliding = sliding_spring.getForce();
+	vec3d torque_sliding = cross(rvec/2, force_sliding);
 
 	//Rotation spring
-	torque += rotation_spring.getForce();
+	vec3d torque_rotation = rotation_spring.getForce();
 
-	return std::make_pair(force, torque);
+	return std::make_tuple(force_sliding, -force_sliding, torque_sliding+torque_rotation, torque_sliding-torque_rotation);
 }
 
-std::pair<vec3d, vec3d> Dimer::getForceTorqueDashpot(const struct PairVelocity &vel) const
+std::tuple<vec3d, vec3d, vec3d, vec3d> Dimer::getForceTorqueDashpot(const struct PairVelocity &vel) const
 {
 	return dashpot.getForceTorque(vel);
 }
@@ -207,19 +210,19 @@ std::pair<vec3d, vec3d> Dimer::getForceTorqueDashpot(const struct PairVelocity &
 Sym2Tensor Dimer::getStress(const struct PairVelocity &vel) const
 {
 	auto ft = getForceTorque(vel);
-	return outer_sym(rvec, ft.first);
+	return outer_sym(rvec, std::get<0>(ft));
 }
 
 Sym2Tensor Dimer::getDashpotStress(const struct PairVelocity &vel) const
 {
 	auto ft = getForceTorqueDashpot(vel);
-	return outer_sym(rvec, ft.first);
+	return outer_sym(rvec, std::get<0>(ft));
 }
 
 Sym2Tensor Dimer::getSpringStress() const
 {
 	auto ft = getForceTorqueSpring();
-	return outer_sym(rvec, ft.first);
+	return outer_sym(rvec, std::get<0>(ft));
 }
 
 struct ODBlock Dimer::RFU_ODBlock() const

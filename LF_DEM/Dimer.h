@@ -49,7 +49,7 @@ private:
 class Dashpot {
 public:
 	Dashpot(double resistance, Dimer *dimer);
-	std::pair<vec3d, vec3d> getForceTorque(const struct PairVelocity &vel) const;
+	std::tuple<vec3d, vec3d, vec3d, vec3d> getForceTorque(const struct PairVelocity &vel) const;
 	struct ODBlock RFU_ODBlock() const;
 	std::pair<struct DBlock, struct DBlock> RFU_DBlocks() const;
 private:
@@ -70,9 +70,9 @@ public:
 	void restoreState();
 	void applyTimeStep(double dt, vec3d sep, const struct PairVelocity &vel);
 
-	std::pair<vec3d, vec3d> getForceTorque(const struct PairVelocity &vel) const;
-	std::pair<vec3d, vec3d> getForceTorqueDashpot(const struct PairVelocity &vel) const;
-	std::pair<vec3d, vec3d> getForceTorqueSpring() const;
+	std::tuple<vec3d, vec3d, vec3d, vec3d> getForceTorque(const struct PairVelocity &vel) const;
+	std::tuple<vec3d, vec3d, vec3d, vec3d> getForceTorqueDashpot(const struct PairVelocity &vel) const;
+	std::tuple<vec3d, vec3d, vec3d, vec3d> getForceTorqueSpring() const;
 
 	Sym2Tensor getStress(const struct PairVelocity &vel) const;
 	Sym2Tensor getDashpotStress(const struct PairVelocity &vel) const;

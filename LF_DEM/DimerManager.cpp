@@ -163,7 +163,7 @@ void DimerManager::setDashpotForceToParticle(std::vector<vec3d> &force,
 	for (auto &t: torque) {
 		t.reset();
 	}
-	vec3d f, t;
+	vec3d f0, f1, t0, t1;
 	unsigned int i, j;
 	struct PairVelocity pvel;
 
@@ -171,11 +171,11 @@ void DimerManager::setDashpotForceToParticle(std::vector<vec3d> &force,
 	for (const auto &dimer: interactions) {
 		std::tie(i, j) = dimer->get_par_num();
 		pdist->getVelocities(i, j, pvel);
-		std::tie(f, t) = dimer->getForceTorqueDashpot(pvel);
-		force[i] += f;
-		force[j] -= f;
-		torque[i] += t;
-		torque[j] += t;
+		std::tie(f0, f1, t0, t1) = dimer->getForceTorqueDashpot(pvel);
+		force[i] += f0;
+		force[j] += f1;
+		torque[i] += t0;
+		torque[j] += t1;
 	}
 }
 
@@ -188,15 +188,17 @@ void DimerManager::setSpringForceToParticle(std::vector<vec3d> &force,
 	for (auto &t: torque) {
 		t.reset();
 	}
-	vec3d f, t;
+	vec3d f0, f1, t0, t1;
 	unsigned int i, j;
+	struct PairVelocity pvel;
+
 	for (const auto &dimer: interactions) {
 		std::tie(i, j) = dimer->get_par_num();
-		std::tie(f, t) = dimer->getForceTorqueSpring();
-		force[i] += f;
-		force[j] -= f;
-		torque[i] += t;
-		torque[j] += t;
+		std::tie(f0, f1, t0, t1) = dimer->getForceTorqueDashpot(pvel);
+		force[i] += f0;
+		force[j] += f1;
+		torque[i] += t0;
+		torque[j] += t1;
 	}
 }
 
