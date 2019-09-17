@@ -190,11 +190,10 @@ void DimerManager::setSpringForceToParticle(std::vector<vec3d> &force,
 	}
 	vec3d f0, f1, t0, t1;
 	unsigned int i, j;
-	struct PairVelocity pvel;
 
 	for (const auto &dimer: interactions) {
 		std::tie(i, j) = dimer->get_par_num();
-		std::tie(f0, f1, t0, t1) = dimer->getForceTorqueDashpot(pvel);
+		std::tie(f0, f1, t0, t1) = dimer->getForceTorqueSpring();
 		force[i] += f0;
 		force[j] += f1;
 		torque[i] += t0;
