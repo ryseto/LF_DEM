@@ -123,7 +123,7 @@ void Simulation::setOutputUnit(Parameters::ParameterSetFactory &PFact)
 {
 	// set the output unit
 	output_unit = control_value.unit;
-	if (PFact.getParameterSet().body_force>0) {
+	if (PFact.getParameterSet().bodyforce>0) {
 		/*** for sedimentation simulations ***/
 		output_unit = Dimensional::Unit::bodyforce;
 	}
@@ -134,7 +134,7 @@ void Simulation::exportControlVariable()
 {
 	// when there is a hydro force, its value is the non-dimensionalized shear rate.
 	auto forces = system_of_units.getForceScales();
-	if (control_var == Parameters::ControlVariable::rate) {
+	if (control_var == Parameters::ControlVariable::rate && forces.count(Dimensional::Unit::hydro)) {
 		sys.imposed_flow->setRate(forces.at(Dimensional::Unit::hydro).value);
 	} else if (control_var == Parameters::ControlVariable::stress) {
 		sys.target_stress = forces.at(Dimensional::Unit::stress).value;
@@ -347,7 +347,6 @@ void Simulation::setupControl(Parameters::ControlVariable control_variable_,
 	control_var = control_variable_;
 	control_value = control_value_;
 	cout << indent << "Simulation:: Control variable set: " << (unsigned)control_var << " " << control_value.value << endl;
-
 }
 
 void Simulation::setupSimulation(string in_args,

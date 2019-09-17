@@ -119,7 +119,7 @@ void Dimer::checkHomegeneity()
 
 Dimer::Dimer(const PairId &pairid, vec3d sep, const struct UnloadedDimerState &uds, DimerParams p) :
 PairwiseInteraction(pairid, sep),
-dashpot(p.resistance, this),
+dashpot(p.relaxation_time*p.stiffness, this),
 sliding_spring({getSeparation() - uds.relaxed_length*getUnitSeparation(), uds.relaxed_length}, p.stiffness),
 rotation_spring({vec3d(), 0}, p.stiffness)
 {
@@ -129,7 +129,7 @@ rotation_spring({vec3d(), 0}, p.stiffness)
 
 Dimer::Dimer(const PairId &pairid, vec3d sep, const struct DimerState &ds, DimerParams p) :
 PairwiseInteraction(pairid, sep),
-dashpot(p.resistance, this),
+dashpot(p.relaxation_time*p.stiffness, this),
 sliding_spring(ds.sliding_st, p.stiffness),
 rotation_spring(ds.rotation_st, p.stiffness)
 {

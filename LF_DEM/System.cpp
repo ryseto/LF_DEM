@@ -103,7 +103,7 @@ void System::declareForceComponents()
 		declared_forces.push_back("brownian");
 	}
 
-	if (p.body_force > 0) {
+	if (p.bodyforce > 0) {
 		force_components["body_force"] = ForceComponent(np, RateDependence::independent, torque);
 		declared_forces.push_back("body_force");
 	}
@@ -1475,8 +1475,8 @@ void System::setBodyForce(vector<vec3d> &force,
 		t.reset();
 	}
 	double angle = M_PI*p.body_force_angle/180;
-	double bf_x = p.body_force*cos(angle); // cos(angle);
-	double bf_z = -p.body_force*sin(angle);
+	double bf_x = p.bodyforce*cos(angle); // cos(angle);
+	double bf_z = -p.bodyforce*sin(angle);
 	for (int i=0; i<np_mobile; i++) {
 		force[i].set(radius_cubed[i]*bf_x, 0 , radius_cubed[i]*bf_z);
 	}

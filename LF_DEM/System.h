@@ -287,7 +287,7 @@ private:
 	
 	bool has_body_force() const
 	{
-		return p.body_force > 0;
+		return p.bodyforce > 0;
 	}
 
 	double get_lx() const

@@ -8,7 +8,7 @@ namespace Dimer
 
 struct DimerParams {
 	double stiffness;  ///< Spring stiffness. [0]
-	double resistance; ///< Dashpot damping coefficient. [0]
+	double relaxation_time; ///< Spring-Dashpot relaxation time. [0]
 };
 
 }

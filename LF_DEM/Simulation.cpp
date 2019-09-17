@@ -333,7 +333,7 @@ void Simulation::simulationSteadyShear(string in_args,
 									   string simu_identifier)
 {
 	indent = "  Simulation::\t";
-	setupControl(control_variable_,	control_value = control_value_);
+	setupControl(control_variable_,	control_value_);
 	setupSimulation(in_args, input_files, binary_conf, simu_identifier);
 	time_t now;
 	time_strain_1 = 0;

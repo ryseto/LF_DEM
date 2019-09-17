@@ -99,7 +99,7 @@ namespace Dimensional {
 		if (s == "cl" || s == "critical_load") {
 			return Unit::critical_load;
 		}
-		if (s == "bf" || s == "") {
+		if (s == "bf") {
 			return Unit::bodyforce;
 		}		
 		if (s == "ft" || s == "ft_max") {

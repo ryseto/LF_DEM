@@ -116,7 +116,6 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(sj_disp_max_goal, 1e-6),
 		PARAM_INIT(sj_shear_rate, 0),
 		PARAM_INIT(sj_velocity, 1e-3),
-		PARAM_INIT(body_force, 0),
 		PARAM_INIT(body_force_angle, 0),
 		PARAM_INIT(sflow_dx, 5),
 		PARAM_INIT(sflow_smooth_length, 3),
@@ -129,7 +128,6 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(sflow_target_flux, 0),
 		PARAM_INIT(confinement.y_min, 0),
 		PARAM_INIT(confinement.y_max, 0),
-		PARAM_INIT(dimer.resistance, 0),
 	};
 
 	/*================================
@@ -199,8 +197,6 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 
 	default_val = {Dimensional::Unit::bodyforce, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(bodyforce, default_val));
-
-	
 	
 	
 	/*==============================================
@@ -243,6 +239,10 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 
 	default_qty = {Dimensional::Dimension::Force, 0, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(dimer.stiffness, default_qty));
+
+	default_qty = {Dimensional::Dimension::Time, 0, guarranted_unit};
+	DimValDblParams.push_back(PARAM_INIT_DIMQTY(dimer.relaxation_time, default_qty));
+
 
 	/*----------  True dim vals  ----------*/
 	
@@ -415,7 +415,7 @@ void ParameterSetFactory::setParameterFromKeyValue(const std::string &keyword,
 		}
 	}
 	std::ostringstream error_str;
-	error_str << "keyword " << keyword << " is not associated with an parameter" << std::endl;
+	error_str << "keyword " << keyword << " is not associated with any parameter" << std::endl;
 	throw std::runtime_error(error_str.str());
 }
 

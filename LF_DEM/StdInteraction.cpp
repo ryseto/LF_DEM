@@ -100,9 +100,13 @@ std::pair<double, double> StdInteraction::calcContactDashpotResistanceCoeffs()
 	if (p.contp->friction_model == FrictionModel::frictionless && p.lubp && p.lubp->model != "tangential") {
 		tangential_coeff = 0;
 	} else {
-		if (p.contp->relaxation_time_tan > 0) {
-			if (p.lubp && p.lubp->model != "none") { // the contact can get unstable if the tangential resistance difference is too big between with and wihout contact
-				throw std::runtime_error(" ContactDashpot:: Error: with lubrication, tangential relaxation time cannot be set positive.");
+		if (p.contp->relaxation_time_tan >= 0) {
+			if (p.contp->relaxation_time_tan == 0) {
+				std::cerr << "WARNING: The relaxation time is set to zero, which set the dashpot resistance zero.\n" ;
+			} else {
+				if (p.lubp && p.lubp->model != "none") { // the contact can get unstable if the tangential resistance difference is too big between with and wihout contact
+					throw std::runtime_error(" ContactDashpot:: Error: with lubrication, tangential relaxation time cannot be set positive.");
+				}
 			}
 			tangential_coeff = 6*p.contp->kt*p.contp->relaxation_time_tan;
 		} else {

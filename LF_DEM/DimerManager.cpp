@@ -45,8 +45,11 @@ solver(vel_solver)
 
 void DimerManager::setDimers(const std::vector <struct DimerState> &dimer_states)
 {
-	DimerParams params = {p->dimer.stiffness, p->dimer.resistance};
+	DimerParams params = p->dimer;
 	for (auto ds: dimer_states) {
+		if (ds.p0 > interactions_pp.size() || ds.p0 > interactions_pp.size()) {
+			throw std::runtime_error(" Inconsistency between configuration and dimer files.");
+		}
 		struct PairId pairid = {ds.p0, ds.p1, conf->radius[ds.p0], conf->radius[ds.p1]};
 		addInteraction(ds.p0, ds.p1, std::make_shared<Dimer>(pairid, pdist->getSeparation(ds.p0, ds.p1), ds, params));
 	}
@@ -54,8 +57,11 @@ void DimerManager::setDimers(const std::vector <struct DimerState> &dimer_states
 
 void DimerManager::setDimers(const std::vector <struct UnloadedDimerState> &dimer_states)
 {
-	DimerParams params = {p->dimer.stiffness, p->dimer.resistance};
+	DimerParams params = p->dimer;
 	for (auto ds: dimer_states) {
+		if (ds.p0 > interactions_pp.size() || ds.p0 > interactions_pp.size()) {
+			throw std::runtime_error(" Inconsistency between configuration and dimer files.");
+		}
 		struct PairId pairid = {ds.p0, ds.p1, conf->radius[ds.p0], conf->radius[ds.p1]};
 		addInteraction(ds.p0, ds.p1, std::make_shared<Dimer>(pairid, pdist->getSeparation(ds.p0, ds.p1), ds, params));
 	}

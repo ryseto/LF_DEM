@@ -183,7 +183,6 @@ namespace Parameters {
 		bool keep_input_strain;  ///< Use as initial strain value the strain from initial Lees-Edwards displacement [false]
 		double brownian_relaxation_time; ///< Averaging time scale in the stress controlled simulation for Brownian [1]
 		bool check_static_force_balance;
-		double body_force;  ///< body force [0 guarranted unit]
 		double body_force_angle;  ///< parallel to wall 0 and vertical to wall 90 [0]
 		double sflow_dx; // mesh size in unit of particle radius [5]
 		double sflow_smooth_length; // mesh size in unit of particle radius [3]
