@@ -47,7 +47,7 @@ def get_normal_force_dimers(dimers, coldef_dict):
 
 
 
-def particles_yaparray(pos, rad, angles=None):
+def particles_yaparray(pos, rad, angles=None, particle_colors=None):
     """
         Get yaplot commands (as an aray of strings) to display circles
         for each particle defined in (pos, rad).
@@ -58,11 +58,12 @@ def particles_yaparray(pos, rad, angles=None):
         npos = np.asarray(pos)
     else:
         npos = np.column_stack((np.zeros(len(pos)), pos))[:, [1, 0, 2]]
-    
-    particle_circle_positions = pyp.cmd('c', npos)
-    particle_circle_radius = pyp.cmd('r', rad)
-    yap_out = pyp.pair_cmd_and_switch(particle_circle_positions,
-                                      particle_circle_radius)
+    part_commands = (pyp.cmd('c', npos), pyp.cmd('r', rad))
+    if particle_colors is not None:
+        part_commands += (particle_colors,)
+
+    yap_out = pyp.interleave(part_commands)
+
     if angles is None:
         return yap_out
     else:
@@ -214,9 +215,16 @@ def snaps2yap(pos_fname,
     if int_f is not None:
         frame_int = int_f.__next__()
         strain_int = du.matching_uniq(frame_int[0], ["cu".encode('utf8'), "strain".encode('utf8')])
+    particle_colors = None
+
     if dim_f is not None:
         frame_dim = dim_f.__next__()
         strain_int = du.matching_uniq(frame_dim[0], ["cu".encode('utf8'), "strain".encode('utf8')])
+        color_palette = np.random.random((4, 3))
+        dimer_nb = int(int(par_f.meta_data()['np'])/2)
+        dimer_colors = color_palette[np.random.randint(0, color_palette.shape[0], size=dimer_nb)]
+        particle_colors = pyp.color_switch(np.repeat(dimer_colors, 2, axis=0))
+    
     for frame_par in par_f:
         # *cu*rvilinear or *cu*mulated strain depending on LF_DEM version
         strain = du.matching_uniq(frame_par[0], ["cu".encode('utf8'), "strain".encode('utf8')])
@@ -234,14 +242,14 @@ def snaps2yap(pos_fname,
         if is2d:
             try:
                 angle = frame_par[1][:, pcols['angle']].astype(np.float)
-                particles, crosses = particles_yaparray(pos, rad, angles=angle)
+                particles, crosses = particles_yaparray(pos, rad, angles=angle, particle_colors=particle_colors)
                 yap_out = np.row_stack((yap_out, particles))
                 yap_out = pyp.add_color_switch(yap_out, 0)
                 yap_out = np.row_stack((yap_out, crosses))
             except KeyError:
-                yap_out = np.row_stack((yap_out, particles_yaparray(pos, rad)))
+                yap_out = np.row_stack((yap_out, particles_yaparray(pos, rad, particle_colors=particle_colors)))
         else:
-            yap_out = np.row_stack((yap_out, particles_yaparray(pos, rad)))
+            yap_out = np.row_stack((yap_out, particles_yaparray(pos, rad, particle_colors=particle_colors)))
 
         # display bounding box
         yap_out = pyp.add_layer_switch(yap_out, 4)
