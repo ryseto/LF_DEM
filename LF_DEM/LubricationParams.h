@@ -23,6 +23,7 @@ struct LubParams {
 	double max_gap;					///< Lubrication range (in interparticle gap distance) [0.5]
 	double regularization_length;   ///< Lubrication regularization length ("roughness length") [1e-3]
 	std::string model;              ///< Lubrication type. "none": no lubrication, "normal": 1/xi lubrication (only squeeze mode), "tangential": "normal" plus log(1/xi) terms (shear and pump modes) ["tangential"]
+	bool smooth;
 };
 
 inline void setupLubricationParameters(LubParams &p)

@@ -45,9 +45,7 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 		pressure_grad_x = 0;
 	} else if (simulation_type == "channel flow") {
 		channel_flow = true;
-		if (pressure_grad_x < sys->pressure_drop) {
-			pressure_grad_x += sys->pressure_drop/10000;
-		}
+		pressure_grad_x = sys->pressure_drop;
 		std::cerr << "pressure_grad_x = " << pressure_grad_x << std::endl;
 	} else if (simulation_type == "simple shear") {
 		simple_shear = true;

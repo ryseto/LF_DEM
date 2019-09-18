@@ -40,6 +40,8 @@ private:
 	double lub_coeff;
 	double log_lub_coeff;
 	double lub_coeff_min;
+	bool smooth;
+
 	double XA[4]; // ii ij ji jj
 	double YA[4]; // ii ij ji jj
 	double YB[4]; // ii ij ji jj

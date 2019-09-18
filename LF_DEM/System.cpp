@@ -687,7 +687,6 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 
 	 This method is never used when running a Brownian simulation.
 	 */
-	static int cnt = 0;
 	in_predictor = true;
 	in_corrector = true;
 	if (shear_type == ShearType::simple_shear || shear_type == ShearType::extensional_flow) {
@@ -698,26 +697,13 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		}
 		computeTotalVelocity();
 	} else {
-		//if (1) {
-		//sflowFiniteRe(calc_stress);
 		if (!Interactions::hasPairwiseResistanceStdInteraction(p)) {
 			computeNonAffineVelocitiesStokesDrag();
 		} else {
 			computeNonAffineVelocities(calc_stress, true);
 		}
-		if (!p.fixed_dt) {
-			if (cnt++ > 0) {
-				adaptTimeStepWithVelocities();
-			}
-			adaptTimeStepWithBounds(time_end, strain_end);
-		}
-		//	sflow->pressureController();
 		sflow->update();
 		adjustVelocitySolventFlow();
-
-		//} else {
-		//sflowIteration(calc_stress);
-		//}
 	}
 	if (wall_rheology && calc_stress) { // @@@@ calc_stress remove????
 		forceResultantReset();
@@ -747,42 +733,32 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	}
 }
 
-void System::sflowIteration(bool calc_stress)
-{
-	double diff_u = 0;
-	int cnt = 0;
-	do {
-		if (!Interactions::hasPairwiseResistanceStdInteraction(p)) {
-			computeNonAffineVelocitiesStokesDrag();
-		} else {
-			computeNonAffineVelocities(calc_stress, true);
-		}
-		diff_u = sflow->update();
-		if (cnt == 1 || cnt % 100 == 0) {
-			cerr << cnt << ' '  << diff_u << ' '  << sflow->get_pressure_grad_x() << endl;
-		}
-		cnt++;
-		if (cnt > 1000) {
-			break;
-		}
-	} while (diff_u > 1e-3);
-	sflow->pressureController();
-	if (cnt > 1) {
-		cerr << cnt << endl;
-	}
-	adjustVelocitySolventFlow();
-	return ;
-}
-
-void System::sflowFiniteRe(bool calc_stress)
-{
-	//static int cnt = 0;
-	//	if (cnt ++ > 1000 && forbid_displacement && fabs(sflow->u_ave.x) < 1e-3) {
-	//		forbid_displacement = false;
-	//		cerr << cnt << ' ' << sflow->u_ave.x << ' ' << sflow->get_pressure_grad_x() << endl;
-	//		cerr << "allow displacmenet" << endl;
-	//	}
-}
+//void System::sflowIteration(bool calc_stress)
+//{
+//	double diff_u = 0;
+//	int cnt = 0;
+//	do {
+//		if (!pairwise_resistance) {
+//			computeVelocitiesStokesDrag();
+//		} else {
+//			computeVelocities(calc_stress, true);
+//		}
+//		diff_u = sflow->update();
+//		if (cnt == 1 || cnt % 100 == 0) {
+//			cerr << cnt << ' '  << diff_u << ' '  << sflow->get_pressure_grad_x() << endl;
+//		}
+//		cnt++;
+//		if (cnt > 1000) {
+//			break;
+//		}
+//	} while (diff_u > 1e-3);
+//	sflow->pressureController();
+//	if (cnt > 1) {
+//		cerr << cnt << endl;
+//	}
+//	adjustVelocitySolventFlow();
+//	return ;
+//}
 
 /****************************************************************************************************
  ******************************************** Mid-Point Scheme ***************************************
@@ -904,11 +880,6 @@ void System::adaptTimeStepWithVelocities()
 	 * at each time step.
 	 */
 	double max_na_velocity = computeMaxNAVelocity();
-	if (in_predictor) {
-		if (!p.fixed_dt || eventLookUp != NULL) {
-			computeMaxNAVelocity();
-		}
-	}
 	double max_interaction_vel = interaction->getMaxRelativeVelocity(&velocity);
 	if (dimer_manager) {
 		double max_dimer_vel = dimer_manager->getMaxRelativeVelocity(&velocity);
@@ -934,15 +905,7 @@ void System::adaptTimeStepWithVelocities()
 		}
 	}
 	if (p.solvent_flow) {
-		auto max_velocity = computeMaxVelocity();
-		double dt_sflow = p.disp_max/max_velocity;
-		if (max_velocity > 0) {
-			dt_sflow = p.disp_max/max_velocity;
-		} else {
-			dt_sflow = 1e-5;
-		}
-		cerr << "max_velocity = " << max_velocity << endl;
-		cerr << "dt_sflow = " << dt_sflow << endl;
+		double dt_sflow = p.disp_max/max_na_velocity;
 		if (dt_sflow < dt) {
 			dt = dt_sflow;
 		}
@@ -1933,7 +1896,6 @@ void System::computeNonAffineVelocities(bool divided_velocities, bool mat_rebuil
 		}
 		sumUpVelocityComponents();
 	} else {
-		//if (!p.solvent_flow) {
 		computeUInf();
 		if (mobile_fixed) {
 			setFixedParticleVelocities();

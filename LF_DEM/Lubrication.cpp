@@ -18,6 +18,7 @@ namespace Lub {
 Lubrication::Lubrication(PairwiseInteraction* interaction, const LubParams &params):
 inter(interaction),
 regularization_length(params.regularization_length),
+smooth(params.smooth),
 coeffs(inter->a0, inter->a1)
 {
 	if (params.model == "normal") {
@@ -29,8 +30,9 @@ coeffs(inter->a0, inter->a1)
 		error_str << "Unknown lubrication_model " << params.model << std::endl;
 		throw std::runtime_error(error_str.str());
 	}
-	lub_coeff_min = 1/(params.max_gap+params.regularization_length);
-
+	if (smooth) {
+		lub_coeff_min = 1/(params.max_gap+params.regularization_length);
+	}
 	updateResistanceCoeff();
 }
 
@@ -575,11 +577,15 @@ void Lubrication::updateResistanceCoeff()
 {
 	if (inter->getReducedGap() > 0) {
 		double coeff = 1/(inter->getReducedGap()+regularization_length);
-		double coeff_norm = coeff-lub_coeff_min;
-		if (coeff > 1.) {
-			setResistanceCoeff(coeff_norm, log(coeff));
+		if (!smooth) {
+			if (coeff > 1.) {
+				setResistanceCoeff(coeff, log(coeff));
+			} else {
+				setResistanceCoeff(coeff, 0.);
+			}
 		} else {
-			setResistanceCoeff(coeff_norm, 0.);
+			double coeff_norm = coeff-lub_coeff_min;
+			setResistanceCoeff(coeff_norm, log(coeff_norm+1));
 		}
 	}
 }

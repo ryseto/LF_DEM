@@ -76,7 +76,8 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(output.effective_coordination_number, false),
 		PARAM_INIT(check_static_force_balance, false),
 		PARAM_INIT(solvent_flow, false),
-		PARAM_INIT(confinement.on, false)
+		PARAM_INIT(confinement.on, false),
+		PARAM_INIT(lub.smooth, false)
 	};
 
 	/*===========================================
