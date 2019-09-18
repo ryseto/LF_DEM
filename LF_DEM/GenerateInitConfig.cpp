@@ -831,7 +831,7 @@ void GenerateInitConfig::setParameters(Simulation &simu, double volume_frac_init
 		radius_wall_particle = readStdinDefault(1.0, "wall particle size");
 		nb_pin = readStdinDefault(0, "number of wall pin");
 		double delta = 1e-6;
-		z_bot = 0  + delta;
+		z_bot = 0 + delta;
 		z_top = lz - delta;
 	} else if (filter_mesh_config) {
 		radius_wall_particle = readStdinDefault(1.0, "wall particle size");

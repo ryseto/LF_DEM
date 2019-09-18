@@ -770,7 +770,7 @@ void System::timeStepBoxing()
 	if (!zero_shear) {
 		double strain_increment = shear_rate*dt;
 		clk.cumulated_strain += strain_increment;
-		if (simu_type == simple_shear) {
+		if (simu_type != extensional_flow) {
 			vec3d shear_strain_increment = 2*dot(E_infinity, {0, 0, 1})*dt;
 			shear_strain += shear_strain_increment;
 			shear_disp += shear_strain_increment*lz;
@@ -795,12 +795,11 @@ void System::timeStepBoxing()
 			angle_wheel += dt*(omega_wheel_in-omega_wheel_out);
 		}
 	}
-
-	if (simu_type == extensional_flow) {
+	if (simu_type != extensional_flow) {
+		boxset.update();
+	} else {
 		updateH(); // update cell axes
 		boxset.updateExtFlow();
-	} else {
-		boxset.update();
 	}
 }
 
@@ -992,7 +991,6 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 
 	 This method is never used when running a Brownian simulation.
 	 */
-	static int cnt = 0;
 	in_predictor = true;
 	in_corrector = true;
 	if (!p.solvent_flow) {
@@ -1006,25 +1004,13 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		}
 		adjustVelocityPeriodicBoundary();
 	} else {
-		//if (1) {
-		//sflowFiniteRe(calc_stress);
 		if (!pairwise_resistance) {
 			computeVelocitiesStokesDrag();
 		} else {
 			computeVelocities(calc_stress, true);
 		}
-		if (!p.fixed_dt) {
-			if (cnt++ > 0) {
-				adaptTimeStep(time_end, strain_end);
-			}
-		}
-		//	sflow->pressureController();
 		sflow->update();
 		adjustVelocitySolventFlow();
-
-		//} else {
-		//sflowIteration(calc_stress);
-		//}
 	}
 	if (wall_rheology && calc_stress) { // @@@@ calc_stress remove????
 		forceResultantReset();
@@ -1054,42 +1040,32 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	}
 }
 
-void System::sflowIteration(bool calc_stress)
-{
-	double diff_u = 0;
-	int cnt = 0;
-	do {
-		if (!pairwise_resistance) {
-			computeVelocitiesStokesDrag();
-		} else {
-			computeVelocities(calc_stress, true);
-		}
-		diff_u = sflow->update();
-		if (cnt == 1 || cnt % 100 == 0) {
-			cerr << cnt << ' '  << diff_u << ' '  << sflow->get_pressure_grad_x() << endl;
-		}
-		cnt++;
-		if (cnt > 1000) {
-			break;
-		}
-	} while (diff_u > 1e-3);
-	sflow->pressureController();
-	if (cnt > 1) {
-		cerr << cnt << endl;
-	}
-	adjustVelocitySolventFlow();
-	return ;
-}
-
-void System::sflowFiniteRe(bool calc_stress)
-{
-	//static int cnt = 0;
-	//	if (cnt ++ > 1000 && forbid_displacement && fabs(sflow->u_ave.x) < 1e-3) {
-	//		forbid_displacement = false;
-	//		cerr << cnt << ' ' << sflow->u_ave.x << ' ' << sflow->get_pressure_grad_x() << endl;
-	//		cerr << "allow displacmenet" << endl;
-	//	}
-}
+//void System::sflowIteration(bool calc_stress)
+//{
+//	double diff_u = 0;
+//	int cnt = 0;
+//	do {
+//		if (!pairwise_resistance) {
+//			computeVelocitiesStokesDrag();
+//		} else {
+//			computeVelocities(calc_stress, true);
+//		}
+//		diff_u = sflow->update();
+//		if (cnt == 1 || cnt % 100 == 0) {
+//			cerr << cnt << ' '  << diff_u << ' '  << sflow->get_pressure_grad_x() << endl;
+//		}
+//		cnt++;
+//		if (cnt > 1000) {
+//			break;
+//		}
+//	} while (diff_u > 1e-3);
+//	sflow->pressureController();
+//	if (cnt > 1) {
+//		cerr << cnt << endl;
+//	}
+//	adjustVelocitySolventFlow();
+//	return ;
+//}
 
 /****************************************************************************************************
  ******************************************** Mid-Point Scheme ***************************************
@@ -1228,34 +1204,26 @@ void System::adaptTimeStep()
 			max_interaction_vel = max_rolling_velocity;
 		}	
 	}
-	if (!p.solvent_flow) {
-		if (max_na_velocity > 0 || max_interaction_vel > 0) { // small density system can have na_velocity=0
-			if (max_na_velocity > max_interaction_vel) {
-				dt = p.disp_max/max_na_velocity;
-			} else {
-				dt = p.disp_max/max_interaction_vel;
-			}
+	if (max_na_velocity > 0 || max_interaction_vel > 0) { // small density system can have na_velocity=0
+		if (max_na_velocity > max_interaction_vel) {
+			dt = p.disp_max/max_na_velocity;
 		} else {
-			dt = p.disp_max/shear_rate;
-		}
-		if (dt*shear_rate > p.disp_max) { // cases where na_velocity < \dotgamma*radius
-			dt = p.disp_max/shear_rate;
-		}
-		if (p.dt_max > 0) {
-			if (dt > p.dt_max) {
-				dt = p.dt_max;
-			}
+			dt = p.disp_max/max_interaction_vel;
 		}
 	} else {
-		computeMaxVelocity();
-		double dt_sflow;
-		if (max_velocity > 0) {
-			dt_sflow = p.disp_max/max_velocity;
-		} else {
-			dt_sflow = 1e-5;
+		dt = p.disp_max/shear_rate;
+	}
+	if (dt*shear_rate > p.disp_max) { // cases where na_velocity < \dotgamma*radius
+		dt = p.disp_max/shear_rate;
+	}
+	if (p.dt_max > 0) {
+		if (dt > p.dt_max) {
+			dt = p.dt_max;
 		}
-		cerr << "max_velocity = " << max_velocity << endl;
-		cerr << "dt_sflow = " << dt_sflow << endl;
+	}
+	if (p.solvent_flow) {
+		computeMaxVelocity();
+		double dt_sflow = p.disp_max/max_velocity;
 		if (dt_sflow < dt) {
 			dt = dt_sflow;
 		}
@@ -1309,25 +1277,21 @@ void System::timeStepMove(double time_end, double strain_end)
 	 * dot_epsion = shear_rate / 2 is always true.
 	 * clk.cumulated_strain = shear_rate * t for both simple shear and extensional flow.
 	 */
+	//cerr << "shear_rate = " << shear_rate << endl;
 	clk.time_ += dt;
 	total_num_timesteps ++;
 	/* evolve PBC */
 	timeStepBoxing();
 	
 	/* move particles */
-	//	if (!forbid_displacement) {
-	for (int i=0; i<np_mobile; i++) {
+	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
 	if (angle_output) {
-		for (int i=0; i<np_mobile; i++) {
+		for (int i=0; i<np; i++) {
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
-	if (dt == 1e-5) {
-		exit(1);
-	}
-	//	}
 	if (retrim_ext_flow) {
 		cerr << "clk.cumulated_strain = " << clk.cumulated_strain << endl;
 		retrimProcess();
@@ -1461,7 +1425,7 @@ void System::timeEvolution(double time_end, double strain_end)
 
 	while (keepRunning(time_end-loop_time_adjust, strain_end-loop_time_adjust)) {
 		retrim_ext_flow = false; // used in ext_flow simulation
-		if (!p.solvent_flow && !brownian && !p.fixed_dt) { // adaptative time-step for non-Brownian cases
+		if (!brownian && !p.fixed_dt) { // adaptative time-step for non-Brownian cases
 			adaptTimeStep(time_end, strain_end);
 		}
 		if (simu_type == extensional_flow) {
@@ -2633,9 +2597,7 @@ void System::computeVelocities(bool divided_velocities, bool mat_rebuild)
 		}
 		sumUpVelocityComponents();
 	} else {
-		//if (!p.solvent_flow) {
 		computeUInf();
-		//}
 		setFixedParticleVelocities();
 		computeVelocityWithoutComponents(mat_rebuild);
 	}
@@ -2767,13 +2729,13 @@ void System::displacement(int i, const vec3d& dr)
 	 * we need to modify the velocity, which was already evaluated.
 	 * The position and velocity will be used to calculate the contact forces.
 	 */
-	if (simu_type == simple_shear) {
+	if (simu_type != extensional_flow) {
 		/**** simple shear flow ****/
 		int z_shift = periodize(position[i]);
 		if (z_shift != 0) {
 			velocity[i] += z_shift*vel_difference;
 		}
-	} else if (simu_type == extensional_flow) {
+	} else {
 		/**** extensional flow ****/
 		bool pd_transport = false;
 		periodizeExtFlow(i, pd_transport);
@@ -2782,8 +2744,6 @@ void System::displacement(int i, const vec3d& dr)
 			u_inf[i] = grad_u*position[i];
 			velocity[i] +=  u_inf[i];
 		}
-	} else {
-		periodize(position[i]);
 	}
 	boxset.box(i);
 }
