@@ -34,8 +34,8 @@ class TimeActivatedAdhesion;
 }
 
 struct PairId {
-	unsigned p1;
 	unsigned p0; 
+	unsigned p1;
 	double a0;
 	double a1; 
 };

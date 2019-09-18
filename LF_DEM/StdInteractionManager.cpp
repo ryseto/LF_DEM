@@ -101,8 +101,11 @@ void StdInteractionManager::createNewInteraction(unsigned i, unsigned j, double 
 		params.repp->max_length = calcRepulsiveForceRange(p->repulsion, conf->radius[i], conf->radius[j]);
 	}
 
-	struct PairId pairid = {i, j, 
-							conf->radius[i], conf->radius[j]};
+	struct PairId pairid;
+	pairid.p0 = i;
+	pairid.p1 = j;
+	pairid.a0 = conf->radius[i];
+	pairid.a1 = conf->radius[j];
 	addInteraction(i, j, std::make_shared<StdInteraction>(pairid, pdist->getSeparation(i, j), scaled_interaction_range, 
 															std::move(params), solver.get()));
 }

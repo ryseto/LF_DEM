@@ -113,8 +113,8 @@ void System::gatherVelocitiesByRateDependencies(ParticleVelocity &rateprop_vel,
 		}
 		if (vc.second.rate_dependence == RateDependence::independent) {
 			for (unsigned int i=0; i<rateprop_vel.vel.size(); i++) {
-				rateprop_vel.vel[i] += vc.second.vel[i];
-				rateprop_vel.ang_vel[i] += vc.second.ang_vel[i];
+				rateindep_vel.vel[i] += vc.second.vel[i];
+				rateindep_vel.ang_vel[i] += vc.second.ang_vel[i];
 			}
 		}
 	}
