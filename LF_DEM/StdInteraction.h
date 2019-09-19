@@ -57,7 +57,7 @@ private:
 	void switchOnContact();
 	void switchOffContact();
 	void updateContactState();
-
+	void updateRepulsionState();
 	void updateLubricationState();
 
 	//===== forces/stresses  ========================== //

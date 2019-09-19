@@ -102,7 +102,7 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(lub.regularization_length, 1e-3),
 		PARAM_INIT(sd_coeff, 1),
 		PARAM_INIT(repulsion.screening_length, 0.05),
-		PARAM_INIT(repulsion.max_length, -1),
+		PARAM_INIT(repulsion.max_gap, -1),
 		PARAM_INIT(repulsion.smoothing, 5e-3),
 		PARAM_INIT(vdw.coefficient, -1),
 		PARAM_INIT(vdw.singularity_cutoff, 0.1),

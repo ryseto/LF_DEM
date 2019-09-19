@@ -32,7 +32,8 @@ solver(vel_solver)
 	}
 
 	if (p.repp) {
-		repulsion = std::unique_ptr<RepulsiveForce>(new RepulsiveForce (this, *(p.repp)));
+		p.repp->max_gap = calcRepulsiveForceMaxGap(*(p.repp));
+		updateRepulsionState();
 	}
 	
 	// if (sys->delayed_adhesion) {
@@ -52,13 +53,17 @@ void StdInteraction::switchOnContact()
 {
 	auto dash_coeffs = calcContactDashpotResistanceCoeffs();
 	contact = std::unique_ptr<Contact>(new Contact (this, *(p.contp), dash_coeffs.first, dash_coeffs.second));
-	solver->declareResistance(p0, p1);
+	if (!lubrication) {
+		solver->declareResistance(p0, p1);
+	}
 }
 
 void StdInteraction::switchOffContact()
 {
 	contact.reset(nullptr);
-	solver->eraseResistance(p0, p1);
+	if (!lubrication) {
+		solver->eraseResistance(p0, p1);
+	}
 }
 
 void StdInteraction::switchOnDelayedAdhesion()
@@ -155,8 +160,8 @@ void StdInteraction::updateState(const struct PairVelocity &vel,
 		updateLubricationState();
 	}
 
-	if (p.repp && repulsion) {
-		repulsion->calcForce();
+	if (p.repp) {
+		updateRepulsionState();
 	}
 	// if (delayed_adhesion) {
 	// 	delayed_adhesion->update(sys->get_time(), reduced_gap, nvec);
@@ -169,7 +174,9 @@ void StdInteraction::updateLubricationState()
 		// check if it is still alive
 		if (reduced_gap > p.lubp->max_gap || contact) {
 			lubrication.reset(nullptr);
-			solver->eraseResistance(p0, p1);
+			if (!contact->dashpot) {
+				solver->eraseResistance(p0, p1);
+			}
 		} else {
 			lubrication->updateResistanceCoeff();
 		}
@@ -209,6 +216,23 @@ void StdInteraction::updateContactState()
 			// now contact
 			switchOnContact();
 		}
+	}
+}
+
+void StdInteraction::updateRepulsionState()
+{
+	if (repulsion) {
+		// check if it is still alive
+		if (r > p.repp->max_gap) {
+			repulsion.reset(nullptr);
+		}
+	} else {
+		if (r <= p.repp->max_gap) {
+			repulsion = std::unique_ptr<RepulsiveForce>(new RepulsiveForce (this, *(p.repp)));
+		}
+	}
+	if (repulsion) {
+		repulsion->calcForce();
 	}
 }
 

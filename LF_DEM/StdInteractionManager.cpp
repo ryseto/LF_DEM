@@ -98,7 +98,7 @@ void StdInteractionManager::createNewInteraction(unsigned i, unsigned j, double 
 	}
 	if (has_repulsion(p->repulsion)) {
 		params.add(p->repulsion);
-		params.repp->max_length = calcRepulsiveForceRange(p->repulsion, conf->radius[i], conf->radius[j]);
+		params.repp->max_gap = calcRepulsiveForceRange(p->repulsion, conf->radius[i], conf->radius[j]);
 	}
 
 	struct PairId pairid;
