@@ -401,7 +401,9 @@ void StdInteractionManager::setRepulsiveForceToParticle(std::vector<vec3d> &forc
 		t.reset();
 	}
 	for (const auto &inter: interactions) {
-		inter->repulsion->addUpForce(force);
+		if (inter->repulsion) {
+			inter->repulsion->addUpForce(force);
+		}
 	}
 }
 
@@ -416,8 +418,10 @@ void StdInteractionManager::setTActAdhesionForceToParticle(std::vector<vec3d> &f
 	}
 	unsigned int i, j;
 	for (const auto &inter: interactions) {
-		std::tie(i, j) = inter->get_par_num();
-		inter->delayed_adhesion->addUpForce(force[i], force[j]);
+		if (inter->delayed_adhesion) {
+			std::tie(i, j) = inter->get_par_num();
+			inter->delayed_adhesion->addUpForce(force[i], force[j]);
+		}
 	}
 }
 
