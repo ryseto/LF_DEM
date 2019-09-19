@@ -53,14 +53,13 @@ def particles_yaparray(pos, rad, angles=None, particle_colors=None):
         for each particle defined in (pos, rad).
         pos and rad must contain positions and radii of particles.
     """
-
     if pos.shape[-1]==3:
         npos = np.asarray(pos)
     else:
         npos = np.column_stack((np.zeros(len(pos)), pos))[:, [1, 0, 2]]
-    part_commands = (pyp.cmd('c', npos), pyp.cmd('r', rad))
+    part_commands = (pyp.cmd('r', rad), pyp.cmd('c', npos))
     if particle_colors is not None:
-        part_commands += (particle_colors,)
+        part_commands = (particle_colors,) + part_commands
 
     yap_out = pyp.interleave(part_commands)
 
@@ -220,7 +219,7 @@ def snaps2yap(pos_fname,
     if dim_f is not None:
         frame_dim = dim_f.__next__()
         strain_int = du.matching_uniq(frame_dim[0], ["cu".encode('utf8'), "strain".encode('utf8')])
-        color_palette = np.random.random((4, 3))
+        color_palette = 0.5*(1+np.random.random((4, 3)))
         dimer_nb = int(int(par_f.meta_data()['np'])/2)
         dimer_colors = color_palette[np.random.randint(0, color_palette.shape[0], size=dimer_nb)]
         particle_colors = pyp.color_switch(np.repeat(dimer_colors, 2, axis=0))
