@@ -174,7 +174,7 @@ void StdInteraction::updateLubricationState()
 		// check if it is still alive
 		if (reduced_gap > p.lubp->max_gap || contact) {
 			lubrication.reset(nullptr);
-			if (!contact->dashpot) {
+			if (!(contact && contact->dashpot)) {
 				solver->eraseResistance(p0, p1);
 			}
 		} else {
