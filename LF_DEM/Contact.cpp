@@ -59,10 +59,9 @@ friction_model(p.friction_model)
 	disp_rolling.reset();
 	prev_disp_tan.reset();
 	prev_disp_rolling.reset();
-	calcContactSpringForce();
-
 	adhesion = p.adhesion;
 
+	calcContactSpringForce();
 }
 
 void Contact::setSpringConstants(const ContactParams &p)
