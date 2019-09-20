@@ -10,6 +10,7 @@
 #include "System.h"
 #include "LeesEdwards.h"
 #include "CheckFile.h"
+#include "Dimer_io.h"
 
 inline void removeBlank(std::string& str)
 {
@@ -300,6 +301,40 @@ void writeBinaryBaseConfiguration(std::ofstream &conf_export, const struct base_
 	Interactions::Contact_ios::writeStatesBStream(conf_export, conf.contact_states);
 }
 
+std::pair<struct base_shear_configuration, std::vector<Interactions::Dimer::DimerState>> readBinaryDimerConfiguration(const std::string &filename)
+{
+
+	checkInFile(filename);
+	auto format = getBinaryConfigurationFileFormat(filename);
+	std::set<ConfFileFormat> allowed_formats = \
+	{
+		ConfFileFormat::bin_dimers,
+	};
+	if (!allowed_formats.count(format)) {
+		throw std::runtime_error("readBinaryDimerConfiguration(): got incorrect binary format.");
+	}
+	std::ifstream input(filename.c_str(), std::ios::binary | std::ios::in);
+	struct base_shear_configuration c;
+
+	int _switch;
+	typedef std::underlying_type<ConfFileFormat>::type format_type;
+	format_type fmt;
+	input.read((char*)&_switch, sizeof(int));
+	input.read((char*)&fmt, sizeof(format_type));
+
+	auto base = readBinaryBaseConfiguration(input);
+	fillBaseConfiguration<struct base_shear_configuration>(c, base);
+	auto dimers = Interactions::Dimer::io::readStatesBStream(input);
+
+	c.lees_edwards_disp.reset();
+	input.read((char*)&c.lees_edwards_disp.x, sizeof(double));
+	input.read((char*)&c.lees_edwards_disp.y, sizeof(double));
+
+	return std::make_pair(c, dimers);
+}
+
+
+
 std::vector<vec3d> readBinaryFixedVelocities(std::ifstream &input)
 {
 	std::vector<vec3d> fixed_velocities;
@@ -451,6 +486,7 @@ void outputBinaryConfiguration(const System &sys,
 		ConfFileFormat::bin_delayed_adhesion,
 		ConfFileFormat::bin_format_fixed_vel_shear,
 		ConfFileFormat::bin_format_base_shear,
+		ConfFileFormat::bin_dimers
 	};
 	if (!allowed_formats.count(format)) {
 		throw std::runtime_error("outputBinaryConfiguration(): got incorrect binary format.");
@@ -465,11 +501,11 @@ void outputBinaryConfiguration(const System &sys,
 		if (sys.res_solver->velo_assignor) {
 			writeBinaryFixedVelocities(conf_export, sys.res_solver->velo_assignor->getFixedVel().vel);
 		}
-	}
-	
-	if (format == ConfFileFormat::bin_delayed_adhesion) {
+	} else if (format == ConfFileFormat::bin_delayed_adhesion) {
 		Interactions::TActAdhesion::writeStatesBStream(conf_export,
 										 			   *(sys.interaction));
+	} else if (format == ConfFileFormat::bin_dimers) {
+		Interactions::Dimer::io::writeStatesBStream(conf_export, *(sys.dimer_manager));
 	}
 	auto shear_disp = sys.lees->getShearDisp();
 	conf_export.write((char*)&(shear_disp.x), sizeof(double));

@@ -1,5 +1,8 @@
-#include "Dimer.h"
+#include "DimerState.h"
+#include "DimerManager.h"
+#include "Dimer_io.h"
 #include "CheckFile.h"
+#include "vec3d.h"
 
 namespace Interactions {
 
@@ -60,20 +63,20 @@ std::vector <struct DimerState> readStatesBStream(std::istream &input)
 }
 
 
-void writeStatesBStream(std::ostream &conf_export, const std::vector <struct DimerState> &ds)
-{
-	unsigned ndimer = ds.size();
+void writeStatesBStream(std::ostream &conf_export, const DimerManager &dm) {
+	unsigned ndimer = dm.size();
 	conf_export.write((char*)&ndimer, sizeof(unsigned int));
-	for (unsigned i=0; i<ds.size(); i++) {
-		conf_export.write((char*)&(ds[i].p0), sizeof(unsigned int));
-		conf_export.write((char*)&(ds[i].p1), sizeof(unsigned int));
-		conf_export.write((char*)&(ds[i].sliding_st.relaxed_length), sizeof(double));
-		conf_export.write((char*)&(ds[i].sliding_st.stretch.x), sizeof(double));
-		conf_export.write((char*)&(ds[i].sliding_st.stretch.y), sizeof(double));
-		conf_export.write((char*)&(ds[i].sliding_st.stretch.z), sizeof(double));
-		conf_export.write((char*)&(ds[i].rotation_st.stretch.x), sizeof(double));
-		conf_export.write((char*)&(ds[i].rotation_st.stretch.y), sizeof(double));
-		conf_export.write((char*)&(ds[i].rotation_st.stretch.z), sizeof(double));
+	for (const auto &dimer: dm) {
+		auto ds = dimer->getState();
+		conf_export.write((char*)&(ds.p0), sizeof(unsigned int));
+		conf_export.write((char*)&(ds.p1), sizeof(unsigned int));
+		conf_export.write((char*)&(ds.sliding_st.relaxed_length), sizeof(double));
+		conf_export.write((char*)&(ds.sliding_st.stretch.x), sizeof(double));
+		conf_export.write((char*)&(ds.sliding_st.stretch.y), sizeof(double));
+		conf_export.write((char*)&(ds.sliding_st.stretch.z), sizeof(double));
+		conf_export.write((char*)&(ds.rotation_st.stretch.x), sizeof(double));
+		conf_export.write((char*)&(ds.rotation_st.stretch.y), sizeof(double));
+		conf_export.write((char*)&(ds.rotation_st.stretch.z), sizeof(double));
 	}
 }
 

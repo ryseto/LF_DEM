@@ -1,6 +1,8 @@
 #ifndef __LF_DEM__DimerState__
 #define __LF_DEM__DimerState__
 
+#include "vec3d.h"
+
 namespace Interactions {
 
 namespace Dimer {

@@ -601,6 +601,10 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 	if (Interactions::has_delayed_adhesion(sys.p.TA_adhesion)) {
 		binary_conf_format = ConfFileFormat::bin_delayed_adhesion;
 	}
+	if (sys.dimer_manager) {
+		binary_conf_format = ConfFileFormat::bin_dimers;
+	}
+
 	outputBinaryConfiguration(sys, conf_filename, binary_conf_format);
 }
 

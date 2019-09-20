@@ -18,13 +18,6 @@ namespace Dimer {
 class Dimer;
 class DimerManager;
 
-namespace io 
-{
-std::vector <struct DimerState> readStatesBStream(std::istream &input);
-std::vector <struct UnloadedDimerState> readTxtDimer(const std::string& filename);
-void writeStatesBStream(std::ostream &conf_export, const std::vector <struct DimerState> &ds);
-}
-
 class Spring {
 public:
 	Spring(SpringState state, double stiffness);

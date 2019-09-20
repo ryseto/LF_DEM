@@ -13,7 +13,7 @@ void output(const StdInteractionManager &manager, ParticleVelocity *vel, const s
 
 namespace Dimer {
 class DimerManager;
-void output(const Dimer::DimerManager &manager, ParticleVelocity *vel, const struct Parameters::ParameterSet &p, OutputData &outdata_int);
+void output(const DimerManager &manager, ParticleVelocity *vel, const struct Parameters::ParameterSet &p, OutputData &outdata_int);
 }
 
 }

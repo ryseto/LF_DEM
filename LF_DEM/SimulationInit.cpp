@@ -12,6 +12,7 @@
 #include <stdexcept>
 #include "Configuration.h"
 #include "ParameterSetFactory.h"
+#include "Dimer_io.h"
 
 using namespace std;
 
@@ -182,6 +183,11 @@ void Simulation::setConfigToSystem(bool binary_conf, const std::string &filename
 					sys.setupConfiguration(conf, control_var);
 					break;
 				}
+			case ConfFileFormat::bin_dimers:
+				{
+					setConfigToSystemDimers(binary_conf, filename, "");
+					break;
+				}
 			default:
 				throw std::runtime_error("Unable to read config binary format "+to_string(static_cast<int>(format)));
 		}
@@ -225,30 +231,15 @@ void Simulation::setConfigToSystemDimers(bool binary_conf, const std::string &fi
 	if (binary_conf) {
 		auto format = getBinaryConfigurationFileFormat(filename);
 		switch(format) {
-			case ConfFileFormat::bin_format_base_shear:
-			case ConfFileFormat::bin_format_base_new:
+			case ConfFileFormat::bin_dimers:
 				{
-					auto conf = readBinaryBaseShearConfiguration(filename);
-					sys.setupConfiguration(conf, control_var);
-					sys.addDimers(Interactions::Dimer::io::readTxtDimer(dimer_filename), conf.contact_states);
-					break;
-				}
-			case ConfFileFormat::bin_format_fixed_vel_shear:
-				{
-					auto conf = readBinaryFixedVeloConfiguration(filename);
-					sys.setupConfiguration(conf, control_var);
-					sys.addDimers(Interactions::Dimer::io::readTxtDimer(dimer_filename), conf.contact_states);
-					break;
-				}
-			case ConfFileFormat::bin_delayed_adhesion:
-				{
-					auto conf = readBinaryDelayedAdhesionConfiguration(filename);
-					sys.setupConfiguration(conf, control_var);
-					sys.addDimers(Interactions::Dimer::io::readTxtDimer(dimer_filename), conf.base.contact_states);
+					auto conf = readBinaryDimerConfiguration(filename);
+					sys.setupConfiguration(conf.first, control_var);
+					sys.addDimers(conf.second, conf.first.contact_states);
 					break;
 				}
 			default:
-				throw std::runtime_error("Unable to read config binary format "+to_string(static_cast<int>(format)));
+				throw std::runtime_error("Unable to read config binary format "+to_string(static_cast<int>(format))+" with dimers.");
 		}
 	} else {
 		auto format = getTxtConfigurationFileFormat(filename);
