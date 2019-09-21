@@ -15,7 +15,6 @@ sedimentation(false),
 channel_flow(false)
 {
 	psolver = new Eigen::SimplicialLDLT <SpMat>;
-	pressure_grad_x = 0;
 }
 
 SolventFlow::~SolventFlow()
@@ -46,6 +45,7 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 	} else if (simulation_type == "channel flow") {
 		channel_flow = true;
 		pressure_grad_x = sys->pressure_drop;
+		sys->body_force = false;
 		std::cerr << "pressure_grad_x = " << pressure_grad_x << std::endl;
 	} else if (simulation_type == "simple shear") {
 		simple_shear = true;
@@ -63,9 +63,7 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 		std::cerr << "sedimentation simulation" << std::endl;
 		sys->body_force = true;
 	}
-	if (channel_flow) {
-		sys->body_force = false;
-	}
+
 	nx = (int)(sys->get_lx()/sys->p.sflow_dx);
 	dx = sys->get_lx()/nx;
 	std::cerr << sys->p.sflow_dx << " --> " << dx << std::endl;
@@ -331,7 +329,7 @@ void SolventFlow::particleVelocityDiffToMesh()
 		phi_uz2[k] = phi_uz[k]/(1-phi_uz[k]);
 	}
 	/**** Doctor codes ****/
-	// doctor_phi();
+	//doctor_phi();
 }
 
 void SolventFlow::doctor_phi()
@@ -351,11 +349,7 @@ void SolventFlow::pressureController()
 	u_ave = calcAverageU(); // fluid unit
 	average_pressure_x.update(pressure_grad_x, sys->get_time());
 	if (channel_flow) {
-		if (u_ave.x < sys->p.sflow_target_flux) {
-			pressure_grad_x += sys->p.sflow_pcontrol_increment;
-		} else {
-			pressure_grad_x -= sys->p.sflow_pcontrol_increment;
-		}
+		exit(1);
 	} else if (sedimentation) {
 		double diff_x = u_ave.x-target_flux;
 		pressure_grad_x += -diff_x*sys->p.sflow_pcontrol_increment*sys->dt;
@@ -363,7 +357,7 @@ void SolventFlow::pressureController()
 	}
 }
 
-double SolventFlow::update()
+void SolventFlow::update()
 {
 	//static std::ofstream fout_tmp("debug.dat");
 	particleVelocityDiffToMesh();
@@ -377,19 +371,7 @@ double SolventFlow::update()
 		u_z[k] = u_sol_z[k] + Urel_z[k]*phi_uz2[k];// particle unit
 	}
 	calcVelocityGradients();
-	
-	double u_change_max = 0;
-	for (int k=0; k<n; k++) {
-		double dux = u_sol_x[k]-u_sol_x_old[k];
-		double duz = u_sol_z[k]-u_sol_z_old[k];
-		double u_change = dux*dux + duz*duz;
-		if (u_change_max < u_change) {
-			u_change_max = u_change;
-		}
-		u_sol_x_old[k] = u_sol_x[k];
-		u_sol_z_old[k] = u_sol_z[k];
-	}
-	return sqrt(u_change_max);
+	return;
 }
 
 double SolventFlow::porousResistance(double phi)
@@ -441,10 +423,12 @@ void SolventFlow::predictorStep()
 				double ux_duzdx = 0.25*(u_sol_x[k]+u_sol_x[ir]+u_sol_x[jd]+u_sol_x[ip1+jm1*nx])*(u_sol_z[ir]-u_sol_z[il])/(2*dx);
 				double fx = dd_ux + res_coeff_ux*Urel_x[k];
 				double fz = dd_uz + res_coeff_uz*Urel_z[k];
+				//std::cerr << Urel_x[k] << ' ' << Urel_z[k] << std::endl;
 				u_sol_ast_x[k] = u_sol_x[k] + sys->dt*(fx/re_num - (ux_duxdx + uz_duxdz));
 				u_sol_ast_z[k] = u_sol_z[k] + sys->dt*(fz/re_num - (uz_duzdz + ux_duzdx));
-				//u_sol_ast_x[k] = u_sol_x[k] + sys->dt*(fx/re_num);
-				//u_sol_ast_z[k] = u_sol_z[k] + sys->dt*(fz/re_num);
+//				u_sol_ast_x[k] = u_sol_x[k] + sys->dt*(fx/re_num);
+//				u_sol_ast_z[k] = u_sol_z[k] + sys->dt*(fz/re_num);
+
 				// - sys->p.sf_zfriction*u_sol_ave.z);
 				/* sf_zfriction*u_sol_z[k] term is added
 				 * to stabilize view center along z direction.

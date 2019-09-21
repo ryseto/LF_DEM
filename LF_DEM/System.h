@@ -386,6 +386,7 @@ private:
 	void updateInteractions();
 	void calculateForces(); //
 	int periodize(vec3d& pos);
+	void periodizeZeroShear(vec3d& pos);
 	void periodizeExtFlow(const int &i, bool &pd_transport);
 	vec3d periodized(const vec3d& pos_diff);
 	int periodizeDiff(vec3d& pos_diff);

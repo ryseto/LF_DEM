@@ -375,7 +375,6 @@ vec3d ContactDashpot::getForceOnP0(const vec3d &vel_p0,
 		} else {
 			vj += sys->get_vel_difference_extension(interaction->pd_shift);
 		}
-
 		/* XAU_i */
 		vec3d force_p0 = -dot(XA[0]*vi+XA[1]*vj, nvec)*(*nvec);
 		if (tangential_coeff > 0) {

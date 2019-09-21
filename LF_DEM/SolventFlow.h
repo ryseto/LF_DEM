@@ -113,7 +113,7 @@ public:
 	Averager<double> average_pressure_x;
 	void init(System* sys_, std::string simulation_type);
 	void particleVelocityDiffToMesh();
-	double update();
+	void update();
 	void initPoissonSolver();
 	void localFlow(const vec3d &p, vec3d &u_local, vec3d &omega_local,
 				   std::vector<double> &e_local);
