@@ -1017,6 +1017,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 			computeVelocities(calc_stress, true);
 		}
 		sflow->update();
+		sflow->pressureController();
 		adjustVelocitySolventFlow();
 	}
 	if (wall_rheology && calc_stress) { // @@@@ calc_stress remove????
@@ -2572,6 +2573,7 @@ void System::computeVelocities(bool divided_velocities, bool mat_rebuild)
 	 simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
 	 */
 	stokes_solver.resetRHS();
+
 	if (divided_velocities || control == Parameters::ControlVariable::stress) {
 		if (control == Parameters::ControlVariable::stress) {
 			set_shear_rate(1);

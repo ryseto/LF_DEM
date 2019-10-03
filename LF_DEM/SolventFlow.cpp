@@ -349,7 +349,7 @@ void SolventFlow::pressureController()
 	u_ave = calcAverageU(); // fluid unit
 	average_pressure_x.update(pressure_grad_x, sys->get_time());
 	if (channel_flow) {
-		exit(1);
+		//
 	} else if (sedimentation) {
 		double diff_x = u_ave.x-target_flux;
 		pressure_grad_x += -diff_x*sys->p.sflow_pcontrol_increment*sys->dt;
