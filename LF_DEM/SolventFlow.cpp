@@ -812,8 +812,7 @@ vec3d SolventFlow::calcAverageU()
 		int k = i + nx*j;
 		u_x_total += u_x[k];//  + phi_ux[k]*Urel_x[k];
 	}
-	
-	/*
+
 	i = 0;
 	double u_x_total0 = 0;
 	for (int j=0; j<nz; j++) {
@@ -822,11 +821,10 @@ vec3d SolventFlow::calcAverageU()
 		//u_x_total0 += u_x[k] + phi_ux[k]*Urel_x[k];
 	}
 	double err =  (u_x_total - u_x_total0)/u_x_total;
-	//	std::cerr << u_x_total << ' ' << u_x_total0 << std::endl;
+	//std::cerr << u_x_total << ' ' << u_x_total0 << std::endl;
 	if (abs(err) > 0.001) {
 		std::cerr << "err = " << err  << std::endl;
 	}
-	*/
 	
 	int j = std::lround(0.5*nz);
 	double u_z_total = 0;
@@ -988,8 +986,12 @@ void SolventFlow::outputYaplot(std::ofstream &fout_flow)
 			for (int i=0; i<nx; i++){
 				vec3d po = pos[i + nx*j] - o_shift;
 				int k = i+j*nx;
-				double vx = vfactor*(u_sol_x[k] +u_sol_x[meshNb(i+1,j)])/2;
-				double vz = vfactor*(u_sol_z[k] +u_sol_z[meshNb(i,j+1)])/2;
+				//double vx = vfactor*(u_sol_x[k] +u_sol_x[meshNb(i+1,j)])/2;
+				//double vz = vfactor*(u_sol_z[k] +u_sol_z[meshNb(i,j+1)])/2;
+				
+				double vx = vfactor*(u_x[k] +u_x[meshNb(i+1,j)])/2;
+				double vz = vfactor*(u_z[k] +u_z[meshNb(i,j+1)])/2;
+
 				fout_flow << "s ";
 				fout_flow << po.x      << ' ' << -0.02 << ' ' << po.z << ' ';
 				fout_flow << po.x + vx << ' ' << -0.02 << ' ' << po.z + vz << std::endl;
