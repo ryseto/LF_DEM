@@ -2287,26 +2287,28 @@ void System::setImposedFlow(Sym2Tensor EhatInfty, vec3d OhatInfty)
 
 void System::setShearDirection(double theta_shear) // will probably be deprecated soon
 {
-	p.theta_shear = theta_shear;
-	double costheta_shear = cos(theta_shear);
-	double sintheta_shear = sin(theta_shear);
-	if (abs(sintheta_shear) < 1e-15) {
-		sintheta_shear = 0;
-		if (costheta_shear > 0) {
-			costheta_shear = 1;
+	if (simu_type == simple_shear) {
+		p.theta_shear = theta_shear;
+		double costheta_shear = cos(theta_shear);
+		double sintheta_shear = sin(theta_shear);
+		if (abs(sintheta_shear) < 1e-15) {
+			sintheta_shear = 0;
+			if (costheta_shear > 0) {
+				costheta_shear = 1;
 		} else {
 			costheta_shear = -1;
 		}
-	} else if (abs(costheta_shear) < 1e-15) {
-		costheta_shear = 0;
-		if (sintheta_shear > 0) {
-			sintheta_shear = 1;
-		} else {
-			sintheta_shear = -1;
+		} else if (abs(costheta_shear) < 1e-15) {
+			costheta_shear = 0;
+			if (sintheta_shear > 0) {
+				sintheta_shear = 1;
+			} else {
+				sintheta_shear = -1;
+			}
 		}
+		setImposedFlow({0, 0, 0.5*costheta_shear, 0.5*sintheta_shear, 0, 0},
+					   {-0.5*sintheta_shear, 0.5*costheta_shear, 0});
 	}
-	setImposedFlow({0, 0, 0.5*costheta_shear, 0.5*sintheta_shear, 0, 0},
-				   {-0.5*sintheta_shear, 0.5*costheta_shear, 0});
 }
 
 void System::computeShearRate()
