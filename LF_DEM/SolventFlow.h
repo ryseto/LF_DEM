@@ -53,6 +53,8 @@ private:
 	double target_flux;
 	double average_area_fraction;
 	double system_volume;
+	double pressure_difference_x;
+
 	bool sedimentation;
 	bool channel_flow;
 	bool simple_shear; // not yet implemented
@@ -67,8 +69,6 @@ private:
 
 	std::vector<double> u_sol_x;
 	std::vector<double> u_sol_z;
-	std::vector<double> u_sol_x_old;
-	std::vector<double> u_sol_z_old;
 	std::vector<double> u_sol_ast_x;
 	std::vector<double> u_sol_ast_z;
 	std::vector<double> u_particle_x;
