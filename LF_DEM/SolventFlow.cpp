@@ -101,24 +101,24 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 	sq_smooth_length = smooth_length*smooth_length;
 	pressure.resize(n, 0);
 	Urel_x.resize(n, 0);
-	u_sol_x.resize(n, 0);
-	u_x.resize(n, 0);
-	u_sol_ast_x.resize(n, 0);
-	div_u_sol_ast.resize(n, 0);
-	gr_phi_Ud_phi_div_Ud.resize(n, 0);
-	phi_ux.resize(n,0);
-	phi_ux2.resize(n,0);
-	pos.resize(n_adpt);
 	Urel_z.resize(n_adpt, 0);
+	u_x.resize(n, 0);
 	u_z.resize(n_adpt, 0);
+	u_sol_x.resize(n, 0);
 	u_sol_z.resize(n_adpt, 0);
+	u_sol_ast_x.resize(n, 0);
 	u_sol_ast_z.resize(n_adpt, 0);
+	div_u_sol_ast.resize(n, 0);
+	phi_ux.resize(n,0);
 	phi_uz.resize(n_adpt, 0);
+	phi_ux2.resize(n,0);
 	phi_uz2.resize(n_adpt, 0);
+	pos.resize(n_adpt);
 	omega.resize(n_adpt, 0);
 	strain_rate_xx.resize(n_adpt, 0);
 	strain_rate_xz.resize(n_adpt, 0);
 	strain_rate_zz.resize(n_adpt, 0);
+	
 	for (int j=0; j<nz_adpt; j++) {
 		for (int i=0; i<nx; i++) {
 			pos[i+nx*j].set(dx*i+dx/2, 0, dz*j+dz/2);
@@ -390,24 +390,16 @@ void SolventFlow::predictorStep()
 			int jd = i   + jm1*nx; //down
 			double res_coeff_ux = porousResistance(phi_ux[k]);
 			double res_coeff_uz = porousResistance(phi_uz[k]);
-
+			double dd_ux, dd_uz, ux_duxdx, uz_duxdz, uz_duzdz, ux_duzdx;
 			if (sys->p.sflow_boundary_conditions == 0) {
 				/* periodic boundary condtions in x and z directions.
 				 */
-				double dd_ux = (u_sol_x[ir]-2*u_sol_x[k]+u_sol_x[il])/dx2+(u_sol_x[ju]-2*u_sol_x[k]+u_sol_x[jd])/dz2;
-				double dd_uz = (u_sol_z[ir]-2*u_sol_z[k]+u_sol_z[il])/dx2+(u_sol_z[ju]-2*u_sol_z[k]+u_sol_z[jd])/dz2;
-				double ux_duxdx = u_sol_x[k]*(u_sol_x[ir]-u_sol_x[il])/(2*dx);
-				double uz_duxdz = 0.25*(u_sol_z[k]+u_sol_z[il]+u_sol_z[ju]+u_sol_z[im1+jp1*nx])*(u_sol_x[ju]-u_sol_x[jd])/(2*dz);
-				double uz_duzdz = u_sol_z[k]*(u_sol_z[ju]-u_sol_z[jd])/(2*dz);
-				double ux_duzdx = 0.25*(u_sol_x[k]+u_sol_x[ir]+u_sol_x[jd]+u_sol_x[ip1+jm1*nx])*(u_sol_z[ir]-u_sol_z[il])/(2*dx);
-				double fx = dd_ux + res_coeff_ux*Urel_x[k];
-				double fz = dd_uz + res_coeff_uz*Urel_z[k];
-				//std::cerr << Urel_x[k] << ' ' << Urel_z[k] << std::endl;
-				u_sol_ast_x[k] = u_sol_x[k] + sys->dt*(fx/re_num - (ux_duxdx + uz_duxdz));
-				u_sol_ast_z[k] = u_sol_z[k] + sys->dt*(fz/re_num - (uz_duzdz + ux_duzdx));
-//				u_sol_ast_x[k] = u_sol_x[k] + sys->dt*(fx/re_num);
-//				u_sol_ast_z[k] = u_sol_z[k] + sys->dt*(fz/re_num);
-
+				dd_ux = (u_sol_x[ir]-2*u_sol_x[k]+u_sol_x[il])/dx2+(u_sol_x[ju]-2*u_sol_x[k]+u_sol_x[jd])/dz2;
+				dd_uz = (u_sol_z[ir]-2*u_sol_z[k]+u_sol_z[il])/dx2+(u_sol_z[ju]-2*u_sol_z[k]+u_sol_z[jd])/dz2;
+				ux_duxdx = u_sol_x[k]*(u_sol_x[ir]-u_sol_x[il])/(2*dx);
+				uz_duxdz = 0.25*(u_sol_z[k]+u_sol_z[il]+u_sol_z[ju]+u_sol_z[im1+jp1*nx])*(u_sol_x[ju]-u_sol_x[jd])/(2*dz);
+				uz_duzdz = u_sol_z[k]*(u_sol_z[ju]-u_sol_z[jd])/(2*dz);
+				ux_duzdx = 0.25*(u_sol_x[k]+u_sol_x[ir]+u_sol_x[jd]+u_sol_x[ip1+jm1*nx])*(u_sol_z[ir]-u_sol_z[il])/(2*dx);
 				// - sys->p.sf_zfriction*u_sol_ave.z);
 				/* sf_zfriction*u_sol_z[k] term is added
 				 * to stabilize view center along z direction.
@@ -420,68 +412,47 @@ void SolventFlow::predictorStep()
 				/* periodic boundary condtions in x directions.
 				 * Non-slip boundy conditions at z = 0 and z=Lz.
 				 */
-				double dd_ux, dd_uz, ux_duxdx, uz_duxdz, uz_duzdz, ux_duzdx, fx, fz;
+				double u_sol_x_jd;
+				double u_sol_z_jd;
+				double u_sol_x_ju;
+				double u_sol_z_ju;
+				double u_sol_z_ilju;
+				double u_sol_x_irjd;
 				if (j == 0) {
-					// bottom
-					// u_sol_x[jd] = ux_bot_m1 = 2*ux_bot - u_sol_x[k]
-					// u_sol_z[ju] = 0
-					double u_sol_x_jd = 2*ux_bot - u_sol_x[k]; // (ux(i,-1)+ux(i,0))/2 = ux_bot
-					//---- dd_ux = (u_sol_x[ir]-2*u_sol_x[k]+u_sol_x[il])/dx2+(u_sol_x[ju]-2*u_sol_x[k]+u_sol_x[jd])/dz2;
-					dd_ux = (u_sol_x[ir]-2*u_sol_x[k]+u_sol_x[il])/dx2+(u_sol_x[ju]-2*u_sol_x[k]+u_sol_x_jd )/dz2;
-					//---- dd_uz = (u_sol_z[ir]-2*u_sol_z[k]+u_sol_z[il])/dx2+(u_sol_z[ju]-2*u_sol_z[k]+u_sol_z[jd])/dz2;
-					dd_uz =                                                   (u_sol_z[ju]                         )/dz2;
-					//ux_duxdx=u_sol_x[k]*(u_sol_x[ir]-u_sol_x[il])/(2*dx);
-					ux_duxdx = u_sol_x[k]*(u_sol_x[ir]-u_sol_x[il])/(2*dx);
-					//uz_duxdz = 0.25*(u_sol_z[k]+u_sol_z[il]+u_sol_z[ju]+u_sol_z[im1+jp1*nx])*(u_sol_x[ju]-u_sol_x[jd])/(2*dz);
-					uz_duxdz   = 0.25*(                       u_sol_z[ju]+u_sol_z[im1+jp1*nx])*(u_sol_x[ju]-u_sol_x_jd )/(2*dz);
-					//uz_duzdz = u_sol_z[k]*(u_sol_z[ju]-u_sol_z[jd])/(2*dz);
-					uz_duzdz   = 0;
-					//ux_duzdx = 0.25*(u_sol_x[k]+u_sol_x[ir]+u_sol_x[jd]+u_sol_x[ip1+jm1*nx])*(u_sol_z[ir]-u_sol_z[il])/(2*dx);
-					ux_duzdx   = 0;
-				} else if (j == nz-1) {
-					double u_sol_x_ju = 2*ux_top - u_sol_x[jd];
-					//dd_ux = (u_sol_x[ir]-2*u_sol_x[k]+u_sol_x[il])/dx2+(u_sol_x[ju]-2*u_sol_x[k]+u_sol_x[jd])/dz2;
-					dd_ux   = (u_sol_x[ir]-2*u_sol_x[k]+u_sol_x[il])/dx2+(u_sol_x_ju -2*u_sol_x[k]+u_sol_x[jd])/dz2;
-					//---  dd_uz = (u_sol_z[ir]-2*u_sol_z[k]+u_sol_z[il])/dx2+(u_sol_z[ju]-2*u_sol_z[k]+u_sol_z[jd])/dz2;
-					dd_uz = (u_sol_z[ir]-2*u_sol_z[k]+u_sol_z[il])/dx2+(           -2*u_sol_z[k]+u_sol_z[jd])/dz2;
-					//---  ux_duxdx = u_sol_x[k]*(u_sol_x[ir]-u_sol_x[il])/(2*dx);
-					ux_duxdx = u_sol_x[k]*(u_sol_x[ir]-u_sol_x[il])/(2*dx);
-					//---  uz_duxdz = 0.25*(u_sol_z[k]+u_sol_z[il]+u_sol_z[ju]+u_sol_z[im1+jp1*nx])*(u_sol_x[ju]-u_sol_x[jd])/(2*dz);
-					uz_duxdz = 0.25*(u_sol_z[k]+u_sol_z[il]                                )*(u_sol_x_ju -u_sol_x[jd])/(2*dz);
-					//---  uz_duzdz = u_sol_z[k]*(u_sol_z[ju]-u_sol_z[jd])/(2*dz);
-					uz_duzdz = u_sol_z[k]*(          0-u_sol_z[jd])/(2*dz);
-					//---  ux_duzdx = 0.25*(u_sol_x[k]+u_sol_x[ir]+u_sol_x[jd]+u_sol_x[ip1+jm1*nx])*(u_sol_z[ir]-u_sol_z[il])/(2*dx);
-					ux_duzdx = 0.25*(u_sol_x[k]+u_sol_x[ir]+u_sol_x[jd]+u_sol_x[ip1+jm1*nx])*(u_sol_z[ir]-u_sol_z[il])/(2*dx);
-				} else if (j == nz) {
-					double u_sol_x_k  = 2*ux_top - u_sol_x[jd];
-					double u_sol_x_ir = 2*ux_top - u_sol_x[ip1+jm1*nx];
-					double u_sol_x_il = 2*ux_top - u_sol_x[im1+jm1*nx];
-					//---- dd_ux = (u_sol_x[ir]-2*u_sol_x[k]+u_sol_x[il])/dx2+(u_sol_x[ju]-2*u_sol_x[k]+u_sol_x[jd])/dz2;
-					dd_ux = (u_sol_x_ir -2*u_sol_x_k +u_sol_x_il )/dx2+(0          -2*u_sol_x_k +u_sol_x[jd])/dz2;
-					//---- dd_uz = (u_sol_z[ir]-2*u_sol_z[k]+u_sol_z[il])/dx2+(u_sol_z[ju]-2*u_sol_z[k]+u_sol_z[jd])/dz2;
-					dd_uz =    0                                      +(0           - 0         +u_sol_z[jd])/dz2;
-					//---- ux_duxdx = u_sol_x[k]*(u_sol_x[ir]-u_sol_x[il])/(2*dx);
-					ux_duxdx = u_sol_x[k]*(u_sol_x_ir -u_sol_x_il )/(2*dx);
-					//---- uz_duxdz = 0.25*(u_sol_z[k]+u_sol_z[il]+u_sol_z[ju]+u_sol_z[im1+jp1*nx])*(u_sol_x[ju]-u_sol_x[jd])/(2*dz);
-					uz_duxdz = 0;
-					// u_sol_z[ju] = 0 and u_sol_z[im1+jp1*nx] = 0
-					//---- uz_duzdz = u_sol_z[k]*(u_sol_z[ju]-u_sol_z[jd])/(2*dz);
-					uz_duzdz = 0;
-					//---- ux_duzdx = 0.25*(u_sol_x[k]+u_sol_x[ir]+u_sol_x[jd]+u_sol_x[ip1+jm1*nx])*(u_sol_z[ir]-u_sol_z[il])/(2*dx);
-					ux_duzdx = 0;
+					u_sol_x_jd = 2*ux_bot - u_sol_x[k]; // (ux(i,-1)+ux(i,0))/2 = ux_bot
+					u_sol_z_jd = 0;
+					u_sol_x_irjd = 2*ux_bot - u_sol_x[ip1];
 				} else {
-					dd_ux = (u_sol_x[ir]-2*u_sol_x[k]+u_sol_x[il])/dx2+(u_sol_x[ju]-2*u_sol_x[k]+u_sol_x[jd])/dz2;
-					dd_uz = (u_sol_z[ir]-2*u_sol_z[k]+u_sol_z[il])/dx2+(u_sol_z[ju]-2*u_sol_z[k]+u_sol_z[jd])/dz2;
-					ux_duxdx = u_sol_x[k]*(u_sol_x[ir]-u_sol_x[il])/(2*dx);
-					uz_duxdz = 0.25*(u_sol_z[k]+u_sol_z[il]+u_sol_z[ju]+u_sol_z[im1+jp1*nx])*(u_sol_x[ju]-u_sol_x[jd])/(2*dz);
-					uz_duzdz = u_sol_z[k]*(u_sol_z[ju]-u_sol_z[jd])/(2*dz);
-					ux_duzdx = 0.25*(u_sol_x[k]+u_sol_x[ir]+u_sol_x[jd]+u_sol_x[ip1+jm1*nx])*(u_sol_z[ir]-u_sol_z[il])/(2*dx);
+					u_sol_x_jd = u_sol_x[jd];
+					u_sol_z_jd = u_sol_z[jd];
+					u_sol_x_irjd = u_sol_x[ip1+jm1*nx];
 				}
-				fx = dd_ux + res_coeff_ux*Urel_x[k];
-				fz = dd_uz + res_coeff_uz*Urel_z[k];
-				u_sol_ast_x[k] = u_sol_x[k] + sys->dt*(fx/re_num - (ux_duxdx + uz_duxdz));
-				u_sol_ast_z[k] = u_sol_z[k] + sys->dt*(fz/re_num - (uz_duzdz + ux_duzdx));
+				if (j == nz-1) {
+					u_sol_x_ju = 2*ux_top - u_sol_x[jd];
+				} else {
+					u_sol_x_ju = u_sol_x[ju];
+				}
+				if (j == n) {
+					u_sol_z_ju = 0;
+					u_sol_z_ilju = 0;
+				} else {
+					u_sol_z_ju = u_sol_z[ju];
+					u_sol_z_ilju = u_sol_z[im1+jp1*nx];
+				}
+				dd_ux = (u_sol_x[ir]-2*u_sol_x[k]+u_sol_x[il])/dx2+(u_sol_x_ju-2*u_sol_x[k]+u_sol_x_jd)/dz2;
+				dd_uz = (u_sol_z[ir]-2*u_sol_z[k]+u_sol_z[il])/dx2+(u_sol_z_ju-2*u_sol_z[k]+u_sol_z_jd)/dz2;
+				ux_duxdx = u_sol_x[k]*(u_sol_x[ir]-u_sol_x[il])/(2*dx);
+				uz_duxdz = 0.25*(u_sol_z[k]+u_sol_z[il]+u_sol_z_ju+u_sol_z_ilju)*(u_sol_x_ju-u_sol_x_jd)/(2*dz);
+				uz_duzdz = u_sol_z[k]*(u_sol_z_ju-u_sol_z_jd)/(2*dz);
+				ux_duzdx = 0.25*(u_sol_x[k]+u_sol_x[ir]+u_sol_x_jd+u_sol_x_irjd)*(u_sol_z[ir]-u_sol_z[il])/(2*dx);
 			}
+			double fx = dd_ux + res_coeff_ux*Urel_x[k];
+			double fz = dd_uz + res_coeff_uz*Urel_z[k];
+			//std::cerr << Urel_x[k] << ' ' << Urel_z[k] << std::endl;
+			u_sol_ast_x[k] = u_sol_x[k] + sys->dt*(fx/re_num - (ux_duxdx + uz_duxdz));
+			u_sol_ast_z[k] = u_sol_z[k] + sys->dt*(fz/re_num - (uz_duzdz + ux_duzdx));
+			//				u_sol_ast_x[k] = u_sol_x[k] + sys->dt*(fx/re_num);
+			//				u_sol_ast_z[k] = u_sol_z[k] + sys->dt*(fz/re_num);
 		}
 	}
 //	if (sys->p.sflow_boundary_conditions == 1) {
