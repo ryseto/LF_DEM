@@ -34,8 +34,10 @@ private:
 	System *sys;
 	int nx;
 	int nz;
+	int nz_adpt;
 	int n;
-	int jmax_uz;
+	int n_adpt;
+
 	double re_num;
 	//double alpha;
 	double six_pi;
@@ -84,7 +86,8 @@ private:
 	std::vector<double> phi_ux2;
 	std::vector<double> phi_uz2;
 	std::vector<vec3d> pos;
-	std::vector <int> mesh_nb;
+	std::vector <int> mesh_nb_x;
+	std::vector <int> mesh_nb_z;
 	std::vector <double> udx_values;
 	std::vector <double> udz_values;
 	std::vector <double> phi_ux_values;
