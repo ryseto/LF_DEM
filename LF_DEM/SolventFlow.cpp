@@ -115,9 +115,9 @@ void SolventFlow::init(System* sys_, std::string simulation_type)
 	phi_uz2.resize(n_adpt, 0);
 	pos.resize(n_adpt);
 	omega.resize(n_adpt, 0);
-	strain_rate_xx.resize(n_adpt, 0);
+	strain_rate_xx.resize(n, 0);
 	strain_rate_xz.resize(n_adpt, 0);
-	strain_rate_zz.resize(n_adpt, 0);
+	strain_rate_zz.resize(n, 0);
 	
 	for (int j=0; j<nz_adpt; j++) {
 		for (int i=0; i<nx; i++) {
@@ -342,10 +342,12 @@ void SolventFlow::update()
 		u_x[k] = u_sol_x[k] + Urel_x[k]*phi_ux2[k];// particle unit
 		u_z[k] = u_sol_z[k] + Urel_z[k]*phi_uz2[k];// particle unit
 	}
-	if (sys->p.sflow_boundary_conditions == 0) {
+	if (sys->p.sflow_boundary_conditions == 1) {
 		for (int i=0; i<nx; i++) {
+			u_sol_z[i] = 0;
+			u_sol_z[i + n] = 0; // n = nx*nze
 			u_z[i] = 0;
-			u_z[i + nx*nz] = 0;
+			u_z[i + n] = 0; // n = nx*nz
 		}
 	}
 	//	std::cerr << "p = " << pressure[0] << ' ' << pos[0].x << ' ' <<pos[0].z << std::endl;
@@ -619,54 +621,35 @@ void SolventFlow::calcVelocityGradients()
 			}
 		}
 	} else {
-		for (int j=0; j<nz_adpt; j++) {
+		for (int j=0; j<nz; j++) {
 			int jp1 = j+1;
-			int jm1 = j-1;
 			for (int i=0; i<nx; i++) {
 				int k = i+nx*j;
 				int ip1 = (i == nx-1 ? 0 : i+1);
-				double d_ux_d_z, d_uz_d_x, d_ux_d_x, d_uz_d_z;
+				double d_ux_d_x = (u_x[ip1+j*nx]-u_x[k])/dx;
+				double d_uz_d_z = (u_z[i+jp1*nx]-u_z[k])/dz;
+				strain_rate_xx[k] = d_ux_d_x; // center
+				strain_rate_zz[k] = d_uz_d_z; // center
+			}
+		}
+		for (int j=0; j<nz_adpt; j++) {
+			int jm1 = j-1;
+			for (int i=0; i<nx; i++) {
+				int k = i+nx*j;
+				int im1 = (i == 0 ? nx-1 : i-1);
+				double d_ux_d_z, d_uz_d_x;
 				if (j == 0) {
-					double u_x_jd = 2*ux_bot - u_x[k]; // (ux(i,-1)+ux(i,0))/2 = ux_bot
-					// (u[j] + u[j-1])/2 = ux_bot
-					// u[j-1] = 2*ux_bot - u[j];
-					// u[j] - u[j-1] = u[j] -(2*ux_bot - u[j]) = 2*u[j] -2*ux_bot
-					//strain_rate_xx = d_ux_d_x
-					d_ux_d_x = (u_x[ip1]-u_x[k])/dx; //center
-					//strain_rate_zz[k] = (u_z[i+jp1*nx]-u_z[k])/dz; // szz - (sxx+szz)/2 = szz/2-dxx/2
-					// d_uz_d_z
-					d_uz_d_z = u_z[i+jp1*nx]/dz;
-					//double d_uz_d_x = (u_z[k]-u_z[im1+j*nx])/dx
+					d_ux_d_z = 2*(u_x[k]-ux_bot)/dz;
 					d_uz_d_x = 0;
-					//double d_ux_d_z = (u_x[k]-u_x[i+jm1*nx])/dz;
-					d_ux_d_z = 2*(u_x[k]-ux_bot)/dz; // left_bottom
-					//
-				} else if (j == nz) {
-					//				int jd = i+nx*(j-1);
-					//					double u_x_ju = 2*ux_top - u_x[jd];
-					// (u[j]+u[j-1])/2 = ux_top
-					// u[j] = 2=ux_top - u[j-1]
-					// u[j]-u[j-1] = 2ux_top - u[j-1] - u[j-1]
-					int im1 = (i == 0 ? nx-1 : i-1);
-					d_ux_d_x = 0;  //center
-					d_uz_d_z = 0;
-					d_ux_d_z = 2*(ux_top-u_x[i+jm1*nx])/dz; // left_bottom
-					d_uz_d_x = 0; // left_bottom
+				} if (j == nz) {
+					d_ux_d_z = 2*(ux_top-u_x[i+jm1*nx])/dz;
+					d_uz_d_x = 0;
 				} else {
-					int k =i+nx*j;
-					int im1 = (i == 0 ? nx-1 : i-1);
-					int ip1 = (i == nx-1 ? 0 : i+1);
-					d_ux_d_x = (u_x[ip1+j*nx]-u_x[k])/dx;
-					d_uz_d_z = (u_z[i+jp1*nx]-u_z[k])/dz;
 					d_ux_d_z = (u_x[k]-u_x[i+jm1*nx])/dz;
 					d_uz_d_x = (u_z[k]-u_z[im1+nx*j])/dx;
 				}
-
-				strain_rate_xx[k] = d_ux_d_x; // center
-				strain_rate_zz[k] = d_uz_d_z; // center
 				omega[k]          = (d_ux_d_z - d_uz_d_x)/2; // left_bottom
 				strain_rate_xz[k] = (d_ux_d_z + d_uz_d_x)/2; // left_bottom
-
 			}
 		}
 	}
@@ -687,16 +670,19 @@ void SolventFlow::localFlow(const vec3d &p,
 	int j = (int)z_dz;
 	int ip1 = (i == nx-1 ? 0 : i+1);
 	int jp1;
+	int jm1;
 	if (sys->p.sflow_boundary_conditions == 0) {
 		jp1 = (j == nz-1 ? 0 : j+1);
+		jm1 = (j == 0 ? nz-1 : j-1);
 	} else {
 		jp1 = j+1;
+		jm1 = j-1;
 	}
 	/* x_diff = (p.x - i*dx)/dx
 	 *        = p.x/dx - i
 	 *        = x_dx - i
 	 */
-	double x_diff = x_dx - i;
+	double x_diff = x_dx - i; // p.x/dx - xo/dx
 	double z_diff = z_dz - j;
 	int kk[4];
 	/********************************************************
@@ -704,30 +690,43 @@ void SolventFlow::localFlow(const vec3d &p,
 	 * (0, dy/2)
 	 ********************************************************/
 	double z_diffS;
+	double ux0, ux1, ux2, ux3;
 	if (z_diff < 0.5) {
-		int jm1 = (j == 0 ? nz-1 : j-1);
 		z_diffS = z_diff + 0.5;
-		kk[0] = i   + jm1*nx;
-		kk[1] = ip1 + jm1*nx;
 		kk[2] = i   + j*nx;
 		kk[3] = ip1 + j*nx;
+		ux2 = u_x[kk[2]];
+		ux3 = u_x[kk[3]];
+		if (jm1 != -1) {
+			kk[0] = i   + jm1*nx;
+			kk[1] = ip1 + jm1*nx;
+			ux0 = u_x[kk[0]];
+			ux1 = u_x[kk[1]];
+		} else {
+			ux0 = 2*ux_bot - ux2; // (ux(i,-1)+ux(i,0))/2 = ux_bot
+			ux1 = 2*ux_bot - ux3; // (ux(i,-1)+ux(i,0))/2 = ux_bot
+		}
 	} else {
 		z_diffS = z_diff - 0.5;
 		kk[0] = i   + j*nx;
 		kk[1] = ip1 + j*nx;
-		kk[2] = i   + jp1*nx;
-		kk[3] = ip1 + jp1*nx;
+		ux0 = u_x[kk[0]];
+		ux1 = u_x[kk[1]];
+		if (jp1 != nz) {
+			kk[2] = i   + jp1*nx;
+			kk[3] = ip1 + jp1*nx;
+			ux2 = u_x[kk[2]];
+			ux3 = u_x[kk[3]];
+		} else {
+			ux2 = 2*ux_top - ux0;
+			ux3 = 2*ux_top - ux1;
+		}
 	}
-	u_local.x = u_x[kk[0]];
-	u_local.x += (u_x[kk[1]]-u_x[kk[0]])*x_diff;
-	u_local.x += (u_x[kk[2]]-u_x[kk[0]])*z_diffS;
-	u_local.x += (u_x[kk[3]]-u_x[kk[2]]-u_x[kk[1]]+u_x[kk[0]])*x_diff*z_diffS;
-	
-//	phi_local = phi_ux[kk[0]];
-//	phi_local += (phi_ux[kk[1]]-phi_ux[kk[0]])*x_diff;
-//	phi_local += (phi_ux[kk[2]]-phi_ux[kk[0]])*z_diffS;
-//	phi_local += (phi_ux[kk[3]]-phi_ux[kk[2]]-phi_ux[kk[1]]+phi_ux[kk[0]])*x_diff*z_diffS;
-//
+	u_local.x = ux0;
+	u_local.x += (ux1-ux0)*x_diff;
+	u_local.x += (ux2-ux0)*z_diffS;
+	u_local.x += (ux3-ux2-ux1+ux0)*x_diff*z_diffS;
+
 	/********************************************************
 	 * uz interpolation
 	 * (dx/2, 0)
@@ -755,8 +754,8 @@ void SolventFlow::localFlow(const vec3d &p,
 	 * omega interpolation
 	 * (0, 0)
 	 ********************************************************/
-	kk[0] = i   + j*nx;
-	kk[1] = ip1 + j*nx; // +dx
+	kk[0] = i   + j  *nx;
+	kk[1] = ip1 + j  *nx; // +dx
 	kk[2] = i   + jp1*nx; // +dz
 	kk[3] = ip1 + jp1*nx; // +dx+dz
 	omega_local.y = omega[kk[0]];
@@ -778,25 +777,68 @@ void SolventFlow::localFlow(const vec3d &p,
 	i--; // -0.5 = +0.5 - 1
 	j--; // -0.5 = +0.5 - 1
 	if (i == -1) {i += nx;}
-	if (j == -1) {j += nz;}
 	ip1 = (i == nx-1 ? 0 : i+1);
-	jp1 = (j == nz-1 ? 0 : j+1);
-	kk[0] = i   + j*nx;
-	kk[1] = ip1 + j*nx; // +dx
-	kk[2] = i   + jp1*nx; // +dz
-	kk[3] = ip1 + jp1*nx; // +dx+dz
-	double sxx = strain_rate_xx[kk[0]];
-	sxx += (strain_rate_xx[kk[1]]-strain_rate_xx[kk[0]])*x_diff;
-	sxx += (strain_rate_xx[kk[2]]-strain_rate_xx[kk[0]])*z_diff;
-	sxx += (strain_rate_xx[kk[3]]-strain_rate_xx[kk[2]]-strain_rate_xx[kk[1]]+strain_rate_xx[kk[0]])*x_diff*z_diff;
-	double szz = strain_rate_zz[kk[0]];
-	szz += (strain_rate_zz[kk[1]]-strain_rate_zz[kk[0]])*x_diff;
-	szz += (strain_rate_zz[kk[2]]-strain_rate_zz[kk[0]])*z_diff;
-	szz += (strain_rate_zz[kk[3]]-strain_rate_zz[kk[2]]-strain_rate_zz[kk[1]]+strain_rate_zz[kk[0]])*x_diff*z_diff;
+	if (sys->p.sflow_boundary_conditions == 0) {
+		if (j == -1) {j += nz;}
+		jp1 = (j == nz-1 ? 0 : j+1);
+	} else {
+		jp1 = j+1;
+	}
+	double sxx, szz;
+	double sx0, sx1, sx2, sx3;
+	double sz0, sz1, sz2, sz3;
+	if (j == -1) {
+		//	kk[0] = i   + j*nx;
+		//	kk[1] = ip1 + j*nx; // +dx
+		kk[2] = i   + jp1*nx; // +dz
+		kk[3] = ip1 + jp1*nx; // +dx+dz
+		sx2 = strain_rate_xx[kk[2]];
+		sx3 = strain_rate_xx[kk[3]];
+		sx0 = -sx2;
+		sx1 = -sx3;
+		sz0 = 0;
+		sz1 = 0;
+		sz2 = strain_rate_zz[kk[2]];
+		sz3 = strain_rate_zz[kk[3]];
+	} else if (j == nz -1) {
+		kk[0] = i   + j*nx;
+		kk[1] = ip1 + j*nx; // +dx
+		//	kk[2] = i   + jp1*nx; // +dz
+		//	kk[3] = ip1 + jp1*nx; // +dx+dz
+		sx0 = strain_rate_xx[kk[0]];
+		sx1 = strain_rate_xx[kk[1]];
+		sx2 = -sx0;
+		sx3 = -sx1;
+		sz0 = strain_rate_zz[kk[0]];
+		sz1 = strain_rate_zz[kk[1]];
+		sz2 = 0;
+		sz3 = 0;
+		// V0=(1 -(x-x0) /dx-(y-y0)/dy +(x-x0)(y -0y)/dx/dy)*val(0)
+		// Dzz (-1) = 0;
+		// Dzz (nz) = 0;
+	} else {
+		kk[0] = i   + j*nx;
+		kk[1] = ip1 + j*nx; // +dx
+		kk[2] = i   + jp1*nx; // +dz
+		kk[3] = ip1 + jp1*nx; // +dx+dz
+		sx0 = strain_rate_xx[kk[0]];
+		sx1 = strain_rate_xx[kk[1]];
+		sx2 = strain_rate_xx[kk[2]];
+		sx3 = strain_rate_xx[kk[3]];
+		// V0=(1 -(x-x0) /dx-(y-y0)/dy +(x-x0)(y -0y)/dx/dy)*val(0)
+		// Dzz (-1) = 0;
+		// Dzz (nz) = 0;
+		sz0 = strain_rate_zz[kk[0]];
+		sz1 = strain_rate_zz[kk[1]];
+		sz2 = strain_rate_zz[kk[2]];
+		sz3 = strain_rate_zz[kk[3]];
+	}
+	sxx = sx0 + (sx1-sx0)*x_diff + (sx2-sx0)*z_diff + (sx3-sx2-sx1+sx0)*x_diff*z_diff;
+	szz = sz0 + (sz1-sz0)*x_diff + (sz2-sz0)*z_diff + (sz3-sz2-sz1+sz0)*x_diff*z_diff;
 	double s = sxx-szz;
 	//std::cerr << sxx + szz << std::endl;
-	//e_local[0] = sxx;
-	//e_local[2] = szz;
+	//e_local[0] = (sxx - szz)/2;
+	//e_local[2] = - (sxx - szz)/2;
 	e_local[0] = 0.5*s;
 	e_local[2] = -0.5*s;
 }
