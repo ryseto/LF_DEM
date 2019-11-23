@@ -170,6 +170,9 @@ void System::allocateRessources()
 		omega_local.resize(np);
 		E_local.resize(np);
 		phi_local.resize(np);
+		for (int i=0; i<np; i++) {
+			E_local[i].reset();
+		}
 		//forbid_displacement = true;
 	}
 }
@@ -1221,8 +1224,10 @@ void System::adaptTimeStep()
 	} else {
 		dt = p.disp_max/shear_rate;
 	}
-	if (dt*shear_rate > p.disp_max) { // cases where na_velocity < \dotgamma*radius
-		dt = p.disp_max/shear_rate;
+	if (shear_rheology) {
+		if (dt*shear_rate > p.disp_max) { // cases where na_velocity < \dotgamma*radius
+			dt = p.disp_max/shear_rate;
+		}
 	}
 	if (p.dt_max > 0) {
 		if (dt > p.dt_max) {
@@ -1232,6 +1237,7 @@ void System::adaptTimeStep()
 	if (p.solvent_flow) {
 		computeMaxVelocity();
 		double dt_sflow = p.disp_max/max_velocity;
+//		cerr << max_velocity << ' ' << max_na_velocity << endl;
 		if (dt_sflow < dt) {
 			dt = dt_sflow;
 		}
@@ -2684,12 +2690,13 @@ void System::adjustVelocityPeriodicBoundary()
 void System::adjustVelocitySolventFlow()
 {
 	vector<double> st_tens(3);
-	for (int i=0; i<np_mobile; i++) {
+	for (int i=0; i<np; i++) {
 		sflow->localFlow(position[i], u_local[i], omega_local[i], st_tens);
 		E_local[i].set(st_tens[0], 0, st_tens[1], 0, 0, st_tens[2]);// xx xy xz yz yy zz
 	}
+
 	for (int i=0; i<np_mobile; i++) {
-		velocity[i] = na_velocity[i] + u_local[i];
+		velocity[i]     = na_velocity[i]     + u_local[i];
 		ang_velocity[i] = na_ang_velocity[i] + omega_local[i];
 	}
 }

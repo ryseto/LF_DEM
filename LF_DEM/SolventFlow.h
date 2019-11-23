@@ -37,6 +37,7 @@ private:
 	int nz_adpt;
 	int n;
 	int n_adpt;
+	int k0;
 
 	double re_num;
 	//double alpha;
@@ -65,6 +66,7 @@ private:
 	// - the velocities at the cell faces.
 	std::vector<double> pressure;
 	std::vector<double> div_u_sol_ast;
+	std::vector<double> div_u;
 	std::vector<double> gr_phi_Ud_phi_div_Ud;
 	std::vector<double> u_x;
 	std::vector<double> u_z;
@@ -83,8 +85,8 @@ private:
 	std::vector<double> strain_rate_zz;
 	std::vector<double> phi_ux;
 	std::vector<double> phi_uz;
-	std::vector<double> phi_ux2;
-	std::vector<double> phi_uz2;
+	std::vector<double> Urel_phi_x;
+	std::vector<double> Urel_phi_z;
 	std::vector<vec3d> pos;
 	std::vector <int> mesh_nb_x;
 	std::vector <int> mesh_nb_z;
@@ -101,6 +103,7 @@ private:
 	double weightFunc(double r_sq);
 	void predictorStep();
 	void calcVelocityDivergence();
+	void calcSuspensionVelocityDivergence();
 	void solvePressure();
 	void correctorStep();
 	double porousResistance(double volume_fraction);

@@ -866,7 +866,8 @@ void Simulation::outputDataSedimentatioin()
 	outdata.entryData("frictional contact number", Dimensional::Dimension::none, 1, frictional_contact_nb_per_particle);//18
 	outdata.entryData("number of interaction", Dimensional::Dimension::none, 1, sys.get_nb_interactions()); //19
 	outdata.entryData("dt", Dimensional::Dimension::Time, 1, sys.avg_dt);//20
-
+	outdata.entryData("max NA velocity", Dimensional::Dimension::Velocity, 1, sys.max_na_velocity);
+	outdata.entryData("max velocity", Dimensional::Dimension::Velocity, 1, sys.max_velocity);
 	outdata.writeToFile();
 	
 }
