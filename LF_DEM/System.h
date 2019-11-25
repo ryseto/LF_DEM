@@ -242,7 +242,6 @@ private:
 	std::vector<vec3d> na_ang_velocity;
 	std::vector<vec3d> fixed_velocities;
 	std::vector<Sym2Tensor> total_stress_pp; // per particle
-	std::vector<std::complex<double>> phi6;
 	Sym2Tensor total_stress;
 	std::vector<int> n_contact;
 	std::ofstream fout_history;

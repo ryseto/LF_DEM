@@ -110,6 +110,7 @@ void Contact::activate()
 	} else {
 		state = 1;
 	}
+//	std::cerr << "new contact " << interaction->get_reduced_gap() << std::endl;
 	dashpot.activate();
 }
 

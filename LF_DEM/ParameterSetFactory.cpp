@@ -196,17 +196,22 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 	default_qty = {Dimensional::Dimension::Time, -1, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(contact_relaxation_time_tan, default_qty));
 	
-	default_qty = {Dimensional::Dimension::Force, 0.1, Dimensional::Unit::kn};
-	DimValDblParams.push_back(PARAM_INIT_DIMQTY(min_kn_auto_det, default_qty));
-
-	default_qty = {Dimensional::Dimension::Force, 1e3, Dimensional::Unit::kn};
-	DimValDblParams.push_back(PARAM_INIT_DIMQTY(max_kn_auto_det, default_qty));
-
-	default_qty ={Dimensional::Dimension::Force, 0.1, Dimensional::Unit::kt};
-	DimValDblParams.push_back(PARAM_INIT_DIMQTY(min_kt_auto_det, default_qty));
-
-	default_qty = {Dimensional::Dimension::Force, 1e3, Dimensional::Unit::kt};
-	DimValDblParams.push_back(PARAM_INIT_DIMQTY(max_kt_auto_det, default_qty));
+	if (false) {
+		// @@@ This needs to be rewriten.
+		// @@@ IN the Frictionolss simulation,
+		default_qty = {Dimensional::Dimension::Force, 0.1, Dimensional::Unit::kn};
+		DimValDblParams.push_back(PARAM_INIT_DIMQTY(min_kn_auto_det, default_qty));
+		
+		default_qty = {Dimensional::Dimension::Force, 1e3, Dimensional::Unit::kn};
+		DimValDblParams.push_back(PARAM_INIT_DIMQTY(max_kn_auto_det, default_qty));
+		
+		
+		default_qty ={Dimensional::Dimension::Force, 0.1, Dimensional::Unit::kt};
+		DimValDblParams.push_back(PARAM_INIT_DIMQTY(min_kt_auto_det, default_qty));
+		
+		default_qty = {Dimensional::Dimension::Force, 1e3, Dimensional::Unit::kt};
+		DimValDblParams.push_back(PARAM_INIT_DIMQTY(max_kt_auto_det, default_qty));
+	}
 
 	default_qty = {Dimensional::Dimension::Time, 0, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(TA_adhesion.activation_time, default_qty));

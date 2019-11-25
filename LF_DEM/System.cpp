@@ -162,7 +162,6 @@ void System::allocateRessources()
 	torqueResultant.resize(np);
 	declareStressComponents();
 	total_stress_pp.resize(np);
-	phi6.resize(np);
 	n_contact.resize(np);
 	if (p.solvent_flow) {
 		sflow = new SolventFlow;
@@ -194,11 +193,10 @@ void System::declareForceComponents()
 	}
 
 	/*********** Hydro force, i.e.  R_FE:E_inf *****************/
-	if (!zero_shear) {
+	if (!zero_shear || p.solvent_flow) {
 		if (p.lubrication_model == "normal") {
 			force_components["hydro"] = ForceComponent(np, RATE_PROPORTIONAL, !torque, &System::setHydroForceToParticle_squeeze);
-		}
-		if (p.lubrication_model == "tangential") {
+		} else if (p.lubrication_model == "tangential") {
 			force_components["hydro"] = ForceComponent(np, RATE_PROPORTIONAL, torque, &System::setHydroForceToParticle_squeeze_tangential);
 		}
 		/******* Contact force, dashpot part, U_inf only, i.e. R_FU^{dashpot}.U_inf ***********/
@@ -2586,7 +2584,7 @@ void System::computeVelocities(bool divided_velocities, bool mat_rebuild)
 		if (control == Parameters::ControlVariable::stress) {
 			set_shear_rate(1);
 		}
-		computeUInf(); // note: after set_shear_rate(1);
+		computeUInf(); // note: after set_shear_rate(1)
 		setFixedParticleVelocities();
 		computeVelocityByComponents();
 		if (control == Parameters::ControlVariable::stress) {
@@ -2654,12 +2652,14 @@ void System::computeVelocitiesStokesDrag()
 
 void System::computeUInf()
 {
-	for (int i=0; i<np; i++) {
-		u_inf[i].reset();
-	}
-	if (!zero_shear) {
+	if (!p.solvent_flow) {
 		for (int i=0; i<np; i++) {
-			u_inf[i] = dot(E_infinity, position[i]) + cross(omega_inf, position[i]);
+			u_inf[i].reset();
+		}
+		if (!zero_shear) {
+			for (int i=0; i<np; i++) {
+				u_inf[i] = dot(E_infinity, position[i]) + cross(omega_inf, position[i]);
+			}
 		}
 	}
 }

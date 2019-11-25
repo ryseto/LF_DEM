@@ -784,6 +784,7 @@ vec3d Lubrication::getTotalForce() const
 				std::tie(GEi, GEj) = calcGE_squeeze(0.5*(sys->E_local[p0]+ sys->E_local[p1]));
 			} else {
 				std::tie(GEi, GEj) = calcGE_squeeze_tangential(0.5*(sys->E_local[p0]+ sys->E_local[p1]));
+				//std::tie(GEi, GEj) = calcGE_squeeze_tangential(sys->E_local[p0], sys->E_local[p1]);
 			}
 			/* XGE_i */
 			lubforce_p0 += GEi;
