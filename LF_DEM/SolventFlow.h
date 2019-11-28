@@ -34,8 +34,11 @@ private:
 	System *sys;
 	int nx;
 	int nz;
+	int nz_adpt;
 	int n;
-	int jmax_uz;
+	int n_adpt;
+	int k0;
+
 	double re_num;
 	//double alpha;
 	double six_pi;
@@ -53,6 +56,8 @@ private:
 	double target_flux;
 	double average_area_fraction;
 	double system_volume;
+	double pressure_difference_x;
+
 	bool sedimentation;
 	bool channel_flow;
 	bool simple_shear; // not yet implemented
@@ -61,14 +66,13 @@ private:
 	// - the velocities at the cell faces.
 	std::vector<double> pressure;
 	std::vector<double> div_u_sol_ast;
+	std::vector<double> div_u;
 	std::vector<double> gr_phi_Ud_phi_div_Ud;
 	std::vector<double> u_x;
 	std::vector<double> u_z;
 
 	std::vector<double> u_sol_x;
 	std::vector<double> u_sol_z;
-	std::vector<double> u_sol_x_old;
-	std::vector<double> u_sol_z_old;
 	std::vector<double> u_sol_ast_x;
 	std::vector<double> u_sol_ast_z;
 	std::vector<double> u_particle_x;
@@ -81,10 +85,11 @@ private:
 	std::vector<double> strain_rate_zz;
 	std::vector<double> phi_ux;
 	std::vector<double> phi_uz;
-	std::vector<double> phi_ux2;
-	std::vector<double> phi_uz2;
+	std::vector<double> Urel_phi_x;
+	std::vector<double> Urel_phi_z;
 	std::vector<vec3d> pos;
-	std::vector <int> mesh_nb;
+	std::vector <int> mesh_nb_x;
+	std::vector <int> mesh_nb_z;
 	std::vector <double> udx_values;
 	std::vector <double> udz_values;
 	std::vector <double> phi_ux_values;
@@ -98,6 +103,7 @@ private:
 	double weightFunc(double r_sq);
 	void predictorStep();
 	void calcVelocityDivergence();
+	void calcSuspensionVelocityDivergence();
 	void solvePressure();
 	void correctorStep();
 	double porousResistance(double volume_fraction);
@@ -113,7 +119,7 @@ public:
 	Averager<double> average_pressure_x;
 	void init(System* sys_, std::string simulation_type);
 	void particleVelocityDiffToMesh();
-	double update();
+	void update();
 	void initPoissonSolver();
 	void localFlow(const vec3d &p, vec3d &u_local, vec3d &omega_local,
 				   std::vector<double> &e_local);

@@ -243,7 +243,6 @@ private:
 	std::vector<vec3d> na_ang_velocity;
 	std::vector<vec3d> fixed_velocities;
 	std::vector<Sym2Tensor> total_stress_pp; // per particle
-	std::vector<std::complex<double>> phi6;
 	Sym2Tensor total_stress;
 	std::vector<int> n_contact;
 	std::ofstream fout_history;
@@ -387,6 +386,7 @@ private:
 	void updateInteractions();
 	void calculateForces(); //
 	int periodize(vec3d& pos);
+	void periodizeZeroShear(vec3d& pos);
 	void periodizeExtFlow(const int &i, bool &pd_transport);
 	vec3d periodized(const vec3d& pos_diff);
 	int periodizeDiff(vec3d& pos_diff);

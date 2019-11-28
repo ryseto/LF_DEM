@@ -110,6 +110,7 @@ void Contact::activate()
 	} else {
 		state = 1;
 	}
+//	std::cerr << "new contact " << interaction->get_reduced_gap() << std::endl;
 	dashpot.activate();
 }
 
@@ -136,16 +137,14 @@ void Contact::deactivate()
  *********************************/
 vec3d Contact::getSlidingVelocity() const
 {
-	vec3d vel_offset;
+	vec3d translational_deltav = sys->velocity[p1]-sys->velocity[p0];
 	if (sys->simu_type == sys->SimulationType::simple_shear) {
 		// simple shear
-		vel_offset = interaction->z_offset*sys->get_vel_difference();
+		translational_deltav += interaction->z_offset*sys->get_vel_difference();
 	} else if (sys->simu_type == sys->SimulationType::extensional_flow) {
 		// extensional flow
-		vel_offset = sys->get_vel_difference_extension(interaction->pd_shift);
+		translational_deltav += sys->get_vel_difference_extension(interaction->pd_shift);
 	}
-	
-	vec3d translational_deltav = sys->velocity[p1]-sys->velocity[p0]+vel_offset;
 	vec3d rotational_deltav = -cross(a0*sys->ang_velocity[p0]+a1*sys->ang_velocity[p1], interaction->nvec);
 
 	vec3d sliding_velocity = translational_deltav+rotational_deltav;

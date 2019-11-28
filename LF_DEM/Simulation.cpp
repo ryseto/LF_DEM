@@ -849,23 +849,25 @@ void Simulation::outputDataSedimentatioin()
 	outdata.entryData("suspension velocity", Dimensional::Dimension::none, 3, sys.sflow->u_ave); // 3,4,5 //
 	outdata.entryData("pressure gradient x", Dimensional::Dimension::Stress, 1, sys.sflow->get_pressure_grad_x()); // 6
 	outdata.entryData("relative particle velocity", Dimensional::Dimension::Velocity, 3, sys.meanParticleVelocity()-sys.sflow->u_ave);// 7 8 9
-	outdata.entryData("relative particle angvelocity", Dimensional::Dimension::Velocity, 3, sys.meanParticleAngVelocity()); // 10
-	outdata.entryData("flow dissipation", Dimensional::Dimension::none, 1, sys.sflow->flowFiledDissipation()); // 11
-	outdata.entryData("particle dissipation", Dimensional::Dimension::none, 1, sys.sflow->particleDissipation()); //12
-	outdata.entryData("min gap", Dimensional::Dimension::none, 1, evaluateMinGap(sys)); //13
+	outdata.entryData("relative particle angvelocity", Dimensional::Dimension::Velocity, 3, sys.meanParticleAngVelocity()); // 10 11 ,12
+	outdata.entryData("flow dissipation", Dimensional::Dimension::none, 1, sys.sflow->flowFiledDissipation()); // 13
+	outdata.entryData("particle dissipation", Dimensional::Dimension::none, 1, sys.sflow->particleDissipation()); //14
+	outdata.entryData("min gap", Dimensional::Dimension::none, 1, evaluateMinGap(sys)); //15
 	if (sys.adhesion) {
 		outdata.entryData("max gap", Dimensional::Dimension::none, 1, evaluateMaxContactGap(sys));
 	}
 	if (sys.friction) {
-		outdata.entryData("max tangential displacement", Dimensional::Dimension::none, 1, evaluateMaxDispTan(sys));
+		outdata.entryData("max tangential displacement", Dimensional::Dimension::none, 1, evaluateMaxDispTan(sys)); // 16
 	}
 	if (sys.rolling_friction) {
 		outdata.entryData("max rolling displacement", Dimensional::Dimension::none, 1, evaluateMaxDispRolling(sys));
 	}
-	outdata.entryData("contact number", Dimensional::Dimension::none, 1, contact_nb_per_particle);
-	outdata.entryData("frictional contact number", Dimensional::Dimension::none, 1, frictional_contact_nb_per_particle);
-	outdata.entryData("number of interaction", Dimensional::Dimension::none, 1, sys.get_nb_interactions());
-	outdata.entryData("dt", Dimensional::Dimension::Time, 1, sys.avg_dt);
+	outdata.entryData("contact number", Dimensional::Dimension::none, 1, contact_nb_per_particle); //17
+	outdata.entryData("frictional contact number", Dimensional::Dimension::none, 1, frictional_contact_nb_per_particle);//18
+	outdata.entryData("number of interaction", Dimensional::Dimension::none, 1, sys.get_nb_interactions()); //19
+	outdata.entryData("dt", Dimensional::Dimension::Time, 1, sys.avg_dt);//20
+	outdata.entryData("max NA velocity", Dimensional::Dimension::Velocity, 1, sys.max_na_velocity);
+	outdata.entryData("max velocity", Dimensional::Dimension::Velocity, 1, sys.max_velocity);
 	outdata.writeToFile();
 	
 }

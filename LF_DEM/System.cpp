@@ -162,7 +162,6 @@ void System::allocateRessources()
 	torqueResultant.resize(np);
 	declareStressComponents();
 	total_stress_pp.resize(np);
-	phi6.resize(np);
 	n_contact.resize(np);
 	if (p.solvent_flow) {
 		sflow = new SolventFlow;
@@ -170,6 +169,9 @@ void System::allocateRessources()
 		omega_local.resize(np);
 		E_local.resize(np);
 		phi_local.resize(np);
+		for (int i=0; i<np; i++) {
+			E_local[i].reset();
+		}
 		//forbid_displacement = true;
 	}
 }
@@ -194,8 +196,7 @@ void System::declareForceComponents()
 	if (!zero_shear || p.solvent_flow) {
 		if (p.lubrication_model == "normal") {
 			force_components["hydro"] = ForceComponent(np, RATE_PROPORTIONAL, !torque, &System::setHydroForceToParticle_squeeze);
-		}
-		if (p.lubrication_model == "tangential") {
+		} else if (p.lubrication_model == "tangential") {
 			force_components["hydro"] = ForceComponent(np, RATE_PROPORTIONAL, torque, &System::setHydroForceToParticle_squeeze_tangential);
 		}
 		/******* Contact force, dashpot part, U_inf only, i.e. R_FU^{dashpot}.U_inf ***********/
@@ -221,12 +222,23 @@ void System::declareForceComponents()
 	}
 	/********** Force R_FU^{mf}*(U^f-U^f_inf)  *************/
 	if (mobile_fixed) {
-		// rate proportional with walls, but this can change
-		if (p.lubrication_model == "normal") {
-			force_components["from_fixed"] = ForceComponent(np, RATE_PROPORTIONAL, !torque, &System::setFixedParticleForceToParticle);
-		}
-		if (p.lubrication_model == "tangential") {
-			force_components["from_fixed"] = ForceComponent(np, RATE_PROPORTIONAL, torque, &System::setFixedParticleForceToParticle);
+		if (p.solvent_flow) {
+			// rate proportional with walls, but this can change
+			if (p.lubrication_model == "normal") {
+				force_components["from_fixed"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setFixedParticleForceToParticle);
+			}
+			if (p.lubrication_model == "tangential") {
+				force_components["from_fixed"] = ForceComponent(np, RATE_INDEPENDENT, torque, &System::setFixedParticleForceToParticle);
+			}
+			
+		} else {
+			// rate proportional with walls, but this can change
+			if (p.lubrication_model == "normal") {
+				force_components["from_fixed"] = ForceComponent(np, RATE_PROPORTIONAL, !torque, &System::setFixedParticleForceToParticle);
+			}
+			if (p.lubrication_model == "tangential") {
+				force_components["from_fixed"] = ForceComponent(np, RATE_PROPORTIONAL, torque, &System::setFixedParticleForceToParticle);
+			}
 		}
 	}
 	if (p.confinement.on) {
@@ -1010,6 +1022,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 			computeVelocities(calc_stress, true);
 		}
 		sflow->update();
+		sflow->pressureController();
 		adjustVelocitySolventFlow();
 	}
 	if (wall_rheology && calc_stress) { // @@@@ calc_stress remove????
@@ -1213,8 +1226,10 @@ void System::adaptTimeStep()
 	} else {
 		dt = p.disp_max/shear_rate;
 	}
-	if (dt*shear_rate > p.disp_max) { // cases where na_velocity < \dotgamma*radius
-		dt = p.disp_max/shear_rate;
+	if (shear_rheology) {
+		if (dt*shear_rate > p.disp_max) { // cases where na_velocity < \dotgamma*radius
+			dt = p.disp_max/shear_rate;
+		}
 	}
 	if (p.dt_max > 0) {
 		if (dt > p.dt_max) {
@@ -1224,6 +1239,7 @@ void System::adaptTimeStep()
 	if (p.solvent_flow) {
 		computeMaxVelocity();
 		double dt_sflow = p.disp_max/max_velocity;
+//		cerr << max_velocity << ' ' << max_na_velocity << endl;
 		if (dt_sflow < dt) {
 			dt = dt_sflow;
 		}
@@ -1244,6 +1260,12 @@ void System::adaptTimeStep(double time_end, double strain_end)
 				dt = fabs((strain_end-clk.cumulated_strain)/shear_rate);
 			}
 		}
+		if (time_end >= 0) {
+			if (get_time()+dt > time_end) {
+				dt = time_end-get_time();
+			}
+		}
+	} else {
 		if (time_end >= 0) {
 			if (get_time()+dt > time_end) {
 				dt = time_end-get_time();
@@ -1277,18 +1299,17 @@ void System::timeStepMove(double time_end, double strain_end)
 	 * dot_epsion = shear_rate / 2 is always true.
 	 * clk.cumulated_strain = shear_rate * t for both simple shear and extensional flow.
 	 */
-	//cerr << "shear_rate = " << shear_rate << endl;
 	clk.time_ += dt;
 	total_num_timesteps ++;
 	/* evolve PBC */
 	timeStepBoxing();
 	
 	/* move particles */
-	for (int i=0; i<np; i++) {
+	for (int i=0; i<np_mobile; i++) {
 		displacement(i, velocity[i]*dt);
 	}
 	if (angle_output) {
-		for (int i=0; i<np; i++) {
+		for (int i=0; i<np_mobile; i++) {
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
@@ -1573,7 +1594,6 @@ void System::updateInteractions()
 	 To be called after particle moved.
 	 Note that this routine does not look for new interactions (this is done by System::checkNewInteraction), it only updates already known active interactions.
 	 It however desactivate interactions removes interactions that became inactive (ie when the distance between particles gets larger than the interaction range).
-
 	 */
 	for (unsigned int k=0; k<interaction.size(); k++) {
 		bool deactivated = false;
@@ -2164,6 +2184,7 @@ void System::setSolverRHS(const ForceComponent &fc)
 
 void System::addToSolverRHS(const ForceComponent &fc)
 {
+	//cerr << fc.rate_dependence << ' ' << fc.force[0] << endl;
 	if (fc.has_torque) {
 		for (int i=0; i<np; i++) {
 			stokes_solver.addToRHSForce(i, fc.force[i]);
@@ -2299,9 +2320,9 @@ void System::setShearDirection(double theta_shear) // will probably be deprecate
 			sintheta_shear = 0;
 			if (costheta_shear > 0) {
 				costheta_shear = 1;
-			} else {
-				costheta_shear = -1;
-			}
+		} else {
+			costheta_shear = -1;
+		}
 		} else if (abs(costheta_shear) < 1e-15) {
 			costheta_shear = 0;
 			if (sintheta_shear > 0) {
@@ -2579,11 +2600,12 @@ void System::computeVelocities(bool divided_velocities, bool mat_rebuild)
 	 simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
 	 */
 	stokes_solver.resetRHS();
+
 	if (divided_velocities || control == Parameters::ControlVariable::stress) {
 		if (control == Parameters::ControlVariable::stress) {
 			set_shear_rate(1);
 		}
-		computeUInf(); // note: after set_shear_rate(1);
+		computeUInf(); // note: after set_shear_rate(1)
 		setFixedParticleVelocities();
 		computeVelocityByComponents();
 		if (control == Parameters::ControlVariable::stress) {
@@ -2651,12 +2673,14 @@ void System::computeVelocitiesStokesDrag()
 
 void System::computeUInf()
 {
-	for (int i=0; i<np; i++) {
-		u_inf[i].reset();
-	}
-	if (!zero_shear) {
+	if (!p.solvent_flow) {
 		for (int i=0; i<np; i++) {
-			u_inf[i] = dot(E_infinity, position[i]) + cross(omega_inf, position[i]);
+			u_inf[i].reset();
+		}
+		if (!zero_shear) {
+			for (int i=0; i<np; i++) {
+				u_inf[i] = dot(E_infinity, position[i]) + cross(omega_inf, position[i]);
+			}
 		}
 	}
 }
@@ -2671,12 +2695,12 @@ void System::adjustVelocityPeriodicBoundary()
 		ang_velocity[i] = na_ang_velocity[i];
 	}
 	if (!zero_shear) {
-		if (simu_type == simple_shear) {
+		if (simu_type != extensional_flow) {
 			for (int i=0; i<np; i++) {
 				velocity[i] += u_inf[i];
 				ang_velocity[i] += omega_inf;
 			}
-		} else if (simu_type == extensional_flow) {
+		} else {
 			for (int i=0; i<np; i++) {
 				velocity[i] += u_inf[i];
 			}
@@ -2687,12 +2711,13 @@ void System::adjustVelocityPeriodicBoundary()
 void System::adjustVelocitySolventFlow()
 {
 	vector<double> st_tens(3);
-	for (int i=0; i<np_mobile; i++) {
+	for (int i=0; i<np; i++) {
 		sflow->localFlow(position[i], u_local[i], omega_local[i], st_tens);
 		E_local[i].set(st_tens[0], 0, st_tens[1], 0, 0, st_tens[2]);// xx xy xz yz yy zz
 	}
+
 	for (int i=0; i<np_mobile; i++) {
-		velocity[i] = na_velocity[i] + u_local[i];
+		velocity[i]     = na_velocity[i]     + u_local[i];
 		ang_velocity[i] = na_ang_velocity[i] + omega_local[i];
 	}
 }
@@ -2729,13 +2754,13 @@ void System::displacement(int i, const vec3d& dr)
 	 * we need to modify the velocity, which was already evaluated.
 	 * The position and velocity will be used to calculate the contact forces.
 	 */
-	if (simu_type != extensional_flow) {
+	if (simu_type == simple_shear) {
 		/**** simple shear flow ****/
 		int z_shift = periodize(position[i]);
 		if (z_shift != 0) {
 			velocity[i] += z_shift*vel_difference;
 		}
-	} else {
+	} else if (simu_type == extensional_flow) {
 		/**** extensional flow ****/
 		bool pd_transport = false;
 		periodizeExtFlow(i, pd_transport);
@@ -2744,6 +2769,8 @@ void System::displacement(int i, const vec3d& dr)
 			u_inf[i] = grad_u*position[i];
 			velocity[i] +=  u_inf[i];
 		}
+	} else {
+		periodizeZeroShear(position[i]);
 	}
 	boxset.box(i);
 }
@@ -2810,6 +2837,27 @@ int System::periodize(vec3d& pos)
 		}
 	}
 	return z_shift;
+}
+
+void System::periodizeZeroShear(vec3d& pos)
+{
+	if (pos.z >= lz) {
+		pos.z -= lz;
+	} else if (pos.z < 0) {
+		pos.z += lz;
+	}
+	if (pos.x >= lx) {
+		pos.x -= lx;
+	} else if (pos.x < 0) {
+		pos.x += lx;
+	}
+	if (!twodimension) {
+		if (pos.y >= ly) {
+			pos.y -= ly;
+		} else if (pos.y < 0) {
+			pos.y += ly;
+		}
+	}
 }
 
 // [0,l]

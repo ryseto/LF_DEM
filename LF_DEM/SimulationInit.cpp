@@ -365,6 +365,7 @@ void Simulation::setupSimulation(string in_args,
 		}
 	} else {
 		sys.simu_type = sys.SimulationType::solvent_flow;
+		sys.zero_shear = true;
 	}
 	if (!sys.p.solvent_flow) {
 		setupFlow(); // Including parameter p setting.
@@ -397,8 +398,6 @@ void Simulation::setupSimulation(string in_args,
 		// extensional flow
 		cerr << "extensional flow " << endl;
 		sys.vel_difference.reset();
-	} else {
-		sys.zero_shear = true;
 	}
 	if (simu_name.empty()) {
 		simu_name = prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
