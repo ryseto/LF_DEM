@@ -25,8 +25,12 @@ SimpleShearBoxSet::SimpleShearBoxSet(double interaction_dist, unsigned np, const
 	if (z_box_nb == 0) {
 		z_box_nb = 1;
 	}
-	yz_box_nb = y_box_nb*z_box_nb;
 	if (x_box_nb < 4 && y_box_nb < 4 && z_box_nb < 4) { // boxing useless: a neighborhood is the whole system
+		x_box_nb = 1;
+		y_box_nb = 1;
+		z_box_nb = 1;
+		yz_box_nb = 1;
+
 		_is_boxed = false;
 		box_xsize = sysbox.lx;
 		box_ysize = sysbox.ly;
@@ -38,7 +42,9 @@ SimpleShearBoxSet::SimpleShearBoxSet(double interaction_dist, unsigned np, const
 		TopBottomBoxes.insert(b);
 		box_labels.push_back(b);
 		b->type = 1;
+		
 	} else {
+		yz_box_nb = y_box_nb*z_box_nb;
 		_is_boxed = true;
 		box_xsize = sysbox.lx/x_box_nb;
 		box_ysize = sysbox.ly/y_box_nb;
