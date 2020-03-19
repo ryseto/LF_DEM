@@ -177,9 +177,15 @@ void Simulation::setConfigToSystem(bool binary_conf, const std::string &filename
 					sys.setupConfiguration(conf, control_var);
 					break;
 				}
-			case ConfFileFormat::bin_delayed_adhesion:
+			// case ConfFileFormat::bin_delayed_adhesion:
+			// 	{
+			// 		auto conf = readBinaryDelayedAdhesionConfiguration(filename);
+			// 		sys.setupConfiguration(conf, control_var);
+			// 		break;
+			// 	}
+			case ConfFileFormat::bin_activated_adhesion:
 				{
-					auto conf = readBinaryDelayedAdhesionConfiguration(filename);
+					auto conf = readBinaryActivatedAdhesionConfiguration(filename);
 					sys.setupConfiguration(conf, control_var);
 					break;
 				}

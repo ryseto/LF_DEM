@@ -100,6 +100,9 @@ void StdInteractionManager::createNewInteraction(unsigned i, unsigned j, double 
 		params.add(p->repulsion);
 		params.repp->max_gap = calcRepulsiveForceRange(p->repulsion, conf->radius[i], conf->radius[j]);
 	}
+	if (has_activated_adhesion(p->activated_adhesion)) {
+		params.add(p->activated_adhesion);
+	}
 
 	struct PairId pairid;
 	pairid.p0 = i;
@@ -274,10 +277,10 @@ void StdInteractionManager::declareForceComponents(std::map<std::string, ForceCo
 		declared_forces.push_back("repulsion");
 	}
 
-	// if (Interactions::has_TActAdhesion(p->TA_adhesion)) {
-	// 	force_components["delayed_adhesion"] = ForceComponent(np, RateDependence::independent, !torque);
-	// 	declared_forces.push_back("delayed_adhesion");
-	// }
+	if (Interactions::has_activated_adhesion(p->activated_adhesion)) {
+		force_components["activated_adhesion"] = ForceComponent(np, RateDependence::independent, !torque);
+		declared_forces.push_back("activated_adhesion");
+	}
 }
 
 void StdInteractionManager::setForceToParticle(const std::string &component, std::vector<vec3d> &force, std::vector<vec3d> &torque)
@@ -295,8 +298,8 @@ void StdInteractionManager::setForceToParticle(const std::string &component, std
 		}
 	} else if (component == "repulsion") {
 		setRepulsiveForceToParticle(force, torque);
-	} else if (component == "delayed_adhesion") {
-		setTActAdhesionForceToParticle(force, torque);
+	} else if (component == "activated_adhesion") {
+		setActAdhesionForceToParticle(force, torque);
 	} else {
 		throw std::runtime_error(" StdInteractionManager::Unknown force component.");
 	}
@@ -407,8 +410,8 @@ void StdInteractionManager::setRepulsiveForceToParticle(std::vector<vec3d> &forc
 	}
 }
 
-void StdInteractionManager::setTActAdhesionForceToParticle(std::vector<vec3d> &force,
-										            std::vector<vec3d> &torque)
+void StdInteractionManager::setActAdhesionForceToParticle(std::vector<vec3d> &force,
+											            std::vector<vec3d> &torque)
 {
 	for (auto &f: force) {
 		f.reset();
@@ -418,9 +421,9 @@ void StdInteractionManager::setTActAdhesionForceToParticle(std::vector<vec3d> &f
 	}
 	unsigned int i, j;
 	for (const auto &inter: interactions) {
-		if (inter->delayed_adhesion) {
+		if (inter->act_adhesion) {
 			std::tie(i, j) = inter->get_par_num();
-			inter->delayed_adhesion->addUpForce(force[i], force[j]);
+			inter->act_adhesion->addUpForce(force[i], force[j]);
 		}
 	}
 }

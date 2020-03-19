@@ -107,11 +107,12 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(vdw.coefficient, -1),
 		PARAM_INIT(vdw.singularity_cutoff, 0.1),
 		PARAM_INIT(vdw.amplitude, 0),
+		PARAM_INIT(activated_adhesion.range, 1e-2),
 		PARAM_INIT(magic_angle, 0),
 		PARAM_INIT(contact.mu_static, 1),
 		PARAM_INIT(contact.mu_dynamic, -1),
 		PARAM_INIT(contact.mu_rolling, 0),
-		PARAM_INIT(TA_adhesion.adhesion_range, 1e-2),
+		// PARAM_INIT(TA_adhesion.adhesion_range, 1e-2),
 		PARAM_INIT(output.recording_start, 1),
 		PARAM_INIT(sj_disp_max_shrink_factor, 1.1),
 		PARAM_INIT(sj_disp_max_goal, 1e-6),
@@ -187,8 +188,11 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 	default_val = {Dimensional::Unit::adhesion, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(contact.adhesion, default_val));
 
-	default_val = {Dimensional::Unit::delayed_adhesion, {Dimensional::Dimension::Force, 0, guarranted_unit}};
-	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(TA_adhesion.adhesion_max_force, default_val));
+	// default_val = {Dimensional::Unit::delayed_adhesion, {Dimensional::Dimension::Force, 0, guarranted_unit}};
+	// ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(TA_adhesion.adhesion_max_force, default_val));
+
+	default_val = {Dimensional::Unit::activated_adhesion, {Dimensional::Dimension::Force, 0, guarranted_unit}};
+	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(activated_adhesion.max_force, default_val));
 
 	default_val = {Dimensional::Unit::repulsion, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(repulsion.repulsion, default_val));
@@ -222,6 +226,12 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 
 	default_qty = {Dimensional::Dimension::Time, -1, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(contact.relaxation_time_tan, default_qty));
+
+	default_qty = {Dimensional::Dimension::Rate, 1, guarranted_unit};
+	DimValDblParams.push_back(PARAM_INIT_DIMQTY(activated_adhesion.activation_rate, default_qty));
+
+	default_qty = {Dimensional::Dimension::Rate, 1, guarranted_unit};
+	DimValDblParams.push_back(PARAM_INIT_DIMQTY(activated_adhesion.deactivation_rate, default_qty));
 	
 	default_qty = {Dimensional::Dimension::Force, 0, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(min_kn_auto_det, default_qty));
@@ -235,8 +245,8 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 	default_qty = {Dimensional::Dimension::Force, 0, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(max_kt_auto_det, default_qty));
 
-	default_qty = {Dimensional::Dimension::Time, 0, guarranted_unit};
-	DimValDblParams.push_back(PARAM_INIT_DIMQTY(TA_adhesion.activation_time, default_qty));
+	// default_qty = {Dimensional::Dimension::Time, 0, guarranted_unit};
+	// DimValDblParams.push_back(PARAM_INIT_DIMQTY(TA_adhesion.activation_time, default_qty));
 
 	default_qty = {Dimensional::Dimension::Force, 0, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(dimer.stiffness, default_qty));

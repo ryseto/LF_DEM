@@ -26,8 +26,8 @@
 #include "Lubrication.h"
 #include "RepulsiveForce.h"
 #include "VanDerWaals.h"
-#include "TimeActivatedAdhesion.h"
-#include "TimeActivatedAdhesion_io.h"
+#include "ActivatedAdhesion.h"
+#include "ActivatedAdhesion_io.h"
 #include "Sym2Tensor.h"
 #include "PairwiseInteraction.h"
 #include "StdInteractionParams.h"
@@ -52,13 +52,12 @@ private:
 	//===== forces and stresses computations =====//
 	void integrateStress();
 	std::pair<double, double> calcContactDashpotResistanceCoeffs();
-	void switchOnDelayedAdhesion();
-	void switchOffDelayedAdhesion();
 	void switchOnContact();
 	void switchOffContact();
 	void updateContactState();
 	void updateRepulsionState();
 	void updateLubricationState();
+	void updateActivatedAdhesionState(double dt);
 
 	//===== forces/stresses  ========================== //
 	double birth_strain;
@@ -68,16 +67,16 @@ private:
 	std::vector<double> gap_history;
 	
 	struct StdInteractionParams p;
-	friend void TActAdhesion::setupInteractions(Interactions::StdInteractionManager &interactions, 
-											    const std::vector <struct TActAdhesion::State> &adhesion_states,
-											    double time_now);
+	friend void ActAdhesion::setupInteractions(Interactions::StdInteractionManager &interactions, 
+											    const std::vector <struct ActAdhesion::State> &adhesion_states);
 public:
 	std::unique_ptr<Contact> contact;
 	std::unique_ptr<Lub::Lubrication> lubrication;
 	std::unique_ptr<RepulsiveForce> repulsion;
+	std::unique_ptr<ActAdhesion::ActivatedAdhesion> act_adhesion;
+
 	Dynamics::PairwiseResistanceVelocitySolver *solver;
 
-	std::unique_ptr<TActAdhesion::TimeActivatedAdhesion> delayed_adhesion;
 	 
 	/*********************************
 	 *       Public Methods          *

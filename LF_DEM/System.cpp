@@ -407,11 +407,18 @@ struct base_shear_configuration confConvertBase2Shear(const struct base_configur
 	return base_shear;
 }
 
-void System::setupConfiguration(const struct delayed_adhesion_configuration &config,
+// void System::setupConfiguration(const struct delayed_adhesion_configuration &config,
+// 								Parameters::ControlVariable control_)
+// {
+// 	setupGenericConfiguration(confConvertBase2Shear(config.base, config.lees_edwards_disp), control_);
+// 	Interactions::TActAdhesion::setupInteractions(*interaction, config.adhesion_states, get_time());
+// }
+
+void System::setupConfiguration(const struct activated_adhesion_configuration &config,
 								Parameters::ControlVariable control_)
 {
 	setupGenericConfiguration(confConvertBase2Shear(config.base, config.lees_edwards_disp), control_);
-	Interactions::TActAdhesion::setupInteractions(*interaction, config.adhesion_states, get_time());
+	Interactions::ActAdhesion::setupInteractions(*interaction, config.adhesion_states);
 }
 
 void System::setupSystemPostConfiguration()

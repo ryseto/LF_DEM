@@ -5,6 +5,8 @@
 #include "LubricationParams.h"
 #include "RepulsiveForceParams.h"
 #include "VanDerWaalsParams.h"
+#include "ActivatedAdhesion_Params.h"
+
 
 namespace Interactions
 {
@@ -14,6 +16,7 @@ struct StdInteractionParams {
 	std::unique_ptr<Lub::LubParams> lubp;
 	std::unique_ptr<RepulsiveForceParams> repp;
 	std::unique_ptr<vanDerWaalsForceParams> vdwp;
+	std::unique_ptr<ActAdhesion::Params> actadhp;
 
 	void add(const ContactParams &p) {
 		contp = std::unique_ptr<ContactParams>(new ContactParams (p));
@@ -26,6 +29,9 @@ struct StdInteractionParams {
 	}
 	void add(const vanDerWaalsForceParams &p) {
 		vdwp = std::unique_ptr<vanDerWaalsForceParams>(new vanDerWaalsForceParams (p));
+	}
+	void add(const ActAdhesion::Params &p) {
+		actadhp = std::unique_ptr<ActAdhesion::Params>(new ActAdhesion::Params (p));
 	}
 };
 

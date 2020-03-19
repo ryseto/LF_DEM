@@ -77,15 +77,12 @@ void output(const StdInteractionManager &manager, ParticleVelocity *vel, const s
 			outdata_int.entryData("norm of the normal repulsive force", Dimensional::Dimension::Force, 1, r_npart);
 		}
 
-		if (Interactions::has_delayed_adhesion(p.TA_adhesion)) {
+		if (Interactions::has_activated_adhesion(p.activated_adhesion)) {
 			double a_npart = 0;
-			double tratio = 0;
-			if (inter->delayed_adhesion) {
-				a_npart = inter->delayed_adhesion->getForceNorm();
-				tratio = inter->delayed_adhesion->ratioUptimeToActivation();
+			if (inter->act_adhesion) {
+				a_npart = inter->act_adhesion->getForceNorm();
 			}
 			outdata_int.entryData("norm of the normal adhesion force", Dimensional::Dimension::Force, 1, a_npart);
-			outdata_int.entryData("adhesion ratio uptime to activation time", Dimensional::Dimension::none, 1, tratio);
 		}
 	}
 }

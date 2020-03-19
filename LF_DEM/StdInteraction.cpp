@@ -36,13 +36,9 @@ solver(vel_solver)
 		updateRepulsionState();
 	}
 	
-	// if (sys->delayed_adhesion) {
-	// 	delayed_adhesion = \
-	// 	std::unique_ptr<TActAdhesion::TimeActivatedAdhesion>(new TActAdhesion::TimeActivatedAdhesion(sys->p.TA_adhesion,
-	// 																								 p0, p1,
-	// 																								 a0, a1));
-	// 	delayed_adhesion->update(sys->get_time(), reduced_gap, nvec);
-	// }
+	if (p.actadhp) {
+		updateActivatedAdhesionState(0);
+	}
 
 	if (!vel_solver && (p.lubp || has_dashpot(*(p.contp)))) { // should not happen as it is screened in InteractionManager
 		throw std::runtime_error(" StdIntercation:: Error: Dashpot and lubrication require a pairwise velocity solver.");
@@ -64,20 +60,6 @@ void StdInteraction::switchOffContact()
 	if (!lubrication) {
 		solver->eraseResistance(p0, p1);
 	}
-}
-
-void StdInteraction::switchOnDelayedAdhesion()
-{
-	throw std::runtime_error(" StdIntercation:: Error: Delayed adhesion temporarily deactivated.");
-	// delayed_adhesion = \
-	// 	std::unique_ptr<TActAdhesion::TimeActivatedAdhesion>(new TActAdhesion::TimeActivatedAdhesion(sys->p.TA_adhesion,
-	// 																								 p0, p1,
-	// 																								 a0, a1));
-}
-
-void StdInteraction::switchOffDelayedAdhesion()
-{
-	delayed_adhesion.reset(nullptr);
 }
 
 
@@ -163,9 +145,9 @@ void StdInteraction::updateState(const struct PairVelocity &vel,
 	if (p.repp) {
 		updateRepulsionState();
 	}
-	// if (delayed_adhesion) {
-	// 	delayed_adhesion->update(sys->get_time(), reduced_gap, nvec);
-	// }
+	if (p.actadhp) {
+		updateActivatedAdhesionState(dt);
+	}
 }
 
 void StdInteraction::updateLubricationState()
@@ -235,6 +217,25 @@ void StdInteraction::updateRepulsionState()
 		repulsion->calcForce();
 	}
 }
+
+void StdInteraction::updateActivatedAdhesionState(double dt)
+{
+	if (act_adhesion) {
+		// check if it is still alive
+		if (reduced_gap > p.actadhp->range) {
+			act_adhesion.reset(nullptr);
+		}
+	} else {
+		if (reduced_gap <= p.actadhp->range) {
+			act_adhesion = std::unique_ptr<ActAdhesion::ActivatedAdhesion>(
+								new ActAdhesion::ActivatedAdhesion(this, *(p.actadhp)));
+		}
+	}
+	if (act_adhesion) {
+		act_adhesion->update(dt);
+	}
+}
+
 
 bool StdInteraction::hasPairwiseResistance()
 {

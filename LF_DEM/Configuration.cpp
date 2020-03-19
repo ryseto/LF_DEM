@@ -366,19 +366,48 @@ void writeBinaryFixedVelocities(std::ofstream &conf_export, const std::vector<ve
 	}
 }
 
-struct delayed_adhesion_configuration readBinaryDelayedAdhesionConfiguration(std::string filename)
+// struct delayed_adhesion_configuration readBinaryDelayedAdhesionConfiguration(std::string filename)
+// {
+// 	checkInFile(filename);
+// 	auto format = getBinaryConfigurationFileFormat(filename);
+// 	std::set<ConfFileFormat> allowed_formats = \
+// 	{
+// 		ConfFileFormat::bin_delayed_adhesion,
+// 	};
+// 	if (!allowed_formats.count(format)) {
+// 		throw std::runtime_error("readBinaryDelayedAdhesionConfiguration(): got incorrect binary format.");
+// 	}
+// 	std::ifstream input(filename.c_str(), std::ios::binary | std::ios::in);
+// 	struct delayed_adhesion_configuration c;
+
+// 	int _switch;
+// 	typedef std::underlying_type<ConfFileFormat>::type format_type;
+// 	format_type fmt;
+// 	input.read((char*)&_switch, sizeof(int));
+// 	input.read((char*)&fmt, sizeof(format_type));
+
+// 	c.base = readBinaryBaseConfiguration(input);
+// 	c.adhesion_states = Interactions::TActAdhesion::readStatesBStream(input);
+// 	c.lees_edwards_disp.reset();
+// 	input.read((char*)&c.lees_edwards_disp.x, sizeof(double));
+// 	input.read((char*)&c.lees_edwards_disp.y, sizeof(double));
+	
+// 	return c;
+// }
+
+struct activated_adhesion_configuration readBinaryActivatedAdhesionConfiguration(std::string filename)
 {
 	checkInFile(filename);
 	auto format = getBinaryConfigurationFileFormat(filename);
 	std::set<ConfFileFormat> allowed_formats = \
 	{
-		ConfFileFormat::bin_delayed_adhesion,
+		ConfFileFormat::bin_activated_adhesion,
 	};
 	if (!allowed_formats.count(format)) {
-		throw std::runtime_error("readBinaryDelayedAdhesionConfiguration(): got incorrect binary format.");
+		throw std::runtime_error("readBinaryActivatedAdhesionConfiguration(): got incorrect binary format.");
 	}
 	std::ifstream input(filename.c_str(), std::ios::binary | std::ios::in);
-	struct delayed_adhesion_configuration c;
+	struct activated_adhesion_configuration c;
 
 	int _switch;
 	typedef std::underlying_type<ConfFileFormat>::type format_type;
@@ -387,7 +416,7 @@ struct delayed_adhesion_configuration readBinaryDelayedAdhesionConfiguration(std
 	input.read((char*)&fmt, sizeof(format_type));
 
 	c.base = readBinaryBaseConfiguration(input);
-	c.adhesion_states = Interactions::TActAdhesion::readStatesBStream(input);
+	c.adhesion_states = Interactions::ActAdhesion::readStatesBStream(input);
 	c.lees_edwards_disp.reset();
 	input.read((char*)&c.lees_edwards_disp.x, sizeof(double));
 	input.read((char*)&c.lees_edwards_disp.y, sizeof(double));
@@ -484,6 +513,7 @@ void outputBinaryConfiguration(const System &sys,
 	std::set<ConfFileFormat> allowed_formats = \
 	{
 		ConfFileFormat::bin_delayed_adhesion,
+		ConfFileFormat::bin_activated_adhesion,
 		ConfFileFormat::bin_format_fixed_vel_shear,
 		ConfFileFormat::bin_format_base_shear,
 		ConfFileFormat::bin_dimers
@@ -501,8 +531,11 @@ void outputBinaryConfiguration(const System &sys,
 		if (sys.res_solver->velo_assignor) {
 			writeBinaryFixedVelocities(conf_export, sys.res_solver->velo_assignor->getFixedVel().vel);
 		}
-	} else if (format == ConfFileFormat::bin_delayed_adhesion) {
-		Interactions::TActAdhesion::writeStatesBStream(conf_export,
+	// } else if (format == ConfFileFormat::bin_delayed_adhesion) {
+	// 	Interactions::TActAdhesion::writeStatesBStream(conf_export,
+	// 									 			   *(sys.interaction));
+	} else if (format == ConfFileFormat::bin_activated_adhesion) {
+		Interactions::ActAdhesion::writeStatesBStream(conf_export,
 										 			   *(sys.interaction));
 	} else if (format == ConfFileFormat::bin_dimers) {
 		Interactions::Dimer::io::writeStatesBStream(conf_export, *(sys.dimer_manager));

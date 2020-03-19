@@ -68,6 +68,7 @@ void GenerateInitConfig::generateBasic(int rand_seed_, double volume_frac, unsig
 	rand_seed = rand_seed_;
 	cerr << "rand_seed = " << rand_seed_ << endl;
 	auto &sys = simu.getSys();
+	sys.imposed_flow = std::make_shared<Geometry::ImposedDeformation>();
 	double contact_ratio = 0.05;
 	double min_gap = -0.01;
 	double inflate_ratio = 1-min_gap;
@@ -133,6 +134,7 @@ int GenerateInitConfig::generate(int rand_seed_, double volume_frac_gen_, double
 	cerr << "rand_seed = " << rand_seed_ << endl;
 	cluster_phi = cluster_phi_;
 	auto &sys = simu.getSys();
+	sys.imposed_flow = std::make_shared<Geometry::ImposedDeformation>();
 	double contact_ratio = 0.05;
 	double min_gap = -0.01;
 	double inflate_ratio = 1-min_gap;

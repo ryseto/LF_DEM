@@ -43,6 +43,7 @@ namespace Dimensional {
 		pressure_drop,
 		sigma_zz,
 		delayed_adhesion,
+		activated_adhesion,
 		none
 	};
 
@@ -76,6 +77,8 @@ namespace Dimensional {
 				return "pd";
 			case Unit::delayed_adhesion:
 				return "da";
+			case Unit::activated_adhesion:
+				return "aa";
 			case Unit::none:
 				return "";
 			default:
@@ -125,6 +128,9 @@ namespace Dimensional {
 		}
 		if (s == "da") {
 			return Unit::delayed_adhesion;
+		}
+		if (s == "aa") {
+			return Unit::activated_adhesion;
 		}
 		if (s == "") {
 			return Unit::none;

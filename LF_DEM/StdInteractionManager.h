@@ -91,8 +91,8 @@ private:
 								   std::vector<vec3d> &torque);
 	void setRepulsiveForceToParticle(std::vector<vec3d> &force,
 									 std::vector<vec3d> &torque);
-	void setTActAdhesionForceToParticle(std::vector<vec3d> &force,
-								        std::vector<vec3d> &torque);
+	void setActAdhesionForceToParticle(std::vector<vec3d> &force,
+								       std::vector<vec3d> &torque);
 	void checkInputParams(std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> vel_solver);
 
 	friend void output(const StdInteractionManager &manager, ParticleVelocity *vel, const struct Parameters::ParameterSet &p, OutputData &outdata_int);

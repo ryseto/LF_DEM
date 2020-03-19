@@ -598,8 +598,8 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 	if (sys.p.simulation_mode == 31) {
 		binary_conf_format = ConfFileFormat::bin_format_fixed_vel_shear;
 	}
-	if (Interactions::has_delayed_adhesion(sys.p.TA_adhesion)) {
-		binary_conf_format = ConfFileFormat::bin_delayed_adhesion;
+	if (Interactions::has_activated_adhesion(sys.p.activated_adhesion)) {
+		binary_conf_format = ConfFileFormat::bin_activated_adhesion;
 	}
 	if (sys.dimer_manager) {
 		binary_conf_format = ConfFileFormat::bin_dimers;
@@ -765,10 +765,10 @@ void Simulation::outputData()
 	outdata.entryData("contact number", Dimensional::Dimension::none, 1, contact_nb_per_particle);
 	outdata.entryData("frictional contact number", Dimensional::Dimension::none, 1, frictional_contact_nb_per_particle);
 	outdata.entryData("number of interaction", Dimensional::Dimension::none, 1, sys.get_nb_interactions());
-	if (Interactions::has_delayed_adhesion(sys.p.TA_adhesion)) {
+	if (Interactions::has_activated_adhesion(sys.p.activated_adhesion)) {
 		unsigned active_nb;
 		double active_ratio;
-		std::tie(active_nb, active_ratio) = getTAAdhesionActivityStatistics(sys);
+		std::tie(active_nb, active_ratio) = getActAdhesionActivityStatistics(sys);
 		outdata.entryData("delayed adhesion active nb", Dimensional::Dimension::none, 1, active_nb);
 		outdata.entryData("delayed adhesion active ratio", Dimensional::Dimension::none, 1, active_ratio);
 	}

@@ -7,7 +7,7 @@
 #ifndef __LF_DEM__ParameterSet__
 #define __LF_DEM__ParameterSet__
 #include <string>
-#include "TimeActivatedAdhesion_Params.h"
+#include "ActivatedAdhesion_Params.h"
 #include "ConfinementParams.h"
 #include "LubricationParams.h"
 #include "RepulsiveForceParams.h"
@@ -94,7 +94,8 @@ namespace Parameters {
 		struct Interactions::vanDerWaalsForceParams vdw;
 		double bodyforce;              ///< Amplitude of the body force [0]
 		int np_fixed;
-		struct Interactions::TActAdhesion::Parameters TA_adhesion; ///< Time delayed adhesion params (.adhesion_range [1e-2], .adhesion_max_force [0h], .activation_time [0h])
+		// struct Interactions::TActAdhesion::Parameters TA_adhesion; ///< Time delayed adhesion params (.adhesion_range [1e-2], .adhesion_max_force [0h], .activation_time [0h])
+		struct Interactions::ActAdhesion::Params activated_adhesion; ///< Time delayed adhesion params (.adhesion_range [1e-2], .adhesion_max_force [0h], .activation_time [0h])
 		
 		struct Interactions::Dimer::DimerParams dimer;  ///< see DimerParams.h
 		/*******************************************************

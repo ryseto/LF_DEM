@@ -7,6 +7,7 @@
 #include "Contact.h"
 #include "TimeActivatedAdhesion_io.h"
 #include "TimeActivatedAdhesion.h"
+#include "ActivatedAdhesionState.h"
 #include "DimerState.h"
 
 #ifndef __LF_DEM__Configuration__
@@ -26,7 +27,8 @@ enum struct ConfFileFormat : int { // assign values as it is for output and othe
 	bin_format_base_shear = 8,
 	bin_format_fixed_vel_shear = 9,
 	bin_delayed_adhesion = 10,
-	bin_dimers = 11
+	bin_dimers = 11,
+	bin_activated_adhesion = 12
 };
 
 struct base_configuration {
@@ -74,6 +76,12 @@ struct delayed_adhesion_configuration {
 	std::vector <struct Interactions::TActAdhesion::State> adhesion_states;
 };
 
+struct activated_adhesion_configuration {
+	struct base_configuration base;
+	vec3d lees_edwards_disp;
+	std::vector <struct Interactions::ActAdhesion::State> adhesion_states;
+};
+
 struct circular_couette_configuration {
 	int np_wall1;
 	int np_wall2;
@@ -100,6 +108,8 @@ struct base_shear_configuration readBinaryBaseShearConfiguration(const std::stri
 struct base_configuration readBinaryBaseConfiguration(std::ifstream &input);
 
 struct delayed_adhesion_configuration readBinaryDelayedAdhesionConfiguration(std::string filename);
+
+struct activated_adhesion_configuration readBinaryActivatedAdhesionConfiguration(std::string filename);
 
 struct fixed_velo_configuration readBinaryFixedVeloConfiguration(const std::string& filename);
 

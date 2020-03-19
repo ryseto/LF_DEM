@@ -132,25 +132,22 @@ std::pair<unsigned int, unsigned int> countNumberOfContact(const System &sys)
 	return std::make_pair(contact_nb, fric_contact_nb);
 }
 
-std::pair<unsigned, double> getTAAdhesionActivityStatistics(const System &sys)
+std::pair<unsigned, double> getActAdhesionActivityStatistics(const System &sys)
 {
-	assert(Interactions::has_delayed_adhesion(sys.p.TA_adhesion));
+	assert(Interactions::has_activated_adhesion(sys.p.activated_adhesion));
 	unsigned active_nb = 0;
-	unsigned active_dormant_nb = 0;
+	unsigned total_nb = 0;
 	for (const auto &inter: *(sys.interaction)) {
-		if (inter->delayed_adhesion) {
-			auto state = inter->delayed_adhesion->getState();
-			if (state.activity != Interactions::TActAdhesion::Activity::inactive) {
-				active_dormant_nb++;
-				if (state.activity == Interactions::TActAdhesion::Activity::active) {
-					active_nb++;
-				}
+		if (inter->act_adhesion) {
+			total_nb++;
+			if (inter->act_adhesion->getState().activity == Interactions::ActAdhesion::Activity::active) {
+				active_nb++;
 			}
 		}
 	}
 	double active_ratio = 0;
-	if (active_dormant_nb>0) {
-		active_ratio = (double)(active_nb)/active_dormant_nb;
+	if (total_nb>0) {
+		active_ratio = (double)(active_nb)/total_nb;
 	}
 	return std::make_pair(active_nb, active_ratio);
 }

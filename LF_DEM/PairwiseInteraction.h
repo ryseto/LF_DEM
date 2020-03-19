@@ -32,6 +32,9 @@ class vanDerWaalsForce;
 namespace TActAdhesion {
 class TimeActivatedAdhesion;
 }
+namespace ActAdhesion {
+class ActivatedAdhesion;
+}
 
 struct PairId {
 	unsigned p0; 
@@ -67,6 +70,7 @@ protected:
 	friend RepulsiveForce;
 	friend vanDerWaalsForce;
 	friend TActAdhesion::TimeActivatedAdhesion;
+	friend ActAdhesion::ActivatedAdhesion;
 	friend InteractionSet;
 
 public:
