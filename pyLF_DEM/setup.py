@@ -14,6 +14,8 @@ os.environ["CXX"] = setup_in.cxx
 
 extra_link_args = setup_in.Blas_Linking_Flags + setup_in.Lapack_Linking_Flags\
                   + setup_in.SuiteSparse_Linking_Flags + setup_in.Extra_Linking_Flags
+extra_link_args = [a for a in extra_link_args if len(a)]
+print(extra_link_args)
 include_dirs = setup_in.Blas_Include_Dirs + setup_in.Lapack_Include_Dirs\
                + setup_in.SuiteSparse_Include_Dirs
 extra_compile_args = setup_in.Extra_Compile_Args+["-std=c++11", "-O3", "-fpermissive"] # -fpermissive for gsd.c
