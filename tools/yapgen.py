@@ -269,35 +269,36 @@ def snaps2yap(pos_fname,
                                     'strain='+str(strain[1]), '', '']))
 
         # display interactions, if any
-        while strain_int < strain:
-            try:
+        if int_f is not None or dim_f is not None:
+            while strain_int < strain:
+                try:
+                    if int_f is not None:
+                        frame_int = int_f.__next__()
+                        strain_int = du.matching_uniq(frame_int[0], ["cu".encode('utf8'), "strain".encode('utf8')])
+                    if dim_f is not None:
+                        frame_dim = dim_f.__next__()
+                        strain_int = du.matching_uniq(frame_dim[0], ["cu".encode('utf8'), "strain".encode('utf8')])
+                except StopIteration:
+                    break
+            if strain_int == strain:
                 if int_f is not None:
-                    frame_int = int_f.__next__()
-                    strain_int = du.matching_uniq(frame_int[0], ["cu".encode('utf8'), "strain".encode('utf8')])
+                    interaction_bonds, f_factor =\
+                    interactions_bonds_yaparray(frame_int[1], frame_par[1],
+                                                int_f.column_def(), pcols,
+                                                f_factor=f_factor,
+                                                f_chain_thresh=f_chain_thresh,
+                                                layer_contacts=1,
+                                                layer_noncontacts=2,
+                                                color_contacts=4,
+                                                color_noncontacts=5)
+                    yap_out = np.row_stack((yap_out, interaction_bonds))
                 if dim_f is not None:
-                    frame_dim = dim_f.__next__()
-                    strain_int = du.matching_uniq(frame_dim[0], ["cu".encode('utf8'), "strain".encode('utf8')])
-            except StopIteration:
-                break
-        if strain_int == strain:
-            if int_f is not None:
-                interaction_bonds, f_factor =\
-                interactions_bonds_yaparray(frame_int[1], frame_par[1],
-                                            int_f.column_def(), pcols,
+                    dimers, f_factor =\
+                        dimers_yaparray(frame_dim[1], frame_par[1],
+                                            dim_f.column_def(), pcols,
                                             f_factor=f_factor,
-                                            f_chain_thresh=f_chain_thresh,
-                                            layer_contacts=1,
-                                            layer_noncontacts=2,
-                                            color_contacts=4,
-                                            color_noncontacts=5)
-                yap_out = np.row_stack((yap_out, interaction_bonds))
-            if dim_f is not None:
-                dimers, f_factor =\
-                    dimers_yaparray(frame_dim[1], frame_par[1],
-                                        dim_f.column_def(), pcols,
-                                        f_factor=f_factor,
-                                        f_chain_thresh=f_chain_thresh)
-                yap_out = np.row_stack((yap_out, dimers))
+                                            f_chain_thresh=f_chain_thresh)
+                    yap_out = np.row_stack((yap_out, dimers))
 
         # output
         np.savetxt(yap_file, yap_out, fmt="%s "*7)

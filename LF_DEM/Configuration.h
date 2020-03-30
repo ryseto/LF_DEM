@@ -107,8 +107,6 @@ struct base_shear_configuration readBinaryBaseShearConfiguration(const std::stri
 
 struct base_configuration readBinaryBaseConfiguration(std::ifstream &input);
 
-struct delayed_adhesion_configuration readBinaryDelayedAdhesionConfiguration(std::string filename);
-
 struct activated_adhesion_configuration readBinaryActivatedAdhesionConfiguration(std::string filename);
 
 struct fixed_velo_configuration readBinaryFixedVeloConfiguration(const std::string& filename);

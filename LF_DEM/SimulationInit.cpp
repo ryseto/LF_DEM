@@ -60,8 +60,11 @@ void Simulation::setupNonDimensionalization(Parameters::ParameterSetFactory &PFa
 
 Dimensional::Unit Simulation::determineUnit(Parameters::ParameterSetFactory &PFact)
 {
+	std::cout << indent << " Determination of the internal unit system:" << std::endl;
 	// feed in the force scales to the UnitSystem solver
+	std::cout << indent << "      Forces involved";
 	for (auto &fs: PFact.getForceScales()) {
+		std::cout << " " << Dimensional::unit2suffix(fs.type) << std::endl;
 		system_of_units.add(fs.type, fs.dim_qty);
 	}
 	// determine the internal unit to be used
@@ -70,6 +73,7 @@ Dimensional::Unit Simulation::determineUnit(Parameters::ParameterSetFactory &PFa
 		if (control_value.value != 0) {
 			system_of_units.add(Dimensional::Unit::hydro, control_value);
 			system_of_units.setInternalUnit(Dimensional::Unit::hydro);
+			std::cout << " " << Dimensional::unit2suffix(Dimensional::Unit::hydro);
 			internal_unit = Dimensional::Unit::hydro;
 			double largest_force_val = 1;
 			for (auto &fs: PFact.getForceScales()) {
@@ -97,16 +101,19 @@ Dimensional::Unit Simulation::determineUnit(Parameters::ParameterSetFactory &PFa
 	} else if (control_var == Parameters::ControlVariable::stress) {
 		system_of_units.add(Dimensional::Unit::stress, control_value);
 		internal_unit = control_value.unit;
+		std::cout << " " << Dimensional::unit2suffix(Dimensional::Unit::stress);
 		//		internal_unit = Dimensional::Unit::stress;
 	} else if (control_var == Parameters::ControlVariable::pressure_drop) {
 		system_of_units.add(Dimensional::Unit::pressure_drop, control_value);
 		//internal_unit = control_value.unit;
 		internal_unit = Dimensional::Unit::pressure_drop;
+		std::cout << " " << Dimensional::unit2suffix(Dimensional::Unit::pressure_drop);
 	} else if (control_var == Parameters::ControlVariable::force) {
 		// sedimentation problem
 		system_of_units.add(Dimensional::Unit::bodyforce, control_value);
 		system_of_units.setInternalUnit(Dimensional::Unit::bodyforce);
 		internal_unit = Dimensional::Unit::bodyforce;
+		std::cout << " " << Dimensional::unit2suffix(Dimensional::Unit::bodyforce);
 	}
 	return internal_unit;
 }
