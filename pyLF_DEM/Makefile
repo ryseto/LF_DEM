@@ -10,6 +10,7 @@ all:
 install:
 	cp _pyLFDEM*.so $(PYTHON_SITE_PACKAGES)
 	cp pyLFDEM.py $(PYTHON_SITE_PACKAGES)
+	cp pyLFDEM_helper.py $(PYTHON_SITE_PACKAGES)
 
 swig:
 	$(SWIG) -python -c++ pyLFDEM.i

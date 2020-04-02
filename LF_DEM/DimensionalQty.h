@@ -165,6 +165,7 @@ namespace Dimensional {
 		template<typename T> void convertToInternalUnit(DimensionalQty<T> &quantity) const;
 		template<typename T> void convertFromInternalUnit(DimensionalQty<T> &quantity, Unit unit) const;
 		const std::map<Unit, DimensionalQty<double>> getForceScales() const {assert(has_internal_unit); return unit_nodes;};
+		bool has(Unit unit) const {return unit_nodes.count(unit) > 0;};
 
 	private:
 		std::map<Unit, DimensionalQty<double>> unit_nodes;

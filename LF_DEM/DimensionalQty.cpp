@@ -78,6 +78,7 @@ namespace Dimensional {
 		if (quantity.dimension == Dimension::Stress) {
 			quantity.value /= 6*M_PI; // at some point we have to get rid of this weird unit choice
 		}
+		std::cout << " UnitSystem : adding force scale " << Dimensional::unit2suffix(unit) << std::endl;
 		unit_nodes[unit] = quantity;
 		auto parent_node_name = quantity.unit;
 		// no orphans!

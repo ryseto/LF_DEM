@@ -62,13 +62,12 @@ Dimensional::Unit Simulation::determineUnit(Parameters::ParameterSetFactory &PFa
 {
 	std::cout << indent << " Determination of the internal unit system:" << std::endl;
 	// feed in the force scales to the UnitSystem solver
-	std::cout << indent << "      Forces involved";
 	for (auto &fs: PFact.getForceScales()) {
-		std::cout << " " << Dimensional::unit2suffix(fs.type) << std::endl;
 		system_of_units.add(fs.type, fs.dim_qty);
 	}
 	// determine the internal unit to be used
 	Dimensional::Unit internal_unit = Dimensional::Unit::hydro;
+	
 	if (control_var == Parameters::ControlVariable::rate) {// || control_var == Parameters::ControlVariable::viscnb) {
 		if (control_value.value != 0) {
 			system_of_units.add(Dimensional::Unit::hydro, control_value);
@@ -88,14 +87,11 @@ Dimensional::Unit Simulation::determineUnit(Parameters::ParameterSetFactory &PFa
 			}
 		} else {
 			if (control_value.unit == Dimensional::Unit::brownian) {
-				cout << indent << "Brownian at Pe = 0 " << endl;
 				internal_unit = Dimensional::Unit::brownian;
-			} else if (control_value.unit == Dimensional::Unit::repulsion) {
-				cout << indent << "non-Brownain at rate = 0 " << endl;
-				internal_unit = Dimensional::Unit::repulsion;
-			} else {
-				cout << indent << "non-Brownain at rate = 0 " << endl;
-				internal_unit = Dimensional::Unit::kn;
+			} else if (system_of_units.has(control_value.unit)) {
+				internal_unit = control_value.unit;
+			}  else {
+				throw std::runtime_error("Rate given in undetermined unit \""+Dimensional::unit2suffix(control_value.unit)+"\".");
 			}
 		}
 	} else if (control_var == Parameters::ControlVariable::stress) {
@@ -124,7 +120,7 @@ void Simulation::convertForces(Dimensional::Unit &internal_unit,
 	// set the internal unit to actually determine force and parameter non-dimensionalized values
 	system_of_units.setInternalUnit(internal_unit);
 	PFact.setSystemOfUnits(system_of_units);
-	cout << indent << "internal units = " << Dimensional::unit2suffix(internal_unit) << endl;
+	cout << indent << "All parameters set to internal unit " << Dimensional::unit2suffix(internal_unit) << endl;
 }
 
 void Simulation::setOutputUnit(Parameters::ParameterSetFactory &PFact)
@@ -347,6 +343,14 @@ void Simulation::setupFlow()
 
 void Simulation::setupControl(Parameters::ControlVariable control_variable_,
 							   Dimensional::DimensionalQty<double> control_value_)
+{
+	control_var = control_variable_;
+	control_value = control_value_;
+	cout << indent << "Simulation:: Control variable set: " << (unsigned)control_var << " " << control_value.value << endl;
+}
+
+void Simulation::setupControl(Parameters::ControlVariable control_variable_,
+							  std::string control_value_)
 {
 	control_var = control_variable_;
 	control_value = control_value_;

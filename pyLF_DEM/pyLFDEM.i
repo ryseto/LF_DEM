@@ -15,6 +15,7 @@
 %}
 %include <std_string.i>
 %include <std_set.i>
+%include <std_map.i>
 %include <std_vector.i>
 %include <std_pair.i>
 %include <std_shared_ptr.i>
@@ -58,6 +59,7 @@ namespace std {
   %template(PairIntInt) pair<int, int>;
   %template(PairDoubleString) pair<double, string>;
   %template(SetString) set<string>;
+  %template(StringStringMap) map<string,string>;
 }
 %template(DoubleDimQty) Dimensional::DimensionalQty<double>;
 // imperfect error handling. Errors get passed to Python, but sometimes still seg fault
