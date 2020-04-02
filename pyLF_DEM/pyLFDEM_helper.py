@@ -12,8 +12,6 @@ def getLFControlVar(control_var):
 
 
 
-SimuArgs = namedtuple('SimuArgs', ['ctrl_str', 'conf_file', 'params_file', 'binary_conf', 'identifier', 'call_args'])
-
 def setupBasicSimu(**kwargs):
 	"""
 		Wrapper around LF_DEM's Simulation::setupSimulation method.
@@ -37,6 +35,9 @@ def setupBasicSimu(**kwargs):
 
 		  			- 'call_str': string, call arguments to be printed by LF_DEM in the input_ file of the simulation (default "").
 								   setupBasicSimu will append its own call signature to this string
+
+					- 'overwrite': boolean, start simulation even if corresponding output files already present, 
+						           and about to be overwritten (default False)
 
 		Output:
 			Instance of Simulation class configured according to inputs.
@@ -67,10 +68,15 @@ def setupBasicSimu(**kwargs):
 		call_str = kwargs.pop('call_str')
 	except KeyError:
 		call_str = ""
+	try:
+		overwrite = kwargs.pop('overwrite')
+	except KeyError:
+		overwrite = False
 	
 	call_str = call_str + in_args
 
 	simu = lf.Simulation()
+	simu.force_to_run = overwrite
 	simu.setupControl(getLFControlVar(ctrl_str.split()[0]), ctrl_str.split()[1])
 
 	input_files = lf.StringStringMap({"config": conf_file, "params": params_file})
