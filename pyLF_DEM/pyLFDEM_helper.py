@@ -12,10 +12,12 @@ def getLFControlVar(control_var):
 
 
 
-SimuArgs = namedtuple('SimuArgs', ['ctrl_str', 'conf_file', 'params_file', 'binary_conf', 'identifier'])
+SimuArgs = namedtuple('SimuArgs', ['ctrl_str', 'conf_file', 'params_file', 'binary_conf', 'identifier', 'call_args'])
 
 def setupBasicSimu(**kwargs):
 	"""
+		Wrapper around LF_DEM's Simulation::setupSimulation method.
+
 		Inputs:
 		  	**kwargs :
 		  		Accepts following keys: 
@@ -25,14 +27,22 @@ def setupBasicSimu(**kwargs):
 		  						  Example: "r 1.5kn"
 		  						  (required)
 
-		  			- 'conf_file': name of file containing the initial configuration, either in text or binary format (required)
+		  			- 'conf_file': string, name of file containing the initial configuration, either in text or binary format (required)
 
 		  			- 'binary_conf': boolean, True if the file passed in 'conf_file' is binary (default False)
 
-		  			- 'params_file': name of parameter file (required)
+		  			- 'params_file': string, name of parameter file (required)
 
-		  			- 'identifier': optional name of the simulation (default "pyLFDEM")	
+		  			- 'identifier': string, optional name of the simulation (default "pyLFDEM")	
+
+		  			- 'call_str': string, call arguments to be printed by LF_DEM in the input_ file of the simulation (default "").
+								   setupBasicSimu will append its own call signature to this string
+
+		Output:
+			Instance of Simulation class configured according to inputs.
+
 	"""
+	in_args = "\nThrough pyLFDEM_helper.setupBasicSimu("+str(kwargs)+")"
 	try:
 		ctrl_str = kwargs.pop('ctrl_str')
 	except KeyError:
@@ -53,11 +63,17 @@ def setupBasicSimu(**kwargs):
 		binary_conf = bool(kwargs.pop('binary_conf'))
 	except KeyError:
 		binary_conf = False
+	try:
+		call_str = kwargs.pop('call_str')
+	except KeyError:
+		call_str = ""
+	
+	call_str = call_str + in_args
 
 	simu = lf.Simulation()
 	simu.setupControl(getLFControlVar(ctrl_str.split()[0]), ctrl_str.split()[1])
 
 	input_files = lf.StringStringMap({"config": conf_file, "params": params_file})
-	simu.setupSimulation(str(kwargs), input_files, binary_conf, identifier)
+	simu.setupSimulation(call_str, input_files, binary_conf, identifier)
 
 	return simu
