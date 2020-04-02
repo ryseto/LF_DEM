@@ -503,6 +503,7 @@ ParameterSet ParameterSetFactory::getParameterSet() const
 
 	Interactions::Lub::setupLubricationParameters(p.lub);
 	Interactions::setupContactParameters(p.contact);
+	p.theta_shear *= M_PI/180.;
 	return p;
 }
 

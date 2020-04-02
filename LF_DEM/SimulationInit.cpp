@@ -13,6 +13,7 @@
 #include "Configuration.h"
 #include "ParameterSetFactory.h"
 #include "Dimer_io.h"
+#include "LeesEdwards.h"
 
 using namespace std;
 
@@ -307,10 +308,7 @@ void Simulation::setupFlow()
 			 * E = ((-1/4, 0, 0), (0, 1/2, 0), (0, 0, -1/4))
 			 * G = ((-1/2, 0, 0), (0, 0, 0), (0, 0, 1/2)
 			 */
-			matrix flow_shape = {0, 0, 1,
-								 0, 0, 0,
-								 0, 0, 0};
-			sys.imposed_flow->setShape(flow_shape);
+			sys.imposed_flow->setShape(BC::flowShapeSimpleShear(sys.p.theta_shear));
 			stress_basis_0 = {-0.25, 0, 0, 0, 0.5, -0.25}; // = E
 			stress_basis_3 = {-0.5, 0, 0, 0, 0, 0.5}; // = G
 		} else if (sys.shear_type == ShearType::extensional_flow) {
