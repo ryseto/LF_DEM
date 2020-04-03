@@ -143,7 +143,7 @@ void Simulation::exportControlVariable()
 	// when there is a hydro force, its value is the non-dimensionalized shear rate.
 	auto forces = system_of_units.getForceScales();
 	if (control_var == Parameters::ControlVariable::rate && forces.count(Dimensional::Unit::hydro)) {
-		sys.imposed_flow->setRate(forces.at(Dimensional::Unit::hydro).value);
+		sys.imposed_flow->setRate(forces.at(Dimensional::Unit::hydro).value, true);
 	} else if (control_var == Parameters::ControlVariable::stress) {
 		sys.target_stress = forces.at(Dimensional::Unit::stress).value;
 	} else if (control_var == Parameters::ControlVariable::pressure_drop) {
@@ -340,7 +340,7 @@ void Simulation::setupFlow()
 			stress_basis_3.setSymmetrize(mat_stress_basis_3);
 		}
 	} else {
-		sys.imposed_flow->setRate(0);
+		sys.imposed_flow->setRate(0, true);
 	}
 }
 

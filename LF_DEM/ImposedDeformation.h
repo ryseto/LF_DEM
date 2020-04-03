@@ -13,7 +13,7 @@ public:
 
 	void setShape(Sym2Tensor sym, vec3d antisym);
 	void setShape(const matrix &shape_);
-	void setRate(double rate);
+	void setRate(double rate, bool verbose=false);
 	bool zero_shear() {return shear_rate == 0;};
 
 	const matrix& getShape() {return shape;};

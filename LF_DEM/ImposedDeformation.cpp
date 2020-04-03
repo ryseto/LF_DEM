@@ -26,10 +26,12 @@ void ImposedDeformation::setShape(const matrix &shape_)
 	printShape();
 }
 
-void ImposedDeformation::setRate(double rate)
+void ImposedDeformation::setRate(double rate, bool verbose)
 {
 	shear_rate = rate;
-	std::cout << "\tImposedDeformation:: Setting deformation rate "<< getRate() << std::endl;
+	if (verbose) {
+		std::cout << "\tImposedDeformation:: Setting deformation rate "<< getRate() << std::endl;
+	}
 	grad_u = shear_rate*shape;
 	sym_grad_u = shear_rate*sym_shape;
 	antisym_grad_u = shear_rate*antisym_shape;
