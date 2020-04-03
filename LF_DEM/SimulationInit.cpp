@@ -73,7 +73,6 @@ Dimensional::Unit Simulation::determineUnit(Parameters::ParameterSetFactory &PFa
 		if (control_value.value != 0) {
 			system_of_units.add(Dimensional::Unit::hydro, control_value);
 			system_of_units.setInternalUnit(Dimensional::Unit::hydro);
-			std::cout << " " << Dimensional::unit2suffix(Dimensional::Unit::hydro);
 			internal_unit = Dimensional::Unit::hydro;
 			double largest_force_val = 1;
 			for (auto &fs: PFact.getForceScales()) {
@@ -98,20 +97,24 @@ Dimensional::Unit Simulation::determineUnit(Parameters::ParameterSetFactory &PFa
 	} else if (control_var == Parameters::ControlVariable::stress) {
 		system_of_units.add(Dimensional::Unit::stress, control_value);
 		internal_unit = control_value.unit;
-		std::cout << " " << Dimensional::unit2suffix(Dimensional::Unit::stress);
 		//		internal_unit = Dimensional::Unit::stress;
 	} else if (control_var == Parameters::ControlVariable::pressure_drop) {
 		system_of_units.add(Dimensional::Unit::pressure_drop, control_value);
 		//internal_unit = control_value.unit;
 		internal_unit = Dimensional::Unit::pressure_drop;
-		std::cout << " " << Dimensional::unit2suffix(Dimensional::Unit::pressure_drop);
 	} else if (control_var == Parameters::ControlVariable::force) {
 		// sedimentation problem
 		system_of_units.add(Dimensional::Unit::bodyforce, control_value);
 		system_of_units.setInternalUnit(Dimensional::Unit::bodyforce);
 		internal_unit = Dimensional::Unit::bodyforce;
-		std::cout << " " << Dimensional::unit2suffix(Dimensional::Unit::bodyforce);
 	}
+	if (control_var != Parameters::ControlVariable::stress && system_of_units.has(Dimensional::Unit::stress)) {
+		std::cerr << "WARNING: Some forces are expresses in stress units but simulation not in controlled stress mode. Probably not what you intend to do..." << std::endl;
+	}
+	if (control_var != Parameters::ControlVariable::rate && system_of_units.has(Dimensional::Unit::hydro)) {
+		throw std::runtime_error("Cannot use hydro units for forces if not in controlled rate mode.");
+	}
+	std::cout << " Internal unit picked : " << Dimensional::unit2suffix(internal_unit) << std::endl;
 	return internal_unit;
 }
 
@@ -296,7 +299,9 @@ void Simulation::setupFlow()
 	/* dot_gamma = 1 --> dot_epsilon = 0;
 	 *
 	 */
-	sys.imposed_flow = std::make_shared<Geometry::ImposedDeformation>();
+	if (!sys.imposed_flow) {
+		sys.imposed_flow = std::make_shared<Geometry::ImposedDeformation>();
+	}
 	if (control_value.value != 0) {
 		if (sys.shear_type == ShearType::simple_shear) {
 			/* simple shear flow
