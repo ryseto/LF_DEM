@@ -147,7 +147,7 @@ void KraynikReineltBC::periodize(unsigned i, vec3d &pos) const
 
 vec3d KraynikReineltBC::getVelDifference(const vec3d &separation) const
 {
-	return deformation->grad_u*separation;
+	return deformation->getGradU()*separation;
 }
 
 } // namespace BC

@@ -142,7 +142,7 @@ void Simulation::handleEventsFragility()
 
 void Simulation::handleEventsJammingStressReversal()
 {
-	//	double sr = sqrt(2*sys.imposed_flow->sym_grad_u.selfdoubledot()); // shear rate for simple shear.
+	//	double sr = sqrt(2*sys.imposed_flow->getSymGradU().selfdoubledot()); // shear rate for simple shear.
 	stress_reversal = false;
 	for (const auto& ev : sys.events) {
 		if (ev.type == "jammed_shear_rate") {
@@ -475,7 +475,7 @@ void Simulation::operateJammingStressReversal(std::set<std::string> &output_even
 		output_events.insert("config");
 	} else {
 		jamming_strain = 0;
-		if (sys.imposed_flow->shear_rate < 0.001) {
+		if (sys.imposed_flow->getRate() < 0.001) {
 			if (sys.dt > sys.p.dt_jamming) {
 				sys.dt = sys.p.dt_jamming;
 			}
@@ -645,7 +645,7 @@ void Simulation::outputData()
 	 and made more consistent in the future.
 	 */
 	outdata.setUnits(system_of_units, output_unit);
-	double sr = sqrt(2*sys.imposed_flow->sym_grad_u.selfdoubledot()); // shear rate for simple shear.
+	double sr = sqrt(2*sys.imposed_flow->getSymGradU().selfdoubledot()); // shear rate for simple shear.
 	if (sys.p.output.effective_coordination_number) {
 		sys.countContactNumber();
 	}
@@ -659,11 +659,11 @@ void Simulation::outputData()
 		// Simple shear geometry
 		outdata.entryData("cumulated shear strain", Dimensional::Dimension::none, 1, sys.get_cumulated_strain());
 		/* Note: shear rate
-		 * shear rate = 2*sqrt(sys.imposed_flow->sym_grad_u.selfdoubledot()/2);
+		 * shear rate = 2*sqrt(sys.imposed_flow->getSymGradU().selfdoubledot()/2);
 		 * - shear rate (\dot{\gamma}) in simple shear flow
 		 * - twice of extensional rate (\dot{\varepsilon})in extensional flow
 		 */
-		outdata.entryData("shear rate", Dimensional::Dimension::Rate, 1, sys.imposed_flow->shear_rate);
+		outdata.entryData("shear rate", Dimensional::Dimension::Rate, 1, sys.imposed_flow->getRate());
 	} else {
 		// Rotary Couette geometry
 		outdata.entryData("rotation angle", Dimensional::Dimension::none, 1, sys.get_angle_wheel());
@@ -671,19 +671,19 @@ void Simulation::outputData()
 	}
 	/************** viscosity **********************************************************************/
 	if (sr != 0) {
-		viscosity = 0.5*doubledot(sys.total_stress, sys.imposed_flow->sym_grad_u)/sys.imposed_flow->sym_grad_u.selfdoubledot();
+		viscosity = 0.5*doubledot(sys.total_stress, sys.imposed_flow->getSymGradU())/sys.imposed_flow->getSymGradU().selfdoubledot();
 	} else {
 		// @@@ tentative ouptut for Pe = 0 simulation
 		// output xz component of stress tensor
 		//viscous_material_function = sys.total_stress.elm[2];
-		viscosity = 0.5*doubledot(sys.total_stress, sys.imposed_flow->sym_shape)/sys.imposed_flow->sym_shape.selfdoubledot();
+		viscosity = 0.5*doubledot(sys.total_stress, sys.imposed_flow->getSymShape())/sys.imposed_flow->getSymShape().selfdoubledot();
 		/* D = ((0, 0, 1/2), (0, 0, 0), (1/2, 0, 0))
 		 */
 	}
 	outdata.entryData("viscosity", Dimensional::Dimension::Viscosity, 1, viscosity);
 	for (const auto &stress_comp: sys.total_stress_groups) {
 		string entry_name = "Viscosity("+stress_comp.first+")";
-		double viscosity_component = 0.5*doubledot(stress_comp.second, sys.imposed_flow->sym_grad_u)/sys.imposed_flow->sym_grad_u.selfdoubledot();
+		double viscosity_component = 0.5*doubledot(stress_comp.second, sys.imposed_flow->getSymGradU())/sys.imposed_flow->getSymGradU().selfdoubledot();
 		outdata.entryData(entry_name, Dimensional::Dimension::Viscosity, 1, viscosity_component);
 	}
 	//outdata.entryData("shear stress", Dimensional::Dimension::Stress, 1, shear_stress);
@@ -815,7 +815,7 @@ void Simulation::outputData()
 	outdata_st.setUnits(system_of_units, output_unit);
 	outdata_st.entryData("time", Dimensional::Dimension::Time, 1, sys.get_time());
 	outdata_st.entryData("cumulated strain", Dimensional::Dimension::none, 1, sys.get_cumulated_strain());
-	outdata_st.entryData("shear rate", Dimensional::Dimension::Rate, 1, sys.imposed_flow->shear_rate);
+	outdata_st.entryData("shear rate", Dimensional::Dimension::Rate, 1, sys.imposed_flow->getRate());
 	outdata_st.entryData("total stress tensor (xx, xy, xz, yz, yy, zz)", Dimensional::Dimension::Stress, 6, sys.total_stress);
 	for (const auto &stress_comp: sys.total_stress_groups) {
 		string entry_name = stress_comp.first+" stress tensor (xx, xy, xz, yz, yy, zz)";
@@ -866,7 +866,7 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 	if (sys.shear_type == ShearType::simple_shear) {
 		snapshot_header << "# shear disp" << sep << sys.lees->getShearDisp().x << endl;
 	}
-	Dimensional::DimensionalQty<double> rate = {Dimensional::Dimension::Rate, sys.imposed_flow->shear_rate, system_of_units.getInternalUnit()};
+	Dimensional::DimensionalQty<double> rate = {Dimensional::Dimension::Rate, sys.imposed_flow->getRate(), system_of_units.getInternalUnit()};
 	system_of_units.convertFromInternalUnit(rate, output_unit);
 	Dimensional::DimensionalQty<double> stress = {Dimensional::Dimension::Stress, sys.target_stress, system_of_units.getInternalUnit()};
 	system_of_units.convertFromInternalUnit(stress, output_unit);
@@ -1012,7 +1012,7 @@ void Simulation::outputParFileTxt()
 		//		if (sys.couette_stress) {
 		//			double stress_rr, stress_thetatheta, stress_rtheta;
 		//			sys.getStressCouette(i, stress_rr, stress_thetatheta, stress_rtheta);
-		//			double sr = sys.imposed_flow->shear_rate;
+		//			double sr = sys.imposed_flow->getRate();
 		//			outdata_par.entryData("stress_rr", Dimensional::Dimension::Viscosity, 1, stress_rr/sr);
 		//			outdata_par.entryData("stress_thetatheta", Dimensional::Dimension::Viscosity, 1, stress_thetatheta/sr);
 		//			outdata_par.entryData("stress_rtheta", Dimensional::Dimension::Viscosity, 1, stress_rtheta/sr);

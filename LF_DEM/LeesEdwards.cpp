@@ -83,7 +83,7 @@ deformation(imposed_deformation)
 
 void LeesEdwardsBC::incrementStrain(double dt)
 {
-	vec3d shear_strain_increment = 2*dot(deformation->sym_grad_u, {0, 0, 1})*dt;
+	vec3d shear_strain_increment = 2*dot(deformation->getSymGradU(), {0, 0, 1})*dt;
 	shear_strain += shear_strain_increment;
 	shear_disp += shear_strain_increment*container.lz;
 	int m = (int)(shear_disp.x/container.lx);
@@ -102,7 +102,7 @@ void LeesEdwardsBC::incrementStrain(double dt)
 
 vec3d LeesEdwardsBC::getVelDifference(const vec3d &separation) const
 {
-	return deformation->grad_u*separation;
+	return deformation->getGradU()*separation;
 }
 
 matrix flowShapeSimpleShear(double theta_shear) {

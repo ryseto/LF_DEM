@@ -16,6 +16,17 @@ public:
 	void setRate(double rate);
 	bool zero_shear() {return shear_rate == 0;};
 
+	const matrix& getShape() {return shape;};
+	const Sym2Tensor& getSymShape()  {return sym_shape;};
+	const vec3d& getAntiSymShape()  {return antisym_shape;};
+
+	const matrix& getGradU() {return grad_u;};
+	const Sym2Tensor& getSymGradU()  {return sym_grad_u;};
+	const vec3d& getAntiSymGradU()  {return antisym_grad_u;};
+
+	double getRate() {return shear_rate;};
+
+private:
 	matrix shape;
 	Sym2Tensor sym_shape; // E/shear_rate: "shape" of the flow
 	vec3d antisym_shape;  // omega/shear_rate: "shape" of the flow

@@ -319,7 +319,7 @@ void System::gatherStressesByRateDependencies(Sym2Tensor &rate_prop_stress,
 	rate_indep_stress /= system_volume;
 
 	// suspending fluid viscosity
-	rate_prop_stress += 2*imposed_flow->sym_grad_u/(6*M_PI);
+	rate_prop_stress += 2*imposed_flow->getSymGradU()/(6*M_PI);
 }
 
 void System::calcStress()
@@ -336,7 +336,7 @@ void System::calcStress()
 		sc.second /= system_volume;
 	}
 
-	total_stress_groups["hydro"] += 2*imposed_flow->sym_grad_u/(6*M_PI);
+	total_stress_groups["hydro"] += 2*imposed_flow->getSymGradU()/(6*M_PI);
 
 	total_stress.reset();
 	for (const auto &sc: total_stress_groups) {

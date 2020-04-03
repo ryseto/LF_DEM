@@ -111,17 +111,17 @@ public:
 		}
 	}
 	
-	vec3d diag()
+	vec3d diag() const
 	{
 		return {elm[0], elm[4], elm[5]};
 	}
 	
-	double trace()
+	double trace() const
 	{
 		return elm[0]+elm[4]+elm[5];
 	}
 	
-	double selfdoubledot()
+	double selfdoubledot() const
 	{
 		return elm[0]*elm[0]
 		+ 2*elm[1]*elm[1]
@@ -145,7 +145,7 @@ public:
 		elm[5] = m.elm[8];
 	}
 	
-	matrix getMatrix()
+	matrix getMatrix() const
 	{
 		matrix m(elm[0], elm[1], elm[2],
 				 elm[1], elm[4], elm[3],

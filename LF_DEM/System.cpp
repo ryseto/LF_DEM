@@ -434,7 +434,7 @@ void System::setupSystemPostConfiguration()
 			conf->angle[i] = -atan2(conf->position[i].z-origin_of_rotation.z,
 							 		 conf->position[i].x-origin_of_rotation.x);
 		}
-		double omega_wheel = (radius_out-radius_in)*imposed_flow->shear_rate/radius_in;
+		double omega_wheel = (radius_out-radius_in)*imposed_flow->getRate()/radius_in;
 		if (p.simulation_mode == 11) {
 			omega_wheel_in  = 0;
 			omega_wheel_out = -omega_wheel;
@@ -450,7 +450,7 @@ void System::setupSystemPostConfiguration()
 		}
 		couette_stress = true; // output stress per perticle
 	} else if (p.simulation_mode == 51) {
-		double omega_wheel = (radius_out-radius_in)*imposed_flow->shear_rate/radius_out;
+		double omega_wheel = (radius_out-radius_in)*imposed_flow->getRate()/radius_out;
 		omega_wheel_out = -omega_wheel;
 		omega_wheel_in  = omega_wheel*radius_out/radius_in;
 	}
@@ -483,7 +483,7 @@ void System::timeStepBoxing()
 		\brief Apply a strain step to the boxing system.
 	 */
 	if (!imposed_flow->zero_shear()) {
-		double strain_increment = imposed_flow->shear_rate*dt;
+		double strain_increment = imposed_flow->getRate()*dt;
 		clk.cumulated_strain += strain_increment;
 		if (shear_type == ShearType::simple_shear) {
 			lees->incrementStrain(dt);
@@ -493,7 +493,7 @@ void System::timeStepBoxing()
 		}
 	} else {
 		if (wall_rheology || p.simulation_mode == 31) {
-			vec3d strain_increment = 2*dot(imposed_flow->sym_grad_u, {0, 0, 1})*dt;
+			vec3d strain_increment = 2*dot(imposed_flow->getSymGradU(), {0, 0, 1})*dt;
 			clk.cumulated_strain += strain_increment.norm();
 			// shear_strain += strain_increment;
 			angle_wheel += dt*(omega_wheel_in-omega_wheel_out);
@@ -508,7 +508,7 @@ void System::eventShearJamming()
 	 \brief Create an event when the shear rate is less than p.sj_shear_rate
 	*/
 	static int cnt_jamming = 0;
-	if (abs(imposed_flow->shear_rate) < p.sj_shear_rate && computeMaxNAVelocity() < p.sj_velocity) {
+	if (abs(imposed_flow->getRate()) < p.sj_shear_rate && computeMaxNAVelocity() < p.sj_velocity) {
 		cnt_jamming ++;
 		if (cnt_jamming > p.sj_check_count) {
 			Event ev;
@@ -901,10 +901,10 @@ void System::adaptTimeStepWithVelocities()
 			dt = p.disp_max/max_interaction_vel;
 		}
 	} else {
-		dt = p.disp_max/imposed_flow->shear_rate;
+		dt = p.disp_max/imposed_flow->getRate();
 	}
-	if (dt*imposed_flow->shear_rate > p.disp_max) { // cases where na_velocity < \dotgamma*radius
-		dt = p.disp_max/imposed_flow->shear_rate;
+	if (dt*imposed_flow->getRate() > p.disp_max) { // cases where na_velocity < \dotgamma*radius
+		dt = p.disp_max/imposed_flow->getRate();
 	}
 	if (p.dt_max > 0) {
 		if (dt > p.dt_max) {
@@ -928,8 +928,8 @@ void System::adaptTimeStepWithBounds(double time_end, double strain_end)
 	// whatever comes first
 	if (shear_type != ShearType::solvent_flow) {
 		if (strain_end >= 0) {
-			if (fabs(dt*imposed_flow->shear_rate) > strain_end-clk.cumulated_strain) {
-				dt = fabs((strain_end-clk.cumulated_strain)/imposed_flow->shear_rate);
+			if (fabs(dt*imposed_flow->getRate()) > strain_end-clk.cumulated_strain) {
+				dt = fabs((strain_end-clk.cumulated_strain)/imposed_flow->getRate());
 			}
 		}
 		if (time_end >= 0) {
@@ -975,7 +975,7 @@ void System::timeStepMove(double time_end, double strain_end)
 			kr->retrimProcess(conf->position, clk.cumulated_strain);
 			for (int i=0; i<np; i++) {
 				velocity.vel[i] -= vel_bg.vel[i];
-				vel_bg.vel[i] = imposed_flow->grad_u*conf->position[i];
+				vel_bg.vel[i] = imposed_flow->getGradU()*conf->position[i];
 				velocity.vel[i] += vel_bg.vel[i];
 			}
 		}
@@ -1051,7 +1051,7 @@ void System::timeStepMoveCorrector()
 			kr->retrimProcess(conf->position, clk.cumulated_strain);
 			for (int i=0; i<np; i++) {
 				velocity.vel[i] -= vel_bg.vel[i];
-				vel_bg.vel[i] = imposed_flow->grad_u*conf->position[i];
+				vel_bg.vel[i] = imposed_flow->getGradU()*conf->position[i];
 				velocity.vel[i] += vel_bg.vel[i];
 			}
 		}
@@ -1622,7 +1622,7 @@ void System::computeShearRate()
 	/**
 	 \brief Compute the shear rate under stress control conditions.
 	 */
-	assert(abs(imposed_flow->shear_rate-1) < 1e-15);
+	assert(abs(imposed_flow->getRate()-1) < 1e-15);
 	calcStressPerParticle();
 	Sym2Tensor rate_prop_stress;
 	Sym2Tensor rate_indep_stress;
@@ -1638,8 +1638,8 @@ void System::computeShearRate()
 	 *  sigma_target = rate_prop_shearstress(rate=1)*(rate/1) + rate_indep_shearstress
 	 *  rate = (sigma_target - rate_indep_shearstress) / rate_prop_shearstress(rate=1)
 	 */
-	double rate_prop_shearstress_rate1 = doubledot(rate_prop_stress, imposed_flow->sym_grad_u); // computed with rate=1, o here it is also the viscosity.
-	double rate_indep_shearstress = doubledot(rate_indep_stress, imposed_flow->sym_grad_u);
+	double rate_prop_shearstress_rate1 = doubledot(rate_prop_stress, imposed_flow->getSymGradU()); // computed with rate=1, o here it is also the viscosity.
+	double rate_indep_shearstress = doubledot(rate_indep_stress, imposed_flow->getSymGradU());
 	if (is_brownian()) {
 		rate_prop_shearstress_rate1_ave.update(rate_prop_shearstress_rate1, get_time());
 		rate_indep_shearstress_ave.update(rate_indep_shearstress, get_time());
@@ -1654,7 +1654,7 @@ void System::computeShearRate()
 		exit (1);
 	}
 	if (clk.cumulated_strain < init_strain_shear_rate_limit) {
-		if (imposed_flow->shear_rate > init_shear_rate_limit) {
+		if (imposed_flow->getRate() > init_shear_rate_limit) {
 			imposed_flow->setRate(init_shear_rate_limit);
 		}
 	}
@@ -1868,7 +1868,7 @@ void System::rescaleVelHydroStressControlled()
 {
 	for (auto &vc: na_velo_components) {
 		if (vc.second.rate_dependence == RateDependence::proportional) {
-			vc.second *= imposed_flow->shear_rate;
+			vc.second *= imposed_flow->getRate();
 		}
 	}
 }
@@ -1974,9 +1974,9 @@ void System::computeUInf()
 	}
 	if (!imposed_flow->zero_shear()) {
 		for (int i=0; i<np; i++) {
-			vel_bg.vel[i] = dot(imposed_flow->sym_grad_u, conf->position[i]) + cross(imposed_flow->antisym_grad_u, conf->position[i]);
-			vel_bg.ang_vel[i] = imposed_flow->antisym_grad_u;
-			velgrad_bg.E[i] = imposed_flow->sym_grad_u;
+			vel_bg.vel[i] = dot(imposed_flow->getSymGradU(), conf->position[i]) + cross(imposed_flow->getAntiSymGradU(), conf->position[i]);
+			vel_bg.ang_vel[i] = imposed_flow->getAntiSymGradU();
+			velgrad_bg.E[i] = imposed_flow->getSymGradU();
 		}
 	}
 }
@@ -2051,7 +2051,7 @@ void System::displacement(int i, const vec3d& dr)
 
 	if (!imposed_flow->zero_shear()) {
 		velocity.vel[i] -= vel_bg.vel[i];
-		vel_bg.vel[i] = imposed_flow->grad_u*conf->position[i];
+		vel_bg.vel[i] = imposed_flow->getGradU()*conf->position[i];
 		velocity.vel[i] +=  vel_bg.vel[i];
 	}
 }
