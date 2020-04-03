@@ -12,6 +12,7 @@ void ImposedDeformation::setShape(Sym2Tensor sym, vec3d antisym)
 	grad_u = shear_rate*shape;
 	sym_grad_u = shear_rate*sym_shape;
 	antisym_grad_u = shear_rate*antisym_shape;
+	printShape();
 }
 
 void ImposedDeformation::setShape(const matrix &shape_)
@@ -22,15 +23,27 @@ void ImposedDeformation::setShape(const matrix &shape_)
 	grad_u = shear_rate*shape;
 	sym_grad_u = shear_rate*sym_shape;
 	antisym_grad_u = shear_rate*antisym_shape;
+	printShape();
 }
 
 void ImposedDeformation::setRate(double rate)
 {
 	shear_rate = rate;
-	std::cout << "\tImposedDeformation : Setting deformation rate "<< getRate() << std::endl;
+	std::cout << "\tImposedDeformation:: Setting deformation rate "<< getRate() << std::endl;
 	grad_u = shear_rate*shape;
 	sym_grad_u = shear_rate*sym_shape;
 	antisym_grad_u = shear_rate*antisym_shape;
 }
 
+void ImposedDeformation::printShape()
+{
+	std::cout << "\tImposedDeformation:: Flow shape: " << std::endl;
+	for (unsigned i=0; i<3; i++) {
+		std::cout << "\t\t\t";
+		for (unsigned j=0; j<3; j++) {
+			std::cout << " " << shape.get(i, j);
+		}
+		std::cout << std::endl;
+	}
+}
 }

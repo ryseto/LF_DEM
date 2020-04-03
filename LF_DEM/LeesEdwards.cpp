@@ -8,10 +8,11 @@ void LeesEdwardsBC::periodize(vec3d &pos) const
 	/* Lees-Edwards boundary condition
 	 *
 	 */
-	if (pos.z >= container.lz) {
+	while (pos.z >= container.lz) {
 		pos.z -= container.lz;
 		pos -= shear_disp;
-	} else if (pos.z < 0) {
+	} 
+	while (pos.z < 0) {
 		pos.z += container.lz;
 		pos += shear_disp;
 	}
@@ -22,9 +23,10 @@ void LeesEdwardsBC::periodize(vec3d &pos) const
 		pos.x += container.lx;
 	}
 	if (!twodimension) {
-		if (pos.y >= container.ly) {
+		while (pos.y >= container.ly) {
 			pos.y -= container.ly;
-		} else if (pos.y < 0) {
+		} 
+		while (pos.y < 0) {
 			pos.y += container.ly;
 		}
 	}
@@ -56,9 +58,10 @@ void LeesEdwardsBC::periodizeDiff(vec3d &pos_diff) const
 		pos_diff.x += container.lx;
 	}
 	if (!twodimension) {
-		if (pos_diff.y > container_half.ly) {
+		while (pos_diff.y > container_half.ly) {
 			pos_diff.y -= container.ly;
-		} else if (pos_diff.y < -container_half.ly) {
+		} 
+		while (pos_diff.y < -container_half.ly) {
 			pos_diff.y += container.ly;
 		}
 	}
@@ -105,7 +108,10 @@ vec3d LeesEdwardsBC::getVelDifference(const vec3d &separation) const
 	return deformation->getGradU()*separation;
 }
 
-matrix flowShapeSimpleShear(double theta_shear) {
+matrix flowShapeSimpleShear(double theta_shear, bool radians) {
+	if (!radians) {
+		theta_shear *= M_PI/180.;
+	}
 	double costheta_shear = cos(theta_shear);
 	double sintheta_shear = sin(theta_shear);
 	if (std::abs(sintheta_shear) < 1e-15) {

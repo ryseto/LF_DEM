@@ -34,7 +34,7 @@ private:
 	std::shared_ptr<Geometry::ImposedDeformation> deformation;
 };
 
-matrix flowShapeSimpleShear(double theta_shear);
+matrix flowShapeSimpleShear(double theta_shear, bool radians=true);
 
 } // namespace BC
 #endif /* defined(__LF_DEM__LeesEdwards__) */

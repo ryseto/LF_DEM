@@ -36,6 +36,8 @@ private:
 	vec3d antisym_grad_u;
 
 	double shear_rate;
+
+	void printShape();
 };
 
 }
