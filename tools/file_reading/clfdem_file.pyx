@@ -188,6 +188,35 @@ def read_conf_file(fname):
         in_file.close()
     return pos, rad, meta_data
 
+def readBinaryBaseConfiguration(stream, config):
+    def popValue(t, stream):
+        size = cstruct.calcsize(t)
+        buf = stream.read(size)
+        return cstruct.unpack(t, buf)
+
+    meta_data = {}
+    meta_data["np"] = popValue("i", stream)[0]
+    meta_data["vf"] = popValue("d", stream)[0]
+    meta_data["lx"], meta_data["ly"], meta_data["lz"] = popValue("3d", stream)
+
+    if 'metadata' in config:
+        config['metadata'].update(meta_data)
+    else:
+        config['metadata'] = meta_data
+
+    if meta_data["ly"] == 0:
+        config['positions'] = np.empty((meta_data["np"], 5))
+    else:
+        config['positions'] = np.empty((meta_data["np"], 4))
+    for i in range(meta_data["np"]):
+        config['positions'][i] = np.array(popValue(str(config['positions'].shape[-1])+"d", stream))
+
+    nc = popValue("I", stream)[0]
+    config['contacts'] = np.empty((nc, 8))
+    for i in range(nc):
+        config['contacts'][i] = np.array(popValue("2I6d", stream))
+
+    return config
 
 def read_binary_conf_file(fname):
     def popValue(t, stream):
@@ -198,35 +227,16 @@ def read_binary_conf_file(fname):
     stream = open(fname, mode='rb')
     meta_data = {}
     config = {}
+    config['metadata'] = {}
+    _, config['metadata']["format"] = popValue("2i", stream)
+    config = readBinaryBaseConfiguration(stream, config)
+        # if meta_data["format"] > 3:
+            # raise RuntimeError(" unknown LF_DEM binary format : ", meta_data["format"])
 
-    # determine the format
-    i = popValue("i", stream)[0]
-    if i == -1:
-        meta_data["format"], meta_data["np"] = popValue("2i", stream)
-        if meta_data["format"] > 3:
-            raise RuntimeError(" unknown LF_DEM binary format : ", meta_data["format"])
-        if meta_data["format"] == 3:
-            meta_data["np_fixed"] = popValue("i", stream)[0]
-    else:
-        meta_data["np"] = i
-        meta_data["format"] = 2
-    meta_data["vf"] = popValue("d", stream)[0]
-    meta_data["lx"], meta_data["ly"], meta_data["lz"] = popValue("3d", stream)
-    meta_data["disp_x"], meta_data["disp_y"] = popValue("2d", stream)
-    config['metadata'] = meta_data
-    config['positions'] = np.empty((meta_data["np"], 4))
-    for i in range(meta_data["np"]):
-        config['positions'][i] = np.array(popValue("4d", stream))
-
-    if meta_data["format"] == 3:
-        config['fixed_velocities'] = np.empty((meta_data["np_fixed"], 3))
-        for i in range(meta_data["np_fixed"]):
-            config['fixed_velocities'][i] = np.array(popValue("3d", stream))
-
-    nc = popValue("I", stream)[0]
-    config['contacts'] = np.empty((nc, 8))
-    for i in range(nc):
-        config['contacts'][i] = np.array(popValue("2I6d", stream))
+    # if meta_data["format"] == 3:
+        # config['fixed_velocities'] = np.empty((meta_data["np_fixed"], 3))
+        # for i in range(meta_data["np_fixed"]):
+            # config['fixed_velocities'][i] = np.array(popValue("3d", stream))
 
     stream.close()
     return config
