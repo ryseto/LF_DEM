@@ -95,10 +95,14 @@ def interactions_bonds_yaparray(int_snapshot,
 
     r1r2 = lfu.get_interaction_end_points(int_snapshot, par_snapshot,
                                           icols, pcols)
+
     if r1r2.shape[-1]==4:
         zeros = np.zeros(len(r1r2))
         r1r2 = np.column_stack((r1r2[:,0], zeros, r1r2[:,[1,2]], zeros, r1r2[:,3]))
     f, r1r2 = filter_interactions_crossing_PBC(int_snapshot, r1r2)
+
+    if r1r2.shape[0] == 0:
+        return np.empty([0, 7]), 0
 
     # display a line joining the center of interacting particles
     # with a thickness proportional to the normal force
