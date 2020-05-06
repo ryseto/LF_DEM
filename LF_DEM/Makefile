@@ -1,5 +1,4 @@
 #Makefile LF_DEM, Romain Mari
-
 override_default_cholmod = false
 UseMetis = no
 
@@ -79,13 +78,21 @@ endif
 # Includes
 Includes = $(Cholmod_path)
 
-OUT_CODE=LF_DEM
-SRC=$(shell ls *.cpp)
-LIB=$(shell ls *.h)
-OBJ=$(SRC:.cpp=.o)
-DSFMT_OBJ += $(DSFMT_SRC:.c=.o)
-GSD_OBJ = $(GSD_SRC:.c=.o)
-DATE=$(shell date +%D | sed "s./..g")
+
+BUILDDIR = build
+OBJDIR = $(BUILDDIR)/obj
+BINDIR = $(BUILDDIR)/bin
+OUT_CODE = $(BINDIR)/LF_DEM
+
+SRC = $(shell ls *.cpp)
+LIB = $(shell ls *.h)
+_OBJ = $(SRC:.cpp=.o)
+OBJ = $(patsubst %,$(OBJDIR)/%,$(_OBJ))
+_DSFMT_OBJ = $(DSFMT_SRC:.c=.o)
+DSFMT_OBJ = $(patsubst %,$(OBJDIR)/%,$(_DSFMT_OBJ))
+_GSD_OBJ = $(GSD_SRC:.c=.o)
+GSD_OBJ = $(patsubst %,$(OBJDIR)/%,$(_GSD_OBJ))
+DATE = $(shell date +%D | sed "s./..g")
 
 all:	CXXFLAGS= $(CXXFLAGS_optimized) -std=c++11
 all:	CFLAGS= $(CXXFLAGS_optimized)
@@ -107,17 +114,20 @@ hasconfig:
 		echo "\n no config/Makefile_config.mk \n \n";\
 	fi)
 
-$(OUT_CODE): $(OBJ) $(DSFMT_OBJ) $(GSD_OBJ) hasconfig
+$(OUT_CODE): folder $(OBJ) $(DSFMT_OBJ) $(GSD_OBJ) hasconfig
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJ) $(DSFMT_OBJ) $(GSD_OBJ) $(Cholmod_Linking_Flags) $(Cholmod_GPU) $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Extra_Linking_Flags) -lstdc++ -lm
 
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) $(Includes) -c $(@:.o=.cpp)
+$(OBJDIR)/%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(Includes) -c -o $@ $<
 
 $(GSD_OBJ): $(GSD_SRC)
-	$(CC) $(CFLAGS) -o $@ -c $(@:.o=.c)
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 $(DSFMT_OBJ): $(DSFMT_SRC)
-	$(CXX) $(CFLAGS) -o $@ -c $(@:.o=.c)
+	$(CXX) $(CFLAGS) -c -o $@ $<
+
+folder:
+	mkdir -p $(BUILDDIR) $(BINDIR) $(OBJDIR)
 
 tar:
 	echo "#define GIT_VERSION \"$(VERSION)\"" > VersionInfo.h
