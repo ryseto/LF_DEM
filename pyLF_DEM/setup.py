@@ -18,7 +18,8 @@ with open(LFDEM_ROOT+"LF_DEM/config/Makefile_config.mk") as f:
     for line in f:
         line = line.strip()
         if len(line) and line[0] != '#':
-            k, val = line.split(' =', maxsplit=1)
+            k, val = line.split('=', maxsplit=1)
+            k = k.strip()
             mkconfig[k] = val.lstrip().rstrip()
 
 # replace all the ${...} by their value
