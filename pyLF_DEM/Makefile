@@ -1,5 +1,6 @@
 # load Makefile inputs
 makeconfig = Makefile.in
+SWIG = $(shell which swig)
 ifneq ("$(wildcard $(makeconfig))","")
 	include $(makeconfig)
 endif

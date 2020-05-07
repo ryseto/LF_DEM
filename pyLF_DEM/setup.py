@@ -13,11 +13,13 @@ import re
 LFDEM_ROOT = "../"
 
 # find all variables defines in Makefile_config.mk
+print("Parsing LF_DEM/config/Makefile_config.mk...")
 mkconfig = {}
 with open(LFDEM_ROOT+"LF_DEM/config/Makefile_config.mk") as f:
     for line in f:
         line = line.strip()
         if len(line) and line[0] != '#':
+            print(line)
             k, val = line.split(' =', maxsplit=1)
             mkconfig[k] = val.lstrip().rstrip()
 
@@ -25,7 +27,8 @@ with open(LFDEM_ROOT+"LF_DEM/config/Makefile_config.mk") as f:
 for k in mkconfig:
     for m in re.finditer('\$\{\w*\}', mkconfig[k]):
          mkconfig[k] = mkconfig[k].replace(m.group(0), mkconfig[m.group(0)[2:-1]])
-         
+    for m in re.finditer('\$\(\w*\)', mkconfig[k]):
+         mkconfig[k] = mkconfig[k].replace(m.group(0), mkconfig[m.group(0)[2:-1]])
 
 os.environ["CC"] = mkconfig['CC']
 os.environ["CXX"] = mkconfig['CXX']
