@@ -6,6 +6,7 @@
 //  Copyright (c) 2017 Ryohei Seto and Romain Mari. All rights reserved.
 //
 
+#include <sstream>
 #include "ActivatedAdhesion.h"
 
 namespace Interactions {
@@ -28,7 +29,9 @@ void ActivatedAdhesion::update(double dt)
 	if (state.activity == Activity::dormant) {
 		double prob = params.activation_rate*dt;
 		if (prob > 0.2) {
-			std::cerr << " ActivatedAdhesion:: WARNING, time step too large! " << params.activation_rate << " " << dt << std::endl;
+			std::ostringstream error_str;
+			error_str << " ActivatedAdhesion:: Time step too large! Activation rate = " << params.activation_rate << ", dt = " << dt;
+			std::runtime_error(error_str.str());
 		}
 		if (r_gen->rand() < prob) {
 			state.activity = Activity::active;
@@ -36,7 +39,9 @@ void ActivatedAdhesion::update(double dt)
 	} else {
 		double prob = params.deactivation_rate*dt;
 		if (prob > 0.2) {
-			std::cerr << " ActivatedAdhesion:: WARNING, time step too large! " << params.deactivation_rate << " " << dt << std::endl;
+			std::ostringstream error_str;
+			error_str << " ActivatedAdhesion:: Time step too large! Deactivation rate = " << params.deactivation_rate << ", dt = " << dt << std::endl;
+			std::runtime_error(error_str.str());
 		}
 		if (r_gen->rand() < prob) {
 			state.activity = Activity::dormant;
