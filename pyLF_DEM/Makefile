@@ -1,6 +1,10 @@
 # load Makefile inputs
-makeconfig = Makefile.in
+
 SWIG = $(shell which swig)
+PYTHON_SITE_PACKAGES = $(shell env python -c "import site;print(site.getsitepackages()[0])")
+
+# you can override SWIG and PYTHON_SITE_PACKAGES in a file called Makefile.in
+makeconfig = Makefile.in
 ifneq ("$(wildcard $(makeconfig))","")
 	include $(makeconfig)
 endif
