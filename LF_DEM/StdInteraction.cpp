@@ -133,9 +133,6 @@ void StdInteraction::updateState(const struct PairVelocity &vel,
 
 	if (p.contp) {
 		updateContactState();
-		if (contact) {
-			contact->calcContactSpringForce();
-		}
 	}
 	if (p.lubp) {
 		// Lub
@@ -198,6 +195,9 @@ void StdInteraction::updateContactState()
 			// now contact
 			switchOnContact();
 		}
+	}
+	if (contact) {
+		contact->calcContactSpringForce();
 	}
 }
 
