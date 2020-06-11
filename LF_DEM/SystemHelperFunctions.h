@@ -14,5 +14,5 @@ std::pair<unsigned int, unsigned int> countNumberOfContact(const System &sys);
 std::pair<unsigned, double> getActAdhesionActivityStatistics(const System &sys);
 double getPotentialEnergy(const System &sys);
 void isInContact(const System &sys, std::vector<int> &isincontact);
-
+double evaluateAvgStaticFricCoeff(const System &sys);
 #endif /* defined(__LF_DEM__SystemHF__) */

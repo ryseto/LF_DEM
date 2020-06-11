@@ -130,6 +130,7 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(sflow_target_flux, 0),
 		PARAM_INIT(confinement.y_min, 0),
 		PARAM_INIT(confinement.y_max, 0),
+		PARAM_INIT(ageing_contact.amplitude, 0),
 	};
 
 	/*================================
@@ -188,9 +189,6 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 	default_val = {Dimensional::Unit::adhesion, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(contact.adhesion, default_val));
 
-	// default_val = {Dimensional::Unit::delayed_adhesion, {Dimensional::Dimension::Force, 0, guarranted_unit}};
-	// ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(TA_adhesion.adhesion_max_force, default_val));
-
 	default_val = {Dimensional::Unit::activated_adhesion, {Dimensional::Dimension::Force, 0, guarranted_unit}};
 	ForceScaleParams.push_back(PARAM_INIT_FORCESCALE(activated_adhesion.max_force, default_val));
 
@@ -245,15 +243,14 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 	default_qty = {Dimensional::Dimension::Force, 0, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(max_kt_auto_det, default_qty));
 
-	// default_qty = {Dimensional::Dimension::Time, 0, guarranted_unit};
-	// DimValDblParams.push_back(PARAM_INIT_DIMQTY(TA_adhesion.activation_time, default_qty));
-
 	default_qty = {Dimensional::Dimension::Force, 0, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(dimer.stiffness, default_qty));
 
 	default_qty = {Dimensional::Dimension::Time, 0, guarranted_unit};
 	DimValDblParams.push_back(PARAM_INIT_DIMQTY(dimer.relaxation_time, default_qty));
 
+	default_qty = {Dimensional::Dimension::Time, 0, guarranted_unit};
+	DimValDblParams.push_back(PARAM_INIT_DIMQTY(ageing_contact.timescale, default_qty));
 
 	/*----------  True dim vals  ----------*/
 	

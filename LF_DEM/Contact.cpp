@@ -24,6 +24,7 @@ friction_model(p.friction_model)
 			state = 1;
 			break;
 		case FrictionModel::Coulomb:
+		case FrictionModel::ageing_Coulomb:
 			frictionlaw = &Contact::frictionlaw_standard;
 			state = 2;
 			break;

@@ -12,6 +12,7 @@
 #include "LubricationParams.h"
 #include "RepulsiveForceParams.h"
 #include "ContactParams.h"
+#include "AgeingContactParams.h"
 #include "VanDerWaalsParams.h"
 #include "DimerParams.h"
 #include "DimensionalQty.h"
@@ -197,6 +198,7 @@ namespace Parameters {
 		double sflow_target_flux; // Target flux along x-direction controlled by pressure difference [0]
 
 		Confinement::Parameters confinement;
+		struct Interactions::AgeingContactParams ageing_contact;
 	};
 	
 } // namespace Parameters

@@ -806,6 +806,9 @@ void Simulation::outputData()
 	if (sys.p.event_handler == "jamming_stress_reversal") {
 		outdata.entryData("jamming strain", Dimensional::Dimension::none, 1, jamming_strain);
 	}
+	if (Interactions::has_ageing_contacts(sys.p.ageing_contact)) {
+		outdata.entryData("avg mu_static", Dimensional::Dimension::none, 1, evaluateAvgStaticFricCoeff(sys));
+	}
 	// if (sys.p.check_static_force_balance) {
 	// 	outdata.entryData("max force imbalance",  Dimensional::Dimension::none, 1, sys.max_force_imbalance);
 	// }

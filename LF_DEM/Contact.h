@@ -42,38 +42,7 @@ namespace Contact_ios {
 
 class Contact {
 private:
-	/*********************************
-	 *        Members                *
-	 *********************************/
-	PairwiseInteraction *interaction;
-	FrictionModel friction_model;
 	void (Contact::*frictionlaw)();
-
-	double a_reduced;
-	//===== forces and stresses ==================== //
-	double kt_scaled;
-	double kr_scaled;
-	double kn_scaled;
-	double mu_static;
-	double mu_dynamic;
-	double mu_rolling;
-	/*********************************
-	 *       Private Methods         *
-	 *********************************/
-	//===== forces and stresses computations =====//
-	Sym2Tensor contact_stresslet_XF; //stress tensor of contact force
-	double f_spring_normal_norm; // normal contact force
-	double normal_load; // compressive load + cohesion. If it is positive, particies are in cohesive contact state.
-	vec3d f_spring_normal; // normal contact force, spring only
-	vec3d f_spring_tan; // tangential contact force, spring only
-	vec3d f_spring_total; // spring only
-	vec3d f_rolling;
-	double ft_max; // friction_model = ft_max;
-	double adhesion;
-	double critical_load;
-
-	vec3d rolling_velocity;
-	int state;
 
 	void incrementTangentialDisplacement(double dt, const struct PairVelocity &vel);
 	void incrementRollingDisplacement(double dt, const struct PairVelocity &vel);
@@ -105,6 +74,36 @@ private:
 	void setInteractionData(const ContactParams &p);
 	void setSpringConstants(const ContactParams &p);
 	void setDashpotConstants(const ContactParams &p);
+
+protected:
+	PairwiseInteraction *interaction;
+	FrictionModel friction_model;
+
+	double a_reduced;
+	//===== forces and stresses ==================== //
+	double kt_scaled;
+	double kr_scaled;
+	double kn_scaled;
+	double mu_static;
+	double mu_dynamic;
+	double mu_rolling;
+	/*********************************
+	 *       Private Methods         *
+	 *********************************/
+	//===== forces and stresses computations =====//
+	Sym2Tensor contact_stresslet_XF; //stress tensor of contact force
+	double f_spring_normal_norm; // normal contact force
+	double normal_load; // compressive load + cohesion. If it is positive, particies are in cohesive contact state.
+	vec3d f_spring_normal; // normal contact force, spring only
+	vec3d f_spring_tan; // tangential contact force, spring only
+	vec3d f_spring_total; // spring only
+	vec3d f_rolling;
+	double ft_max; // friction_model = ft_max;
+	double adhesion;
+	double critical_load;
+
+	vec3d rolling_velocity;
+	int state;
 
 public:
 	/*********************************
@@ -158,6 +157,10 @@ public:
 	int getFrictionState() const
 	{
 		return state;
+	}
+	double getMuStatic() const
+	{
+		return mu_static;
 	}
 };
 

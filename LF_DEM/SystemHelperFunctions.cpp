@@ -178,3 +178,17 @@ void isInContact(const System &sys, std::vector<int> &isincontact)
 		}
 	}
 }
+
+double evaluateAvgStaticFricCoeff(const System &sys)
+{
+	double mu = 0;
+	unsigned total_nb = 0;
+
+	for (const auto &inter: *(sys.interaction)) {
+		if (inter->contact) {
+			mu += inter->contact->getMuStatic();
+			total_nb++;	
+		}
+	}
+	return mu/total_nb;
+}

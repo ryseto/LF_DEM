@@ -28,6 +28,7 @@
 #include "VanDerWaals.h"
 #include "ActivatedAdhesion.h"
 #include "ActivatedAdhesion_io.h"
+#include "AgeingContact.h"
 #include "Sym2Tensor.h"
 #include "PairwiseInteraction.h"
 #include "StdInteractionParams.h"

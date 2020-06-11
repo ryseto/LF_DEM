@@ -6,6 +6,7 @@
 #include "RepulsiveForceParams.h"
 #include "VanDerWaalsParams.h"
 #include "ActivatedAdhesion_Params.h"
+#include "AgeingContactParams.h"
 
 
 namespace Interactions
@@ -17,6 +18,7 @@ struct StdInteractionParams {
 	std::unique_ptr<RepulsiveForceParams> repp;
 	std::unique_ptr<vanDerWaalsForceParams> vdwp;
 	std::unique_ptr<ActAdhesion::Params> actadhp;
+	std::unique_ptr<AgeingContactParams> ageing_contp;
 
 	void add(const ContactParams &p) {
 		contp = std::unique_ptr<ContactParams>(new ContactParams (p));
@@ -32,6 +34,9 @@ struct StdInteractionParams {
 	}
 	void add(const ActAdhesion::Params &p) {
 		actadhp = std::unique_ptr<ActAdhesion::Params>(new ActAdhesion::Params (p));
+	}
+	void add(const AgeingContactParams &p) {
+		ageing_contp = std::unique_ptr<AgeingContactParams>(new AgeingContactParams (p));
 	}
 };
 

@@ -10,7 +10,8 @@ enum class FrictionModel : unsigned {
 	criticalload_mu_inf = 3,
 	infinity = 4,
 	ft_max = 5,
-	Coulomb_max = 6
+	Coulomb_max = 6,
+	ageing_Coulomb = 7
 };
 
 struct ContactParams {
