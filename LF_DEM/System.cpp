@@ -102,7 +102,6 @@ void System::declareForceComponents()
 		force_components["brownian"] = ForceComponent(np, RateDependence::independent, torque);
 		declared_forces.push_back("brownian");
 	}
-
 	if (p.bodyforce > 0) {
 		force_components["body_force"] = ForceComponent(np, RateDependence::independent, torque);
 		declared_forces.push_back("body_force");
@@ -119,12 +118,15 @@ void System::declareForceComponents()
 			force_components["from_fixed"] = ForceComponent(np, RateDependence::proportional, torque);
 			declared_forces.push_back("from_fixed");
 		}
-
 	}
 	if (p.confinement.on) {
 		force_components["confinement"] = ForceComponent(np, RateDependence::independent, !torque);
 		declared_forces.push_back("confinement");
 	}
+    if (p.langevin_parameter > 0) {
+        force_components["magnetic_force"] = ForceComponent(np, RateDependence::independent, torque);
+        declared_forces.push_back("magnetic_force");
+    }
 }
 
 void System::setForceToParticle(const string &component, vector<vec3d> &force, vector<vec3d> &torque)
@@ -135,7 +137,9 @@ void System::setForceToParticle(const string &component, vector<vec3d> &force, v
 		setBodyForce(force, torque);
 	} else if (component == "brownian") {
 		setBrownianForceToParticle(force, torque);
-	}
+	} else if (component == "magnetic_force") {
+        setMagneticForce(force, torque);
+    }
 }
 
 
@@ -1499,6 +1503,39 @@ void System::setConfinementForce(vector<vec3d> &force,
 // 		torque[i].z = force_torque_from_fixed[i6+5];
 // 	}
 // }
+
+void System::setMagneticForce(vector<vec3d> &force, vector<vec3d> &torque)
+{
+    magnetic_field_gradient.resize(3,3);
+    if (p.magnetic_field_type == 1) {
+        magnetic_field.set(0,0,1);
+    } else if (p.magnetic_field_type == 2) {
+        magnetic_field.set(0,0,1);                      // Need to modify to satisfy Maxwell's equation
+        magnetic_field_gradient[0].set(0,0,1);          // Better to read external file including magnetic field and gradient
+        magnetic_field_gradient[1].set(0,0,0);
+        magnetic_field_gradient[2].set(0,0,0);
+    } else if (p.magnetic_field_type == 3) {
+        magnetic_field.set(0,0,cos(p.magnetic_field_freq*get_time()));
+    } else if (p.magnetic_field_type == 4) {
+        magnetic_field.set(sin(p.magnetic_field_freq*get_time()),0,cos(p.magnetic_field_freq*get_time()));
+    }
+    
+    for (int i=0; i<np; i++)
+    {
+        if (twodimension) {
+            magnetic_dipole_moment.set(cos(conf->angle[i]),0,sin(conf->angle[i]));
+        }
+        if (p.magnetic_field_type == 2) {
+            double force_x = p.langevin_parameter*dot(magnetic_dipole_moment,magnetic_field_gradient[0]);
+            double force_y = p.langevin_parameter*dot(magnetic_dipole_moment,magnetic_field_gradient[1]);
+            double force_z = p.langevin_parameter*dot(magnetic_dipole_moment,magnetic_field_gradient[2]);
+            force[i].set(force_x,force_y,force_z);
+        } else {
+            force[i].set(0,0,0);
+        }
+        torque[i] = p.langevin_parameter*cross(magnetic_dipole_moment,magnetic_field);
+    }
+}
 
 vec3d System::get_shear_strain() const
 {

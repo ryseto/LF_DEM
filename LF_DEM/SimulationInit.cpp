@@ -241,7 +241,7 @@ void Simulation::setConfigToSystemDimers(bool binary_conf, const std::string &fi
 {
 	// This is a bit dirty, as it duplicates cases of setConfigToSystem, only adding each time a call to sys.addDimers 
 	// Startup should be refactored a bit to make setConfig more flexible
-	if (binary_conf) {
+    if (binary_conf) {
 		auto format = getBinaryConfigurationFileFormat(filename);
 		switch(format) {
 			case ConfFileFormat::bin_dimers:

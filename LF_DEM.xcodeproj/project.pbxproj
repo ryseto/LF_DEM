@@ -7,58 +7,104 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		CDE4695A16BC4CB800923139 /* StokesSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CDE4695916BC4CB800923139 /* StokesSolver.cpp */; };
-		D9032D751B79DFE60062A6F3 /* SimulationInit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9032D741B79DFE60062A6F3 /* SimulationInit.cpp */; };
+		C6774E0C24FCD1B10094C0BC /* BoxSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774D8C24FCD1AA0094C0BC /* BoxSet.cpp */; };
+		C6774E0D24FCD1B10094C0BC /* ContactDashpot.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774D8F24FCD1AA0094C0BC /* ContactDashpot.cpp */; };
+		C6774E0E24FCD1B10094C0BC /* Box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774D9124FCD1AA0094C0BC /* Box.cpp */; };
+		C6774E0F24FCD1B10094C0BC /* ActivatedAdhesion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774D9A24FCD1AA0094C0BC /* ActivatedAdhesion.cpp */; };
+		C6774E1024FCD1B10094C0BC /* RepulsiveForce.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774D9D24FCD1AA0094C0BC /* RepulsiveForce.cpp */; };
+		C6774E1124FCD1B10094C0BC /* PotentialForce.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DA124FCD1AB0094C0BC /* PotentialForce.cpp */; };
+		C6774E1224FCD1B10094C0BC /* LeesEdwards.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DA424FCD1AB0094C0BC /* LeesEdwards.cpp */; };
+		C6774E1324FCD1B10094C0BC /* LubricationCoefficients.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DA524FCD1AB0094C0BC /* LubricationCoefficients.cpp */; };
+		C6774E1424FCD1B10094C0BC /* AgeingContact.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DA924FCD1AB0094C0BC /* AgeingContact.cpp */; };
+		C6774E1524FCD1B10094C0BC /* DimensionalQty.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DAA24FCD1AB0094C0BC /* DimensionalQty.cpp */; };
+		C6774E1624FCD1B10094C0BC /* StdInteractionManagerOutput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DAB24FCD1AB0094C0BC /* StdInteractionManagerOutput.cpp */; };
+		C6774E1724FCD1B10094C0BC /* SimulationInit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DAD24FCD1AB0094C0BC /* SimulationInit.cpp */; };
+		C6774E1824FCD1B10094C0BC /* KraynikReinelt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DB024FCD1AB0094C0BC /* KraynikReinelt.cpp */; };
+		C6774E1924FCD1B10094C0BC /* Contact.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DB524FCD1AC0094C0BC /* Contact.cpp */; };
+		C6774E1A24FCD1B10094C0BC /* ExtensionalShearBoxSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DBC24FCD1AC0094C0BC /* ExtensionalShearBoxSet.cpp */; };
+		C6774E1B24FCD1B10094C0BC /* Contact_io.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DBD24FCD1AC0094C0BC /* Contact_io.cpp */; };
+		C6774E1C24FCD1B10094C0BC /* PairwiseInteraction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DBE24FCD1AC0094C0BC /* PairwiseInteraction.cpp */; };
+		C6774E1D24FCD1B10094C0BC /* MatrixBlocks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DC324FCD1AC0094C0BC /* MatrixBlocks.cpp */; };
+		C6774E1E24FCD1B10094C0BC /* gsd.c in Sources */ = {isa = PBXBuildFile; fileRef = C6774DC424FCD1AC0094C0BC /* gsd.c */; };
+		C6774E1F24FCD1B10094C0BC /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DC624FCD1AD0094C0BC /* main.cpp */; };
+		C6774E2024FCD1B10094C0BC /* ActivatedAdhesion_io.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DCB24FCD1AD0094C0BC /* ActivatedAdhesion_io.cpp */; };
+		C6774E2124FCD1B10094C0BC /* Dimer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DD324FCD1AD0094C0BC /* Dimer.cpp */; };
+		C6774E2224FCD1B10094C0BC /* DimerManagerOutput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DD424FCD1AD0094C0BC /* DimerManagerOutput.cpp */; };
+		C6774E2324FCD1B10094C0BC /* PairwiseResistanceVelocitySolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DD524FCD1AD0094C0BC /* PairwiseResistanceVelocitySolver.cpp */; };
+		C6774E2424FCD1B10094C0BC /* Simulation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DD724FCD1AE0094C0BC /* Simulation.cpp */; };
+		C6774E2524FCD1B10094C0BC /* StokesSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DDA24FCD1AE0094C0BC /* StokesSolver.cpp */; };
+		C6774E2624FCD1B10094C0BC /* SolventFlow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DDB24FCD1AE0094C0BC /* SolventFlow.cpp */; };
+		C6774E2724FCD1B10094C0BC /* PairwiseConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DDC24FCD1AE0094C0BC /* PairwiseConfig.cpp */; };
+		C6774E2824FCD1B10094C0BC /* ImposedDeformation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DDD24FCD1AE0094C0BC /* ImposedDeformation.cpp */; };
+		C6774E2924FCD1B10094C0BC /* VelocityAssignor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DDF24FCD1AE0094C0BC /* VelocityAssignor.cpp */; };
+		C6774E2A24FCD1B10094C0BC /* SimpleShearBoxSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DE024FCD1AE0094C0BC /* SimpleShearBoxSet.cpp */; };
+		C6774E2B24FCD1B10094C0BC /* Stress.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DE124FCD1AE0094C0BC /* Stress.cpp */; };
+		C6774E2C24FCD1B10094C0BC /* States.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DE224FCD1AE0094C0BC /* States.cpp */; };
+		C6774E2D24FCD1B10094C0BC /* SystemHelperFunctions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DE424FCD1AE0094C0BC /* SystemHelperFunctions.cpp */; };
+		C6774E2E24FCD1B10094C0BC /* PairManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DE524FCD1AE0094C0BC /* PairManager.cpp */; };
+		C6774E2F24FCD1B10094C0BC /* Dimer_io.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DE624FCD1AE0094C0BC /* Dimer_io.cpp */; };
+		C6774E3024FCD1B10094C0BC /* StdInteraction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DE724FCD1AE0094C0BC /* StdInteraction.cpp */; };
+		C6774E3124FCD1B10094C0BC /* DimerManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DEB24FCD1AF0094C0BC /* DimerManager.cpp */; };
+		C6774E3224FCD1B10094C0BC /* Lubrication.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DF024FCD1AF0094C0BC /* Lubrication.cpp */; };
+		C6774E3324FCD1B10094C0BC /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DF124FCD1AF0094C0BC /* System.cpp */; };
+		C6774E3424FCD1B10094C0BC /* Configuration.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DF224FCD1AF0094C0BC /* Configuration.cpp */; };
+		C6774E3524FCD1B10094C0BC /* ParameterSetFactory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DF724FCD1AF0094C0BC /* ParameterSetFactory.cpp */; };
+		C6774E3624FCD1B10094C0BC /* GenerateInitConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DF924FCD1B00094C0BC /* GenerateInitConfig.cpp */; };
+		C6774E3724FCD1B10094C0BC /* VanDerWaals.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DFA24FCD1B00094C0BC /* VanDerWaals.cpp */; };
+		C6774E3824FCD1B10094C0BC /* TimeActivatedAdhesion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DFE24FCD1B00094C0BC /* TimeActivatedAdhesion.cpp */; };
+		C6774E3924FCD1B10094C0BC /* Matrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774DFF24FCD1B00094C0BC /* Matrix.cpp */; };
+		C6774E3A24FCD1B10094C0BC /* BoundaryCondition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774E0324FCD1B00094C0BC /* BoundaryCondition.cpp */; };
+		C6774E3B24FCD1B10094C0BC /* TimeActivatedAdhesion_io.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774E0824FCD1B00094C0BC /* TimeActivatedAdhesion_io.cpp */; };
+		C6774E3C24FCD1B10094C0BC /* OutputData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774E0924FCD1B00094C0BC /* OutputData.cpp */; };
+		C6774E3D24FCD1B10094C0BC /* StdInteractionManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774E0A24FCD1B10094C0BC /* StdInteractionManager.cpp */; };
+		C6774E4424FCD1ED0094C0BC /* libcholmod.3.0.14.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C6774E3E24FCD1ED0094C0BC /* libcholmod.3.0.14.dylib */; };
+		C6774E4524FCD1EE0094C0BC /* libcholmod.3.0.14.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = C6774E3E24FCD1ED0094C0BC /* libcholmod.3.0.14.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C6774E4624FCD1EE0094C0BC /* libmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C6774E3F24FCD1ED0094C0BC /* libmetis.dylib */; };
+		C6774E4724FCD1EE0094C0BC /* libmetis.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = C6774E3F24FCD1ED0094C0BC /* libmetis.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C6774E4824FCD1EE0094C0BC /* libcolamd.2.9.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C6774E4024FCD1ED0094C0BC /* libcolamd.2.9.6.dylib */; };
+		C6774E4924FCD1EE0094C0BC /* libcolamd.2.9.6.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = C6774E4024FCD1ED0094C0BC /* libcolamd.2.9.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C6774E4A24FCD1EE0094C0BC /* libsuitesparseconfig.5.8.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C6774E4124FCD1ED0094C0BC /* libsuitesparseconfig.5.8.0.dylib */; };
+		C6774E4B24FCD1EE0094C0BC /* libsuitesparseconfig.5.8.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = C6774E4124FCD1ED0094C0BC /* libsuitesparseconfig.5.8.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C6774E4C24FCD1EE0094C0BC /* libamd.2.4.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C6774E4224FCD1ED0094C0BC /* libamd.2.4.6.dylib */; };
+		C6774E4D24FCD1EE0094C0BC /* libamd.2.4.6.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = C6774E4224FCD1ED0094C0BC /* libamd.2.4.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C6774E4E24FCD1EE0094C0BC /* libccolamd.2.9.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C6774E4324FCD1ED0094C0BC /* libccolamd.2.9.6.dylib */; };
+		C6774E4F24FCD1EE0094C0BC /* libccolamd.2.9.6.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = C6774E4324FCD1ED0094C0BC /* libccolamd.2.9.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		D921A0C1175BF90D002F64B1 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D921A0C0175BF90D002F64B1 /* main.cpp */; };
 		D921A0C3175BF90D002F64B1 /* analyze_data_LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D921A0C2175BF90D002F64B1 /* analyze_data_LF_DEM.1 */; };
 		D921A0C9175C0041002F64B1 /* SystemParticles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D921A0C7175C0041002F64B1 /* SystemParticles.cpp */; };
-		D92244841BFBF08700F46233 /* SystemHelperFunctions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92244831BFBF08700F46233 /* SystemHelperFunctions.cpp */; };
 		D9251FEB1EE8D8720040520A /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B041D166EF0A600DC63CA /* Accelerate.framework */; };
-		D9251FF61EE8D8AF0040520A /* libcamd.2.4.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9251FF01EE8D8AF0040520A /* libcamd.2.4.6.dylib */; };
-		D9251FF71EE8D8AF0040520A /* libamd.2.4.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9251FF11EE8D8AF0040520A /* libamd.2.4.6.dylib */; };
-		D9251FF91EE8D8F80040520A /* libmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9251FF81EE8D8F80040520A /* libmetis.dylib */; };
-		D9278EA81A93056E00ABCD87 /* RepulsiveForce.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9278EA71A93056E00ABCD87 /* RepulsiveForce.cpp */; };
-		D92EAA0F17E39D5100C903F5 /* Contact.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92EAA0B17E39D5100C903F5 /* Contact.cpp */; };
-		D92EAA1017E39D5100C903F5 /* Lubrication.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92EAA0D17E39D5100C903F5 /* Lubrication.cpp */; };
-		D932B8DC16C2E98000AD6E85 /* GenerateInitConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */; };
-		D941779A1F7E041F00BB44C0 /* States.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D94177991F7E041F00BB44C0 /* States.cpp */; };
-		D9506B9216D81A7C00A52CFF /* Stress.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9506B9116D81A7C00A52CFF /* Stress.cpp */; };
-		D9573FB216797A000081E903 /* Box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9573FAE16797A000081E903 /* Box.cpp */; };
-		D9573FB316797A000081E903 /* BoxSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9573FB016797A000081E903 /* BoxSet.cpp */; };
-		D95FE80A1D4E2E40004D2C8A /* ContactDashpot.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D95FE8081D4E2E40004D2C8A /* ContactDashpot.cpp */; };
 		D96731B417A042AD005D02F8 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96731B317A042AD005D02F8 /* main.cpp */; };
 		D96731B617A042AD005D02F8 /* percolation_LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D96731B517A042AD005D02F8 /* percolation_LF_DEM.1 */; };
 		D96731BC17A042D1005D02F8 /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96731BA17A042D1005D02F8 /* System.cpp */; };
-		D980D5CE21FC6E4A009C9AC8 /* libsuitesparseconfig.5.4.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D980D5CD21FC6E4A009C9AC8 /* libsuitesparseconfig.5.4.0.dylib */; };
-		D980D5D021FC6E93009C9AC8 /* libcholmod.3.0.13.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D980D5CF21FC6E93009C9AC8 /* libcholmod.3.0.13.dylib */; };
-		D980D5D121FC6F11009C9AC8 /* libccolamd.2.9.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9251FEF1EE8D8AF0040520A /* libccolamd.2.9.6.dylib */; };
-		D9878877165545680047A87E /* Simulation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9878875165545680047A87E /* Simulation.cpp */; };
-		D988E38E165441750009949F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D988E38D165441750009949F /* main.cpp */; };
 		D988E390165441750009949F /* LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D988E38F165441750009949F /* LF_DEM.1 */; };
-		D988E39C1654A18D0009949F /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D988E39A1654A18D0009949F /* System.cpp */; };
-		D9892544223D3C76002FC5EB /* SolventFlow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9892542223D3C76002FC5EB /* SolventFlow.cpp */; };
 		D9953515180713FB00FC99C9 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9953514180713FB00FC99C9 /* main.cpp */; };
 		D9953517180713FB00FC99C9 /* cluster_life.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D9953516180713FB00FC99C9 /* cluster_life.1 */; };
 		D9953520180716B100FC99C9 /* Cluster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D995351E180716B100FC99C9 /* Cluster.cpp */; };
 		D99535231807276D00FC99C9 /* StrainSnapShot.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D99535211807276D00FC99C9 /* StrainSnapShot.cpp */; };
-		D9B16BDF21B1CB6800AD5939 /* gsd.c in Sources */ = {isa = PBXBuildFile; fileRef = D9B16BDD21B1CB6800AD5939 /* gsd.c */; };
-		D9B18D51200054930009113B /* TimeActivatedAdhesion_io.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9B18D4C200054920009113B /* TimeActivatedAdhesion_io.cpp */; };
-		D9B18D52200054930009113B /* TimeActivatedAdhesion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9B18D4F200054920009113B /* TimeActivatedAdhesion.cpp */; };
-		D9B18D55200054D30009113B /* ParameterSetFactory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9B18D53200054D30009113B /* ParameterSetFactory.cpp */; };
-		D9B18D58200055870009113B /* DimensionalQty.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9B18D56200055870009113B /* DimensionalQty.cpp */; };
-		D9B18D5A200055AB0009113B /* Contact_io.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9B18D59200055AB0009113B /* Contact_io.cpp */; };
-		D9B18D5C200057510009113B /* OutputData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9B18D5B200057510009113B /* OutputData.cpp */; };
-		D9B18D5E20005B470009113B /* Configuration.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9B18D5D20005B470009113B /* Configuration.cpp */; };
 		D9BE3B66178C838100937C5C /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B65178C838100937C5C /* main.cpp */; };
 		D9BE3B68178C838100937C5C /* cluster_detector.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D9BE3B67178C838100937C5C /* cluster_detector.1 */; };
 		D9BE3B6E178C83C900937C5C /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B6C178C83C900937C5C /* System.cpp */; };
 		D9BE3B71178CB35E00937C5C /* Bond.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B6F178CB35E00937C5C /* Bond.cpp */; };
 		D9BE3B74178CB8A800937C5C /* Cluster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B72178CB8A800937C5C /* Cluster.cpp */; };
-		D9CE1B421B066B3400E052D9 /* dSFMT.c in Sources */ = {isa = PBXBuildFile; fileRef = D9CE1B411B066B3400E052D9 /* dSFMT.c */; };
-		D9FAAA301960685B00E601A9 /* Interaction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9FAAA2F1960685B00E601A9 /* Interaction.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		C6774E5024FCD1EE0094C0BC /* Embed Libraries */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				C6774E4B24FCD1EE0094C0BC /* libsuitesparseconfig.5.8.0.dylib in Embed Libraries */,
+				C6774E4924FCD1EE0094C0BC /* libcolamd.2.9.6.dylib in Embed Libraries */,
+				C6774E4D24FCD1EE0094C0BC /* libamd.2.4.6.dylib in Embed Libraries */,
+				C6774E4524FCD1EE0094C0BC /* libcholmod.3.0.14.dylib in Embed Libraries */,
+				C6774E4724FCD1EE0094C0BC /* libmetis.dylib in Embed Libraries */,
+				C6774E4F24FCD1EE0094C0BC /* libccolamd.2.9.6.dylib in Embed Libraries */,
+			);
+			name = "Embed Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D921A0BC175BF90D002F64B1 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -139,9 +185,158 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		CDE4695916BC4CB800923139 /* StokesSolver.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = StokesSolver.cpp; sourceTree = "<group>"; };
-		D9032D731B79D1A00062A6F3 /* Events.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Events.h; sourceTree = "<group>"; };
-		D9032D741B79DFE60062A6F3 /* SimulationInit.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SimulationInit.cpp; sourceTree = "<group>"; };
+		C6774D8B24FCD1AA0094C0BC /* Matrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Matrix.h; sourceTree = "<group>"; };
+		C6774D8C24FCD1AA0094C0BC /* BoxSet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BoxSet.cpp; sourceTree = "<group>"; };
+		C6774D8D24FCD1AA0094C0BC /* global.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = global.h; sourceTree = "<group>"; };
+		C6774D8E24FCD1AA0094C0BC /* DimerManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DimerManager.h; sourceTree = "<group>"; };
+		C6774D8F24FCD1AA0094C0BC /* ContactDashpot.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ContactDashpot.cpp; sourceTree = "<group>"; };
+		C6774D9024FCD1AA0094C0BC /* ShearType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShearType.h; sourceTree = "<group>"; };
+		C6774D9124FCD1AA0094C0BC /* Box.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Box.cpp; sourceTree = "<group>"; };
+		C6774D9224FCD1AA0094C0BC /* Dimer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Dimer.h; sourceTree = "<group>"; };
+		C6774D9324FCD1AA0094C0BC /* AgeingContact.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AgeingContact.h; sourceTree = "<group>"; };
+		C6774D9424FCD1AA0094C0BC /* Simulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Simulation.h; sourceTree = "<group>"; };
+		C6774D9524FCD1AA0094C0BC /* StdInteractionManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StdInteractionManager.h; sourceTree = "<group>"; };
+		C6774D9624FCD1AA0094C0BC /* Timer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Timer.h; sourceTree = "<group>"; };
+		C6774D9724FCD1AA0094C0BC /* VanDerWaals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VanDerWaals.h; sourceTree = "<group>"; };
+		C6774D9824FCD1AA0094C0BC /* SimpleShearBoxSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SimpleShearBoxSet.h; sourceTree = "<group>"; };
+		C6774D9924FCD1AA0094C0BC /* RepulsiveForceParams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RepulsiveForceParams.h; sourceTree = "<group>"; };
+		C6774D9A24FCD1AA0094C0BC /* ActivatedAdhesion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ActivatedAdhesion.cpp; sourceTree = "<group>"; };
+		C6774D9B24FCD1AA0094C0BC /* ActivatedAdhesion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ActivatedAdhesion.h; sourceTree = "<group>"; };
+		C6774D9C24FCD1AA0094C0BC /* TimeActivatedAdhesion_io.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TimeActivatedAdhesion_io.h; sourceTree = "<group>"; };
+		C6774D9D24FCD1AA0094C0BC /* RepulsiveForce.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RepulsiveForce.cpp; sourceTree = "<group>"; };
+		C6774D9E24FCD1AA0094C0BC /* MersenneTwister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MersenneTwister.h; sourceTree = "<group>"; };
+		C6774D9F24FCD1AB0094C0BC /* LeesEdwards.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LeesEdwards.h; sourceTree = "<group>"; };
+		C6774DA024FCD1AB0094C0BC /* ControlVariable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ControlVariable.h; sourceTree = "<group>"; };
+		C6774DA124FCD1AB0094C0BC /* PotentialForce.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PotentialForce.cpp; sourceTree = "<group>"; };
+		C6774DA224FCD1AB0094C0BC /* VanDerWaalsParams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VanDerWaalsParams.h; sourceTree = "<group>"; };
+		C6774DA324FCD1AB0094C0BC /* PotentialForce.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PotentialForce.h; sourceTree = "<group>"; };
+		C6774DA424FCD1AB0094C0BC /* LeesEdwards.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LeesEdwards.cpp; sourceTree = "<group>"; };
+		C6774DA524FCD1AB0094C0BC /* LubricationCoefficients.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LubricationCoefficients.cpp; sourceTree = "<group>"; };
+		C6774DA624FCD1AB0094C0BC /* ForceComponent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ForceComponent.h; sourceTree = "<group>"; };
+		C6774DA724FCD1AB0094C0BC /* Lubrication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Lubrication.h; sourceTree = "<group>"; };
+		C6774DA824FCD1AB0094C0BC /* Contact.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Contact.h; sourceTree = "<group>"; };
+		C6774DA924FCD1AB0094C0BC /* AgeingContact.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AgeingContact.cpp; sourceTree = "<group>"; };
+		C6774DAA24FCD1AB0094C0BC /* DimensionalQty.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DimensionalQty.cpp; sourceTree = "<group>"; };
+		C6774DAB24FCD1AB0094C0BC /* StdInteractionManagerOutput.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StdInteractionManagerOutput.cpp; sourceTree = "<group>"; };
+		C6774DAC24FCD1AB0094C0BC /* InteractionManagerOutput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InteractionManagerOutput.h; sourceTree = "<group>"; };
+		C6774DAD24FCD1AB0094C0BC /* SimulationInit.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SimulationInit.cpp; sourceTree = "<group>"; };
+		C6774DAE24FCD1AB0094C0BC /* StressComponent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StressComponent.h; sourceTree = "<group>"; };
+		C6774DAF24FCD1AB0094C0BC /* Box.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Box.h; sourceTree = "<group>"; };
+		C6774DB024FCD1AB0094C0BC /* KraynikReinelt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = KraynikReinelt.cpp; sourceTree = "<group>"; };
+		C6774DB124FCD1AB0094C0BC /* ImposedDeformation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImposedDeformation.h; sourceTree = "<group>"; };
+		C6774DB224FCD1AB0094C0BC /* StokesSolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StokesSolver.h; sourceTree = "<group>"; };
+		C6774DB324FCD1AB0094C0BC /* SolventFlow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SolventFlow.h; sourceTree = "<group>"; };
+		C6774DB424FCD1AB0094C0BC /* SystemHelperFunctions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SystemHelperFunctions.h; sourceTree = "<group>"; };
+		C6774DB524FCD1AC0094C0BC /* Contact.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Contact.cpp; sourceTree = "<group>"; };
+		C6774DB624FCD1AC0094C0BC /* vec3d.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vec3d.h; sourceTree = "<group>"; };
+		C6774DB724FCD1AC0094C0BC /* DimerState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DimerState.h; sourceTree = "<group>"; };
+		C6774DB824FCD1AC0094C0BC /* GenerateInitConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GenerateInitConfig.h; sourceTree = "<group>"; };
+		C6774DB924FCD1AC0094C0BC /* ExtensionalShearBoxSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExtensionalShearBoxSet.h; sourceTree = "<group>"; };
+		C6774DBA24FCD1AC0094C0BC /* TimeActivatedAdhesion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TimeActivatedAdhesion.h; sourceTree = "<group>"; };
+		C6774DBB24FCD1AC0094C0BC /* VersionInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VersionInfo.h; sourceTree = "<group>"; };
+		C6774DBC24FCD1AC0094C0BC /* ExtensionalShearBoxSet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ExtensionalShearBoxSet.cpp; sourceTree = "<group>"; };
+		C6774DBD24FCD1AC0094C0BC /* Contact_io.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Contact_io.cpp; sourceTree = "<group>"; };
+		C6774DBE24FCD1AC0094C0BC /* PairwiseInteraction.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PairwiseInteraction.cpp; sourceTree = "<group>"; };
+		C6774DBF24FCD1AC0094C0BC /* StdInteractionParams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StdInteractionParams.h; sourceTree = "<group>"; };
+		C6774DC024FCD1AC0094C0BC /* LubricationFunctions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LubricationFunctions.h; sourceTree = "<group>"; };
+		C6774DC124FCD1AC0094C0BC /* AlmostEqual.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AlmostEqual.h; sourceTree = "<group>"; };
+		C6774DC224FCD1AC0094C0BC /* DimerParams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DimerParams.h; sourceTree = "<group>"; };
+		C6774DC324FCD1AC0094C0BC /* MatrixBlocks.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MatrixBlocks.cpp; sourceTree = "<group>"; };
+		C6774DC424FCD1AC0094C0BC /* gsd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gsd.c; sourceTree = "<group>"; };
+		C6774DC524FCD1AD0094C0BC /* ActivatedAdhesion_io.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ActivatedAdhesion_io.h; sourceTree = "<group>"; };
+		C6774DC624FCD1AD0094C0BC /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		C6774DC724FCD1AD0094C0BC /* ParameterSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ParameterSet.h; sourceTree = "<group>"; };
+		C6774DC824FCD1AD0094C0BC /* RepulsiveForce.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RepulsiveForce.h; sourceTree = "<group>"; };
+		C6774DC924FCD1AD0094C0BC /* ConfinementParams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ConfinementParams.h; sourceTree = "<group>"; };
+		C6774DCA24FCD1AD0094C0BC /* Events.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Events.h; sourceTree = "<group>"; };
+		C6774DCB24FCD1AD0094C0BC /* ActivatedAdhesion_io.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ActivatedAdhesion_io.cpp; sourceTree = "<group>"; };
+		C6774DCC24FCD1AD0094C0BC /* Sym2Tensor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Sym2Tensor.h; sourceTree = "<group>"; };
+		C6774DCD24FCD1AD0094C0BC /* TimeActivatedAdhesion_Params.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TimeActivatedAdhesion_Params.h; sourceTree = "<group>"; };
+		C6774DCE24FCD1AD0094C0BC /* AgeingContactParams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AgeingContactParams.h; sourceTree = "<group>"; };
+		C6774DCF24FCD1AD0094C0BC /* Dimer_io.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Dimer_io.h; sourceTree = "<group>"; };
+		C6774DD024FCD1AD0094C0BC /* PairVelocity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PairVelocity.h; sourceTree = "<group>"; };
+		C6774DD124FCD1AD0094C0BC /* ActivatedAdhesion_Params.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ActivatedAdhesion_Params.h; sourceTree = "<group>"; };
+		C6774DD224FCD1AD0094C0BC /* BoxSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BoxSet.h; sourceTree = "<group>"; };
+		C6774DD324FCD1AD0094C0BC /* Dimer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Dimer.cpp; sourceTree = "<group>"; };
+		C6774DD424FCD1AD0094C0BC /* DimerManagerOutput.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DimerManagerOutput.cpp; sourceTree = "<group>"; };
+		C6774DD524FCD1AD0094C0BC /* PairwiseResistanceVelocitySolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PairwiseResistanceVelocitySolver.cpp; sourceTree = "<group>"; };
+		C6774DD624FCD1AE0094C0BC /* KraynikReinelt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KraynikReinelt.h; sourceTree = "<group>"; };
+		C6774DD724FCD1AE0094C0BC /* Simulation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Simulation.cpp; sourceTree = "<group>"; };
+		C6774DD824FCD1AE0094C0BC /* Configuration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Configuration.h; sourceTree = "<group>"; };
+		C6774DD924FCD1AE0094C0BC /* StdInteraction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StdInteraction.h; sourceTree = "<group>"; };
+		C6774DDA24FCD1AE0094C0BC /* StokesSolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StokesSolver.cpp; sourceTree = "<group>"; };
+		C6774DDB24FCD1AE0094C0BC /* SolventFlow.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SolventFlow.cpp; sourceTree = "<group>"; };
+		C6774DDC24FCD1AE0094C0BC /* PairwiseConfig.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PairwiseConfig.cpp; sourceTree = "<group>"; };
+		C6774DDD24FCD1AE0094C0BC /* ImposedDeformation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ImposedDeformation.cpp; sourceTree = "<group>"; };
+		C6774DDE24FCD1AE0094C0BC /* CheckFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CheckFile.h; sourceTree = "<group>"; };
+		C6774DDF24FCD1AE0094C0BC /* VelocityAssignor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VelocityAssignor.cpp; sourceTree = "<group>"; };
+		C6774DE024FCD1AE0094C0BC /* SimpleShearBoxSet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SimpleShearBoxSet.cpp; sourceTree = "<group>"; };
+		C6774DE124FCD1AE0094C0BC /* Stress.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Stress.cpp; sourceTree = "<group>"; };
+		C6774DE224FCD1AE0094C0BC /* States.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = States.cpp; sourceTree = "<group>"; };
+		C6774DE324FCD1AE0094C0BC /* VelocityAssignor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VelocityAssignor.h; sourceTree = "<group>"; };
+		C6774DE424FCD1AE0094C0BC /* SystemHelperFunctions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SystemHelperFunctions.cpp; sourceTree = "<group>"; };
+		C6774DE524FCD1AE0094C0BC /* PairManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PairManager.cpp; sourceTree = "<group>"; };
+		C6774DE624FCD1AE0094C0BC /* Dimer_io.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Dimer_io.cpp; sourceTree = "<group>"; };
+		C6774DE724FCD1AE0094C0BC /* StdInteraction.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StdInteraction.cpp; sourceTree = "<group>"; };
+		C6774DE824FCD1AF0094C0BC /* ContactParams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ContactParams.h; sourceTree = "<group>"; };
+		C6774DE924FCD1AF0094C0BC /* PairwiseResistanceVelocitySolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PairwiseResistanceVelocitySolver.h; sourceTree = "<group>"; };
+		C6774DEA24FCD1AF0094C0BC /* RateDependence.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RateDependence.h; sourceTree = "<group>"; };
+		C6774DEB24FCD1AF0094C0BC /* DimerManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DimerManager.cpp; sourceTree = "<group>"; };
+		C6774DEC24FCD1AF0094C0BC /* ActivatedAdhesionState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ActivatedAdhesionState.h; sourceTree = "<group>"; };
+		C6774DED24FCD1AF0094C0BC /* DimensionalQty.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DimensionalQty.h; sourceTree = "<group>"; };
+		C6774DEE24FCD1AF0094C0BC /* BoundaryCondition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BoundaryCondition.h; sourceTree = "<group>"; };
+		C6774DEF24FCD1AF0094C0BC /* Random.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Random.h; sourceTree = "<group>"; };
+		C6774DF024FCD1AF0094C0BC /* Lubrication.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Lubrication.cpp; sourceTree = "<group>"; };
+		C6774DF124FCD1AF0094C0BC /* System.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = System.cpp; sourceTree = "<group>"; };
+		C6774DF224FCD1AF0094C0BC /* Configuration.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Configuration.cpp; sourceTree = "<group>"; };
+		C6774DF324FCD1AF0094C0BC /* PairwiseInteraction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PairwiseInteraction.h; sourceTree = "<group>"; };
+		C6774DF424FCD1AF0094C0BC /* States.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = States.h; sourceTree = "<group>"; };
+		C6774DF524FCD1AF0094C0BC /* Box3d.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Box3d.h; sourceTree = "<group>"; };
+		C6774DF624FCD1AF0094C0BC /* LubricationParams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LubricationParams.h; sourceTree = "<group>"; };
+		C6774DF724FCD1AF0094C0BC /* ParameterSetFactory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ParameterSetFactory.cpp; sourceTree = "<group>"; };
+		C6774DF824FCD1AF0094C0BC /* gsd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gsd.h; sourceTree = "<group>"; };
+		C6774DF924FCD1B00094C0BC /* GenerateInitConfig.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GenerateInitConfig.cpp; sourceTree = "<group>"; };
+		C6774DFA24FCD1B00094C0BC /* VanDerWaals.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VanDerWaals.cpp; sourceTree = "<group>"; };
+		C6774DFB24FCD1B00094C0BC /* PairwiseConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PairwiseConfig.h; sourceTree = "<group>"; };
+		C6774DFC24FCD1B00094C0BC /* Averager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Averager.h; sourceTree = "<group>"; };
+		C6774DFD24FCD1B00094C0BC /* ContactDashpot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ContactDashpot.h; sourceTree = "<group>"; };
+		C6774DFE24FCD1B00094C0BC /* TimeActivatedAdhesion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TimeActivatedAdhesion.cpp; sourceTree = "<group>"; };
+		C6774DFF24FCD1B00094C0BC /* Matrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Matrix.cpp; sourceTree = "<group>"; };
+		C6774E0024FCD1B00094C0BC /* MatrixBlocks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MatrixBlocks.h; sourceTree = "<group>"; };
+		C6774E0124FCD1B00094C0BC /* System.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = System.h; sourceTree = "<group>"; };
+		C6774E0224FCD1B00094C0BC /* LubricationCoefficients.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LubricationCoefficients.h; sourceTree = "<group>"; };
+		C6774E0324FCD1B00094C0BC /* BoundaryCondition.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BoundaryCondition.cpp; sourceTree = "<group>"; };
+		C6774E0424FCD1B00094C0BC /* InteractionManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InteractionManager.h; sourceTree = "<group>"; };
+		C6774E0524FCD1B00094C0BC /* OutputData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OutputData.h; sourceTree = "<group>"; };
+		C6774E0624FCD1B00094C0BC /* ParameterSetFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ParameterSetFactory.h; sourceTree = "<group>"; };
+		C6774E0724FCD1B00094C0BC /* PairManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PairManager.h; sourceTree = "<group>"; };
+		C6774E0824FCD1B00094C0BC /* TimeActivatedAdhesion_io.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TimeActivatedAdhesion_io.cpp; sourceTree = "<group>"; };
+		C6774E0924FCD1B00094C0BC /* OutputData.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OutputData.cpp; sourceTree = "<group>"; };
+		C6774E0A24FCD1B10094C0BC /* StdInteractionManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StdInteractionManager.cpp; sourceTree = "<group>"; };
+		C6774E0B24FCD1B10094C0BC /* ParticleConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ParticleConfig.h; sourceTree = "<group>"; };
+		C6774E3E24FCD1ED0094C0BC /* libcholmod.3.0.14.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcholmod.3.0.14.dylib; path = ../../SuiteSparse/lib/libcholmod.3.0.14.dylib; sourceTree = "<group>"; };
+		C6774E3F24FCD1ED0094C0BC /* libmetis.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmetis.dylib; path = ../../SuiteSparse/lib/libmetis.dylib; sourceTree = "<group>"; };
+		C6774E4024FCD1ED0094C0BC /* libcolamd.2.9.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcolamd.2.9.6.dylib; path = ../../SuiteSparse/lib/libcolamd.2.9.6.dylib; sourceTree = "<group>"; };
+		C6774E4124FCD1ED0094C0BC /* libsuitesparseconfig.5.8.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsuitesparseconfig.5.8.0.dylib; path = ../../SuiteSparse/lib/libsuitesparseconfig.5.8.0.dylib; sourceTree = "<group>"; };
+		C6774E4224FCD1ED0094C0BC /* libamd.2.4.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libamd.2.4.6.dylib; path = ../../SuiteSparse/lib/libamd.2.4.6.dylib; sourceTree = "<group>"; };
+		C6774E4324FCD1ED0094C0BC /* libccolamd.2.9.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libccolamd.2.9.6.dylib; path = ../../SuiteSparse/lib/libccolamd.2.9.6.dylib; sourceTree = "<group>"; };
+		C6774E5824FCEEDB0094C0BC /* Makefile_config_Romain_HPCCam.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile_config_Romain_HPCCam.mk; sourceTree = "<group>"; };
+		C6774E5924FCEEDB0094C0BC /* Makefile_config_uga_gpu.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile_config_uga_gpu.mk; sourceTree = "<group>"; };
+		C6774E5A24FCEEDB0094C0BC /* Makefile_config_osx.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile_config_osx.mk; sourceTree = "<group>"; };
+		C6774E5B24FCEEDB0094C0BC /* Makefile_config_oist_gpu.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile_config_oist_gpu.mk; sourceTree = "<group>"; };
+		C6774E5C24FCEEDB0094C0BC /* Makefile_config.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile_config.mk; sourceTree = "<group>"; };
+		C6774E5D24FCEEDB0094C0BC /* Makefile_config_Romain_Orwell.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile_config_Romain_Orwell.mk; sourceTree = "<group>"; };
+		C6774E5E24FCEEDB0094C0BC /* Makefile_config_Romain_Ucam_shared_SuiteSparse.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile_config_Romain_Ucam_shared_SuiteSparse.mk; sourceTree = "<group>"; };
+		C6774E5F24FCEEDB0094C0BC /* Makefile_config_Romain_Ucam_shared_SuiteSparse_MKL.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile_config_Romain_Ucam_shared_SuiteSparse_MKL.mk; sourceTree = "<group>"; };
+		C6774E6024FCEEDB0094C0BC /* Makefile_config_Romain_Orwell_mkl.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile_config_Romain_Orwell_mkl.mk; sourceTree = "<group>"; };
+		C6774E6124FCEEDB0094C0BC /* Makefile_config_Dahu.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile_config_Dahu.mk; sourceTree = "<group>"; };
+		C6774E6224FCEEDB0094C0BC /* Makefile_config_oist.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile_config_oist.mk; sourceTree = "<group>"; };
+		C6774E6324FCEEDB0094C0BC /* Makefile_config_generic.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile_config_generic.mk; sourceTree = "<group>"; };
+		C6774E6424FCEEDB0094C0BC /* Makefile_config_Ubuntu_OpenBLAS.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile_config_Ubuntu_OpenBLAS.mk; sourceTree = "<group>"; };
+		C6774E6524FCEEDB0094C0BC /* Makefile_config_kyoto.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile_config_kyoto.mk; sourceTree = "<group>"; };
+		C6774E6624FCEEDB0094C0BC /* Makefile_config_uga.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile_config_uga.mk; sourceTree = "<group>"; };
+		C6774E6724FCEEDC0094C0BC /* Makefile_config_Romain_Ucam.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile_config_Romain_Ucam.mk; sourceTree = "<group>"; };
+		C6774E6824FCEEDC0094C0BC /* Makefile_config_Froggy_UGA.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile_config_Froggy_UGA.mk; sourceTree = "<group>"; };
 		D905949E1E953FA4001252CB /* libcholmod.3.0.11.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcholmod.3.0.11.dylib; path = ../../../../SuiteSparse/lib/libcholmod.3.0.11.dylib; sourceTree = "<group>"; };
 		D905949F1E953FA4001252CB /* libcolamd.2.9.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcolamd.2.9.6.dylib; path = ../../../../SuiteSparse/lib/libcolamd.2.9.6.dylib; sourceTree = "<group>"; };
 		D90594A01E953FA4001252CB /* libamd.2.4.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libamd.2.4.6.dylib; path = ../../../../SuiteSparse/lib/libamd.2.4.6.dylib; sourceTree = "<group>"; };
@@ -538,17 +733,12 @@
 		D90AF4C31AF9FFBB00E15C7E /* tab_s.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = tab_s.png; sourceTree = "<group>"; };
 		D90AF4C41AF9FFBB00E15C7E /* tabs.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = tabs.css; sourceTree = "<group>"; };
 		D90AF4C51AF9FFBB00E15C7E /* vec3d_8h_source.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = vec3d_8h_source.html; sourceTree = "<group>"; };
-		D90B4F681A70942500C51ACD /* ParameterSet.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = ParameterSet.h; sourceTree = "<group>"; };
-		D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = GenerateInitConfig.cpp; sourceTree = "<group>"; };
-		D91539E316718D3200FBD57E /* GenerateInitConfig.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = GenerateInitConfig.h; sourceTree = "<group>"; };
 		D91B041D166EF0A600DC63CA /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
-		D91EB7AA1D7B027C000868CE /* ForceComponent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ForceComponent.h; sourceTree = "<group>"; };
 		D921A0BE175BF90D002F64B1 /* analyze_data_LF_DEM */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = analyze_data_LF_DEM; sourceTree = BUILT_PRODUCTS_DIR; };
 		D921A0C0175BF90D002F64B1 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D921A0C2175BF90D002F64B1 /* analyze_data_LF_DEM.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = analyze_data_LF_DEM.1; sourceTree = "<group>"; };
 		D921A0C7175C0041002F64B1 /* SystemParticles.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SystemParticles.cpp; sourceTree = "<group>"; };
 		D921A0C8175C0041002F64B1 /* SystemParticles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SystemParticles.h; sourceTree = "<group>"; };
-		D92244831BFBF08700F46233 /* SystemHelperFunctions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SystemHelperFunctions.cpp; sourceTree = "<group>"; };
 		D9251FEC1EE8D8AF0040520A /* libsuitesparseconfig.4.5.5.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsuitesparseconfig.4.5.5.dylib; path = ../../../SuiteSparse/lib/libsuitesparseconfig.4.5.5.dylib; sourceTree = "<group>"; };
 		D9251FED1EE8D8AF0040520A /* libcolamd.2.9.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcolamd.2.9.6.dylib; path = ../../../SuiteSparse/lib/libcolamd.2.9.6.dylib; sourceTree = "<group>"; };
 		D9251FEE1EE8D8AF0040520A /* libcholmod.3.0.11.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcholmod.3.0.11.dylib; path = ../../../SuiteSparse/lib/libcholmod.3.0.11.dylib; sourceTree = "<group>"; };
@@ -556,21 +746,7 @@
 		D9251FF01EE8D8AF0040520A /* libcamd.2.4.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcamd.2.4.6.dylib; path = ../../../SuiteSparse/lib/libcamd.2.4.6.dylib; sourceTree = "<group>"; };
 		D9251FF11EE8D8AF0040520A /* libamd.2.4.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libamd.2.4.6.dylib; path = ../../../SuiteSparse/lib/libamd.2.4.6.dylib; sourceTree = "<group>"; };
 		D9251FF81EE8D8F80040520A /* libmetis.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmetis.dylib; path = ../../../SuiteSparse/lib/libmetis.dylib; sourceTree = "<group>"; };
-		D9278EA51A9304F300ABCD87 /* RepulsiveForce.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = RepulsiveForce.h; sourceTree = "<group>"; };
-		D9278EA61A93050700ABCD87 /* Averager.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Averager.h; sourceTree = "<group>"; };
-		D9278EA71A93056E00ABCD87 /* RepulsiveForce.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = RepulsiveForce.cpp; sourceTree = "<group>"; };
-		D92A7C1A1BE3C9BD000092DF /* Makefile_config_generic.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_generic.mk; sourceTree = "<group>"; };
-		D92A7C1B1BE3C9BD000092DF /* Makefile_config_oist.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_oist.mk; sourceTree = "<group>"; };
-		D92A7C1C1BE3C9BD000092DF /* Makefile_config_Romain_HPCCam.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_Romain_HPCCam.mk; sourceTree = "<group>"; };
-		D92A7C1D1BE3C9BD000092DF /* Makefile_config_Romain_Ucam.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_Romain_Ucam.mk; sourceTree = "<group>"; };
 		D92A7C1E1BE3C9BD000092DF /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
-		D92A7C211BE75862000092DF /* Makefile_config_oist_gpu.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_oist_gpu.mk; sourceTree = "<group>"; };
-		D92EAA0B17E39D5100C903F5 /* Contact.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = Contact.cpp; sourceTree = "<group>"; };
-		D92EAA0C17E39D5100C903F5 /* Contact.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Contact.h; sourceTree = "<group>"; };
-		D92EAA0D17E39D5100C903F5 /* Lubrication.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Lubrication.cpp; sourceTree = "<group>"; };
-		D92EAA0E17E39D5100C903F5 /* Lubrication.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Lubrication.h; sourceTree = "<group>"; };
-		D92F19C21676450800411650 /* MersenneTwister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MersenneTwister.h; sourceTree = "<group>"; };
-		D932B8DF16C2EDCB00AD6E85 /* StokesSolver.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = StokesSolver.h; sourceTree = "<group>"; };
 		D932C64C21238C6B0005E67F /* libsuitesparseconfig.5.3.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsuitesparseconfig.5.3.0.dylib; path = ../../../SuiteSparse/lib/libsuitesparseconfig.5.3.0.dylib; sourceTree = "<group>"; };
 		D93C105A1C34197200460301 /* analyzeCircularWideGap.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = analyzeCircularWideGap.pl; path = tools/analyzeCircularWideGap.pl; sourceTree = SOURCE_ROOT; };
 		D94177921F7BAFE600BB44C0 /* yapgen.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = yapgen.py; path = tools/yapgen.py; sourceTree = SOURCE_ROOT; };
@@ -579,18 +755,9 @@
 		D94177951F7BAFE600BB44C0 /* wall_conf.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = wall_conf.py; path = tools/wall_conf.py; sourceTree = SOURCE_ROOT; };
 		D94177961F7BAFE600BB44C0 /* lfdem_utils.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = lfdem_utils.py; path = tools/lfdem_utils.py; sourceTree = SOURCE_ROOT; };
 		D94177971F7BAFE700BB44C0 /* lfdem_file.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = lfdem_file.py; path = tools/lfdem_file.py; sourceTree = SOURCE_ROOT; };
-		D94177981F7E041F00BB44C0 /* States.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = States.h; sourceTree = "<group>"; };
-		D94177991F7E041F00BB44C0 /* States.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = States.cpp; sourceTree = "<group>"; };
 		D94AEF021C0BCEAC0061C679 /* README.rst */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.rst; sourceTree = "<group>"; };
-		D9506B9116D81A7C00A52CFF /* Stress.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Stress.cpp; sourceTree = "<group>"; };
 		D9532ADF1B9412FC0014831F /* CalcOrderParameter */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CalcOrderParameter; sourceTree = BUILT_PRODUCTS_DIR; };
-		D9573FAE16797A000081E903 /* Box.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = Box.cpp; sourceTree = "<group>"; };
-		D9573FAF16797A000081E903 /* Box.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Box.h; sourceTree = "<group>"; };
-		D9573FB016797A000081E903 /* BoxSet.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = BoxSet.cpp; sourceTree = "<group>"; };
-		D9573FB116797A000081E903 /* BoxSet.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = BoxSet.h; sourceTree = "<group>"; };
 		D95D5FC62148E9E6004953DA /* nsd_analysis.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = nsd_analysis.pl; path = tools/nsd_analysis.pl; sourceTree = SOURCE_ROOT; };
-		D95FE8081D4E2E40004D2C8A /* ContactDashpot.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ContactDashpot.cpp; sourceTree = "<group>"; };
-		D95FE8091D4E2E40004D2C8A /* ContactDashpot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ContactDashpot.h; sourceTree = "<group>"; };
 		D9632A401F3021A100741C43 /* averageConfigdata.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; name = averageConfigdata.pl; path = tools/averageConfigdata.pl; sourceTree = SOURCE_ROOT; };
 		D96731B117A042AD005D02F8 /* percolation_LF_DEM */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = percolation_LF_DEM; sourceTree = BUILT_PRODUCTS_DIR; };
 		D96731B317A042AD005D02F8 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -598,25 +765,12 @@
 		D96731BA17A042D1005D02F8 /* System.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = System.cpp; sourceTree = "<group>"; };
 		D96731BB17A042D1005D02F8 /* System.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = System.h; sourceTree = "<group>"; };
 		D96B068920969E4D00EC3A0C /* extractPositionData.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = extractPositionData.pl; path = tools/extractPositionData.pl; sourceTree = SOURCE_ROOT; };
-		D972B3AB1DC785C400024381 /* StressComponent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StressComponent.h; sourceTree = "<group>"; };
-		D972B3AC1DC785C400024381 /* VelocityComponent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VelocityComponent.h; sourceTree = "<group>"; };
-		D9752C881B18285100DDE5E4 /* global.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = global.h; sourceTree = "<group>"; };
-		D97C3B08167690DC009A6BF0 /* Interaction.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Interaction.h; sourceTree = "<group>"; };
 		D97E6DFD1D3FA83300A3D747 /* timeEvolutionWideGap.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; name = timeEvolutionWideGap.pl; path = tools/timeEvolutionWideGap.pl; sourceTree = SOURCE_ROOT; };
 		D980D5CD21FC6E4A009C9AC8 /* libsuitesparseconfig.5.4.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsuitesparseconfig.5.4.0.dylib; path = ../../../SuiteSparse/lib/libsuitesparseconfig.5.4.0.dylib; sourceTree = "<group>"; };
 		D980D5CF21FC6E93009C9AC8 /* libcholmod.3.0.13.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcholmod.3.0.13.dylib; path = ../../../SuiteSparse/lib/libcholmod.3.0.13.dylib; sourceTree = "<group>"; };
 		D9825AF01C410E4B000AF86E /* circularrheo.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = circularrheo.pl; path = tools/circularrheo.pl; sourceTree = SOURCE_ROOT; };
-		D9878875165545680047A87E /* Simulation.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = Simulation.cpp; sourceTree = "<group>"; };
-		D9878876165545680047A87E /* Simulation.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Simulation.h; sourceTree = "<group>"; };
 		D988E389165441750009949F /* LF_DEM */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = LF_DEM; sourceTree = BUILT_PRODUCTS_DIR; };
-		D988E38D165441750009949F /* main.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D988E38F165441750009949F /* LF_DEM.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = LF_DEM.1; sourceTree = "<group>"; };
-		D988E399165443C10009949F /* vec3d.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = vec3d.h; sourceTree = "<group>"; };
-		D988E39A1654A18D0009949F /* System.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = System.cpp; sourceTree = "<group>"; };
-		D988E39B1654A18D0009949F /* System.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = System.h; sourceTree = "<group>"; };
-		D9892542223D3C76002FC5EB /* SolventFlow.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SolventFlow.cpp; sourceTree = "<group>"; };
-		D9892543223D3C76002FC5EB /* SolventFlow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SolventFlow.h; sourceTree = "<group>"; };
-		D98B3CCD17CCF057002B2A4D /* LubricationFunctions.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = LubricationFunctions.h; sourceTree = "<group>"; };
 		D98F62131E62367200053198 /* convertMaterialFunctions.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; name = convertMaterialFunctions.pl; path = tools/convertMaterialFunctions.pl; sourceTree = SOURCE_ROOT; };
 		D9953512180713FB00FC99C9 /* cluster_life */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cluster_life; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9953514180713FB00FC99C9 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -625,17 +779,9 @@
 		D995351F180716B100FC99C9 /* Cluster.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Cluster.h; sourceTree = "<group>"; };
 		D99535211807276D00FC99C9 /* StrainSnapShot.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StrainSnapShot.cpp; sourceTree = "<group>"; };
 		D99535221807276D00FC99C9 /* StrainSnapShot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StrainSnapShot.h; sourceTree = "<group>"; };
-		D9970BD221B2932600738214 /* Makefile_config_Romain_Orwell_mkl.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_Romain_Orwell_mkl.mk; sourceTree = "<group>"; };
-		D9970BD321B2933900738214 /* Makefile_config_Romain_Ucam_shared_SuiteSparse_MKL.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_Romain_Ucam_shared_SuiteSparse_MKL.mk; sourceTree = "<group>"; };
-		D9970BD421B2935100738214 /* Makefile_config_uga.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_uga.mk; sourceTree = "<group>"; };
-		D9970BD521B2935100738214 /* Makefile_config_osx.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_osx.mk; sourceTree = "<group>"; };
-		D9970BD621B2935100738214 /* Makefile_config_uga_gpu.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_uga_gpu.mk; sourceTree = "<group>"; };
-		D9970BD721B2935100738214 /* Makefile_config_Ubuntu_OpenBLAS.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_Ubuntu_OpenBLAS.mk; sourceTree = "<group>"; };
-		D9970BD821B293D200738214 /* Makefile_config_kyoto.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_kyoto.mk; sourceTree = "<group>"; };
 		D9A80BF31B1A9BA700F4BFD3 /* nondimensionalization.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = nondimensionalization.pdf; sourceTree = "<group>"; };
 		D9A80BF41B1A9BA700F4BFD3 /* note_LF_DEM.tex */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.tex; sourceTree = "<group>"; };
 		D9A80BF51B1A9BC200F4BFD3 /* nondimensionalization.tex */ = {isa = PBXFileReference; lastKnownFileType = text; path = nondimensionalization.tex; sourceTree = "<group>"; };
-		D9A80BF61B1C87D000F4BFD3 /* OutputData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OutputData.h; sourceTree = "<group>"; };
 		D9A906641BF331EF00BE8640 /* calc_contact_fraction.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = calc_contact_fraction.pl; path = tools/calc_contact_fraction.pl; sourceTree = SOURCE_ROOT; };
 		D9A906651BF331EF00BE8640 /* extractConfigdata.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = extractConfigdata.pl; path = tools/extractConfigdata.pl; sourceTree = SOURCE_ROOT; };
 		D9A906661BF331EF00BE8640 /* force_chain.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = force_chain.pl; path = tools/force_chain.pl; sourceTree = SOURCE_ROOT; };
@@ -650,25 +796,6 @@
 		D9A9066F1BF331EF00BE8640 /* reduce_rheodata.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = reduce_rheodata.pl; path = tools/reduce_rheodata.pl; sourceTree = SOURCE_ROOT; };
 		D9A906701BF331EF00BE8640 /* trajectory.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = trajectory.pl; path = tools/trajectory.pl; sourceTree = SOURCE_ROOT; };
 		D9AB67A621D3CBB0003ECF50 /* anisotropy_analysis.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = anisotropy_analysis.pl; path = tools/anisotropy_analysis.pl; sourceTree = SOURCE_ROOT; };
-		D9AD32F11D8CAD3D00819471 /* SystemHelperFunctions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SystemHelperFunctions.h; sourceTree = "<group>"; };
-		D9B0FF381D1A810C00FFCBFD /* Timer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Timer.h; sourceTree = "<group>"; };
-		D9B16BDD21B1CB6800AD5939 /* gsd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gsd.c; sourceTree = "<group>"; };
-		D9B16BDE21B1CB6800AD5939 /* gsd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gsd.h; sourceTree = "<group>"; };
-		D9B18D4C200054920009113B /* TimeActivatedAdhesion_io.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TimeActivatedAdhesion_io.cpp; sourceTree = "<group>"; };
-		D9B18D4D200054920009113B /* TimeActivatedAdhesion_Params.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TimeActivatedAdhesion_Params.h; sourceTree = "<group>"; };
-		D9B18D4E200054920009113B /* TimeActivatedAdhesion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TimeActivatedAdhesion.h; sourceTree = "<group>"; };
-		D9B18D4F200054920009113B /* TimeActivatedAdhesion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TimeActivatedAdhesion.cpp; sourceTree = "<group>"; };
-		D9B18D50200054930009113B /* TimeActivatedAdhesion_io.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TimeActivatedAdhesion_io.h; sourceTree = "<group>"; };
-		D9B18D53200054D30009113B /* ParameterSetFactory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ParameterSetFactory.cpp; sourceTree = "<group>"; };
-		D9B18D54200054D30009113B /* ParameterSetFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ParameterSetFactory.h; sourceTree = "<group>"; };
-		D9B18D56200055870009113B /* DimensionalQty.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DimensionalQty.cpp; sourceTree = "<group>"; };
-		D9B18D57200055870009113B /* DimensionalQty.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DimensionalQty.h; sourceTree = "<group>"; };
-		D9B18D59200055AB0009113B /* Contact_io.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Contact_io.cpp; sourceTree = "<group>"; };
-		D9B18D5B200057510009113B /* OutputData.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OutputData.cpp; sourceTree = "<group>"; };
-		D9B18D5D20005B470009113B /* Configuration.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Configuration.cpp; sourceTree = "<group>"; };
-		D9B4104A1E53E52F00A2C9D5 /* Matrix.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Matrix.h; sourceTree = "<group>"; };
-		D9B4104B1E5BE26600A2C9D5 /* Sym2Tensor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sym2Tensor.h; sourceTree = "<group>"; };
-		D9B4104C1E5BF15900A2C9D5 /* Configuration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Configuration.h; sourceTree = "<group>"; };
 		D9B4104F1E5BF8C400A2C9D5 /* generateYaplotFile_extflow.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = generateYaplotFile_extflow.pl; path = tools/generateYaplotFile_extflow.pl; sourceTree = SOURCE_ROOT; };
 		D9B659F81998FD14003DA63E /* LF_DEM.profdata */ = {isa = PBXFileReference; lastKnownFileType = file; path = LF_DEM.profdata; sourceTree = "<group>"; };
 		D9BA0B8B1C7010930077D0AC /* analyzeWallShear.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; name = analyzeWallShear.pl; path = tools/analyzeWallShear.pl; sourceTree = SOURCE_ROOT; };
@@ -686,11 +813,6 @@
 		D9BE3B70178CB35E00937C5C /* Bond.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Bond.h; sourceTree = "<group>"; };
 		D9BE3B72178CB8A800937C5C /* Cluster.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Cluster.cpp; sourceTree = "<group>"; };
 		D9BE3B73178CB8A800937C5C /* Cluster.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Cluster.h; sourceTree = "<group>"; };
-		D9CE1B411B066B3400E052D9 /* dSFMT.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = dSFMT.c; path = "dSFMT-src-2.2.3/dSFMT.c"; sourceTree = "<group>"; };
-		D9CE1B431B066B4200E052D9 /* dSFMT.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dSFMT.h; path = "dSFMT-src-2.2.3/dSFMT.h"; sourceTree = "<group>"; };
-		D9CE1B441B066B5E00E052D9 /* dSFMT-common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "dSFMT-common.h"; path = "dSFMT-src-2.2.3/dSFMT-common.h"; sourceTree = "<group>"; };
-		D9CE1B451B066B5E00E052D9 /* dSFMT-params.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "dSFMT-params.h"; path = "dSFMT-src-2.2.3/dSFMT-params.h"; sourceTree = "<group>"; };
-		D9CE1B461B066B5E00E052D9 /* dSFMT-params19937.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "dSFMT-params19937.h"; path = "dSFMT-src-2.2.3/dSFMT-params19937.h"; sourceTree = "<group>"; };
 		D9D6C5742074B1A5007D455F /* libsuitesparseconfig.5.2.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsuitesparseconfig.5.2.0.dylib; path = ../../../SuiteSparse/lib/libsuitesparseconfig.5.2.0.dylib; sourceTree = "<group>"; };
 		D9D6C5762074B1DE007D455F /* libcholmod.3.0.12.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcholmod.3.0.12.dylib; path = ../../../SuiteSparse/lib/libcholmod.3.0.12.dylib; sourceTree = "<group>"; };
 		D9DA50D71678F61E00E864E4 /* note_LF_DEM.bbl */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.bbl; sourceTree = "<group>"; };
@@ -699,7 +821,6 @@
 		D9DDE7352240835C00FCA6BA /* Sparse */ = {isa = PBXFileReference; lastKnownFileType = text; name = Sparse; path = ../../../../../usr/local/Cellar/eigen/3.3.7/include/eigen3/Eigen/Sparse; sourceTree = "<group>"; };
 		D9EA979A1BBCF2560041B4B0 /* analyze */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = analyze; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9EA97A51BBCF29C0041B4B0 /* analyzeLFDEM */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = analyzeLFDEM; sourceTree = BUILT_PRODUCTS_DIR; };
-		D9FAAA2F1960685B00E601A9 /* Interaction.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = Interaction.cpp; sourceTree = "<group>"; };
 		D9FB0BD61D6934E800E315B1 /* libamd.2.4.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libamd.2.4.6.dylib; path = /usr/local/lib/libamd.2.4.6.dylib; sourceTree = "<absolute>"; };
 		D9FB0BD71D6934E800E315B1 /* libcholmod.3.0.11.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcholmod.3.0.11.dylib; path = /usr/local/lib/libcholmod.3.0.11.dylib; sourceTree = "<absolute>"; };
 		D9FB0BD81D6934E800E315B1 /* libcolamd.2.9.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcolamd.2.9.6.dylib; path = /usr/local/lib/libcolamd.2.9.6.dylib; sourceTree = "<absolute>"; };
@@ -732,13 +853,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D980D5D121FC6F11009C9AC8 /* libccolamd.2.9.6.dylib in Frameworks */,
-				D980D5CE21FC6E4A009C9AC8 /* libsuitesparseconfig.5.4.0.dylib in Frameworks */,
-				D980D5D021FC6E93009C9AC8 /* libcholmod.3.0.13.dylib in Frameworks */,
-				D9251FF91EE8D8F80040520A /* libmetis.dylib in Frameworks */,
-				D9251FF61EE8D8AF0040520A /* libcamd.2.4.6.dylib in Frameworks */,
-				D9251FF71EE8D8AF0040520A /* libamd.2.4.6.dylib in Frameworks */,
+				C6774E4E24FCD1EE0094C0BC /* libccolamd.2.9.6.dylib in Frameworks */,
+				C6774E4424FCD1ED0094C0BC /* libcholmod.3.0.14.dylib in Frameworks */,
+				C6774E4C24FCD1EE0094C0BC /* libamd.2.4.6.dylib in Frameworks */,
+				C6774E4824FCD1EE0094C0BC /* libcolamd.2.9.6.dylib in Frameworks */,
 				D9251FEB1EE8D8720040520A /* Accelerate.framework in Frameworks */,
+				C6774E4A24FCD1EE0094C0BC /* libsuitesparseconfig.5.8.0.dylib in Frameworks */,
+				C6774E4624FCD1EE0094C0BC /* libmetis.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -776,6 +897,12 @@
 		D905949D1E953FA4001252CB /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C6774E4224FCD1ED0094C0BC /* libamd.2.4.6.dylib */,
+				C6774E4324FCD1ED0094C0BC /* libccolamd.2.9.6.dylib */,
+				C6774E3E24FCD1ED0094C0BC /* libcholmod.3.0.14.dylib */,
+				C6774E4024FCD1ED0094C0BC /* libcolamd.2.9.6.dylib */,
+				C6774E3F24FCD1ED0094C0BC /* libmetis.dylib */,
+				C6774E4124FCD1ED0094C0BC /* libsuitesparseconfig.5.8.0.dylib */,
 				D9DDE7352240835C00FCA6BA /* Sparse */,
 				D980D5CF21FC6E93009C9AC8 /* libcholmod.3.0.13.dylib */,
 				D980D5CD21FC6E4A009C9AC8 /* libsuitesparseconfig.5.4.0.dylib */,
@@ -1227,18 +1354,23 @@
 		D92A7C191BE3C9BD000092DF /* config */ = {
 			isa = PBXGroup;
 			children = (
-				D92A7C1A1BE3C9BD000092DF /* Makefile_config_generic.mk */,
-				D92A7C1C1BE3C9BD000092DF /* Makefile_config_Romain_HPCCam.mk */,
-				D9970BD321B2933900738214 /* Makefile_config_Romain_Ucam_shared_SuiteSparse_MKL.mk */,
-				D9970BD221B2932600738214 /* Makefile_config_Romain_Orwell_mkl.mk */,
-				D9970BD521B2935100738214 /* Makefile_config_osx.mk */,
-				D9970BD721B2935100738214 /* Makefile_config_Ubuntu_OpenBLAS.mk */,
-				D9970BD621B2935100738214 /* Makefile_config_uga_gpu.mk */,
-				D9970BD421B2935100738214 /* Makefile_config_uga.mk */,
-				D92A7C1D1BE3C9BD000092DF /* Makefile_config_Romain_Ucam.mk */,
-				D92A7C1B1BE3C9BD000092DF /* Makefile_config_oist.mk */,
-				D92A7C211BE75862000092DF /* Makefile_config_oist_gpu.mk */,
-				D9970BD821B293D200738214 /* Makefile_config_kyoto.mk */,
+				C6774E6124FCEEDB0094C0BC /* Makefile_config_Dahu.mk */,
+				C6774E6824FCEEDC0094C0BC /* Makefile_config_Froggy_UGA.mk */,
+				C6774E6324FCEEDB0094C0BC /* Makefile_config_generic.mk */,
+				C6774E6524FCEEDB0094C0BC /* Makefile_config_kyoto.mk */,
+				C6774E5B24FCEEDB0094C0BC /* Makefile_config_oist_gpu.mk */,
+				C6774E6224FCEEDB0094C0BC /* Makefile_config_oist.mk */,
+				C6774E5A24FCEEDB0094C0BC /* Makefile_config_osx.mk */,
+				C6774E5824FCEEDB0094C0BC /* Makefile_config_Romain_HPCCam.mk */,
+				C6774E6024FCEEDB0094C0BC /* Makefile_config_Romain_Orwell_mkl.mk */,
+				C6774E5D24FCEEDB0094C0BC /* Makefile_config_Romain_Orwell.mk */,
+				C6774E5F24FCEEDB0094C0BC /* Makefile_config_Romain_Ucam_shared_SuiteSparse_MKL.mk */,
+				C6774E5E24FCEEDB0094C0BC /* Makefile_config_Romain_Ucam_shared_SuiteSparse.mk */,
+				C6774E6724FCEEDC0094C0BC /* Makefile_config_Romain_Ucam.mk */,
+				C6774E6424FCEEDB0094C0BC /* Makefile_config_Ubuntu_OpenBLAS.mk */,
+				C6774E5924FCEEDB0094C0BC /* Makefile_config_uga_gpu.mk */,
+				C6774E6624FCEEDB0094C0BC /* Makefile_config_uga.mk */,
+				C6774E5C24FCEEDB0094C0BC /* Makefile_config.mk */,
 			);
 			path = config;
 			sourceTree = "<group>";
@@ -1343,71 +1475,135 @@
 				D932B8DE16C2EA1B00AD6E85 /* lib */,
 				D92A7C191BE3C9BD000092DF /* config */,
 				D92A7C1E1BE3C9BD000092DF /* Makefile */,
-				D9CE1B431B066B4200E052D9 /* dSFMT.h */,
-				D9CE1B411B066B3400E052D9 /* dSFMT.c */,
-				D9CE1B441B066B5E00E052D9 /* dSFMT-common.h */,
-				D9CE1B451B066B5E00E052D9 /* dSFMT-params.h */,
-				D9CE1B461B066B5E00E052D9 /* dSFMT-params19937.h */,
-				D988E38D165441750009949F /* main.cpp */,
-				D9032D731B79D1A00062A6F3 /* Events.h */,
-				D9752C881B18285100DDE5E4 /* global.h */,
-				D91EB7AA1D7B027C000868CE /* ForceComponent.h */,
-				D972B3AB1DC785C400024381 /* StressComponent.h */,
-				D972B3AC1DC785C400024381 /* VelocityComponent.h */,
-				D9B4104C1E5BF15900A2C9D5 /* Configuration.h */,
-				D9B18D5D20005B470009113B /* Configuration.cpp */,
-				D9878876165545680047A87E /* Simulation.h */,
-				D9878875165545680047A87E /* Simulation.cpp */,
-				D9032D741B79DFE60062A6F3 /* SimulationInit.cpp */,
-				D9A80BF61B1C87D000F4BFD3 /* OutputData.h */,
-				D9B18D5B200057510009113B /* OutputData.cpp */,
-				D988E39B1654A18D0009949F /* System.h */,
-				D988E39A1654A18D0009949F /* System.cpp */,
-				D9892543223D3C76002FC5EB /* SolventFlow.h */,
-				D9892542223D3C76002FC5EB /* SolventFlow.cpp */,
-				D94177981F7E041F00BB44C0 /* States.h */,
-				D94177991F7E041F00BB44C0 /* States.cpp */,
-				D92244831BFBF08700F46233 /* SystemHelperFunctions.cpp */,
-				D9AD32F11D8CAD3D00819471 /* SystemHelperFunctions.h */,
-				D9506B9116D81A7C00A52CFF /* Stress.cpp */,
-				D90B4F681A70942500C51ACD /* ParameterSet.h */,
-				D9B18D54200054D30009113B /* ParameterSetFactory.h */,
-				D9B18D53200054D30009113B /* ParameterSetFactory.cpp */,
-				D9B18D56200055870009113B /* DimensionalQty.cpp */,
-				D9B18D57200055870009113B /* DimensionalQty.h */,
-				D932B8DF16C2EDCB00AD6E85 /* StokesSolver.h */,
-				CDE4695916BC4CB800923139 /* StokesSolver.cpp */,
-				D97C3B08167690DC009A6BF0 /* Interaction.h */,
-				D9FAAA2F1960685B00E601A9 /* Interaction.cpp */,
-				D92EAA0C17E39D5100C903F5 /* Contact.h */,
-				D92EAA0B17E39D5100C903F5 /* Contact.cpp */,
-				D9B18D59200055AB0009113B /* Contact_io.cpp */,
-				D95FE8081D4E2E40004D2C8A /* ContactDashpot.cpp */,
-				D95FE8091D4E2E40004D2C8A /* ContactDashpot.h */,
-				D9278EA51A9304F300ABCD87 /* RepulsiveForce.h */,
-				D9278EA71A93056E00ABCD87 /* RepulsiveForce.cpp */,
-				D92EAA0E17E39D5100C903F5 /* Lubrication.h */,
-				D92EAA0D17E39D5100C903F5 /* Lubrication.cpp */,
-				D98B3CCD17CCF057002B2A4D /* LubricationFunctions.h */,
-				D9573FAF16797A000081E903 /* Box.h */,
-				D9573FAE16797A000081E903 /* Box.cpp */,
-				D9573FB116797A000081E903 /* BoxSet.h */,
-				D9573FB016797A000081E903 /* BoxSet.cpp */,
-				D91539E316718D3200FBD57E /* GenerateInitConfig.h */,
-				D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */,
-				D9B4104A1E53E52F00A2C9D5 /* Matrix.h */,
-				D9278EA61A93050700ABCD87 /* Averager.h */,
-				D9B0FF381D1A810C00FFCBFD /* Timer.h */,
-				D9B18D4C200054920009113B /* TimeActivatedAdhesion_io.cpp */,
-				D9B18D50200054930009113B /* TimeActivatedAdhesion_io.h */,
-				D9B18D4D200054920009113B /* TimeActivatedAdhesion_Params.h */,
-				D9B18D4F200054920009113B /* TimeActivatedAdhesion.cpp */,
-				D9B18D4E200054920009113B /* TimeActivatedAdhesion.h */,
-				D988E399165443C10009949F /* vec3d.h */,
-				D9B4104B1E5BE26600A2C9D5 /* Sym2Tensor.h */,
-				D92F19C21676450800411650 /* MersenneTwister.h */,
-				D9B16BDD21B1CB6800AD5939 /* gsd.c */,
-				D9B16BDE21B1CB6800AD5939 /* gsd.h */,
+				C6774DCB24FCD1AD0094C0BC /* ActivatedAdhesion_io.cpp */,
+				C6774DC524FCD1AD0094C0BC /* ActivatedAdhesion_io.h */,
+				C6774DD124FCD1AD0094C0BC /* ActivatedAdhesion_Params.h */,
+				C6774D9A24FCD1AA0094C0BC /* ActivatedAdhesion.cpp */,
+				C6774D9B24FCD1AA0094C0BC /* ActivatedAdhesion.h */,
+				C6774DEC24FCD1AF0094C0BC /* ActivatedAdhesionState.h */,
+				C6774DA924FCD1AB0094C0BC /* AgeingContact.cpp */,
+				C6774D9324FCD1AA0094C0BC /* AgeingContact.h */,
+				C6774DCE24FCD1AD0094C0BC /* AgeingContactParams.h */,
+				C6774DC124FCD1AC0094C0BC /* AlmostEqual.h */,
+				C6774DFC24FCD1B00094C0BC /* Averager.h */,
+				C6774E0324FCD1B00094C0BC /* BoundaryCondition.cpp */,
+				C6774DEE24FCD1AF0094C0BC /* BoundaryCondition.h */,
+				C6774D9124FCD1AA0094C0BC /* Box.cpp */,
+				C6774DAF24FCD1AB0094C0BC /* Box.h */,
+				C6774DF524FCD1AF0094C0BC /* Box3d.h */,
+				C6774D8C24FCD1AA0094C0BC /* BoxSet.cpp */,
+				C6774DD224FCD1AD0094C0BC /* BoxSet.h */,
+				C6774DDE24FCD1AE0094C0BC /* CheckFile.h */,
+				C6774DF224FCD1AF0094C0BC /* Configuration.cpp */,
+				C6774DD824FCD1AE0094C0BC /* Configuration.h */,
+				C6774DC924FCD1AD0094C0BC /* ConfinementParams.h */,
+				C6774DBD24FCD1AC0094C0BC /* Contact_io.cpp */,
+				C6774DB524FCD1AC0094C0BC /* Contact.cpp */,
+				C6774DA824FCD1AB0094C0BC /* Contact.h */,
+				C6774D8F24FCD1AA0094C0BC /* ContactDashpot.cpp */,
+				C6774DFD24FCD1B00094C0BC /* ContactDashpot.h */,
+				C6774DE824FCD1AF0094C0BC /* ContactParams.h */,
+				C6774DA024FCD1AB0094C0BC /* ControlVariable.h */,
+				C6774DAA24FCD1AB0094C0BC /* DimensionalQty.cpp */,
+				C6774DED24FCD1AF0094C0BC /* DimensionalQty.h */,
+				C6774DE624FCD1AE0094C0BC /* Dimer_io.cpp */,
+				C6774DCF24FCD1AD0094C0BC /* Dimer_io.h */,
+				C6774DD324FCD1AD0094C0BC /* Dimer.cpp */,
+				C6774D9224FCD1AA0094C0BC /* Dimer.h */,
+				C6774DEB24FCD1AF0094C0BC /* DimerManager.cpp */,
+				C6774D8E24FCD1AA0094C0BC /* DimerManager.h */,
+				C6774DD424FCD1AD0094C0BC /* DimerManagerOutput.cpp */,
+				C6774DC224FCD1AC0094C0BC /* DimerParams.h */,
+				C6774DB724FCD1AC0094C0BC /* DimerState.h */,
+				C6774DCA24FCD1AD0094C0BC /* Events.h */,
+				C6774DBC24FCD1AC0094C0BC /* ExtensionalShearBoxSet.cpp */,
+				C6774DB924FCD1AC0094C0BC /* ExtensionalShearBoxSet.h */,
+				C6774DA624FCD1AB0094C0BC /* ForceComponent.h */,
+				C6774DF924FCD1B00094C0BC /* GenerateInitConfig.cpp */,
+				C6774DB824FCD1AC0094C0BC /* GenerateInitConfig.h */,
+				C6774D8D24FCD1AA0094C0BC /* global.h */,
+				C6774DC424FCD1AC0094C0BC /* gsd.c */,
+				C6774DF824FCD1AF0094C0BC /* gsd.h */,
+				C6774DDD24FCD1AE0094C0BC /* ImposedDeformation.cpp */,
+				C6774DB124FCD1AB0094C0BC /* ImposedDeformation.h */,
+				C6774E0424FCD1B00094C0BC /* InteractionManager.h */,
+				C6774DAC24FCD1AB0094C0BC /* InteractionManagerOutput.h */,
+				C6774DB024FCD1AB0094C0BC /* KraynikReinelt.cpp */,
+				C6774DD624FCD1AE0094C0BC /* KraynikReinelt.h */,
+				C6774DA424FCD1AB0094C0BC /* LeesEdwards.cpp */,
+				C6774D9F24FCD1AB0094C0BC /* LeesEdwards.h */,
+				C6774DF024FCD1AF0094C0BC /* Lubrication.cpp */,
+				C6774DA724FCD1AB0094C0BC /* Lubrication.h */,
+				C6774DA524FCD1AB0094C0BC /* LubricationCoefficients.cpp */,
+				C6774E0224FCD1B00094C0BC /* LubricationCoefficients.h */,
+				C6774DC024FCD1AC0094C0BC /* LubricationFunctions.h */,
+				C6774DF624FCD1AF0094C0BC /* LubricationParams.h */,
+				C6774DC624FCD1AD0094C0BC /* main.cpp */,
+				C6774DFF24FCD1B00094C0BC /* Matrix.cpp */,
+				C6774D8B24FCD1AA0094C0BC /* Matrix.h */,
+				C6774DC324FCD1AC0094C0BC /* MatrixBlocks.cpp */,
+				C6774E0024FCD1B00094C0BC /* MatrixBlocks.h */,
+				C6774D9E24FCD1AA0094C0BC /* MersenneTwister.h */,
+				C6774E0924FCD1B00094C0BC /* OutputData.cpp */,
+				C6774E0524FCD1B00094C0BC /* OutputData.h */,
+				C6774DE524FCD1AE0094C0BC /* PairManager.cpp */,
+				C6774E0724FCD1B00094C0BC /* PairManager.h */,
+				C6774DD024FCD1AD0094C0BC /* PairVelocity.h */,
+				C6774DDC24FCD1AE0094C0BC /* PairwiseConfig.cpp */,
+				C6774DFB24FCD1B00094C0BC /* PairwiseConfig.h */,
+				C6774DBE24FCD1AC0094C0BC /* PairwiseInteraction.cpp */,
+				C6774DF324FCD1AF0094C0BC /* PairwiseInteraction.h */,
+				C6774DD524FCD1AD0094C0BC /* PairwiseResistanceVelocitySolver.cpp */,
+				C6774DE924FCD1AF0094C0BC /* PairwiseResistanceVelocitySolver.h */,
+				C6774DC724FCD1AD0094C0BC /* ParameterSet.h */,
+				C6774DF724FCD1AF0094C0BC /* ParameterSetFactory.cpp */,
+				C6774E0624FCD1B00094C0BC /* ParameterSetFactory.h */,
+				C6774E0B24FCD1B10094C0BC /* ParticleConfig.h */,
+				C6774DA124FCD1AB0094C0BC /* PotentialForce.cpp */,
+				C6774DA324FCD1AB0094C0BC /* PotentialForce.h */,
+				C6774DEF24FCD1AF0094C0BC /* Random.h */,
+				C6774DEA24FCD1AF0094C0BC /* RateDependence.h */,
+				C6774D9D24FCD1AA0094C0BC /* RepulsiveForce.cpp */,
+				C6774DC824FCD1AD0094C0BC /* RepulsiveForce.h */,
+				C6774D9924FCD1AA0094C0BC /* RepulsiveForceParams.h */,
+				C6774D9024FCD1AA0094C0BC /* ShearType.h */,
+				C6774DE024FCD1AE0094C0BC /* SimpleShearBoxSet.cpp */,
+				C6774D9824FCD1AA0094C0BC /* SimpleShearBoxSet.h */,
+				C6774DD724FCD1AE0094C0BC /* Simulation.cpp */,
+				C6774D9424FCD1AA0094C0BC /* Simulation.h */,
+				C6774DAD24FCD1AB0094C0BC /* SimulationInit.cpp */,
+				C6774DDB24FCD1AE0094C0BC /* SolventFlow.cpp */,
+				C6774DB324FCD1AB0094C0BC /* SolventFlow.h */,
+				C6774DE224FCD1AE0094C0BC /* States.cpp */,
+				C6774DF424FCD1AF0094C0BC /* States.h */,
+				C6774DE724FCD1AE0094C0BC /* StdInteraction.cpp */,
+				C6774DD924FCD1AE0094C0BC /* StdInteraction.h */,
+				C6774E0A24FCD1B10094C0BC /* StdInteractionManager.cpp */,
+				C6774D9524FCD1AA0094C0BC /* StdInteractionManager.h */,
+				C6774DAB24FCD1AB0094C0BC /* StdInteractionManagerOutput.cpp */,
+				C6774DBF24FCD1AC0094C0BC /* StdInteractionParams.h */,
+				C6774DDA24FCD1AE0094C0BC /* StokesSolver.cpp */,
+				C6774DB224FCD1AB0094C0BC /* StokesSolver.h */,
+				C6774DE124FCD1AE0094C0BC /* Stress.cpp */,
+				C6774DAE24FCD1AB0094C0BC /* StressComponent.h */,
+				C6774DCC24FCD1AD0094C0BC /* Sym2Tensor.h */,
+				C6774DF124FCD1AF0094C0BC /* System.cpp */,
+				C6774E0124FCD1B00094C0BC /* System.h */,
+				C6774DE424FCD1AE0094C0BC /* SystemHelperFunctions.cpp */,
+				C6774DB424FCD1AB0094C0BC /* SystemHelperFunctions.h */,
+				C6774E0824FCD1B00094C0BC /* TimeActivatedAdhesion_io.cpp */,
+				C6774D9C24FCD1AA0094C0BC /* TimeActivatedAdhesion_io.h */,
+				C6774DCD24FCD1AD0094C0BC /* TimeActivatedAdhesion_Params.h */,
+				C6774DFE24FCD1B00094C0BC /* TimeActivatedAdhesion.cpp */,
+				C6774DBA24FCD1AC0094C0BC /* TimeActivatedAdhesion.h */,
+				C6774D9624FCD1AA0094C0BC /* Timer.h */,
+				C6774DFA24FCD1B00094C0BC /* VanDerWaals.cpp */,
+				C6774D9724FCD1AA0094C0BC /* VanDerWaals.h */,
+				C6774DA224FCD1AB0094C0BC /* VanDerWaalsParams.h */,
+				C6774DB624FCD1AC0094C0BC /* vec3d.h */,
+				C6774DDF24FCD1AE0094C0BC /* VelocityAssignor.cpp */,
+				C6774DE324FCD1AE0094C0BC /* VelocityAssignor.h */,
+				C6774DBB24FCD1AC0094C0BC /* VersionInfo.h */,
 				D988E38F165441750009949F /* LF_DEM.1 */,
 			);
 			path = LF_DEM;
@@ -1528,6 +1724,7 @@
 				D988E385165441750009949F /* Sources */,
 				D988E386165441750009949F /* Frameworks */,
 				D988E387165441750009949F /* CopyFiles */,
+				C6774E5024FCD1EE0094C0BC /* Embed Libraries */,
 			);
 			buildRules = (
 			);
@@ -1681,32 +1878,56 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D932B8DC16C2E98000AD6E85 /* GenerateInitConfig.cpp in Sources */,
-				D9B18D55200054D30009113B /* ParameterSetFactory.cpp in Sources */,
-				D9B16BDF21B1CB6800AD5939 /* gsd.c in Sources */,
-				D9278EA81A93056E00ABCD87 /* RepulsiveForce.cpp in Sources */,
-				D941779A1F7E041F00BB44C0 /* States.cpp in Sources */,
-				D95FE80A1D4E2E40004D2C8A /* ContactDashpot.cpp in Sources */,
-				D9B18D52200054930009113B /* TimeActivatedAdhesion.cpp in Sources */,
-				D9B18D58200055870009113B /* DimensionalQty.cpp in Sources */,
-				D988E38E165441750009949F /* main.cpp in Sources */,
-				D9CE1B421B066B3400E052D9 /* dSFMT.c in Sources */,
-				D9B18D5C200057510009113B /* OutputData.cpp in Sources */,
-				D9B18D5E20005B470009113B /* Configuration.cpp in Sources */,
-				D988E39C1654A18D0009949F /* System.cpp in Sources */,
-				D9B18D51200054930009113B /* TimeActivatedAdhesion_io.cpp in Sources */,
-				D9878877165545680047A87E /* Simulation.cpp in Sources */,
-				D9573FB216797A000081E903 /* Box.cpp in Sources */,
-				D92244841BFBF08700F46233 /* SystemHelperFunctions.cpp in Sources */,
-				D9573FB316797A000081E903 /* BoxSet.cpp in Sources */,
-				CDE4695A16BC4CB800923139 /* StokesSolver.cpp in Sources */,
-				D9032D751B79DFE60062A6F3 /* SimulationInit.cpp in Sources */,
-				D9506B9216D81A7C00A52CFF /* Stress.cpp in Sources */,
-				D9B18D5A200055AB0009113B /* Contact_io.cpp in Sources */,
-				D9FAAA301960685B00E601A9 /* Interaction.cpp in Sources */,
-				D92EAA0F17E39D5100C903F5 /* Contact.cpp in Sources */,
-				D92EAA1017E39D5100C903F5 /* Lubrication.cpp in Sources */,
-				D9892544223D3C76002FC5EB /* SolventFlow.cpp in Sources */,
+				C6774E3C24FCD1B10094C0BC /* OutputData.cpp in Sources */,
+				C6774E3324FCD1B10094C0BC /* System.cpp in Sources */,
+				C6774E1D24FCD1B10094C0BC /* MatrixBlocks.cpp in Sources */,
+				C6774E2024FCD1B10094C0BC /* ActivatedAdhesion_io.cpp in Sources */,
+				C6774E3D24FCD1B10094C0BC /* StdInteractionManager.cpp in Sources */,
+				C6774E1224FCD1B10094C0BC /* LeesEdwards.cpp in Sources */,
+				C6774E1024FCD1B10094C0BC /* RepulsiveForce.cpp in Sources */,
+				C6774E1B24FCD1B10094C0BC /* Contact_io.cpp in Sources */,
+				C6774E3A24FCD1B10094C0BC /* BoundaryCondition.cpp in Sources */,
+				C6774E3824FCD1B10094C0BC /* TimeActivatedAdhesion.cpp in Sources */,
+				C6774E2824FCD1B10094C0BC /* ImposedDeformation.cpp in Sources */,
+				C6774E1524FCD1B10094C0BC /* DimensionalQty.cpp in Sources */,
+				C6774E2424FCD1B10094C0BC /* Simulation.cpp in Sources */,
+				C6774E3924FCD1B10094C0BC /* Matrix.cpp in Sources */,
+				C6774E1424FCD1B10094C0BC /* AgeingContact.cpp in Sources */,
+				C6774E3424FCD1B10094C0BC /* Configuration.cpp in Sources */,
+				C6774E1724FCD1B10094C0BC /* SimulationInit.cpp in Sources */,
+				C6774E2724FCD1B10094C0BC /* PairwiseConfig.cpp in Sources */,
+				C6774E3224FCD1B10094C0BC /* Lubrication.cpp in Sources */,
+				C6774E3124FCD1B10094C0BC /* DimerManager.cpp in Sources */,
+				C6774E3524FCD1B10094C0BC /* ParameterSetFactory.cpp in Sources */,
+				C6774E3B24FCD1B10094C0BC /* TimeActivatedAdhesion_io.cpp in Sources */,
+				C6774E2C24FCD1B10094C0BC /* States.cpp in Sources */,
+				C6774E1C24FCD1B10094C0BC /* PairwiseInteraction.cpp in Sources */,
+				C6774E1324FCD1B10094C0BC /* LubricationCoefficients.cpp in Sources */,
+				C6774E1924FCD1B10094C0BC /* Contact.cpp in Sources */,
+				C6774E2E24FCD1B10094C0BC /* PairManager.cpp in Sources */,
+				C6774E1E24FCD1B10094C0BC /* gsd.c in Sources */,
+				C6774E2D24FCD1B10094C0BC /* SystemHelperFunctions.cpp in Sources */,
+				C6774E2324FCD1B10094C0BC /* PairwiseResistanceVelocitySolver.cpp in Sources */,
+				C6774E0E24FCD1B10094C0BC /* Box.cpp in Sources */,
+				C6774E2A24FCD1B10094C0BC /* SimpleShearBoxSet.cpp in Sources */,
+				C6774E2624FCD1B10094C0BC /* SolventFlow.cpp in Sources */,
+				C6774E0D24FCD1B10094C0BC /* ContactDashpot.cpp in Sources */,
+				C6774E3024FCD1B10094C0BC /* StdInteraction.cpp in Sources */,
+				C6774E1824FCD1B10094C0BC /* KraynikReinelt.cpp in Sources */,
+				C6774E0F24FCD1B10094C0BC /* ActivatedAdhesion.cpp in Sources */,
+				C6774E2224FCD1B10094C0BC /* DimerManagerOutput.cpp in Sources */,
+				C6774E2924FCD1B10094C0BC /* VelocityAssignor.cpp in Sources */,
+				C6774E1124FCD1B10094C0BC /* PotentialForce.cpp in Sources */,
+				C6774E2124FCD1B10094C0BC /* Dimer.cpp in Sources */,
+				C6774E2524FCD1B10094C0BC /* StokesSolver.cpp in Sources */,
+				C6774E3724FCD1B10094C0BC /* VanDerWaals.cpp in Sources */,
+				C6774E1A24FCD1B10094C0BC /* ExtensionalShearBoxSet.cpp in Sources */,
+				C6774E0C24FCD1B10094C0BC /* BoxSet.cpp in Sources */,
+				C6774E1F24FCD1B10094C0BC /* main.cpp in Sources */,
+				C6774E2F24FCD1B10094C0BC /* Dimer_io.cpp in Sources */,
+				C6774E1624FCD1B10094C0BC /* StdInteractionManagerOutput.cpp in Sources */,
+				C6774E2B24FCD1B10094C0BC /* Stress.cpp in Sources */,
+				C6774E3624FCD1B10094C0BC /* GenerateInitConfig.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2072,11 +2293,12 @@
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				HEADER_SEARCH_PATHS = (
-					/Users/seto/SuiteSparse/include,
+					"$(HOME)/SuiteSparse/include",
 					/usr/local/include/,
 				);
 				LD_DYLIB_INSTALL_NAME = "";
-				LIBRARY_SEARCH_PATHS = /Users/seto/SuiteSparse/lib;
+				LD_RUNPATH_SEARCH_PATHS = "$(HOME)/SuiteSparse/lib/";
+				LIBRARY_SEARCH_PATHS = "$(HOME)/SuiteSparse/lib/";
 				OTHER_CFLAGS = "";
 				OTHER_CPLUSPLUSFLAGS = (
 					"-std=c++11",
@@ -2135,11 +2357,12 @@
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				HEADER_SEARCH_PATHS = (
-					/Users/seto/SuiteSparse/include,
+					"$(HOME)/SuiteSparse/include",
 					/usr/local/include/,
 				);
 				LD_DYLIB_INSTALL_NAME = "";
-				LIBRARY_SEARCH_PATHS = /Users/seto/SuiteSparse/lib;
+				LD_RUNPATH_SEARCH_PATHS = "$(HOME)/SuiteSparse/lib/";
+				LIBRARY_SEARCH_PATHS = "$(HOME)/SuiteSparse/lib/";
 				OTHER_CFLAGS = "";
 				OTHER_CPLUSPLUSFLAGS = (
 					"-std=c++11",

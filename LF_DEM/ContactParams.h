@@ -49,7 +49,6 @@ inline bool has_dashpot(const ContactParams &p)
 	return p.relaxation_time != 0 || p.relaxation_time_tan != 0;
 }
 
-
 inline void setupContactParameters(ContactParams &p)
 {
 	std::string indent = "  setupContactParameters::\t";

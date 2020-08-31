@@ -1175,19 +1175,24 @@ void Simulation::dataAdjustGSD(std::vector<vec3d> &pos,
 
 void Simulation::outputGSD()
 {
-	static std::vector<float> vectorBuffer;    // DIM * bufferSize
-	static std::vector<float> scalarBuffer;    // bufferSize
-	static std::vector<float> quaternionBuffer;    // bufferSize
-	static std::vector<unsigned int> uintBuffer;    // bufferSize
+	static std::vector<float> vectorBuffer;             // DIM * bufferSize
+	static std::vector<float> scalarBuffer;             // bufferSize
+	static std::vector<float> quaternionBuffer;         // bufferSize
+	static std::vector<unsigned int> uintBuffer;        // bufferSize
 	static bool first_time = true;
 	static int ts = 0;
 	int np = sys.get_np();
+    int np_all = np;
+    int nb_mark = sys.p.output.gsd_nb_mark;             // Number of "orientation markers" in each particle
+    if (nb_mark != 0) {
+        np_all = np + np*nb_mark;
+    }
 	if (first_time) {
 		first_time = false;
-		vectorBuffer.resize(3*np, 0);
-		quaternionBuffer.resize(4*np, 0);
-		scalarBuffer.resize(np, 0);
-		uintBuffer.resize(np, 0);
+		vectorBuffer.resize(3*np_all, 0);
+		quaternionBuffer.resize(4*np_all, 0);
+		scalarBuffer.resize(np_all, 0);
+		uintBuffer.resize(np_all, 0);
 	}
 	std::vector<vec3d> pos;
 	std::vector<vec3d> vel = sys.velocity.vel;
@@ -1263,19 +1268,27 @@ void Simulation::outputGSD()
 			// Prticle type names
 			int  n_types;
 			char *types;
+            if (nb_mark != 0) {
+                n_types = 1;
+            } else {
+                n_types = 0;
+            }
 			if (dispersion_type == DispersionType::mono) {
-				n_types = 1;
+				n_types += 1;
 				types = new char [n_types*max_size];
 				snprintf(types, max_size, "colloid");
 			} else if (dispersion_type == DispersionType::bi) {
-				n_types = 2;
+				n_types += 2;
 				types = new char [n_types*max_size];
-				snprintf(types, max_size, "colloid1");
-				snprintf(types+max_size, max_size, "colloid2");
+				snprintf(types, max_size, "colloid 1");
+				snprintf(types+max_size, max_size, "colloid 2");
 			} else {
 				cerr << "not mono or bi ..." << endl;
 				exit(1);
 			}
+            if (nb_mark != 0) {
+                snprintf(types+(n_types-1)*max_size, max_size, "orientation marker");
+            }
 			gsd_write_chunk(&gsdOut, "particles/types", GSD_TYPE_INT8, n_types, max_size, 0, types);
 			delete[] types;
 		}
@@ -1289,9 +1302,10 @@ void Simulation::outputGSD()
 	}
 
 	// Total number of particles
-	uint32_t n = np;
+	uint32_t n = np_all;
 	gsd_write_chunk(&gsdOut, "particles/N", GSD_TYPE_UINT32, 1, 1, 0, &n);
-	// particle IDs
+	
+    // particle IDs
 	// particle diameters
 	{
 		unsigned int* uptr = uintBuffer.data();
@@ -1300,10 +1314,8 @@ void Simulation::outputGSD()
 		for (int i=0; i<np; i++) {
 			if (i < np1) {
 				uptr[i] = 0;
-			} else if (i < sys.np_mobile) {
-				uptr[i] = 1;
 			} else {
-				uptr[i] = 2;
+				uptr[i] = 1;
 			}
 
 			/* 
@@ -1315,8 +1327,12 @@ void Simulation::outputGSD()
 			 */
 			fptr[i] = 2*sys.conf->radius[i];
 		}
-		gsd_write_chunk(&gsdOut, "particles/typeid", GSD_TYPE_UINT32, np, 1, 0, uptr);
-		gsd_write_chunk(&gsdOut, "particles/diameter", GSD_TYPE_FLOAT, np, 1, 0, fptr);
+        for (int i=np; i<np_all; i++) {
+            uptr[i] = uptr[np-1]+1;
+            fptr[i] = 2*sys.p.output.gsd_size_mark;
+        }
+		gsd_write_chunk(&gsdOut, "particles/typeid", GSD_TYPE_UINT32, np_all, 1, 0, uptr);
+		gsd_write_chunk(&gsdOut, "particles/diameter", GSD_TYPE_FLOAT, np_all, 1, 0, fptr);
 	}
 	
 	// particle positions
@@ -1328,7 +1344,19 @@ void Simulation::outputGSD()
 			fptr[i3+1] = pos[i].z;
 			fptr[i3+2] = pos[i].y;
 		}
-		gsd_write_chunk(&gsdOut, "particles/position", GSD_TYPE_FLOAT, np, 3, 0, fptr);
+        for (int m=0; m<nb_mark; m++) {
+            int i_begin = 3*np*(m+1);
+            double delta_ang = m*(2*M_PI/nb_mark);
+            for (int i=0; i<np; i++) {
+                int i3 = i*3;
+                double r = sys.conf->radius[i]/sqrt(2);
+                double theta = -sys.conf->radius[i];
+                fptr[i3  +i_begin] = pos[i].x + r*cos(theta+delta_ang);
+                fptr[i3+1+i_begin] = pos[i].z + r*sin(theta+delta_ang);
+                fptr[i3+2+i_begin] = pos[i].y + sys.conf->radius[i]/sqrt(2);
+            }
+        }
+		gsd_write_chunk(&gsdOut, "particles/position", GSD_TYPE_FLOAT, np_all, 3, 0, fptr);
 	}
 
 	// particle velocities
@@ -1345,28 +1373,50 @@ void Simulation::outputGSD()
 			fptr[i3  ] = v_out.x;
 			fptr[i3+1] = v_out.z;
 			fptr[i3+2] = v_out.y;
+            for (int m=0; m<nb_mark; m++) {
+                int i_begin = 3*np*(m+1);
+//                double delta_ang = m*(2*M_PI/nb_mark);
+                int i3 = i*3;
+//                double r = sys.conf->radius[i]/sqrt(2);
+//                double theta = -sys.conf->angle[i];
+                fptr[i3  +i_begin] = v_out.x;
+                fptr[i3+1+i_begin] = v_out.z;
+                fptr[i3+2+i_begin] = v_out.y;
+            }
 		}
-		gsd_write_chunk(&gsdOut, "particles/velocity", GSD_TYPE_FLOAT, np, 3, 0, fptr);
+		gsd_write_chunk(&gsdOut, "particles/velocity", GSD_TYPE_FLOAT, np_all, 3, 0, fptr);
 	}
 	
+    //particles/charge
+    // ---> We use this for particle pressure
 	{
-		//particles/charge
-		// ---> We use this for particle pressure
 		float* fptr = scalarBuffer.data();
 		for (int i=0; i<np; i++) {
-			fptr[i] = -sys.total_stress_pp[i].trace()/3;
+            double stress_pp = -sys.total_stress_pp[i].trace()/3;
+			fptr[i] = stress_pp;
+            for (int m=0; m<nb_mark; m++) {
+                int i_begin = np*(m+1);
+                fptr[i + i_begin] = stress_pp;
+            }
 		}
-		gsd_write_chunk(&gsdOut, "particles/charge", GSD_TYPE_FLOAT, np, 1, 0, fptr);
+		gsd_write_chunk(&gsdOut, "particles/charge", GSD_TYPE_FLOAT, np_all, 1, 0, fptr);
 	}
+    
+    //particles/mass
+    // ---> We use this for the effective coordination number
 	{
-		//particles/mass
-		// ---> We use this for the effective coordination number
 		float* fptr = scalarBuffer.data();
 		for (int i=0; i<np; i++) {
-			fptr[i] = sys.n_contact[i];
-		}
-		gsd_write_chunk(&gsdOut, "particles/mass", GSD_TYPE_FLOAT, np, 1, 0, fptr);
+            double omega = sys.velocity.ang_vel[i].y;
+            fptr[i] = omega;
+            for (int m=0; m<nb_mark; m++) {
+                int i_begin = np*(m+1);
+                fptr[i + i_begin] = omega;
+            }
+        }
+		gsd_write_chunk(&gsdOut, "particles/mass", GSD_TYPE_FLOAT, np_all, 1, 0, fptr);
 	}
+    
 	//	particles/orientation
 	{
 		if (sys.twodimension) {
@@ -1381,18 +1431,8 @@ void Simulation::outputGSD()
 				fptr[i4+2] = 0;
 				fptr[i4+3] = sin(sys.conf->angle[i]/2);
 			}
-			gsd_write_chunk(&gsdOut, "particles/orientation", GSD_TYPE_FLOAT, np, 4, 0, fptr);
+			gsd_write_chunk(&gsdOut, "particles/orientation", GSD_TYPE_FLOAT, np_all, 4, 0, fptr);
 		}
-	}
-
-	{
-		//particles/charge
-		float* fptr = scalarBuffer.data();
-		//float* fptr = scalarBuffer.data();
-		for (int i=0; i<np; i++) {
-			fptr[i] = -sys.total_stress_pp[i].trace()/3;
-		}
-		gsd_write_chunk(&gsdOut, "particles/charge", GSD_TYPE_FLOAT, np, 1, 0, fptr);
 	}
 
 	{

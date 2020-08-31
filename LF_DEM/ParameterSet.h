@@ -69,6 +69,8 @@ namespace Parameters {
 		bool out_binary_conf;				///< Output binary configurations conf_*.bin files [false]
 		bool out_gsd;						///< Output gsd data file [true]
 		bool out_gsd_na_velocity;    		///< Output gsd data file [true]
+        int gsd_nb_mark;                    ///< Number of markers in each particle to visualize rotation [0]
+        double gsd_size_mark;               ///< Radius of marks to visualize rotation [0.2]
 		std::string out_particle_stress;	///< Output stress per particle in pst_* file, indicating which component ("c" for contact, "r" for repulsion, "b" for Brownian, "t" for total, "l" for lubrication) by a string, e.g "tc" for total stress and contact stress [""]
 		bool out_data_vel_components;		///< Output velocity components in the par* file [false]
 		bool out_na_vel;					///< Output non-affine velocity components in the par* file [false]
@@ -199,6 +201,10 @@ namespace Parameters {
 
 		Confinement::Parameters confinement;
 		struct Interactions::AgeingContactParams ageing_contact;
+        
+        int magnetic_field_type;                        // Type of exeternally applied magnetic field
+        double langevin_parameter;                      // Langevin parameter (alpha) = \miu_0*m*H_0/k_B*T
+        double magnetic_field_freq;                     // Dimensionless frequency of external magnetic field
 	};
 	
 } // namespace Parameters

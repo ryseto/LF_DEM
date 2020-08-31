@@ -131,6 +131,9 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(confinement.y_min, 0),
 		PARAM_INIT(confinement.y_max, 0),
 		PARAM_INIT(ageing_contact.amplitude, 0),
+        PARAM_INIT(output.gsd_size_mark, 0.2),
+        PARAM_INIT(langevin_parameter,0),
+        PARAM_INIT(magnetic_field_freq, 0)
 	};
 
 	/*================================
@@ -146,7 +149,9 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(sj_check_count, 500),
 		PARAM_INIT(sj_reversal_repetition, 10),
 		PARAM_INIT(sflow_boundary_conditions, 0),
-		PARAM_INIT(sflow_Darcy_power, 0)
+		PARAM_INIT(sflow_Darcy_power, 0),
+        PARAM_INIT(output.gsd_nb_mark, 0),
+        PARAM_INIT(magnetic_field_type, 1)
 	};
 
 	UIntParams = \

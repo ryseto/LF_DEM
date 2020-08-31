@@ -140,6 +140,9 @@ private:
 						  const std::vector <double>& radii,
 						  const std::vector <double>& angles);
 	bool hasPairwiseResistance();
+    
+//    void setupParametersMagnetic();
+    void setMagneticForce(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 
  protected:
  public:
@@ -282,6 +285,10 @@ private:
 	vec3d meanParticleAngVelocity();
 	double computeMaxNAVelocity();
 
+    vec3d magnetic_field;
+    vec3d magnetic_dipole_moment;
+    std::vector<vec3d> magnetic_field_gradient;
+    
 	bool is_brownian() const
 	{
 		return p.brownian > 0;

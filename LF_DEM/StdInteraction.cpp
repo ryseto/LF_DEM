@@ -50,10 +50,10 @@ void StdInteraction::switchOnContact()
 	auto dash_coeffs = calcContactDashpotResistanceCoeffs();
 	switch ((p.contp)->friction_model) {
 		case FrictionModel::ageing_Coulomb:
-			contact = std::unique_ptr<Contact>(new Contact (this, *(p.contp), dash_coeffs.first, dash_coeffs.second));
+            contact = std::unique_ptr<AgeingContact>(new AgeingContact (this, *(p.contp), *(p.ageing_contp), dash_coeffs.first, dash_coeffs.second));
 			break;
 		default:
-			contact = std::unique_ptr<AgeingContact>(new AgeingContact (this, *(p.contp), *(p.ageing_contp), dash_coeffs.first, dash_coeffs.second));
+			contact = std::unique_ptr<Contact>(new Contact (this, *(p.contp), dash_coeffs.first, dash_coeffs.second));
 	}
 	if (!lubrication) {
 		solver->declareResistance(p0, p1);
