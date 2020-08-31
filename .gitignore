@@ -4,15 +4,20 @@ SuiteSparse_?PUcompilation.txt
 
 wiki/
 
-# Xcode
-xcuserdata
-*.xcuserstate
-**/*.xcodeproj/*
-!**/*.xcodeproj/project.pbxproj
-!*.xcodeproj/default.*
-!**/*.xcodeproj/default.*
-*.xcworkspace/*
+### Xcode ###
+## User settings
+xcuserdata/
+
+## Gcc Patch
+/*.gcno
+
+### Xcode Patch ###
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
 !*.xcworkspace/contents.xcworkspacedata
+**/xcshareddata/WorkspaceSettings.xcsettings
+
 brownian.log
 brownian_lowPe.log
 knkt_det.log
