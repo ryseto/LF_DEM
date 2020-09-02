@@ -39,6 +39,10 @@ solver(vel_solver)
 	if (p.actadhp) {
 		updateActivatedAdhesionState(0);
 	}
+    
+    if (p.ptr_magnintp) {
+        updateMagneticInteractionState();
+    }
 
 	if (!vel_solver && (p.lubp || has_dashpot(*(p.contp)))) { // should not happen as it is screened in InteractionManager
 		throw std::runtime_error(" StdIntercation:: Error: Dashpot and lubrication require a pairwise velocity solver.");
@@ -151,6 +155,9 @@ void StdInteraction::updateState(const struct PairVelocity &vel,
 	if (p.actadhp) {
 		updateActivatedAdhesionState(dt);
 	}
+    if (p.ptr_magnintp) {
+        updateMagneticInteractionState();
+    }
 }
 
 void StdInteraction::updateLubricationState()
@@ -242,6 +249,12 @@ void StdInteraction::updateActivatedAdhesionState(double dt)
 	}
 }
 
+void StdInteraction::updateMagneticInteractionState()
+{
+    if (ptr_magnetic_int) {
+        ptr_magnetic_int->calcForce();
+    }
+}
 
 bool StdInteraction::hasPairwiseResistance()
 {

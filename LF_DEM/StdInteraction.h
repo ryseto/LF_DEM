@@ -32,6 +32,7 @@
 #include "Sym2Tensor.h"
 #include "PairwiseInteraction.h"
 #include "StdInteractionParams.h"
+#include "MagneticInteraction.h"
 
 namespace Dynamics {
 	class PairwiseResistanceVelocitySolver;
@@ -59,6 +60,7 @@ private:
 	void updateRepulsionState();
 	void updateLubricationState();
 	void updateActivatedAdhesionState(double dt);
+    void updateMagneticInteractionState();
 
 	//===== forces/stresses  ========================== //
 	double birth_strain;
@@ -75,6 +77,7 @@ public:
 	std::unique_ptr<Lub::Lubrication> lubrication;
 	std::unique_ptr<RepulsiveForce> repulsion;
 	std::unique_ptr<ActAdhesion::ActivatedAdhesion> act_adhesion;
+    std::unique_ptr<MagneticInteraction> ptr_magnetic_int;
 
 	Dynamics::PairwiseResistanceVelocitySolver *solver;
 

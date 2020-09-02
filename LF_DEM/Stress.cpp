@@ -55,10 +55,12 @@ void System::declareStressComponents()
 	if (Interactions::has_repulsion(p.repulsion)) {
 		stress_components["xF_repulsion"] = StressComponent(StressType::xf, np, RateDependence::independent, "repulsion");
 	}
-
-	// if (delayed_adhesion) {
-	// 	stress_components["xF_delayed_adhesion"] = StressComponent(StressType::xf, np, RateDependence::independent, "delayed_adhesion");
-	// }
+//    if (delayed_adhesion) {
+//        stress_components["xF_delayed_adhesion"] = StressComponent(StressType::xf, np, RateDependence::independent, "delayed_adhesion");
+//    }
+//    if (Interactions::has_magnetic_int(p.params_magnetic_int)) {
+//        stress_components["xF_magnetic_interaction"] = StressComponent(StressType::xf, np, RateDependence::independent, "magnetic interaction");
+//    }
 
 	if (p.confinement.on) {
 		stress_components["xF_confinement"] = StressComponent(StressType::xf, np, RateDependence::independent, "confinement");
@@ -218,16 +220,18 @@ void System::calcStressPerParticle()
 	} else {
 		calcContactXFPerParticleStressControlled();
 	}
-
 	if (Interactions::has_repulsion(p.repulsion)) {
 		auto &rstress_XF = stress_components.at("xF_repulsion").particle_stress;
 		interaction->addUpRepulsiveStressXF(rstress_XF);
 	}
-
-	// if (delayed_adhesion) {
-	// 	auto &rstress_XF = stress_components.at("xF_delayed_adhesion").particle_stress;
-	// 	addUpDelayedAdhesionStressXF(rstress_XF);
-	// }
+//    if (delayed_adhesion) {
+//	 	auto &rstress_XF = stress_components.at("xF_delayed_adhesion").particle_stress;
+//	 	addUpDelayedAdhesionStressXF(rstress_XF);
+//    }
+//    if (Interactions::has_magnetic_int(p.params_magnetic_int)) {
+//        auto &rstress_XF = stress_components.at("xF_magnetic_interaction").particle_stress;
+//        interaction->addUpMagneticInteractionStressXF(rstress_XF);
+//    }
 
 	if (dimer_manager) {
 		if (control == Parameters::ControlVariable::rate) {

@@ -9,6 +9,14 @@ void PotentialForce::addUpForce(std::vector<vec3d> &force) const
 	force[interaction->p1] -= force_vector;
 }
 
+void PotentialForce::addUpForceTorque(std::vector<vec3d> &force,
+                                      std::vector<vec3d> &torque) const
+{
+    addUpForce(force);
+    torque[interaction->p0] += torque_vector;
+    torque[interaction->p1] -= torque_vector;
+}
+
 void PotentialForce::addUpStressXF(Sym2Tensor &stress_p0, Sym2Tensor &stress_p1)
 {
 	/**

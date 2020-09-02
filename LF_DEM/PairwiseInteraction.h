@@ -15,26 +15,28 @@
 
 
 namespace Geometry {
-class PairwiseConfig;
+    class PairwiseConfig;
 }
 
 namespace Interactions
 {
+
 class InteractionSet;
 class Contact;
 class ContactDashpot;
 namespace Lub {
-class Lubrication;
+    class Lubrication;
 }
 class PotentialForce;
 class RepulsiveForce;
 class vanDerWaalsForce;
 namespace TActAdhesion {
-class TimeActivatedAdhesion;
+    class TimeActivatedAdhesion;
 }
 namespace ActAdhesion {
-class ActivatedAdhesion;
+    class ActivatedAdhesion;
 }
+class MagneticInteraction;
 
 struct PairId {
 	unsigned p0; 
@@ -72,6 +74,7 @@ protected:
 	friend TActAdhesion::TimeActivatedAdhesion;
 	friend ActAdhesion::ActivatedAdhesion;
 	friend InteractionSet;
+    friend MagneticInteraction;
 
 public:
 	PairwiseInteraction(const PairId &data, vec3d sep);

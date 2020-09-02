@@ -12,7 +12,6 @@ class ParticleConfig;
 class ParticleVelocity;
 class ParticleVelocityGrad;
 
-
 namespace Parameters {
 	struct ParameterSet;
 }
@@ -63,6 +62,7 @@ public:
 	void addUpContactSpringStressXF(std::vector<Sym2Tensor> &cstress_XF);
 	void addUpContactDashpotStressXF(std::vector<Sym2Tensor> &cstress_XF, ParticleVelocity *vel);
 	void addUpRepulsiveStressXF(std::vector<Sym2Tensor> &rstress_XF);
+    void addUpMagneticInteractionStressXF(std::vector<Sym2Tensor> &rstress_XF);
 
 	void setContacts(const std::vector <struct contact_state>& cs);
 	std::vector <struct contact_state> getContacts() const;
@@ -93,6 +93,8 @@ private:
 									 std::vector<vec3d> &torque);
 	void setActAdhesionForceToParticle(std::vector<vec3d> &force,
 								       std::vector<vec3d> &torque);
+    void setMagneticInteractionToParticle(std::vector<vec3d> &force,
+                                          std::vector<vec3d> &torque);
 	void checkInputParams(std::shared_ptr<Dynamics::PairwiseResistanceVelocitySolver> vel_solver);
 
 	friend void output(const StdInteractionManager &manager, ParticleVelocity *vel, const struct Parameters::ParameterSet &p, OutputData &outdata_int);

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C645CD2F24FDE95800E4A1CD /* MagneticInteraction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C645CD2D24FDE95800E4A1CD /* MagneticInteraction.cpp */; };
 		C6774E0C24FCD1B10094C0BC /* BoxSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774D8C24FCD1AA0094C0BC /* BoxSet.cpp */; };
 		C6774E0D24FCD1B10094C0BC /* ContactDashpot.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774D8F24FCD1AA0094C0BC /* ContactDashpot.cpp */; };
 		C6774E0E24FCD1B10094C0BC /* Box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6774D9124FCD1AA0094C0BC /* Box.cpp */; };
@@ -185,6 +186,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C645CD2D24FDE95800E4A1CD /* MagneticInteraction.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MagneticInteraction.cpp; sourceTree = "<group>"; };
+		C645CD3024FDE97300E4A1CD /* MagneticInteraction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MagneticInteraction.h; sourceTree = "<group>"; };
+		C645CD3224FDE9AE00E4A1CD /* MagneticInteractionParams.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MagneticInteractionParams.h; sourceTree = "<group>"; };
 		C6774D8B24FCD1AA0094C0BC /* Matrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Matrix.h; sourceTree = "<group>"; };
 		C6774D8C24FCD1AA0094C0BC /* BoxSet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BoxSet.cpp; sourceTree = "<group>"; };
 		C6774D8D24FCD1AA0094C0BC /* global.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = global.h; sourceTree = "<group>"; };
@@ -1538,6 +1542,9 @@
 				C6774E0224FCD1B00094C0BC /* LubricationCoefficients.h */,
 				C6774DC024FCD1AC0094C0BC /* LubricationFunctions.h */,
 				C6774DF624FCD1AF0094C0BC /* LubricationParams.h */,
+				C645CD2D24FDE95800E4A1CD /* MagneticInteraction.cpp */,
+				C645CD3024FDE97300E4A1CD /* MagneticInteraction.h */,
+				C645CD3224FDE9AE00E4A1CD /* MagneticInteractionParams.h */,
 				C6774DC624FCD1AD0094C0BC /* main.cpp */,
 				C6774DFF24FCD1B00094C0BC /* Matrix.cpp */,
 				C6774D8B24FCD1AA0094C0BC /* Matrix.h */,
@@ -1926,6 +1933,7 @@
 				C6774E1F24FCD1B10094C0BC /* main.cpp in Sources */,
 				C6774E2F24FCD1B10094C0BC /* Dimer_io.cpp in Sources */,
 				C6774E1624FCD1B10094C0BC /* StdInteractionManagerOutput.cpp in Sources */,
+				C645CD2F24FDE95800E4A1CD /* MagneticInteraction.cpp in Sources */,
 				C6774E2B24FCD1B10094C0BC /* Stress.cpp in Sources */,
 				C6774E3624FCD1B10094C0BC /* GenerateInitConfig.cpp in Sources */,
 			);

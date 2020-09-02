@@ -7,6 +7,7 @@
 #include "VanDerWaalsParams.h"
 #include "ActivatedAdhesion_Params.h"
 #include "AgeingContactParams.h"
+#include "MagneticInteractionParams.h"
 
 
 namespace Interactions
@@ -19,6 +20,7 @@ struct StdInteractionParams {
 	std::unique_ptr<vanDerWaalsForceParams> vdwp;
 	std::unique_ptr<ActAdhesion::Params> actadhp;
 	std::unique_ptr<AgeingContactParams> ageing_contp;
+    std::unique_ptr<MagneticInteractionParams> ptr_magnintp;
 
 	void add(const ContactParams &p) {
 		contp = std::unique_ptr<ContactParams>(new ContactParams (p));
@@ -38,6 +40,9 @@ struct StdInteractionParams {
 	void add(const AgeingContactParams &p) {
 		ageing_contp = std::unique_ptr<AgeingContactParams>(new AgeingContactParams (p));
 	}
+    void add(const MagneticInteractionParams &p) {
+        ptr_magnintp = std::unique_ptr<MagneticInteractionParams>(new MagneticInteractionParams (p));
+    }
 };
 
 }

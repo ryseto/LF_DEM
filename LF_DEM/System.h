@@ -286,8 +286,8 @@ private:
 	double computeMaxNAVelocity();
 
     vec3d magnetic_field;
-    vec3d magnetic_dipole_moment;
     std::vector<vec3d> magnetic_field_gradient;
+    std::vector<vec3d> magnetic_dipole_moment;
     
 	bool is_brownian() const
 	{
@@ -356,10 +356,10 @@ private:
 		return omega_wheel_in-omega_wheel_out;
 	}
 
-	std::size_t get_nb_interactions() const
-	{
-		return interaction->size();
-	}
+//	std::size_t get_nb_interactions() const
+//	{
+//        return interaction->size();
+//	}
 
 	int get_total_num_timesteps()
 	{

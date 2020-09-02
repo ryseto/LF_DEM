@@ -162,6 +162,9 @@ double getPotentialEnergy(const System &sys)
 		if (inter->repulsion) {
 			total_energy += inter->repulsion->calcEnergy();
 		}
+        if (inter->ptr_magnetic_int) {
+            total_energy += inter->ptr_magnetic_int->calcEnergy();
+        }
 	}
 	return total_energy;
 }

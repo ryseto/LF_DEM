@@ -133,7 +133,8 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(ageing_contact.amplitude, 0),
         PARAM_INIT(output.gsd_size_mark, 0.2),
         PARAM_INIT(langevin_parameter,0),
-        PARAM_INIT(magnetic_field_freq, 0)
+        PARAM_INIT(magnetic_field_freq, 0),
+        PARAM_INIT(params_magnetic_int.beta_DipoleDipole, 0)
 	};
 
 	/*================================

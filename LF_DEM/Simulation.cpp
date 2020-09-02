@@ -764,7 +764,7 @@ void Simulation::outputData()
 	 */
 	outdata.entryData("contact number", Dimensional::Dimension::none, 1, contact_nb_per_particle);
 	outdata.entryData("frictional contact number", Dimensional::Dimension::none, 1, frictional_contact_nb_per_particle);
-	outdata.entryData("number of interaction", Dimensional::Dimension::none, 1, sys.get_nb_interactions());
+	//outdata.entryData("number of interaction", Dimensional::Dimension::none, 1, sys.get_nb_interactions());
 	if (Interactions::has_activated_adhesion(sys.p.activated_adhesion)) {
 		unsigned active_nb;
 		double active_ratio;
@@ -856,7 +856,7 @@ void Simulation::outputDataSedimentatioin()
 	}
 	outdata.entryData("contact number", Dimensional::Dimension::none, 1, contact_nb_per_particle);
 	outdata.entryData("frictional contact number", Dimensional::Dimension::none, 1, frictional_contact_nb_per_particle);
-	outdata.entryData("number of interaction", Dimensional::Dimension::none, 1, sys.get_nb_interactions());
+	//outdata.entryData("number of interaction", Dimensional::Dimension::none, 1, sys.get_nb_interactions());
 	outdata.entryData("dt", Dimensional::Dimension::Time, 1, sys.avg_dt);
 	outdata.writeToFile();
 	
@@ -1350,7 +1350,7 @@ void Simulation::outputGSD()
             for (int i=0; i<np; i++) {
                 int i3 = i*3;
                 double r = sys.conf->radius[i]/sqrt(2);
-                double theta = -sys.conf->radius[i];
+                double theta = -sys.conf->angle[i];
                 fptr[i3  +i_begin] = pos[i].x + r*cos(theta+delta_ang);
                 fptr[i3+1+i_begin] = pos[i].z + r*sin(theta+delta_ang);
                 fptr[i3+2+i_begin] = pos[i].y + sys.conf->radius[i]/sqrt(2);

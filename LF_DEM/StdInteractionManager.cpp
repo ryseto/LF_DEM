@@ -103,6 +103,9 @@ void StdInteractionManager::createNewInteraction(unsigned i, unsigned j, double 
 	if (has_activated_adhesion(p->activated_adhesion)) {
 		params.add(p->activated_adhesion);
 	}
+    if (has_magnetic_int(p->params_magnetic_int)) {
+        params.add(p->params_magnetic_int);
+    }
 
 	struct PairId pairid;
 	pairid.p0 = i;
@@ -271,16 +274,18 @@ void StdInteractionManager::declareForceComponents(std::map<std::string, ForceCo
 		force_components["hydro"] = ForceComponent(np, RateDependence::proportional, torque);
 		declared_forces.push_back("hydro");
 	}
-	
 	if (Interactions::has_repulsion(p->repulsion)) {
 		force_components["repulsion"] = ForceComponent(np, RateDependence::independent, !torque);
 		declared_forces.push_back("repulsion");
 	}
-
 	if (Interactions::has_activated_adhesion(p->activated_adhesion)) {
 		force_components["activated_adhesion"] = ForceComponent(np, RateDependence::independent, !torque);
 		declared_forces.push_back("activated_adhesion");
 	}
+    if (Interactions::has_magnetic_int(p->params_magnetic_int)) {
+        force_components["magnetic_interaction"] = ForceComponent(np, RateDependence::independent, torque);
+        declared_forces.push_back("magnetic_interaction");
+    }
 }
 
 void StdInteractionManager::setForceToParticle(const std::string &component, std::vector<vec3d> &force, std::vector<vec3d> &torque)
@@ -300,7 +305,9 @@ void StdInteractionManager::setForceToParticle(const std::string &component, std
 		setRepulsiveForceToParticle(force, torque);
 	} else if (component == "activated_adhesion") {
 		setActAdhesionForceToParticle(force, torque);
-	} else {
+	} else if (component == "magnetic_interaction") {
+        setMagneticInteractionToParticle(force, torque);
+    } else {
 		throw std::runtime_error(" StdInteractionManager::Unknown force component.");
 	}
 }
@@ -379,7 +386,7 @@ void StdInteractionManager::setHydroForceToParticle_squeeze_tangential(std::vect
 }
 
 void StdInteractionManager::setContactForceToParticle(std::vector<vec3d> &force,
-									   			std::vector<vec3d> &torque)
+                                                      std::vector<vec3d> &torque)
 {
 	for (auto &f: force) {
 		f.reset();
@@ -395,7 +402,7 @@ void StdInteractionManager::setContactForceToParticle(std::vector<vec3d> &force,
 }
 
 void StdInteractionManager::setRepulsiveForceToParticle(std::vector<vec3d> &force,
-										 		 std::vector<vec3d> &torque)
+                                                        std::vector<vec3d> &torque)
 {
 	for (auto &f: force) {
 		f.reset();
@@ -411,7 +418,7 @@ void StdInteractionManager::setRepulsiveForceToParticle(std::vector<vec3d> &forc
 }
 
 void StdInteractionManager::setActAdhesionForceToParticle(std::vector<vec3d> &force,
-											            std::vector<vec3d> &torque)
+                                                          std::vector<vec3d> &torque)
 {
 	for (auto &f: force) {
 		f.reset();
@@ -428,6 +435,21 @@ void StdInteractionManager::setActAdhesionForceToParticle(std::vector<vec3d> &fo
 	}
 }
 
+void StdInteractionManager::setMagneticInteractionToParticle(std::vector<vec3d> &force,
+                                                             std::vector<vec3d> &torque)
+{
+    for (auto &f: force) {
+        f.reset();
+    }
+    for (auto &t: torque) {
+        t.reset();
+    }
+    for (const auto &inter: interactions) {
+        if (inter->ptr_magnetic_int) {
+            inter->ptr_magnetic_int->addUpForceTorque(force, torque);
+        }
+    }
+}
 
 void StdInteractionManager::setContacts(const std::vector <struct contact_state>& cs)
 {
@@ -547,6 +569,17 @@ void StdInteractionManager::addUpRepulsiveStressXF(std::vector<Sym2Tensor> &rstr
 		}
 	}
 }
+
+//void StdInteractionManager::addUpMagneticInteractionStressXF(std::vector<Sym2Tensor> &rstress_XF)
+//{
+//    for (auto &inter: interactions) {
+//        if (inter->ptr_magnetic_int) {
+//            unsigned int i, j;
+//            std::tie(i, j) = inter->get_par_num();
+//            inter->ptr_magnetic_int->addUpStressXF(rstress_XF[i], rstress_XF[j]); // - rF_magn
+//        }
+//    }
+//}
 
 // void StdInteractionManager::addUpDelayedAdhesionStressXF(std::vector<Sym2Tensor> &rstress_XF)
 // {

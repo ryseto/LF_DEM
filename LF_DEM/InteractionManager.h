@@ -26,7 +26,7 @@ public:
 	std::vector< std::shared_ptr<InteractionT> > interactions;
 	std::vector< std::vector< std::shared_ptr<InteractionT> > > interactions_pp; // per particles
 
-	std::size_t size() const {return interactions.size();};
+	std::size_t size2() const {return interactions.size();};
 
 	typename std::vector< std::shared_ptr<InteractionT> >::iterator begin() {return interactions.begin();}
 	typename std::vector< std::shared_ptr<InteractionT> >::iterator end() {return interactions.end();}

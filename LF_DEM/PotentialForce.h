@@ -13,7 +13,8 @@ namespace Interactions
 class PotentialForce {
 protected:
 	PairwiseInteraction* interaction;
-	vec3d force_vector; // normal contact force
+	vec3d force_vector;                                 // normal contact force
+    vec3d torque_vector;
 	double force_norm;
 	
 public:
@@ -21,6 +22,7 @@ public:
 	PotentialForce(PairwiseInteraction* interaction_) : interaction(interaction_) {};
 	virtual void calcForce() = 0;
 	void addUpForce(std::vector<vec3d> &force) const;
+    void addUpForceTorque(std::vector<vec3d> &force, std::vector<vec3d> &torque) const;
 	inline double getForceNorm() const
 	{
 		return force_norm;

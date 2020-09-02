@@ -16,6 +16,7 @@
 #include "VanDerWaalsParams.h"
 #include "DimerParams.h"
 #include "DimensionalQty.h"
+#include "MagneticInteractionParams.h"
 
 /*===================================================
  =            Adding a parameter to LF_DEM           =
@@ -99,8 +100,9 @@ namespace Parameters {
 		int np_fixed;
 		// struct Interactions::TActAdhesion::Parameters TA_adhesion; ///< Time delayed adhesion params (.adhesion_range [1e-2], .adhesion_max_force [0h], .activation_time [0h])
 		struct Interactions::ActAdhesion::Params activated_adhesion; ///< Time delayed adhesion params (.adhesion_range [1e-2], .adhesion_max_force [0h], .activation_time [0h])
-		
 		struct Interactions::Dimer::DimerParams dimer;  ///< see DimerParams.h
+        
+        struct Interactions::MagneticInteractionParams params_magnetic_int;
 		/*******************************************************
 		 HYDRODYNAMICS
 		 ********************************************************/
@@ -205,6 +207,7 @@ namespace Parameters {
         int magnetic_field_type;                        // Type of exeternally applied magnetic field
         double langevin_parameter;                      // Langevin parameter (alpha) = \miu_0*m*H_0/k_B*T
         double magnetic_field_freq;                     // Dimensionless frequency of external magnetic field
+//        double beta_DipoleDipole;                       // Intensity of magnetic dipole-dipole interaction
 	};
 	
 } // namespace Parameters
