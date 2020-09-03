@@ -12,6 +12,7 @@
 #include "vec3d.h"
 #include "Sym2Tensor.h"
 #include "PairVelocity.h"
+#include "ParticleConfig.h"
 
 
 namespace Geometry {
@@ -58,7 +59,10 @@ protected:
 	double r; // center-center distance
 	vec3d rvec; // vector center to center
 	vec3d nvec; // normal vector
-
+    
+    std::shared_ptr<ParticleConfig> conf;
+    vec3d dipole_moment_p0;
+    vec3d dipole_moment_p1;
 
 	void setSeparation(const vec3d &sep);
 

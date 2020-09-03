@@ -10,12 +10,18 @@ class ParticleConfig {
 public:
 	std::vector <vec3d> position;
 	std::vector <double> radius;
-	std::vector <double> angle;  // 2d only
+	std::vector <double> angle;                         // For 2D model
+    std::vector <vec3d> orientation_2d;                 // For 2D model
 	ParticleConfig(){};
 	ParticleConfig(unsigned np) :
 	position(np),
 	radius(np),
-	angle(np) {};
+	angle(np) {
+        for (int i=0; i<np; i++)
+        {
+            orientation_2d[i].set(cos(angle[i]),0,sin(angle[i]));
+        }
+    };
 };
 
 enum class VelocityType : unsigned {

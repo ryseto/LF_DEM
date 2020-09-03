@@ -132,9 +132,9 @@ void ParameterSetFactory::setDefaultValues(Dimensional::Unit guarranted_unit)
 		PARAM_INIT(confinement.y_max, 0),
 		PARAM_INIT(ageing_contact.amplitude, 0),
         PARAM_INIT(output.gsd_size_mark, 0.2),
-        PARAM_INIT(langevin_parameter,0),
+        PARAM_INIT(langevin_parameter, 0),
         PARAM_INIT(magnetic_field_freq, 0),
-        PARAM_INIT(params_magnetic_int.beta_DipoleDipole, 0)
+        PARAM_INIT(params_magnetic_int.beta_dipoledipole, 0)
 	};
 
 	/*================================
@@ -282,7 +282,7 @@ void ParameterSetFactory::setFromFile(const std::string& filename_parameters)
 	/**
 	 \brief Read and parse the parameter file
 	 */
-	std::string indent = "  ParameterSetFactory::\t";
+    std::string indent = "  ParameterSetFactory::\t";
 	std::cout << indent << "setFromFile..." << std::endl;
 	std::ifstream fin;
 	fin.open(filename_parameters.c_str());

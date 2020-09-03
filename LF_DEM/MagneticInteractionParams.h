@@ -14,15 +14,12 @@ namespace Interactions
 
 struct MagneticInteractionParams
 {
-    int magnetic_field_type;                            // Type of applied external magnetic field
-    double langevin_parameter;                          // Ratio of magnetic energy to thermal energy: \miu_0 * m * H_0 / (k_B * T)
-    double magnetic_field_freq;                         // Dimensionless angular frequency of magnetic field: 2 * \pi * f / Dr
-    double beta_DipoleDipole;                           // Intensity of magnetic dipole-dipole interaction: \miu_0 * m^2 /(\pi * a^3 * k_B * T)
+    double beta_dipoledipole;                           // Intensity of magnetic dipole-dipole interaction: \miu_0 * m^2 /(\pi * a^3 * k_B * T)
 };
 
 inline bool has_magnetic_int(struct MagneticInteractionParams p)
 {
-    return p.langevin_parameter > 0;
+    return p.beta_dipoledipole > 0;
 }
 
 }

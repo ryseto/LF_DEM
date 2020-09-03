@@ -1529,18 +1529,17 @@ void System::setMagneticForce(vector<vec3d> &force, vector<vec3d> &torque)
     for (int i=0; i<np; i++)
     {
         if (twodimension) {
-            magnetic_field_gradient.resize(np,3);
-            magnetic_dipole_moment[i].set(cos(conf->angle[i]),0,sin(conf->angle[i]));
+            magnetic_dipole_moment = conf->orientation_2d[i];
         }
         if (p.magnetic_field_type == 2) {
-            double force_x = p.langevin_parameter*dot(magnetic_dipole_moment[i],magnetic_field_gradient[0]);
-            double force_y = p.langevin_parameter*dot(magnetic_dipole_moment[i],magnetic_field_gradient[1]);
-            double force_z = p.langevin_parameter*dot(magnetic_dipole_moment[i],magnetic_field_gradient[2]);
+            double force_x = p.langevin_parameter*dot(magnetic_dipole_moment,magnetic_field_gradient[0]);
+            double force_y = p.langevin_parameter*dot(magnetic_dipole_moment,magnetic_field_gradient[1]);
+            double force_z = p.langevin_parameter*dot(magnetic_dipole_moment,magnetic_field_gradient[2]);
             force[i].set(force_x,force_y,force_z);
         } else {
             force[i].set(0,0,0);
         }
-        torque[i] = p.langevin_parameter*cross(magnetic_dipole_moment[i],magnetic_field);
+        torque[i] = p.langevin_parameter*cross(magnetic_dipole_moment,magnetic_field);
     }
 }
 

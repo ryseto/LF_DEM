@@ -14,6 +14,10 @@ PairwiseInteraction::PairwiseInteraction(const PairId &data, vec3d sep)
 		a0 = data.a1, a1 = data.a0;
 	}
 	setSeparation(sep);
+    
+    dipole_moment_p0 = conf->orientation_2d[p0];
+    dipole_moment_p1 = conf->orientation_2d[p1];
+    std::cout << "outputtttttttttt = " << dipole_moment_p0 << std::endl;
 }
 
 void PairwiseInteraction::setSeparation(const vec3d &sep)

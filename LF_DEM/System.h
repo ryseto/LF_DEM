@@ -265,7 +265,7 @@ private:
 	void calcContactXFPerParticleStressControlled();
 	void calcDimerXFPerParticleStressControlled();
 	void gatherVelocitiesByRateDependencies(ParticleVelocity &rateprop_vel,
-												ParticleVelocity &rateindep_vel) const;
+                                            ParticleVelocity &rateindep_vel) const;
 	void calcTotalStressPerParticle();
 	void getStressCouette(int i,
 						  double &stress_rr,
@@ -287,7 +287,7 @@ private:
 
     vec3d magnetic_field;
     std::vector<vec3d> magnetic_field_gradient;
-    std::vector<vec3d> magnetic_dipole_moment;
+    vec3d magnetic_dipole_moment;
     
 	bool is_brownian() const
 	{
@@ -356,10 +356,10 @@ private:
 		return omega_wheel_in-omega_wheel_out;
 	}
 
-//	std::size_t get_nb_interactions() const
-//	{
-//        return interaction->size();
-//	}
+	std::size_t get_nb_interactions() const
+	{
+        return interaction->size();
+	}
 
 	int get_total_num_timesteps()
 	{

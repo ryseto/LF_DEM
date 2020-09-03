@@ -101,7 +101,6 @@ namespace Parameters {
 		// struct Interactions::TActAdhesion::Parameters TA_adhesion; ///< Time delayed adhesion params (.adhesion_range [1e-2], .adhesion_max_force [0h], .activation_time [0h])
 		struct Interactions::ActAdhesion::Params activated_adhesion; ///< Time delayed adhesion params (.adhesion_range [1e-2], .adhesion_max_force [0h], .activation_time [0h])
 		struct Interactions::Dimer::DimerParams dimer;  ///< see DimerParams.h
-        
         struct Interactions::MagneticInteractionParams params_magnetic_int;
 		/*******************************************************
 		 HYDRODYNAMICS
@@ -206,8 +205,8 @@ namespace Parameters {
         
         int magnetic_field_type;                        // Type of exeternally applied magnetic field
         double langevin_parameter;                      // Langevin parameter (alpha) = \miu_0*m*H_0/k_B*T
-        double magnetic_field_freq;                     // Dimensionless frequency of external magnetic field
-//        double beta_DipoleDipole;                       // Intensity of magnetic dipole-dipole interaction
+        double magnetic_field_freq;                     // Dimensionless angular frequency of magnetic field = 2*\pi*f/Dr
+//        double beta_dipoledipole;                       // Intensity of magnetic dipole-dipole interaction: \miu_0*m^2/(\pi*a^3*k_B*T)
 	};
 	
 } // namespace Parameters
