@@ -1167,8 +1167,8 @@ void System::timeEvolution(double time_end, double strain_end)
 	} else {
 		avg_dt = dt;
 	}
-	if (!(!events.empty() || 
-		  (shear_type == ShearType::extensional_flow && almost_equal(clk.cumulated_strain, kr->getStrainRetrim(), 2) ))) {
+	if (!(!events.empty() ||
+          (shear_type == ShearType::extensional_flow && almost_equal(clk.cumulated_strain, kr->getStrainRetrim(), 2) ))) {
 		if (shear_type != ShearType::solvent_flow) {
 			calc_stress = true;
 		}
@@ -1529,7 +1529,11 @@ void System::setMagneticForce(vector<vec3d> &force, vector<vec3d> &torque)
     for (int i=0; i<np; i++)
     {
         if (twodimension) {
-            magnetic_dipole_moment = conf->orientation_2d[i];
+//            magnetic_dipole_moment = conf->orientation_2d[i];
+            magnetic_dipole_moment.x = cos(conf->angle[i]);
+            magnetic_dipole_moment.y = 0;
+            magnetic_dipole_moment.z = sin(conf->angle[i]);
+//            cout << "Testttttttttttttttttt = (1) " << magnetic_dipole_moment << endl;
         }
         if (p.magnetic_field_type == 2) {
             double force_x = p.langevin_parameter*dot(magnetic_dipole_moment,magnetic_field_gradient[0]);
@@ -1553,7 +1557,6 @@ vec3d System::get_shear_strain() const
 	}
 	return 0;
 }
-
 
 double System::computeMaxNAVelocity()
 {
@@ -1652,7 +1655,7 @@ void System::computeVelocityByComponents()
 		}
 		res_solver->setSolverRHS(force_components[component]);
 		res_solver->solve(na_velo_components[component].vel,
-							na_velo_components[component].ang_vel);
+                          na_velo_components[component].ang_vel);
 	}
 	if (is_brownian() && twodimension) {
 		rushWorkFor2DBrownian(na_velo_components["brownian"].vel,

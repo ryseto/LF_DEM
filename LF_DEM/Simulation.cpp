@@ -288,11 +288,11 @@ void Simulation::timeEvolutionUntilNextOutput(const TimeKeeper &tk)
 {
 	pair<double, string> t = tk.nextTime();
 	pair<double, string> s = tk.nextStrain();
-	if (t.second.empty()) { // no next time
+	if (t.second.empty()) {                             // no next time
 		sys.timeEvolution(-1, s.first);
-	} else if (s.second.empty()) { // no next strain
+	} else if (s.second.empty()) {                      // no next strain
 		sys.timeEvolution(t.first, -1);
-	} else { // either next time or next strain
+	} else {                                            // either next time or next strain
 		sys.timeEvolution(t.first, s.first);
 	}
 #ifdef SIGINT_CATCH
@@ -361,7 +361,8 @@ void Simulation::simulationSteadyShear(string in_args,
 			}
 		}
 		timeEvolutionUntilNextOutput(tk);
-		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_cumulated_strain());
+		set<string> output_events = tk.getElapsedClocks(sys.get_time(),
+                                                        sys.get_cumulated_strain());
 		if (sys.shear_type == ShearType::extensional_flow) {
 			if (almost_equal(sys.get_cumulated_strain(), sys.kr->getStrainRetrim(), 2)) {
 				output_events.insert("data");

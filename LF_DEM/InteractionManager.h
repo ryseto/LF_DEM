@@ -48,6 +48,7 @@ void InteractionManager<InteractionT>::addInteraction(unsigned i,
                                                       unsigned j,
                                                       std::shared_ptr<InteractionT> inter)
 {
+    std::cout << "Testttttttttttttt = (0) " << std::endl;
 	if (!pair_manager->areInteracting(i, j)) {
 		interactions.push_back(inter);
 

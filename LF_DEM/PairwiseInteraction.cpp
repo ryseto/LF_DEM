@@ -15,9 +15,14 @@ PairwiseInteraction::PairwiseInteraction(const PairId &data, vec3d sep)
 	}
 	setSeparation(sep);
     
-    dipole_moment_p0 = conf->orientation_2d[p0];
-    dipole_moment_p1 = conf->orientation_2d[p1];
-    std::cout << "outputtttttttttt = " << dipole_moment_p0 << std::endl;
+//    dipole_moment_p0 = conf->orientation_2d[p0];
+//    dipole_moment_p1 = conf->orientation_2d[p1];
+    dipole_moment_p0.x = cos(conf->angle[p0]);
+    dipole_moment_p0.y = 0;
+    dipole_moment_p0.z = sin(conf->angle[p0]);
+    dipole_moment_p1.x = cos(conf->angle[p1]);
+    dipole_moment_p1.y = 0;
+    dipole_moment_p1.z = sin(conf->angle[p1]);
 }
 
 void PairwiseInteraction::setSeparation(const vec3d &sep)

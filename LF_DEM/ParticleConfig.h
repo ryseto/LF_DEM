@@ -16,7 +16,8 @@ public:
 	ParticleConfig(unsigned np) :
 	position(np),
 	radius(np),
-	angle(np) {
+    angle(np),
+    orientation_2d(np) {
         for (int i=0; i<np; i++)
         {
             orientation_2d[i].set(cos(angle[i]),0,sin(angle[i]));

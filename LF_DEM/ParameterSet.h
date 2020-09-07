@@ -206,7 +206,6 @@ namespace Parameters {
         int magnetic_field_type;                        // Type of exeternally applied magnetic field
         double langevin_parameter;                      // Langevin parameter (alpha) = \miu_0*m*H_0/k_B*T
         double magnetic_field_freq;                     // Dimensionless angular frequency of magnetic field = 2*\pi*f/Dr
-//        double beta_dipoledipole;                       // Intensity of magnetic dipole-dipole interaction: \miu_0*m^2/(\pi*a^3*k_B*T)
 	};
 	
 } // namespace Parameters
