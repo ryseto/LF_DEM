@@ -60,10 +60,12 @@ protected:
 	vec3d rvec; // vector center to center
 	vec3d nvec; // normal vector
     
-    std::shared_ptr<ParticleConfig> conf;
     vec3d dipole_moment_p0;
     vec3d dipole_moment_p1;
 
+    PairwiseInteraction(const PairId &data, vec3d sep);
+    PairwiseInteraction(const PairId &data, vec3d sep, std::shared_ptr<ParticleConfig> config);
+    std::shared_ptr<ParticleConfig> conf;
 	void setSeparation(const vec3d &sep);
 
 	double gap2separation(double gap);  // gap is in units of (a0+a1)/2, separation is in std unit length
@@ -81,8 +83,6 @@ protected:
     friend MagneticInteraction;
 
 public:
-	PairwiseInteraction(const PairId &data, vec3d sep);
-
 	virtual void saveState() = 0;
 	virtual void restoreState() = 0;
 

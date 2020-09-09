@@ -166,7 +166,10 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	conf->position = initial_positions;
 	conf->radius = radii;
 	if (twodimension) {
-		conf->angle = angles;
+//		conf->angle = angles;
+        for (int i=0; i<np; i++) {
+            conf->orientation_2d[i].set(cos(conf->angle[i]),0,sin(conf->angle[i]));
+        }
 	}
 	np_mobile = np-p.np_fixed;
 	if (np_mobile <= 0) {
@@ -976,7 +979,8 @@ void System::timeStepMove(double time_end, double strain_end)
 	}
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
-			conf->angle[i] += velocity.ang_vel[i].y*dt;
+//			conf->angle[i] += velocity.ang_vel[i].y*dt;
+            conf->incrementAngle(i, velocity.ang_vel[i].y*dt);
 		}
 	}
 	if (shear_type == ShearType::extensional_flow) {
@@ -1020,7 +1024,8 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
 	
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
-			conf->angle[i] += velocity.ang_vel[i].y*dt;
+//			conf->angle[i] += velocity.ang_vel[i].y*dt;
+            conf->incrementAngle(i, velocity.ang_vel[i].y*dt);
 		}
 	}
 	interaction->saveState();
@@ -1052,7 +1057,8 @@ void System::timeStepMoveCorrector()
 	}
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
-			conf->angle[i] += (velocity.ang_vel[i].y-velocity_predictor.ang_vel[i].y)*dt; // no cross_shear in 2d
+//			conf->angle[i] += (velocity.ang_vel[i].y-velocity_predictor.ang_vel[i].y)*dt; // no cross_shear in 2d
+            conf->incrementAngle(i, (velocity.ang_vel[i].y-velocity_predictor.ang_vel[i].y)*dt);
 		}
 	}
 	if (shear_type == ShearType::extensional_flow) {
@@ -1533,7 +1539,6 @@ void System::setMagneticForce(vector<vec3d> &force, vector<vec3d> &torque)
             magnetic_dipole_moment.x = cos(conf->angle[i]);
             magnetic_dipole_moment.y = 0;
             magnetic_dipole_moment.z = sin(conf->angle[i]);
-//            cout << "Testttttttttttttttttt = (1) " << magnetic_dipole_moment << endl;
         }
         if (p.magnetic_field_type == 2) {
             double force_x = p.langevin_parameter*dot(magnetic_dipole_moment,magnetic_field_gradient[0]);

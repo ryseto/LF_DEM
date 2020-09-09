@@ -6,6 +6,19 @@ namespace Interactions
 
 PairwiseInteraction::PairwiseInteraction(const PairId &data, vec3d sep)
 {
+    if (data.p1 > data.p0) {
+        p0 = data.p0, p1 = data.p1;
+        a0 = data.a0, a1 = data.a1;
+    } else {
+        p0 = data.p1, p1 = data.p0;
+        a0 = data.a1, a1 = data.a0;
+    }
+    setSeparation(sep);
+}
+
+PairwiseInteraction::PairwiseInteraction(const PairId &data, vec3d sep, std::shared_ptr<ParticleConfig> config) :
+conf(config)
+{
 	if (data.p1 > data.p0) {
 		p0 = data.p0, p1 = data.p1;
 		a0 = data.a0, a1 = data.a1;
@@ -14,15 +27,8 @@ PairwiseInteraction::PairwiseInteraction(const PairId &data, vec3d sep)
 		a0 = data.a1, a1 = data.a0;
 	}
 	setSeparation(sep);
-    
-//    dipole_moment_p0 = conf->orientation_2d[p0];
-//    dipole_moment_p1 = conf->orientation_2d[p1];
-    dipole_moment_p0.x = cos(conf->angle[p0]);
-    dipole_moment_p0.y = 0;
-    dipole_moment_p0.z = sin(conf->angle[p0]);
-    dipole_moment_p1.x = cos(conf->angle[p1]);
-    dipole_moment_p1.y = 0;
-    dipole_moment_p1.z = sin(conf->angle[p1]);
+     dipole_moment_p0 = conf->orientation_2d[p0];
+    dipole_moment_p1 = conf->orientation_2d[p1];
 }
 
 void PairwiseInteraction::setSeparation(const vec3d &sep)

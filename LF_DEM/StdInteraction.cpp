@@ -15,7 +15,7 @@ StdInteraction::StdInteraction(const PairId &pairid,
 							   double interaction_range_,
 							   struct StdInteractionParams params,
 							   Dynamics::PairwiseResistanceVelocitySolver *vel_solver = nullptr) :
-PairwiseInteraction(pairid, sep),
+PairwiseInteraction(pairid, sep, conf),
 interaction_range(interaction_range_),
 p(std::move(params)),
 solver(vel_solver)
