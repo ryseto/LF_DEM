@@ -112,6 +112,8 @@ void StdInteractionManager::createNewInteraction(unsigned i, unsigned j, double 
 	pairid.p1 = j;
 	pairid.a0 = conf->radius[i];
 	pairid.a1 = conf->radius[j];
+    pairid.orient_p0 = conf->orientation_2d[i];
+    pairid.orient_p1 = conf->orientation_2d[j];
 	addInteraction(i, j, std::make_shared<StdInteraction>(pairid, pdist->getSeparation(i, j), scaled_interaction_range,
                                                           std::move(params), solver.get()));
 }

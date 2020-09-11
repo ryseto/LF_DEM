@@ -22,7 +22,6 @@ namespace Interactions
 
 class MagneticInteraction : public PotentialForce {
 private:
-    std::shared_ptr<ParticleConfig> conf;
     struct MagneticInteractionParams p;
 public:
     MagneticInteraction(PairwiseInteraction* interaction_, struct MagneticInteractionParams params);

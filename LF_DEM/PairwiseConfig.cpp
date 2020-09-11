@@ -88,8 +88,8 @@ void LeesEdwardsPairwiseConfig::getVelocities(unsigned i, unsigned j, struct Pai
 }
 
 KraynikReineltPairwiseConfig::KraynikReineltPairwiseConfig(std::shared_ptr<ParticleConfig> config,
-															std::shared_ptr<BC::KraynikReineltBC> krbc,
-															double max_interaction_range) :
+                                                           std::shared_ptr<BC::KraynikReineltBC> krbc,
+                                                           double max_interaction_range) :
 PairwiseConfig(config),
 kr(krbc),
 twodimension(krbc->getContainer().ly == 0)

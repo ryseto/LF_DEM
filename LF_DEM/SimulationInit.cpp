@@ -345,7 +345,7 @@ void Simulation::setupFlow()
 }
 
 void Simulation::setupControl(Parameters::ControlVariable control_variable_,
-							   Dimensional::DimensionalQty<double> control_value_)
+                              Dimensional::DimensionalQty<double> control_value_)
 {
 	control_var = control_variable_;
 	control_value = control_value_;

@@ -15,7 +15,7 @@ StdInteraction::StdInteraction(const PairId &pairid,
 							   double interaction_range_,
 							   struct StdInteractionParams params,
 							   Dynamics::PairwiseResistanceVelocitySolver *vel_solver = nullptr) :
-PairwiseInteraction(pairid, sep, conf),
+PairwiseInteraction(pairid, sep),
 interaction_range(interaction_range_),
 p(std::move(params)),
 solver(vel_solver)
@@ -251,6 +251,7 @@ void StdInteraction::updateActivatedAdhesionState(double dt)
 
 void StdInteraction::updateMagneticInteractionState()
 {
+    ptr_magnetic_int = std::unique_ptr<MagneticInteraction>(new MagneticInteraction (this, *(p.ptr_magnintp)));
     if (ptr_magnetic_int) {
         ptr_magnetic_int->calcForce();
     }
