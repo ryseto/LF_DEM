@@ -18,7 +18,6 @@
 #include "PotentialForce.h"
 #include "ParticleConfig.h"
 #include "MagneticInteractionParams.h"
-#include "MagneticParticle.h"
 
 namespace Interactions
 {
@@ -26,11 +25,13 @@ namespace Interactions
 class MagneticInteraction : public PotentialForce {
 private:
     struct MagneticInteractionParams p;
-    std::shared_ptr<MagneticParticle> magnetic_particle1;
+    std::shared_ptr<ParticleConfig> conf;
+    void calcDipoleOrientation();
     vec3d dipole_orient_p0;
     vec3d dipole_orient_p1;
 public:
     MagneticInteraction(PairwiseInteraction* interaction_, struct MagneticInteractionParams params);
+//    void calcDipoleOrientation(vec3d orient_p0, vec3d orient_p1);
     void calcForce();
     double calcEnergy() const;
 };

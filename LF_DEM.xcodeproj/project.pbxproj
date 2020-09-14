@@ -339,7 +339,6 @@
 		C6774E6624FCEEDB0094C0BC /* Makefile_config_uga.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile_config_uga.mk; sourceTree = "<group>"; };
 		C6774E6724FCEEDC0094C0BC /* Makefile_config_Romain_Ucam.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile_config_Romain_Ucam.mk; sourceTree = "<group>"; };
 		C6774E6824FCEEDC0094C0BC /* Makefile_config_Froggy_UGA.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile_config_Froggy_UGA.mk; sourceTree = "<group>"; };
-		C688CB26250F01F90083847D /* MagneticParticle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MagneticParticle.h; sourceTree = "<group>"; };
 		D905949E1E953FA4001252CB /* libcholmod.3.0.11.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcholmod.3.0.11.dylib; path = ../../../../SuiteSparse/lib/libcholmod.3.0.11.dylib; sourceTree = "<group>"; };
 		D905949F1E953FA4001252CB /* libcolamd.2.9.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcolamd.2.9.6.dylib; path = ../../../../SuiteSparse/lib/libcolamd.2.9.6.dylib; sourceTree = "<group>"; };
 		D90594A01E953FA4001252CB /* libamd.2.4.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libamd.2.4.6.dylib; path = ../../../../SuiteSparse/lib/libamd.2.4.6.dylib; sourceTree = "<group>"; };
@@ -1543,7 +1542,6 @@
 				C645CD2D24FDE95800E4A1CD /* MagneticInteraction.cpp */,
 				C645CD3024FDE97300E4A1CD /* MagneticInteraction.h */,
 				C645CD3224FDE9AE00E4A1CD /* MagneticInteractionParams.h */,
-				C688CB26250F01F90083847D /* MagneticParticle.h */,
 				C6774DC624FCD1AD0094C0BC /* main.cpp */,
 				C6774DFF24FCD1B00094C0BC /* Matrix.cpp */,
 				C6774D8B24FCD1AA0094C0BC /* Matrix.h */,

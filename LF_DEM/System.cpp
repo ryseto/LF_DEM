@@ -163,14 +163,13 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	set_np(initial_positions.size());
 
 	conf = std::make_shared<ParticleConfig> (np);
-    magnetic_particle = std::make_shared<MagneticParticle> (np);
 	conf->position = initial_positions;
 	conf->radius = radii;
 	if (twodimension) {
 		conf->angle = angles;
-        if (magnetic_particle) {
+        if (p.magnetic_field_type != 0) {
             for (int i=0; i<np; i++) {
-                magnetic_particle->calcDipoleOrientation(i, conf->angle[i]);
+                conf->updateOrientation(i, conf->angle[i]);
             }
         }
 	}
@@ -983,8 +982,8 @@ void System::timeStepMove(double time_end, double strain_end)
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
 			conf->angle[i] += velocity.ang_vel[i].y*dt;
-            if (magnetic_particle) {
-                magnetic_particle->calcDipoleOrientation(i, conf->angle[i]);
+            if (p.magnetic_field_type != 0) {
+                conf->updateOrientation(i, conf->angle[i]);
             }
 		}
 	}
@@ -1030,8 +1029,8 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
 			conf->angle[i] += velocity.ang_vel[i].y*dt;
-            if (magnetic_particle) {
-                magnetic_particle->calcDipoleOrientation(i, conf->angle[i]);
+            if (p.magnetic_field_type != 0) {
+                conf->updateOrientation(i, conf->angle[i]);
             }
         }
 	}
@@ -1065,8 +1064,8 @@ void System::timeStepMoveCorrector()
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
 			conf->angle[i] += (velocity.ang_vel[i].y-velocity_predictor.ang_vel[i].y)*dt; // no cross_shear in 2d
-            if (magnetic_particle) {
-                magnetic_particle->calcDipoleOrientation(i, conf->angle[i]);
+            if (p.magnetic_field_type != 0) {
+                conf->updateOrientation(i, conf->angle[i]);
             }
 		}
 	}
@@ -1544,7 +1543,7 @@ void System::setMagneticForce(vector<vec3d> &force, vector<vec3d> &torque)
     for (int i=0; i<np; i++)
     {
         if (twodimension) {
-            magnetic_dipole_moment = magnetic_particle->dipole_orient[i];
+            magnetic_dipole_moment = conf->orientation[i];
         }
         if (p.magnetic_field_type == 2) {
             double force_x = p.langevin_parameter*dot(magnetic_dipole_moment,magnetic_field_gradient[0]);

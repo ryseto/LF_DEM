@@ -11,19 +11,19 @@ public:
 	std::vector <vec3d> position;
 	std::vector <double> radius;
     std::vector <double> angle;                         // For 2D model
+    std::vector <vec3d> orientation;
     
 	ParticleConfig(){};
 	ParticleConfig(unsigned np) :
 	position(np),
 	radius(np),
-    angle(np)
+    angle(np),
+    orientation(np)
     {};
 
-//    void incrementAngle(int i, double delt_ang) {
-//        angle[i] += delt_ang;
-//        orientation_2d[i].set(cos(angle[i]),0,sin(angle[i]));
-//    }
-    
+    void updateOrientation(int i, double angle) {
+        orientation[i].set(cos(angle),0,sin(angle));
+    }
 };
 
 enum class VelocityType : unsigned {
