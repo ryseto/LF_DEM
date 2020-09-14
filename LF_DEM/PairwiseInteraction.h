@@ -9,6 +9,7 @@
 #ifndef __LF_DEM__PairwiseInteraction__
 #define __LF_DEM__PairwiseInteraction__
 
+#include <memory>
 #include "vec3d.h"
 #include "Sym2Tensor.h"
 #include "PairVelocity.h"

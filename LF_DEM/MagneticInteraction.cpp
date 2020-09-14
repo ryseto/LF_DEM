@@ -23,11 +23,12 @@ void MagneticInteraction::calcDipoleOrientation()
 {
     dipole_orient_p0 = conf->orientation[interaction->p0];
     dipole_orient_p1 = conf->orientation[interaction->p1];
-//    std::cout << "Testtttttttttt = (0) " << dipole_orient_p0 << std::endl;
+    std::cout << "Testtttttttttt = (0) " << dipole_orient_p0 << std::endl;
 }
 
 void MagneticInteraction::calcForce()
 {
+    calcDipoleOrientation();
     double gap = interaction->getGap();
     vec3d e_force_dd = interaction->nvec*dot(dipole_orient_p0,dipole_orient_p1) + dipole_orient_p0*dot(interaction->nvec,dipole_orient_p1) + dipole_orient_p1*dot(interaction->nvec,dipole_orient_p0) - 5*interaction->nvec*dot(interaction->nvec,dipole_orient_p1)*dot(interaction->nvec,dipole_orient_p0);
     vec3d e_torque_dd = dot(dipole_orient_p1,interaction->nvec)*cross(dipole_orient_p0,interaction->nvec) + cross(dipole_orient_p1,dipole_orient_p0)/3;

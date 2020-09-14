@@ -167,10 +167,8 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	conf->radius = radii;
 	if (twodimension) {
 		conf->angle = angles;
-        if (p.magnetic_field_type != 0) {
-            for (int i=0; i<np; i++) {
-                conf->updateOrientation(i, conf->angle[i]);
-            }
+        for (int i=0; i<np; i++) {
+            conf->updateOrientation(i, conf->angle[i]);
         }
 	}
 	np_mobile = np-p.np_fixed;
@@ -982,9 +980,7 @@ void System::timeStepMove(double time_end, double strain_end)
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
 			conf->angle[i] += velocity.ang_vel[i].y*dt;
-            if (p.magnetic_field_type != 0) {
-                conf->updateOrientation(i, conf->angle[i]);
-            }
+            conf->updateOrientation(i, conf->angle[i]);
 		}
 	}
 	if (shear_type == ShearType::extensional_flow) {
@@ -1029,9 +1025,7 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
 			conf->angle[i] += velocity.ang_vel[i].y*dt;
-            if (p.magnetic_field_type != 0) {
-                conf->updateOrientation(i, conf->angle[i]);
-            }
+            conf->updateOrientation(i, conf->angle[i]);
         }
 	}
 	interaction->saveState();
@@ -1064,9 +1058,7 @@ void System::timeStepMoveCorrector()
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
 			conf->angle[i] += (velocity.ang_vel[i].y-velocity_predictor.ang_vel[i].y)*dt; // no cross_shear in 2d
-            if (p.magnetic_field_type != 0) {
-                conf->updateOrientation(i, conf->angle[i]);
-            }
+            conf->updateOrientation(i, conf->angle[i]);
 		}
 	}
 	if (shear_type == ShearType::extensional_flow) {
@@ -1549,9 +1541,9 @@ void System::setMagneticForce(vector<vec3d> &force, vector<vec3d> &torque)
             double force_x = p.langevin_parameter*dot(magnetic_dipole_moment,magnetic_field_gradient[0]);
             double force_y = p.langevin_parameter*dot(magnetic_dipole_moment,magnetic_field_gradient[1]);
             double force_z = p.langevin_parameter*dot(magnetic_dipole_moment,magnetic_field_gradient[2]);
-            force[i].set(force_x,force_y,force_z);
+            force[i].set(force_x, force_y, force_z);
         } else {
-            force[i].set(0,0,0);
+            force[i].set(0, 0, 0);
         }
         torque[i] = p.langevin_parameter*cross(magnetic_dipole_moment,magnetic_field);
     }
