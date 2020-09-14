@@ -163,12 +163,15 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	set_np(initial_positions.size());
 
 	conf = std::make_shared<ParticleConfig> (np);
+    magnetic_particle = std::make_shared<MagneticParticle> (np);
 	conf->position = initial_positions;
 	conf->radius = radii;
 	if (twodimension) {
-//		conf->angle = angles;
-        for (int i=0; i<np; i++) {
-            conf->orientation_2d[i].set(cos(conf->angle[i]),0,sin(conf->angle[i]));
+		conf->angle = angles;
+        if (magnetic_particle) {
+            for (int i=0; i<np; i++) {
+                magnetic_particle->calcDipoleOrientation(i, conf->angle[i]);
+            }
         }
 	}
 	np_mobile = np-p.np_fixed;
@@ -979,8 +982,10 @@ void System::timeStepMove(double time_end, double strain_end)
 	}
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
-//			conf->angle[i] += velocity.ang_vel[i].y*dt;
-            conf->incrementAngle(i, velocity.ang_vel[i].y*dt);
+			conf->angle[i] += velocity.ang_vel[i].y*dt;
+            if (magnetic_particle) {
+                magnetic_particle->calcDipoleOrientation(i, conf->angle[i]);
+            }
 		}
 	}
 	if (shear_type == ShearType::extensional_flow) {
@@ -1024,9 +1029,11 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
 	
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
-//			conf->angle[i] += velocity.ang_vel[i].y*dt;
-            conf->incrementAngle(i, velocity.ang_vel[i].y*dt);
-		}
+			conf->angle[i] += velocity.ang_vel[i].y*dt;
+            if (magnetic_particle) {
+                magnetic_particle->calcDipoleOrientation(i, conf->angle[i]);
+            }
+        }
 	}
 	interaction->saveState();
 	interaction->updateInteractions(dt, &velocity);
@@ -1057,8 +1064,10 @@ void System::timeStepMoveCorrector()
 	}
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
-//			conf->angle[i] += (velocity.ang_vel[i].y-velocity_predictor.ang_vel[i].y)*dt; // no cross_shear in 2d
-            conf->incrementAngle(i, (velocity.ang_vel[i].y-velocity_predictor.ang_vel[i].y)*dt);
+			conf->angle[i] += (velocity.ang_vel[i].y-velocity_predictor.ang_vel[i].y)*dt; // no cross_shear in 2d
+            if (magnetic_particle) {
+                magnetic_particle->calcDipoleOrientation(i, conf->angle[i]);
+            }
 		}
 	}
 	if (shear_type == ShearType::extensional_flow) {
@@ -1522,8 +1531,8 @@ void System::setMagneticForce(vector<vec3d> &force, vector<vec3d> &torque)
     if (p.magnetic_field_type == 1) {
         magnetic_field.set(0,0,1);
     } else if (p.magnetic_field_type == 2) {
-        magnetic_field.set(0,0,1);                      // Need to modify to satisfy Maxwell's equation
-        magnetic_field_gradient[0].set(0,0,1);          // Better to read external file including magnetic field and gradient
+        magnetic_field.set(0,0,1);                                  // Need to modify to satisfy Maxwell's equation
+        magnetic_field_gradient[0].set(0,0,1);                      // Better to read external file including magnetic field and gradient
         magnetic_field_gradient[1].set(0,0,0);
         magnetic_field_gradient[2].set(0,0,0);
     } else if (p.magnetic_field_type == 3) {
@@ -1535,10 +1544,7 @@ void System::setMagneticForce(vector<vec3d> &force, vector<vec3d> &torque)
     for (int i=0; i<np; i++)
     {
         if (twodimension) {
-//            magnetic_dipole_moment = conf->orientation_2d[i];
-            magnetic_dipole_moment.x = cos(conf->angle[i]);
-            magnetic_dipole_moment.y = 0;
-            magnetic_dipole_moment.z = sin(conf->angle[i]);
+            magnetic_dipole_moment = magnetic_particle->dipole_orient[i];
         }
         if (p.magnetic_field_type == 2) {
             double force_x = p.langevin_parameter*dot(magnetic_dipole_moment,magnetic_field_gradient[0]);

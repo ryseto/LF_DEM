@@ -11,11 +11,14 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <memory>
+#include <vector>
 #include "vec3d.h"
 #include "Sym2Tensor.h"
 #include "PotentialForce.h"
 #include "ParticleConfig.h"
 #include "MagneticInteractionParams.h"
+#include "MagneticParticle.h"
 
 namespace Interactions
 {
@@ -23,6 +26,9 @@ namespace Interactions
 class MagneticInteraction : public PotentialForce {
 private:
     struct MagneticInteractionParams p;
+    std::shared_ptr<MagneticParticle> magnetic_particle1;
+    vec3d dipole_orient_p0;
+    vec3d dipole_orient_p1;
 public:
     MagneticInteraction(PairwiseInteraction* interaction_, struct MagneticInteractionParams params);
     void calcForce();

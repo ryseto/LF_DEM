@@ -11,20 +11,18 @@ public:
 	std::vector <vec3d> position;
 	std::vector <double> radius;
     std::vector <double> angle;                         // For 2D model
-    std::vector <vec3d> orientation_2d;                 // For 2D model
-	
+    
 	ParticleConfig(){};
 	ParticleConfig(unsigned np) :
 	position(np),
 	radius(np),
-    angle(np),
-    orientation_2d(np)
+    angle(np)
     {};
-        
-    void incrementAngle(int i, double delt_ang) {
-        angle[i] += delt_ang;
-        orientation_2d[i].set(cos(angle[i]),0,sin(angle[i]));
-    }
+
+//    void incrementAngle(int i, double delt_ang) {
+//        angle[i] += delt_ang;
+//        orientation_2d[i].set(cos(angle[i]),0,sin(angle[i]));
+//    }
     
 };
 

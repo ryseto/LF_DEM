@@ -44,8 +44,6 @@ struct PairId {
 	unsigned p1;
 	double a0;
 	double a1;
-    vec3d orient_p0;
-    vec3d orient_p1;
 };
 
 class PairwiseInteraction {
@@ -55,8 +53,6 @@ protected:
 	unsigned p1;
 	double a0;
 	double a1;
-    vec3d orient_p0;
-    vec3d orient_p1;
 
 	//======= relative position/velocity data  =========//
 	double reduced_gap; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )

@@ -42,6 +42,7 @@
 #include "DimerManager.h"
 #include "PairwiseResistanceVelocitySolver.h"
 #include "ControlVariable.h"
+#include "MagneticParticle.h"
 
 
 class MTRand;
@@ -285,6 +286,7 @@ private:
 	vec3d meanParticleAngVelocity();
 	double computeMaxNAVelocity();
 
+    std::shared_ptr<MagneticParticle> magnetic_particle;
     vec3d magnetic_field;
     std::vector<vec3d> magnetic_field_gradient;
     vec3d magnetic_dipole_moment;

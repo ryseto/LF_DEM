@@ -14,13 +14,32 @@ namespace Interactions
 
 struct MagneticInteractionParams
 {
-    double beta_dipoledipole;                           // Intensity of magnetic dipole-dipole interaction: \miu_0 * m^2 /(\pi * a^3 * k_B * T)
+    double beta_dipoledipole;                                       // Intensity of magnetic dipole-dipole interaction: \miu_0*m^2/(\pi*a^3*k_B*T)
+//    bool janus_magnetic_particle;
+//    int dipole_orient;
+//    double dipole_shift;
 };
 
 inline bool has_magnetic_int(struct MagneticInteractionParams p)
 {
     return p.beta_dipoledipole > 0;
 }
+
+//inline bool setMagneticParameters(MagneticInteractionParams &p)
+//{
+//    string indent = "  setupMagneticForce::\t";
+//    if (p.magnetic_field_type == 1) {
+//        cout << indent+"static homogenous magnetic field" << endl;
+//    } else if (p.magnetic_field_type == 2) {
+//        cout << indent+"static magnetic field gradient" << endl;
+//    } else if (p.magnetic_field_type == 3) {
+//        cout << indent+"alternating homogeneous magnetic field" << endl;
+//    } else if (p.magnetic_field_type == 4) {
+//        cout << indent+"rotating homogeneous magnetic field" << endl;
+//    } else {
+//        throw runtime_error(indent+"Error: unknown magnetic field type\n");
+//    }
+//}
 
 }
 
