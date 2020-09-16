@@ -40,7 +40,7 @@ solver(vel_solver)
 		updateActivatedAdhesionState(0);
 	}
     
-    if (p.ptr_magnintp) {
+    if (p.magnetic_intp) {
         updateMagneticInteractionState();
     }
 
@@ -155,7 +155,7 @@ void StdInteraction::updateState(const struct PairVelocity &vel,
 	if (p.actadhp) {
 		updateActivatedAdhesionState(dt);
 	}
-    if (p.ptr_magnintp) {
+    if (p.magnetic_intp) {
         updateMagneticInteractionState();
     }
 }
@@ -251,10 +251,14 @@ void StdInteraction::updateActivatedAdhesionState(double dt)
 
 void StdInteraction::updateMagneticInteractionState()
 {
-    ptr_magnetic_int = std::unique_ptr<MagneticInteraction>(new MagneticInteraction (this, *(p.ptr_magnintp)));
-    if (ptr_magnetic_int) {
-        ptr_magnetic_int->calcForce();
+    if (magnetic_int) {
+        if (r < 0) {                                                // Check if it is still alive
+            magnetic_int.reset(nullptr);
+        }
+    } else {
+        magnetic_int = std::unique_ptr<MagneticInteraction>(new MagneticInteraction (this, *(p.magnetic_intp)));
     }
+    magnetic_int->calcForce();
 }
 
 bool StdInteraction::hasPairwiseResistance()

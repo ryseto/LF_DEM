@@ -1518,14 +1518,13 @@ void System::setConfinementForce(vector<vec3d> &force,
 
 void System::setMagneticForce(vector<vec3d> &force, vector<vec3d> &torque)
 {
-    magnetic_field_gradient.resize(3,3);
     if (p.magnetic_field_type == 1) {
         magnetic_field.set(0,0,1);
     } else if (p.magnetic_field_type == 2) {
         magnetic_field.set(0,0,1);                                  // Need to modify to satisfy Maxwell's equation
-        magnetic_field_gradient[0].set(0,0,1);                      // Better to read external file including magnetic field and gradient
-        magnetic_field_gradient[1].set(0,0,0);
-        magnetic_field_gradient[2].set(0,0,0);
+        matrix magnetic_field_gradient(0, 0, 1,                           // Better to read external file including magnetic field and gradient
+                                       0, 0, 0,
+                                       0, 0, 0);
     } else if (p.magnetic_field_type == 3) {
         magnetic_field.set(0,0,cos(p.magnetic_field_freq*get_time()));
     } else if (p.magnetic_field_type == 4) {
@@ -1535,17 +1534,14 @@ void System::setMagneticForce(vector<vec3d> &force, vector<vec3d> &torque)
     for (int i=0; i<np; i++)
     {
         if (twodimension) {
-            magnetic_dipole_moment = conf->orientation[i];
+            magnetic_dipole_orient = conf->orientation[i];
         }
         if (p.magnetic_field_type == 2) {
-            double force_x = p.langevin_parameter*dot(magnetic_dipole_moment,magnetic_field_gradient[0]);
-            double force_y = p.langevin_parameter*dot(magnetic_dipole_moment,magnetic_field_gradient[1]);
-            double force_z = p.langevin_parameter*dot(magnetic_dipole_moment,magnetic_field_gradient[2]);
-            force[i].set(force_x, force_y, force_z);
+            force[i] = p.langevin_parameter*(magnetic_dipole_orient*magnetic_field_gradient);
         } else {
             force[i].set(0, 0, 0);
         }
-        torque[i] = p.langevin_parameter*cross(magnetic_dipole_moment,magnetic_field);
+        torque[i] = p.langevin_parameter*cross(magnetic_dipole_orient,magnetic_field);
     }
 }
 

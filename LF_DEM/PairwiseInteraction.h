@@ -60,9 +60,6 @@ protected:
 	double r; // center-center distance
 	vec3d rvec; // vector center to center
 	vec3d nvec; // normal vector
-    
-    vec3d dipole_moment_p0;
-    vec3d dipole_moment_p1;
 
     PairwiseInteraction(const PairId &data, vec3d sep);
 	void setSeparation(const vec3d &sep);

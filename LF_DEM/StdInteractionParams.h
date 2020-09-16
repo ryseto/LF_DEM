@@ -20,7 +20,7 @@ struct StdInteractionParams {
 	std::unique_ptr<vanDerWaalsForceParams> vdwp;
 	std::unique_ptr<ActAdhesion::Params> actadhp;
 	std::unique_ptr<AgeingContactParams> ageing_contp;
-    std::unique_ptr<MagneticInteractionParams> ptr_magnintp;
+    std::unique_ptr<MagneticInteractionParams> magnetic_intp;
 
 	void add(const ContactParams &p) {
 		contp = std::unique_ptr<ContactParams>(new ContactParams (p));
@@ -41,7 +41,7 @@ struct StdInteractionParams {
 		ageing_contp = std::unique_ptr<AgeingContactParams>(new AgeingContactParams (p));
 	}
     void add(const MagneticInteractionParams &p) {
-        ptr_magnintp = std::unique_ptr<MagneticInteractionParams>(new MagneticInteractionParams (p));
+        magnetic_intp = std::unique_ptr<MagneticInteractionParams>(new MagneticInteractionParams (p));
     }
 };
 

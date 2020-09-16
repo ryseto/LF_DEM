@@ -286,8 +286,8 @@ private:
 	double computeMaxNAVelocity();
 
     vec3d magnetic_field;
-    std::vector<vec3d> magnetic_field_gradient;
-    vec3d magnetic_dipole_moment;
+    matrix magnetic_field_gradient;
+    vec3d magnetic_dipole_orient;
     
 	bool is_brownian() const
 	{

@@ -112,8 +112,6 @@ void StdInteractionManager::createNewInteraction(unsigned i, unsigned j, double 
 	pairid.p1 = j;
 	pairid.a0 = conf->radius[i];
 	pairid.a1 = conf->radius[j];
-//    pairid.orient_p0 = conf->orientation_2d[i];
-//    pairid.orient_p1 = conf->orientation_2d[j];
 	addInteraction(i, j, std::make_shared<StdInteraction>(pairid, pdist->getSeparation(i, j), scaled_interaction_range,
                                                           std::move(params), solver.get()));
 }
@@ -159,6 +157,10 @@ void StdInteractionManager::updateInteractions(double dt, ParticleVelocity *vel)
 		bool deactivated = false;
 		std::tie(i, j) = interactions[k]->get_par_num();
 		pdist->getVelocities(i, j, pvel);
+        if (interactions[k]->magnetic_int) {
+            interactions[k]->magnetic_int->calcDipoleOrientation(conf->orientation[i],
+                                                                     conf->orientation[j]);
+        }
 		interactions[k]->updateState(pvel,
 									 pdist->getSeparation(i, j), 
 									 dt,
@@ -179,6 +181,10 @@ void StdInteractionManager::updateInteractions()
 	for (unsigned k=0; k<interactions.size(); k++) {
 		bool deactivated = false;
 		std::tie(i, j) = interactions[k]->get_par_num();
+        if (interactions[k]->magnetic_int) {
+            interactions[k]->magnetic_int->calcDipoleOrientation(conf->orientation[i],
+                                                                     conf->orientation[j]);
+        }
 		interactions[k]->updateState(pvel,
 									 pdist->getSeparation(i, j), 
 									 0,
@@ -447,8 +453,8 @@ void StdInteractionManager::setMagneticInteractionToParticle(std::vector<vec3d> 
         t.reset();
     }
     for (const auto &inter: interactions) {
-        if (inter->ptr_magnetic_int) {
-            inter->ptr_magnetic_int->addUpForceTorque(force, torque);
+        if (inter->magnetic_int) {
+            inter->magnetic_int->addUpForceTorque(force, torque);
         }
     }
 }
@@ -575,10 +581,10 @@ void StdInteractionManager::addUpRepulsiveStressXF(std::vector<Sym2Tensor> &rstr
 //void StdInteractionManager::addUpMagneticInteractionStressXF(std::vector<Sym2Tensor> &rstress_XF)
 //{
 //    for (auto &inter: interactions) {
-//        if (inter->ptr_magnetic_int) {
+//        if (inter->magnetic_int) {
 //            unsigned int i, j;
 //            std::tie(i, j) = inter->get_par_num();
-//            inter->ptr_magnetic_int->addUpStressXF(rstress_XF[i], rstress_XF[j]); // - rF_magn
+//            inter->magnetic_int->addUpStressXF(rstress_XF[i], rstress_XF[j]); // - rF_magn
 //        }
 //    }
 //}

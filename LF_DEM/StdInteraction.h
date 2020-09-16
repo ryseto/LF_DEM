@@ -77,7 +77,7 @@ public:
 	std::unique_ptr<Lub::Lubrication> lubrication;
 	std::unique_ptr<RepulsiveForce> repulsion;
 	std::unique_ptr<ActAdhesion::ActivatedAdhesion> act_adhesion;
-    std::unique_ptr<MagneticInteraction> ptr_magnetic_int;
+    std::unique_ptr<MagneticInteraction> magnetic_int;
 
 	Dynamics::PairwiseResistanceVelocitySolver *solver;
 
