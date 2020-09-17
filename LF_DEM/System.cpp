@@ -166,10 +166,7 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	conf->position = initial_positions;
 	conf->radius = radii;
 	if (twodimension) {
-		conf->angle = angles;
-        for (int i=0; i<np; i++) {
-            conf->updateOrientation(i, conf->angle[i]);
-        }
+		conf->setAngles(angles);
 	}
 	np_mobile = np-p.np_fixed;
 	if (np_mobile <= 0) {
@@ -979,8 +976,7 @@ void System::timeStepMove(double time_end, double strain_end)
 	}
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
-			conf->angle[i] += velocity.ang_vel[i].y*dt;
-            conf->updateOrientation(i, conf->angle[i]);
+			conf->incrementAngle(i, velocity.ang_vel[i].y*dt);
 		}
 	}
 	if (shear_type == ShearType::extensional_flow) {
@@ -1024,8 +1020,7 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
 	
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
-			conf->angle[i] += velocity.ang_vel[i].y*dt;
-            conf->updateOrientation(i, conf->angle[i]);
+			conf->incrementAngle(i, velocity.ang_vel[i].y*dt);
         }
 	}
 	interaction->saveState();
@@ -1057,8 +1052,8 @@ void System::timeStepMoveCorrector()
 	}
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
-			conf->angle[i] += (velocity.ang_vel[i].y-velocity_predictor.ang_vel[i].y)*dt; // no cross_shear in 2d
-            conf->updateOrientation(i, conf->angle[i]);
+			double d_ang = (velocity.ang_vel[i].y-velocity_predictor.ang_vel[i].y)*dt;
+			conf->incrementAngle(i, d_ang); // no cross_shear in 2d
 		}
 	}
 	if (shear_type == ShearType::extensional_flow) {
@@ -1519,20 +1514,19 @@ void System::setConfinementForce(vector<vec3d> &force,
 void System::setMagneticForce(vector<vec3d> &force, vector<vec3d> &torque)
 {
     if (p.magnetic_field_type == 1) {
-        magnetic_field.set(0,0,1);
+        magnetic_field.set(0, 0, 1);
     } else if (p.magnetic_field_type == 2) {
-        magnetic_field.set(0,0,1);                                  // Need to modify to satisfy Maxwell's equation
+        magnetic_field.set(0, 0, 1);                                  // Need to modify to satisfy Maxwell's equation
         matrix magnetic_field_gradient(0, 0, 1,                           // Better to read external file including magnetic field and gradient
                                        0, 0, 0,
                                        0, 0, 0);
     } else if (p.magnetic_field_type == 3) {
-        magnetic_field.set(0,0,cos(p.magnetic_field_freq*get_time()));
+        magnetic_field.set(0, 0, cos(p.magnetic_field_freq*get_time()));
     } else if (p.magnetic_field_type == 4) {
         magnetic_field.set(sin(p.magnetic_field_freq*get_time()),0,cos(p.magnetic_field_freq*get_time()));
     }
     
-    for (int i=0; i<np; i++)
-    {
+    for (int i=0; i<np; i++) {
         if (twodimension) {
             magnetic_dipole_orient = conf->orientation[i];
         }

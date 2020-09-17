@@ -20,10 +20,20 @@ public:
     angle(np),
     orientation(np)
     {};
-
-    void updateOrientation(int i, double angle) {
-        orientation[i].set(cos(angle),0,sin(angle));
-    }
+	
+	void incrementAngle(int i, double d_angle) {
+		// this is for 2D system.
+		angle[i] += d_angle;
+		orientation[i].set(cos(angle[i]), 0, sin(angle[i]));
+	}
+	
+	void setAngles(std::vector <double> angle_) {
+		// this is for 2D system.
+		angle = angle_;
+		for (int i=0; i<angle.size(); i++) {
+			orientation[i].set(cos(angle[i]), 0, sin(angle[i]));
+		}
+	}
 };
 
 enum class VelocityType : unsigned {

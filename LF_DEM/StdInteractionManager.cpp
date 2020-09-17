@@ -113,7 +113,7 @@ void StdInteractionManager::createNewInteraction(unsigned i, unsigned j, double 
 	pairid.a0 = conf->radius[i];
 	pairid.a1 = conf->radius[j];
 	addInteraction(i, j, std::make_shared<StdInteraction>(pairid, pdist->getSeparation(i, j), scaled_interaction_range,
-                                                          std::move(params), solver.get()));
+														  std::move(params), solver.get()));
 }
 
 void StdInteractionManager::checkNewInteractions()
@@ -157,9 +157,9 @@ void StdInteractionManager::updateInteractions(double dt, ParticleVelocity *vel)
 		bool deactivated = false;
 		std::tie(i, j) = interactions[k]->get_par_num();
 		pdist->getVelocities(i, j, pvel);
-        if (interactions[k]->magnetic_int) {
-            interactions[k]->magnetic_int->calcDipoleOrientation(conf->orientation[i],
-                                                                     conf->orientation[j]);
+		if (interactions[k]->magnetic_int) {
+			interactions[k]->magnetic_int->calcDipoleOrientation(conf->orientation[i],
+																 conf->orientation[j]);
         }
 		interactions[k]->updateState(pvel,
 									 pdist->getSeparation(i, j), 
@@ -181,9 +181,9 @@ void StdInteractionManager::updateInteractions()
 	for (unsigned k=0; k<interactions.size(); k++) {
 		bool deactivated = false;
 		std::tie(i, j) = interactions[k]->get_par_num();
-        if (interactions[k]->magnetic_int) {
-            interactions[k]->magnetic_int->calcDipoleOrientation(conf->orientation[i],
-                                                                     conf->orientation[j]);
+		if (interactions[k]->magnetic_int) {
+			interactions[k]->magnetic_int->calcDipoleOrientation(conf->orientation[i],
+																 conf->orientation[j]);
         }
 		interactions[k]->updateState(pvel,
 									 pdist->getSeparation(i, j), 
